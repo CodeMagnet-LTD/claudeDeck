@@ -8,7 +8,8 @@ Hangi oturum çalışıyor, hangisi izin bekliyor, hangisi soru soruyor, hangisi
 hepsini tek bakışta görürsün. İzni bildirimden verirsin, oturumları yan yana açarsın, uygulamayı
 kapatıp açınca kaldığın yerden devam edersin.
 
-> Not: Uygulamanın arayüzü İngilizcedir; bu belgede menü adları Türkçe karşılıklarıyla anlatılır.
+> Not: Uygulama İngilizce ve Türkçe destekler ve sistem dilini izler. Yalnızca ClaudeDeck'in dilini
+> değiştirmek için: Sistem Ayarları › Genel › Dil ve Bölge › Uygulamalar.
 
 ClaudeDeck Claude'u sarmalamaz ya da taklit etmez, ekran da okumaz. Her oturum gömülü bir terminalde
 (SwiftTerm, gerçek pty) senin kurulu `claude` komutunu login shell üzerinden çalıştırır.

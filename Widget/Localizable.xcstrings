@@ -1,0 +1,195 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    " ": {
+      "shouldTranslate": false
+    },
+    "\"%@\" in ~/.claude/settings.json has an unexpected format; left untouched.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~/.claude/settings.json içindeki \"%@\" beklenmeyen biçimde; dokunulmadı."
+          }
+        }
+      }
+    },
+    "%lld": {
+      "shouldTranslate": false
+    },
+    "%lld running": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld çalışıyor"
+          }
+        }
+      }
+    },
+    "App not running": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama çalışmıyor"
+          }
+        }
+      }
+    },
+    "Asking a question": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soru soruyor"
+          }
+        }
+      }
+    },
+    "ClaudeDeck": {
+      "shouldTranslate": false
+    },
+    "Couldn’t read ~/.claude/settings.json: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~/.claude/settings.json okunamadı: %@"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koyu"
+          }
+        }
+      }
+    },
+    "Interrupted — your turn": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kesildi — sıra sende"
+          }
+        }
+      }
+    },
+    "Light": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık"
+          }
+        }
+      }
+    },
+    "Needs permission": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzin bekliyor"
+          }
+        }
+      }
+    },
+    "No sessions waiting for you": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seni bekleyen oturum yok"
+          }
+        }
+      }
+    },
+    "Permission denied — your turn": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzin reddedildi — sıra sende"
+          }
+        }
+      }
+    },
+    "Running": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalışıyor"
+          }
+        }
+      }
+    },
+    "Sessions stopped": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturumlar durdu"
+          }
+        }
+      }
+    },
+    "Status of your Claude sessions: waiting, running and ready for you.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude oturumlarının durumu: bekleyen, çalışan ve sıra sende olanlar."
+          }
+        }
+      }
+    },
+    "System": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistem"
+          }
+        }
+      }
+    },
+    "Untitled session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adsız oturum"
+          }
+        }
+      }
+    },
+    "Your turn": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıra sende"
+          }
+        }
+      }
+    },
+    "the root value is not a JSON object": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kök değer bir JSON nesnesi değil"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

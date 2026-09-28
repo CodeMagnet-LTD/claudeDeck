@@ -1,0 +1,1940 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "\"%@\" in ~/.claude/settings.json has an unexpected format; left untouched.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~/.claude/settings.json içindeki \"%@\" beklenmeyen biçimde; dokunulmadı."
+          }
+        }
+      }
+    },
+    "%@ already exists.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ zaten var."
+          }
+        }
+      }
+    },
+    "%@ · %@": {
+      "shouldTranslate": false
+    },
+    "%@ — Previous Conversations": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — Eski konuşmalar"
+          }
+        }
+      }
+    },
+    "%@ — Projects": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — Projeler"
+          }
+        }
+      }
+    },
+    "%lld": {
+      "shouldTranslate": false
+    },
+    "%lldd": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lldg"
+          }
+        }
+      }
+    },
+    "%lldh": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lldsa"
+          }
+        }
+      }
+    },
+    "%lldm": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%llddk"
+          }
+        }
+      }
+    },
+    "%llds": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lldsn"
+          }
+        }
+      }
+    },
+    ", Claude sessions working right now: %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ", şu an çalışan Claude oturumu: %lld"
+          }
+        }
+      }
+    },
+    ". Quitting closes them all (Claude sessions resume where they left off next launch). Keep running in the background to close the window while everything keeps working.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ". Çıkış hepsini kapatır (Claude oturumları bir sonraki açılışta kaldığı yerden devam eder). Arka planda çalışmaya devam et dersen pencere kapanır, her şey çalışmayı sürdürür."
+          }
+        }
+      }
+    },
+    "Actual Size": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerçek Boyut"
+          }
+        }
+      }
+    },
+    "Add": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekle"
+          }
+        }
+      }
+    },
+    "Add %lld Files to Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld dosyayı Claude'a ekle"
+          }
+        }
+      }
+    },
+    "Add @%@ to Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude'a ekle (@%@)"
+          }
+        }
+      }
+    },
+    "Add Project": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proje Ekle"
+          }
+        }
+      }
+    },
+    "Add Project (⌘O)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proje ekle (⌘O)"
+          }
+        }
+      }
+    },
+    "Add Project to This Group…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Gruba Proje Ekle…"
+          }
+        }
+      }
+    },
+    "Add Project…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proje Ekle…"
+          }
+        }
+      }
+    },
+    "Add a project to get started": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlamak için bir proje ekle"
+          }
+        }
+      }
+    },
+    "Add project / new group": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proje ekle / yeni grup"
+          }
+        }
+      }
+    },
+    "Add projects to the group": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gruba proje ekle"
+          }
+        }
+      }
+    },
+    "Alerts": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uyarılar"
+          }
+        }
+      }
+    },
+    "Allow": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzin Ver"
+          }
+        }
+      }
+    },
+    "Ask before quitting (⌘Q while terminals are open)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çıkarken sor (açık terminaller varken ⌘Q)"
+          }
+        }
+      }
+    },
+    "Asking a question": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Soru soruyor"
+          }
+        }
+      }
+    },
+    "Auto": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomatik"
+          }
+        }
+      }
+    },
+    "Blue": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mavi"
+          }
+        }
+      }
+    },
+    "Bounce the Dock icon": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dock simgesini zıplat"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vazgeç"
+          }
+        }
+      }
+    },
+    "Choose Projects…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projeleri Seç…"
+          }
+        }
+      }
+    },
+    "Choose the project folder to run Claude sessions in": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude oturumlarının çalışacağı proje klasörünü seç"
+          }
+        }
+      }
+    },
+    "Claude Code Hooks": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Code Hook'ları"
+          }
+        }
+      }
+    },
+    "Claude session ended": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude oturumu bitti"
+          }
+        }
+      }
+    },
+    "ClaudeDeck": {
+      "shouldTranslate": false
+    },
+    "ClaudeDeck adds only its own status hook to ~/.claude/settings.json; it leaves other hooks alone and makes a backup before every change. The hook only runs in ClaudeDeck terminals.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClaudeDeck, ~/.claude/settings.json dosyasına yalnızca kendi durum hook'unu ekler; diğer hook'lara dokunmaz ve her değişiklikten önce yedek alır. Hook yalnızca ClaudeDeck terminallerinde çalışır."
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapat"
+          }
+        }
+      }
+    },
+    "Close Pane": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bölmeyi Kapat"
+          }
+        }
+      }
+    },
+    "Close Pane (the session keeps running)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bölmeyi kapat (oturum çalışmaya devam eder)"
+          }
+        }
+      }
+    },
+    "Close Terminal": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminali Kapat"
+          }
+        }
+      }
+    },
+    "Closing the window (X) doesn't stop any session; the app keeps running in the menu bar.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pencereyi kapatmak (X) hiçbir oturumu durdurmaz; uygulama menü çubuğunda çalışmaya devam eder."
+          }
+        }
+      }
+    },
+    "Color": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renk"
+          }
+        }
+      }
+    },
+    "Command": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Komutlu"
+          }
+        }
+      }
+    },
+    "Command to run on open": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açılışta çalışacak komut"
+          }
+        }
+      }
+    },
+    "Command to run when the terminal opens": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminal açılınca çalışacak komut"
+          }
+        }
+      }
+    },
+    "Compact threshold: context above %lldK tokens": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compact eşiği: context %lld bin token üstü"
+          }
+        }
+      }
+    },
+    "Copy Path": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yolu Kopyala"
+          }
+        }
+      }
+    },
+    "Copy Relative Path": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Göreli Yolu Kopyala"
+          }
+        }
+      }
+    },
+    "Couldn't read %@ in iCloud; it was not overwritten.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud'daki %@ okunamadı; üzerine yazılmadı."
+          }
+        }
+      }
+    },
+    "Couldn’t Install the Hook": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hook Kurulamadı"
+          }
+        }
+      }
+    },
+    "Couldn’t read ~/.claude/settings.json: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "~/.claude/settings.json okunamadı: %@"
+          }
+        }
+      }
+    },
+    "Dark": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koyu"
+          }
+        }
+      }
+    },
+    "Delete Group": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grubu Sil"
+          }
+        }
+      }
+    },
+    "Delete Group…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grubu Sil…"
+          }
+        }
+      }
+    },
+    "Delete the group \"%@\"?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" grubu silinsin mi?"
+          }
+        }
+      }
+    },
+    "Deny": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reddet"
+          }
+        }
+      }
+    },
+    "Done — %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitti — %@"
+          }
+        }
+      }
+    },
+    "Done — your turn": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitti — sıra sende"
+          }
+        }
+      }
+    },
+    "End \"%@\" and remove it from the list?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" bitirilip listeden kaldırılsın mı?"
+          }
+        }
+      }
+    },
+    "End All Sessions (%lld)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm Oturumları Bitir (%lld)"
+          }
+        }
+      }
+    },
+    "End Session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturumu Bitir"
+          }
+        }
+      }
+    },
+    "End and Remove": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitir ve Kaldır"
+          }
+        }
+      }
+    },
+    "End and Remove…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitir ve Listeden Kaldır…"
+          }
+        }
+      }
+    },
+    "Files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalar"
+          }
+        }
+      }
+    },
+    "General": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Genel"
+          }
+        }
+      }
+    },
+    "Green": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeşil"
+          }
+        }
+      }
+    },
+    "Group name": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grup adı"
+          }
+        }
+      }
+    },
+    "Hide from the Dock when the window is closed (menu bar only)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pencere kapanınca Dock'tan gizle (yalnızca menü çubuğunda çalışsın)"
+          }
+        }
+      }
+    },
+    "History": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmiş"
+          }
+        }
+      }
+    },
+    "Installed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kurulu"
+          }
+        }
+      }
+    },
+    "Interrupted — your turn": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kesildi — sıra sende"
+          }
+        }
+      }
+    },
+    "Its %lld sessions are ended and removed. ": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld oturumu bitirilip kaldırılır. "
+          }
+        }
+      }
+    },
+    "Its projects are not deleted; they just leave the group.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projeleri silinmez, yalnızca gruptan çıkar."
+          }
+        }
+      }
+    },
+    "Keep Running in Background": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arka Planda Çalışmaya Devam Et"
+          }
+        }
+      }
+    },
+    "Last sync: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son eşitleme: %@"
+          }
+        }
+      }
+    },
+    "Launch ClaudeDeck at login": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilgisayar açılınca ClaudeDeck'i başlat"
+          }
+        }
+      }
+    },
+    "Light": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık"
+          }
+        }
+      }
+    },
+    "Move %lld items to the Trash?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld öğe çöpe taşınsın mı?"
+          }
+        }
+      }
+    },
+    "Move to Group": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gruba Taşı"
+          }
+        }
+      }
+    },
+    "Move to Trash": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çöpe Taşı"
+          }
+        }
+      }
+    },
+    "Move “%@” to the Trash?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” çöpe taşınsın mı?"
+          }
+        }
+      }
+    },
+    "Name": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ad"
+          }
+        }
+      }
+    },
+    "Needs Attention": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bekleyenler"
+          }
+        }
+      }
+    },
+    "Needs permission": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzin bekliyor"
+          }
+        }
+      }
+    },
+    "New Claude Session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Claude Oturumu"
+          }
+        }
+      }
+    },
+    "New Claude Session (Separate Worktree)…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Claude Oturumu (Ayrı Worktree)…"
+          }
+        }
+      }
+    },
+    "New File": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Dosya"
+          }
+        }
+      }
+    },
+    "New File…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Dosya…"
+          }
+        }
+      }
+    },
+    "New Folder": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Klasör"
+          }
+        }
+      }
+    },
+    "New Folder…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Klasör…"
+          }
+        }
+      }
+    },
+    "New Group": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Grup"
+          }
+        }
+      }
+    },
+    "New Group…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Grup…"
+          }
+        }
+      }
+    },
+    "New Terminal": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Terminal"
+          }
+        }
+      }
+    },
+    "New Terminal with Command…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Terminal (Komutla)…"
+          }
+        }
+      }
+    },
+    "New Worktree Session — Worktree Name": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni worktree oturumu — worktree adı"
+          }
+        }
+      }
+    },
+    "New file, not yet added to Git": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni dosya, henüz Git'e eklenmedi"
+          }
+        }
+      }
+    },
+    "No Sessions": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum Yok"
+          }
+        }
+      }
+    },
+    "No commits for this file": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu dosya için commit yok"
+          }
+        }
+      }
+    },
+    "No saved Claude conversations for this project.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu proje için kayıtlı Claude konuşması yok."
+          }
+        }
+      }
+    },
+    "None": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hiçbiri"
+          }
+        }
+      }
+    },
+    "Not Installed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kurulu Değil"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamam"
+          }
+        }
+      }
+    },
+    "Open": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aç"
+          }
+        }
+      }
+    },
+    "Open Beside": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yanına Aç"
+          }
+        }
+      }
+    },
+    "Open Project in VS Code": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projeyi VS Code'da aç"
+          }
+        }
+      }
+    },
+    "Open Sessions Side by Side": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturumlarını Yan Yana Aç"
+          }
+        }
+      }
+    },
+    "Open Window": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pencereyi Aç"
+          }
+        }
+      }
+    },
+    "Open a plain terminal in the project folder": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proje klasöründe düz terminal aç"
+          }
+        }
+      }
+    },
+    "Open in VS Code": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "VS Code'da Aç"
+          }
+        }
+      }
+    },
+    "Open terminals: %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık terminal: %lld"
+          }
+        }
+      }
+    },
+    "Orange": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turuncu"
+          }
+        }
+      }
+    },
+    "Permission denied — your turn": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzin reddedildi — sıra sende"
+          }
+        }
+      }
+    },
+    "Pin": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitle"
+          }
+        }
+      }
+    },
+    "Pink": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pembe"
+          }
+        }
+      }
+    },
+    "Pinned": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlenenler"
+          }
+        }
+      }
+    },
+    "Presses 1 (Yes) in the terminal": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminalde 1'e (Evet) basar"
+          }
+        }
+      }
+    },
+    "Presses Esc in the terminal": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminalde Esc'ye basar"
+          }
+        }
+      }
+    },
+    "Project Files (⌘⇧E)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proje dosyaları (⌘⇧E)"
+          }
+        }
+      }
+    },
+    "Projects": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projeler"
+          }
+        }
+      }
+    },
+    "Purple": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mor"
+          }
+        }
+      }
+    },
+    "Quit": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çık"
+          }
+        }
+      }
+    },
+    "Quit ClaudeDeck?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClaudeDeck'ten çıkılsın mı?"
+          }
+        }
+      }
+    },
+    "Red": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kırmızı"
+          }
+        }
+      }
+    },
+    "Refresh": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yenile"
+          }
+        }
+      }
+    },
+    "Reinstall": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden Kur"
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaldır"
+          }
+        }
+      }
+    },
+    "Remove \"%@\" from the list?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" listeden kaldırılsın mı?"
+          }
+        }
+      }
+    },
+    "Remove Project…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projeyi Kaldır…"
+          }
+        }
+      }
+    },
+    "Remove from Group": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gruptan Çıkar"
+          }
+        }
+      }
+    },
+    "Rename": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden Adlandır"
+          }
+        }
+      }
+    },
+    "Rename Group": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grubu Yeniden Adlandır"
+          }
+        }
+      }
+    },
+    "Rename Project": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projeyi Yeniden Adlandır"
+          }
+        }
+      }
+    },
+    "Rename Session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturumu Yeniden Adlandır"
+          }
+        }
+      }
+    },
+    "Rename…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden Adlandır…"
+          }
+        }
+      }
+    },
+    "Reopen": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden Aç"
+          }
+        }
+      }
+    },
+    "Resume": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devam Et"
+          }
+        }
+      }
+    },
+    "Resume Previous Conversation…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eski Oturumu Devam Ettir…"
+          }
+        }
+      }
+    },
+    "Resume open sessions at launch": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açılışta açık oturumları otomatik devam ettir"
+          }
+        }
+      }
+    },
+    "Reveal in Finder": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finder'da Göster"
+          }
+        }
+      }
+    },
+    "Run /compact on large resumed sessions": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devam ettirilen büyük oturumlarda /compact çalıştır"
+          }
+        }
+      }
+    },
+    "Running": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalışıyor"
+          }
+        }
+      }
+    },
+    "Runs when opened: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açılınca çalışır: %@"
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydet"
+          }
+        }
+      }
+    },
+    "Search": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ara"
+          }
+        }
+      }
+    },
+    "Select All": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümünü Seç"
+          }
+        }
+      }
+    },
+    "Select a session or start a new one": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir oturum seç ya da yenisini başlat"
+          }
+        }
+      }
+    },
+    "Select a session to see its files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalarını görmek için bir oturum seç"
+          }
+        }
+      }
+    },
+    "Separate git worktree: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayrı git worktree: %@"
+          }
+        }
+      }
+    },
+    "Sessions": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturumlar"
+          }
+        }
+      }
+    },
+    "Settings — auto-resume, /compact, notifications (⌘,)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar — otomatik devam, /compact, bildirimler (⌘,)"
+          }
+        }
+      }
+    },
+    "Show Hidden Files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gizli Dosyaları Göster"
+          }
+        }
+      }
+    },
+    "Show notifications (permission / question / done)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirim göster (izin / soru / bitti)"
+          }
+        }
+      }
+    },
+    "Start Automatically When the App Opens": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama Açılınca Otomatik Başlat"
+          }
+        }
+      }
+    },
+    "Start Fresh": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Başlat"
+          }
+        }
+      }
+    },
+    "Starting": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlıyor"
+          }
+        }
+      }
+    },
+    "Starts automatically when the app launches: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama açılınca otomatik başlar: %@"
+          }
+        }
+      }
+    },
+    "Startup Command: %@…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlangıç Komutu: %@…"
+          }
+        }
+      }
+    },
+    "Startup Command…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlangıç Komutu…"
+          }
+        }
+      }
+    },
+    "Status": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durum"
+          }
+        }
+      }
+    },
+    "Stopped": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durdu"
+          }
+        }
+      }
+    },
+    "Sync projects and groups with iCloud Drive": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Projeleri ve grupları iCloud Drive ile eşitle"
+          }
+        }
+      }
+    },
+    "System": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistem"
+          }
+        }
+      }
+    },
+    "Teal": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Camgöbeği"
+          }
+        }
+      }
+    },
+    "Terminal": {
+      "shouldTranslate": false
+    },
+    "Terminal closed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminal kapandı"
+          }
+        }
+      }
+    },
+    "The app is running outside /Applications (%@). Move it to /Applications for a lasting login item.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uygulama /Applications dışında çalışıyor (%@). Kalıcı giriş öğesi için /Applications'a taşı."
+          }
+        }
+      }
+    },
+    "The folder and its files are not touched.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klasöre ve dosyalarına dokunulmaz."
+          }
+        }
+      }
+    },
+    "The operation couldn’t be completed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İşlem tamamlanamadı"
+          }
+        }
+      }
+    },
+    "The project list and groups (name, color, pinning, group membership) are merged with your other Macs through iCloud Drive › ClaudeDeck › projects.json. Sessions, panes, selection and settings are not synced. Deletions don't propagate to other Macs.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proje listesi ve gruplar (ad, renk, sabitleme, grup ataması) iCloud Drive › ClaudeDeck › projects.json üzerinden diğer Mac'lerinle birleştirilir. Oturumlar, bölmeler, seçim ve ayarlar eşitlenmez. Silme işlemleri diğer Mac'lere yansımaz."
+          }
+        }
+      }
+    },
+    "The running process is stopped. The Claude conversation history is kept and can be reopened from the project's \"Resume Previous Conversation…\" menu.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalışan süreç durdurulur. Claude konuşma geçmişi silinmez; projenin \"Eski Oturumu Devam Ettir…\" menüsünden yeniden açılabilir."
+          }
+        }
+      }
+    },
+    "Theme": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tema"
+          }
+        }
+      }
+    },
+    "Uncommitted Changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydedilmemiş Değişiklikler"
+          }
+        }
+      }
+    },
+    "Uninstall": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaldır"
+          }
+        }
+      }
+    },
+    "Unpin": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sabitlemeyi Kaldır"
+          }
+        }
+      }
+    },
+    "Untitled session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adsız oturum"
+          }
+        }
+      }
+    },
+    "Waiting for an answer": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cevap bekliyor"
+          }
+        }
+      }
+    },
+    "Waiting for approval in System Settings › General › Login Items.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistem Ayarları › Genel › Giriş Öğeleri'nden onay bekliyor."
+          }
+        }
+      }
+    },
+    "Yellow": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sarı"
+          }
+        }
+      }
+    },
+    "You can restore items from the Trash.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öğeleri çöpten geri alabilirsin."
+          }
+        }
+      }
+    },
+    "Your turn": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıra sende"
+          }
+        }
+      }
+    },
+    "Zoom In": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yakınlaştır"
+          }
+        }
+      }
+    },
+    "Zoom Out": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uzaklaştır"
+          }
+        }
+      }
+    },
+    "`claude` was not found in your login shell.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "`claude` login shell'de bulunamadı."
+          }
+        }
+      }
+    },
+    "`claude` wasn’t found in your login shell. Is Claude Code installed?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "`claude` login shell'de bulunamadı. Claude Code kurulu mu?"
+          }
+        }
+      }
+    },
+    "claude": {
+      "shouldTranslate": false
+    },
+    "file.txt": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "dosya.txt"
+          }
+        }
+      }
+    },
+    "folder": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "klasör"
+          }
+        }
+      }
+    },
+    "iCloud": {
+      "shouldTranslate": false
+    },
+    "iCloud Drive is off on this Mac (~/Library/Mobile Documents/com~apple~CloudDocs is missing). Turn it on in System Settings › Apple Account › iCloud › iCloud Drive.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive bu Mac'te açık değil (~/Library/Mobile Documents/com~apple~CloudDocs yok). Sistem Ayarları › Apple Hesabı › iCloud › iCloud Drive'ı aç."
+          }
+        }
+      }
+    },
+    "name (A-Z a-z 0-9 . _ -)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ad (A-Z a-z 0-9 . _ -)"
+          }
+        }
+      }
+    },
+    "now": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "şimdi"
+          }
+        }
+      }
+    },
+    "running": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "çalışıyor"
+          }
+        }
+      }
+    },
+    "the root value is not a JSON object": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kök değer bir JSON nesnesi değil"
+          }
+        }
+      }
+    },
+    "waiting": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "bekliyor"
+          }
+        }
+      }
+    },
+    "yarn start (leave empty for none)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yarn start (yoksa boş bırak)"
+          }
+        }
+      }
+    },
+    "your turn": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "sıra sende"
+          }
+        }
+      }
+    },
+    "▶%lld": {
+      "shouldTranslate": false
+    },
+    "●%lld": {
+      "shouldTranslate": false
+    }
+  },
+  "version": "1.0"
+}

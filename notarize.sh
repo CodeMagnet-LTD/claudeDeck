@@ -59,7 +59,8 @@ xcrun notarytool history --keychain-profile "$PROFILE" >/dev/null 2>&1 \
   || fail "notarytool profile \"$PROFILE\" is missing or invalid. Create it:
    xcrun notarytool store-credentials \"$PROFILE\" --apple-id \"<apple-id>\" --team-id \"$TEAM\" --password \"<app-specific-password>\""
 
-# 2. Build (release).
+# 2. Clean release build (incremental builds can embed a stale widget).
+rm -rf build/xcode/Build
 ./build.sh
 
 # 3. Re-sign inside-out with Developer ID, hardened runtime and a secure timestamp.

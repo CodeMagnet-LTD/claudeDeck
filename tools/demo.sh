@@ -2,6 +2,7 @@
 # Launches build/ClaudeDeck.app in demo mode with made-up projects and sessions, for screenshots.
 #
 #   ./build.sh && tools/demo.sh
+#   tools/demo.sh -AppleLanguages '(tr)'     # same, with the Turkish UI
 #
 # Everything lives in $CLAUDEDECK_DEMO_ROOT (default /tmp/ClaudeDeckDemo) and is recreated on every run.
 # Demo mode never touches ~/.claude/settings.json, your deck.json or iCloud: sessions run
@@ -156,17 +157,17 @@ scene $S1 'needsPermission|PermissionRequest|Bash|Bash: pnpm vitest run tests/ch
 
 [1m●[0m Now let me run the checkout tests.
 
-[33m╭──────────────────────────────────────────────────────────────────╮[0m
-[33m│[0m [1mBash command[0m                                                     [33m│[0m
-[33m│[0m                                                                  [33m│[0m
-[33m│[0m   pnpm vitest run tests/checkout.test.ts                         [33m│[0m
-[33m│[0m   [2mRun the checkout test suite[0m                                    [33m│[0m
-[33m│[0m                                                                  [33m│[0m
-[33m│[0m Do you want to proceed?                                          [33m│[0m
-[33m│[0m [36m❯ 1. Yes[0m                                                         [33m│[0m
-[33m│[0m   2. Yes, and don't ask again for [1mpnpm vitest[0m commands           [33m│[0m
-[33m│[0m   3. No, and tell Claude what to do differently ([1mesc[0m)            [33m│[0m
-[33m╰──────────────────────────────────────────────────────────────────╯[0m
+[33m╭──────────────────────────────────────────────────────────╮[0m
+[33m│[0m [1mBash command[0m                                             [33m│[0m
+[33m│[0m                                                          [33m│[0m
+[33m│[0m   pnpm vitest run tests/checkout.test.ts                 [33m│[0m
+[33m│[0m   [2mRun the checkout test suite[0m                            [33m│[0m
+[33m│[0m                                                          [33m│[0m
+[33m│[0m Do you want to proceed?                                  [33m│[0m
+[33m│[0m [36m❯ 1. Yes[0m                                                 [33m│[0m
+[33m│[0m   2. Yes, and don't ask again for [1mpnpm vitest[0m commands   [33m│[0m
+[33m│[0m   3. No, and tell Claude what to do differently ([1mesc[0m)    [33m│[0m
+[33m╰──────────────────────────────────────────────────────────╯[0m
 EOF
 
 scene $S2 'running|PostToolUse|Edit|Edit: src/checkout/Checkout.tsx' <<'EOF'
@@ -247,5 +248,5 @@ CLAUDEDECK_DEMO=1 \
 CLAUDEDECK_DATA_DIR="$ROOT/data" \
 CLAUDEDECK_STATE_DIR="$ROOT/sessions" \
 CLAUDEDECK_CLAUDE_PATH="$ROOT/bin/claude" \
-  "$APP/Contents/MacOS/ClaudeDeck" >/dev/null 2>&1 &
+  "$APP/Contents/MacOS/ClaudeDeck" "$@" >/dev/null 2>&1 &
 echo "ClaudeDeck demo started (pid $!). Quit it with ⌘Q; run this script again for a fresh copy."

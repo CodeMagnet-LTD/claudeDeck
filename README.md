@@ -47,6 +47,8 @@ Billing, usage limits and sign-in stay entirely with Claude Code. ClaudeDeck doe
   `yarn start` that runs when the app launches.
 - ☁️ **iCloud sync (optional):** your project list and groups stay in sync across your Macs.
 - 🎨 Light and dark themes, terminal zoom (⌘+ / ⌘- / ⌘0), and ⌘V to paste images into Claude.
+- 🌐 **English and Turkish.** The app follows your system language. To choose one just for ClaudeDeck,
+  go to System Settings › General › Language & Region › Applications.
 
 ## Install
 
@@ -246,6 +248,9 @@ xcodegen generate    # generate ClaudeDeck.xcodeproj from project.yml, then open
   - Change targets in `project.yml`.
   - Change the team, bundle id and version in `Config/Shared.xcconfig`.
   - On first open, Xcode asks you to "Trust & Enable" SwiftTerm's build plugin.
+- UI strings live in string catalogs: `Support/Localizable.xcstrings` for the app and
+  `Widget/Localizable.xcstrings` for the widget. Xcode adds new strings when you build in the IDE.
+  To add a language, add translations there.
 - The app icon is drawn in code: `swift tools/make-icon.swift Support` writes `Support/AppIcon.icns`
   and `Support/Assets.xcassets/AppIcon.appiconset`.
 
