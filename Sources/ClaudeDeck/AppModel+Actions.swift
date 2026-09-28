@@ -26,6 +26,22 @@ extension AppModel {
         terminals.fontSize = clamped
     }
 
+    /// The sidebar list selects on mouse-down; applying that immediately would swap the focused
+    /// pane before a drag even starts. So the selection is applied on mouse-up, and skipped if
+    /// the press turned into a drag of this session.
+    func selectFromSidebar(_ id: UUID) {
+        lastDraggedSessionID = nil
+        Task { @MainActor in
+            var waited = 0
+            while NSEvent.pressedMouseButtons & 1 != 0, waited < 200 {
+                try? await Task.sleep(for: .milliseconds(25))
+                waited += 1
+            }
+            if lastDraggedSessionID == id { return }
+            selectedSessionID = id
+        }
+    }
+
     /// Clicking a project: show its files; if it has a running session, show that session (most
     /// recently active); otherwise leave the terminal view alone, start nothing, just open/close it.
     func openProject(_ id: UUID) {

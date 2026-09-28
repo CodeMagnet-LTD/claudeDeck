@@ -16,7 +16,7 @@ struct SidebarView: View {
             get: { model.sidebarSelection },
             set: { id in
                 guard let id else { return }
-                if model.deck.project(id) != nil { model.openProject(id) } else { model.selectedSessionID = id }
+                if model.deck.project(id) != nil { model.openProject(id) } else { model.selectFromSidebar(id) }
             }
         )) {
             if !waiting.isEmpty {
@@ -223,6 +223,7 @@ struct AttentionRow: View {
         .contextMenu { SessionMenu(session: session) }
         .onDrag {
             model.draggedSessionID = session.id
+            model.lastDraggedSessionID = session.id
             return NSItemProvider(object: session.id.uuidString as NSString)
         }
         .listRowBackground(
@@ -287,6 +288,7 @@ struct SessionRow: View {
         .contextMenu { SessionMenu(session: session) }
         .onDrag {
             model.draggedSessionID = session.id
+            model.lastDraggedSessionID = session.id
             return NSItemProvider(object: session.id.uuidString as NSString)
         }
     }
