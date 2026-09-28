@@ -10,6 +10,7 @@ struct ClaudeDeckApp: App {
         Window("ClaudeDeck", id: "main") {
             ContentView()
                 .environment(delegate.model)
+                .preferredColorScheme(delegate.model.deck.settings.theme.colorScheme)
                 .frame(minWidth: 820, minHeight: 480)
         }
         .defaultSize(width: 1200, height: 760)
@@ -43,6 +44,7 @@ struct ClaudeDeckApp: App {
         MenuBarExtra {
             MenuBarContent()
                 .environment(delegate.model)
+                .preferredColorScheme(delegate.model.deck.settings.theme.colorScheme)
         } label: {
             MenuBarLabel()
                 .environment(delegate.model)
@@ -52,6 +54,7 @@ struct ClaudeDeckApp: App {
         Settings {
             SettingsView()
                 .environment(delegate.model)
+                .preferredColorScheme(delegate.model.deck.settings.theme.colorScheme)
         }
     }
 }

@@ -1,4 +1,5 @@
 import AppKit
+import SwiftUI
 import ClaudeDeckCore
 
 extension AppModel {
@@ -172,7 +173,7 @@ extension AppModel {
 extension NSAlert {
     /// Shows the alert as a sheet on the app's window (not a free-floating panel in the middle of
     /// the screen) while keeping the synchronous call style.
-    @MainActor
+    @MainActor @discardableResult
     func runAsSheet() -> NSApplication.ModalResponse {
         guard let window = NSApp.keyWindow ?? NSApp.mainWindow ?? NSApp.windows.first(where: { $0.isVisible && $0.canBecomeMain }) else {
             return runModal()
@@ -189,5 +190,17 @@ extension NSOpenPanel {
         guard let window = NSApp.keyWindow ?? NSApp.mainWindow else { return runModal() }
         beginSheetModal(for: window) { NSApp.stopModal(withCode: $0) }
         return NSApp.runModal(for: self)
+    }
+}
+
+extension AppTheme {
+    /// SwiftUI's own color scheme, set alongside NSApp.appearance so SwiftUI-drawn text
+    /// (e.g. the glass sidebar) always matches the chosen theme. nil = follow the system.
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
+        }
     }
 }
