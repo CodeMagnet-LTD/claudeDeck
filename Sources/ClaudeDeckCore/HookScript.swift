@@ -7,11 +7,11 @@ import Foundation
 /// and atomically writes `~/.claude/deck/sessions/<session_id>.json`.
 /// `$PPID` is the `claude` process itself (verified), so the app can check liveness.
 public enum HookScript {
-    public static let version = 2
+    public static let version = 3
 
     public static let source = #"""
 #!/bin/sh
-# ClaudeDeck status hook v2 — managed by ClaudeDeck.app, do not edit.
+# ClaudeDeck status hook v3 — managed by ClaudeDeck.app, do not edit.
 [ -n "$CLAUDEDECK_TERMINAL_ID" ] || { cat >/dev/null; exit 0; }
 JQ=/usr/bin/jq
 [ -x "$JQ" ] || JQ=$(command -v jq) || exit 0
@@ -24,7 +24,7 @@ F="$DIR/$SID.json"
 PREV=$("$JQ" -c . "$F" 2>/dev/null)
 [ -n "$PREV" ] || PREV=null
 OUT=$(printf '%s' "$IN" | "$JQ" -c --arg tid "$CLAUDEDECK_TERMINAL_ID" --argjson pid "${PPID:-0}" --argjson prev "$PREV" '
-def clip(n): if type == "string" then (if length > n then .[0:n] + "…" else . end) else null end;
+def clip(n): if type == "string" then (gsub("\\s+"; " ") | if length > n then .[0:n] + "…" else . end) else null end;
 def tooldetail: (.tool_input // {}) as $t
   | (.tool_name // "tool") + (
       if ($t | type) != "object" then ""
@@ -36,13 +36,20 @@ def tooldetail: (.tool_input // {}) as $t
       else "" end);
 def question: (.tool_input.questions[0].question // .tool_input.question // "Claude bir soru soruyor");
 def waiting: $prev != null and ($prev.state == "needsPermission" or $prev.state == "needsAnswer");
+def sig: ((.tool_name // "") + ":" + ((.tool_input // {}) | tojson)) | .[0:300];
+# While a prompt is open, tool events of *other* (parallel) tools must not hide it.
+def othertool: waiting and (
+  if $prev.tool_use_id != null and .tool_use_id != null then $prev.tool_use_id != .tool_use_id
+  else $prev.tool_sig != sig end);
 . as $in
 | .hook_event_name as $e
 | (if $e == "UserPromptSubmit" then {state: "running", detail: (.prompt | clip(200))}
    elif $e == "PreToolUse" then
      (if .tool_name == "AskUserQuestion" then {state: "needsAnswer", detail: (question | clip(200))}
+      elif othertool then null
       else {state: "running", detail: (tooldetail | clip(200))} end)
-   elif $e == "PostToolUse" or $e == "PostToolUseFailure" then {state: "running", detail: (tooldetail | clip(200))}
+   elif $e == "PostToolUse" or $e == "PostToolUseFailure" then
+     (if othertool then null else {state: "running", detail: (tooldetail | clip(200))} end)
    elif $e == "PermissionRequest" then
      (if .tool_name == "AskUserQuestion" then {state: "needsAnswer", detail: (question | clip(200))}
       else {state: "needsPermission", detail: (tooldetail | clip(200))} end)
@@ -64,10 +71,13 @@ def waiting: $prev != null and ($prev.state == "needsPermission" or $prev.state 
    else null end) as $s
 | if $s == null then empty else
   { session_id, terminal_id: $tid, pid: $pid, cwd, transcript_path,
-    state: $s.state, event: $e, detail: $s.detail,
+    state: $s.state, detail: $s.detail,
     tool_name: (.tool_name // null), notification_type: (.notification_type // null),
-    source: (.source // null),
-    updated_at: (if $e == "Notification" and $prev != null and $prev.state == $s.state then $prev.updated_at else now end) }
+    tool_use_id: (if $e == "Notification" then $prev.tool_use_id else .tool_use_id end),
+    tool_sig: (if $e == "Notification" then $prev.tool_sig elif .tool_name then sig else null end),
+  } + (if $e == "Notification" and $prev != null and $prev.state == $s.state
+        then {event: $prev.event, source: $prev.source, updated_at: $prev.updated_at}
+        else {event: $e, source: (.source // null), updated_at: now} end)
   end' 2>/dev/null) || exit 0
 [ -n "$OUT" ] || exit 0
 TMP="$DIR/.$SID.$$.tmp"

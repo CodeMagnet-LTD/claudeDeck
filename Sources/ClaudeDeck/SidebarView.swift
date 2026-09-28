@@ -46,13 +46,20 @@ struct SidebarView: View {
         }
         .listStyle(.sidebar)
         .safeAreaInset(edge: .bottom) {
-            Button {
-                model.presentAddProject()
-            } label: {
-                Label("Proje ekle", systemImage: "folder.badge.plus")
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            HStack {
+                Button {
+                    model.presentAddProject()
+                } label: {
+                    Label("Proje ekle", systemImage: "folder.badge.plus")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(.borderless)
+                SettingsLink {
+                    Image(systemName: "gearshape")
+                }
+                .buttonStyle(.borderless)
+                .help("Ayarlar — otomatik devam, /compact, bildirimler (⌘,)")
             }
-            .buttonStyle(.borderless)
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
             .background(.bar)

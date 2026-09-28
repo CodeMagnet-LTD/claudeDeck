@@ -54,6 +54,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
 
+    /// Dock icon click with the main window closed: bring it back.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag { model.openMainWindow?() }
+        return true
+    }
+
     func applicationDidBecomeActive(_ notification: Notification) {
         if let id = model.selectedSessionID { model.markSeen(id) }
     }

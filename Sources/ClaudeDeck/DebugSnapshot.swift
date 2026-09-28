@@ -14,9 +14,15 @@ enum DebugSnapshot {
         }
     }
 
-    /// `<dir>/<session-uuid>.in` files are typed into that session's terminal, then deleted.
+    /// `<dir>/<session-uuid>.in` files are typed into that session's terminal, then deleted;
+    /// an empty `<dir>/<session-uuid>.select` selects that session.
     private static func typePendingInput(from dir: String, model: AppModel) {
         let files = (try? FileManager.default.contentsOfDirectory(atPath: dir)) ?? []
+        for file in files where file.hasSuffix(".select") {
+            let path = (dir as NSString).appendingPathComponent(file)
+            try? FileManager.default.removeItem(atPath: path)
+            if let id = UUID(uuidString: String(file.dropLast(7))) { model.selectedSessionID = id }
+        }
         for file in files where file.hasSuffix(".in") {
             let path = (dir as NSString).appendingPathComponent(file)
             defer { try? FileManager.default.removeItem(atPath: path) }

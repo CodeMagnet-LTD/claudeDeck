@@ -27,6 +27,7 @@ public struct HookStatus: Codable, Sendable, Equatable {
     public var toolName: String?
     public var notificationType: String?
     public var source: String?
+    public var toolUseID: String?
     public var updatedAt: Date
 
     enum CodingKeys: String, CodingKey {
@@ -38,6 +39,7 @@ public struct HookStatus: Codable, Sendable, Equatable {
         case toolName = "tool_name"
         case notificationType = "notification_type"
         case source
+        case toolUseID = "tool_use_id"
         case updatedAt = "updated_at"
     }
 

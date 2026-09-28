@@ -236,6 +236,12 @@ final class AppModel {
         return activity.rawValue
     }
 
+    /// Idle because of an interrupt or denial recorded in the transcript (not a Stop hook).
+    private func endedByUser(_ id: UUID) -> Bool {
+        guard let signal = transcriptSignals[id], let hook = hookStatuses[id] else { return false }
+        return signal.at > hook.updatedAt && hook.state != .idle
+    }
+
     /// Enter or a numbered choice while blocked = the user answered the prompt.
     private func userTyped(_ id: UUID, _ data: ArraySlice<UInt8>) {
         guard status(of: id).display.isBlocked else { return }
@@ -254,6 +260,11 @@ final class AppModel {
             guard let activity = status.display.activityValue, key != lastNotified[session.id], activity.isAttention else { continue }
             // Finished while the user is looking at it: already seen.
             if activity == .idle, focusedSessionID == session.id { seenAt[session.id] = Date() }
+            // Esc / denied permission: the user did it themselves — no notification, not "unseen".
+            if activity == .idle, endedByUser(session.id) {
+                seenAt[session.id] = Date()
+                continue
+            }
             // Startup / resume sessions land in idle — that's not news.
             if activity == .idle, hookStatuses[session.id]?.event == "SessionStart" { continue }
             let project = deck.project(session.projectID)?.name ?? ""

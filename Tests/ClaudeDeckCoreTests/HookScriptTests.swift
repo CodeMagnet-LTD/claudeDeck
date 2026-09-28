@@ -90,6 +90,27 @@ import Testing
         #expect(idle.updatedAt == stop.updatedAt)
     }
 
+    @Test func parallelToolDoesNotHidePermissionPrompt() throws {
+        try run(#"{"session_id":"s1","hook_event_name":"PreToolUse","tool_name":"Read","tool_use_id":"A","tool_input":{"file_path":"/r"}}"#)
+        try run(#"{"session_id":"s1","hook_event_name":"PreToolUse","tool_name":"Bash","tool_use_id":"B","tool_input":{"command":"ls"}}"#)
+        var s = try #require(try run(#"{"session_id":"s1","hook_event_name":"PermissionRequest","tool_name":"Bash","tool_input":{"command":"ls"}}"#))
+        #expect(s.state == .needsPermission)
+        // Read finishes while the Bash prompt is still open.
+        s = try #require(try run(#"{"session_id":"s1","hook_event_name":"PostToolUse","tool_name":"Read","tool_use_id":"A","tool_input":{"file_path":"/r"}}"#))
+        #expect(s.state == .needsPermission)
+        #expect(s.detail == "Bash: ls")
+        // The approved Bash finishing clears it.
+        s = try #require(try run(#"{"session_id":"s1","hook_event_name":"PostToolUse","tool_name":"Bash","tool_use_id":"B","tool_input":{"command":"ls"}}"#))
+        #expect(s.state == .running)
+    }
+
+    @Test func idlePromptKeepsTheRealEvent() throws {
+        try run(#"{"session_id":"s1","hook_event_name":"SessionStart","source":"resume"}"#)
+        let s = try #require(try run(#"{"session_id":"s1","hook_event_name":"Notification","notification_type":"idle_prompt","message":"waiting"}"#))
+        #expect(s.event == "SessionStart")
+        #expect(s.source == "resume")
+    }
+
     @Test func manualCompactEndsIdle() throws {
         try run(#"{"session_id":"s1","hook_event_name":"UserPromptSubmit","prompt":"/compact"}"#)
         let s = try #require(try run(#"{"session_id":"s1","hook_event_name":"SessionStart","source":"compact"}"#))
