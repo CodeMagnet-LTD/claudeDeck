@@ -35,13 +35,20 @@ struct SidebarView: View {
                 HStack {
                     Text("Projeler")
                     Spacer()
-                    Button {
-                        model.presentAddProject()
+                    Menu {
+                        Button("Proje ekle…") { model.presentAddProject() }
+                        Button("Yeni grup…") {
+                            if let name = TextPrompt.ask(title: "Yeni grup", placeholder: "Grup adı") {
+                                model.mutate { $0.addGroup(name: name) }
+                            }
+                        }
                     } label: {
                         Image(systemName: "plus")
                     }
-                    .buttonStyle(.borderless)
-                    .help("Proje ekle (⌘O)")
+                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .fixedSize()
+                    .help("Proje ekle / yeni grup")
                 }
             }
         }
@@ -72,10 +79,13 @@ struct GroupRow: View {
     @Environment(AppModel.self) private var model
     let group: ProjectGroup
     let projects: [Project]
+    @State private var pickingProjects = false
 
     var body: some View {
+        // A session waiting for the user forces its group open.
+        let attention = projects.contains { p in model.deck.sessions(in: p.id).contains { model.needsAttention($0.id) } }
         DisclosureGroup(isExpanded: Binding(
-            get: { !group.collapsed },
+            get: { !group.collapsed || attention },
             set: { expanded in model.mutate { $0.updateGroup(group.id) { $0.collapsed = !expanded } } }
         )) {
             ForEach(projects) { ProjectRow(project: $0) }
@@ -87,7 +97,8 @@ struct GroupRow: View {
                 AggregateBadge(sessionIDs: projects.flatMap { model.deck.sessions(in: $0.id).map(\.id) })
                 Text("\(projects.count)").font(.caption).foregroundStyle(.tertiary)
             }
-            .contextMenu { GroupMenu(group: group) }
+            .contextMenu { GroupMenu(group: group, pickingProjects: $pickingProjects) }
+            .sheet(isPresented: $pickingProjects) { GroupProjectsSheet(group: group) }
         }
     }
 }
@@ -113,9 +124,11 @@ struct ProjectRow: View {
     var body: some View {
         let sessions = model.deck.sessions(in: project.id)
         let active = sessions.contains { model.terminals.isRunning($0.id) }
+        let attention = sessions.contains { model.needsAttention($0.id) }
         // Projects without a running session start collapsed; with one, the saved state applies.
+        // A session waiting for the user (permission, question, unseen finish) forces it open.
         DisclosureGroup(isExpanded: Binding(
-            get: { active ? !project.collapsed : openedWhileIdle },
+            get: { attention || (active ? !project.collapsed : openedWhileIdle) },
             set: { expanded in
                 if active {
                     model.mutate { $0.updateProject(project.id) { $0.collapsed = !expanded } }
@@ -373,8 +386,11 @@ struct ProjectMenu: View {
 struct GroupMenu: View {
     @Environment(AppModel.self) private var model
     let group: ProjectGroup
+    @Binding var pickingProjects: Bool
 
     var body: some View {
+        Button("Projeleri seç…") { pickingProjects = true }
+        Divider()
         Button("Yeniden adlandır…") {
             if let name = TextPrompt.ask(title: "Grubu yeniden adlandır", placeholder: "Ad", initial: group.name) {
                 model.mutate { $0.updateGroup(group.id) { $0.name = name } }
@@ -407,5 +423,68 @@ enum TextPrompt {
         guard alert.runModal() == .alertFirstButtonReturn else { return nil }
         let value = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         return value.isEmpty && !allowEmpty ? nil : value
+    }
+}
+
+/// Checklist to assign many projects to a group at once.
+struct GroupProjectsSheet: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
+    let group: ProjectGroup
+    @State private var chosen: Set<UUID> = []
+    @State private var filter = ""
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("\(group.name) — projeler").font(.headline)
+            TextField("Ara", text: $filter).textFieldStyle(.roundedBorder)
+            List {
+                ForEach(visibleProjects) { project in
+                    Toggle(isOn: Binding(
+                        get: { chosen.contains(project.id) },
+                        set: { on in if on { chosen.insert(project.id) } else { chosen.remove(project.id) } }
+                    )) {
+                        HStack {
+                            Text(project.name)
+                            if let other = project.groupID, other != group.id, let name = model.deck.groups.first(where: { $0.id == other })?.name {
+                                Text(name).font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            Text(project.path).font(.caption2).foregroundStyle(.tertiary).lineLimit(1).truncationMode(.head)
+                        }
+                    }
+                }
+            }
+            .frame(minHeight: 280)
+            HStack {
+                Button("Tümünü seç") { chosen.formUnion(visibleProjects.map(\.id)) }
+                Button("Hiçbiri") { chosen.subtract(visibleProjects.map(\.id)) }
+                Spacer()
+                Button("Vazgeç") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Kaydet") { save() }.keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(16)
+        .frame(width: 520, height: 460)
+        .onAppear { chosen = Set(model.deck.projects.filter { $0.groupID == group.id }.map(\.id)) }
+    }
+
+    private var visibleProjects: [Project] {
+        let all = model.deck.projects.sorted { $0.name.localizedStandardCompare($1.name) == .orderedAscending }
+        guard !filter.isEmpty else { return all }
+        return all.filter { $0.name.localizedCaseInsensitiveContains(filter) || $0.path.localizedCaseInsensitiveContains(filter) }
+    }
+
+    private func save() {
+        model.mutate { deck in
+            for project in deck.projects {
+                if chosen.contains(project.id) {
+                    deck.updateProject(project.id) { $0.groupID = group.id }
+                } else if project.groupID == group.id {
+                    deck.updateProject(project.id) { $0.groupID = nil }
+                }
+            }
+        }
+        dismiss()
     }
 }
