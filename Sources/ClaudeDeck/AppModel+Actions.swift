@@ -2,15 +2,48 @@ import AppKit
 import ClaudeDeckCore
 
 extension AppModel {
-    func presentAddProject() {
+    /// Projects waiting for the user first, then ones with a running session; otherwise saved order.
+    func activeFirst(_ projects: [Project]) -> [Project] {
+        func rank(_ p: Project) -> Int {
+            let sessions = deck.sessions(in: p.id)
+            if sessions.contains(where: { needsAttention($0.id) }) { return 0 }
+            if sessions.contains(where: { terminals.isRunning($0.id) }) { return 1 }
+            return 2
+        }
+        return projects.enumerated()
+            .sorted { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }
+            .map(\.element)
+    }
+
+    func activeFirst(_ groups: [(group: ProjectGroup, projects: [Project])]) -> [(group: ProjectGroup, projects: [Project])] {
+        func rank(_ projects: [Project]) -> Int {
+            activeFirst(projects).first.map { p in
+                let sessions = deck.sessions(in: p.id)
+                if sessions.contains(where: { needsAttention($0.id) }) { return 0 }
+                return sessions.contains(where: { terminals.isRunning($0.id) }) ? 1 : 2
+            } ?? 2
+        }
+        return groups.enumerated()
+            .sorted { (rank($0.element.projects), $0.offset) < (rank($1.element.projects), $1.offset) }
+            .map(\.element)
+    }
+
+    /// Adds (or picks existing) folders and puts them in the group.
+    func presentAddProject(toGroup groupID: UUID) {
+        let chosen = presentAddProject()
+        mutate { deck in for p in chosen { deck.updateProject(p.id) { $0.groupID = groupID } } }
+    }
+
+    @discardableResult
+    func presentAddProject() -> [Project] {
         let panel = NSOpenPanel()
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = true
         panel.prompt = "Ekle"
         panel.message = "Claude oturumu açılacak proje klasörünü seç"
-        guard panel.runModal() == .OK else { return }
-        for url in panel.urls { addProject(path: url.path) }
+        guard panel.runModal() == .OK else { return [] }
+        return panel.urls.map { addProject(path: $0.path) }
     }
 
     var selectedProjectID: UUID? {

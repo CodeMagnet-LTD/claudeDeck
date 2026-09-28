@@ -19,18 +19,15 @@ struct SidebarView: View {
             }
             if !sections.pinned.isEmpty {
                 Section("Sabitlenenler") {
-                    ForEach(sections.pinned) { ProjectRow(project: $0) }
+                    ForEach(model.activeFirst(sections.pinned)) { ProjectRow(project: $0) }
                 }
             }
-            if !sections.groups.isEmpty {
-                Section("Gruplar") {
-                    ForEach(sections.groups, id: \.group.id) { entry in
-                        GroupRow(group: entry.group, projects: entry.projects)
-                    }
-                }
-            }
+            // Groups live inside "Projeler" like folders; busy groups and projects float to the top.
             Section {
-                ForEach(sections.ungrouped) { ProjectRow(project: $0) }
+                ForEach(model.activeFirst(sections.groups), id: \.group.id) { entry in
+                    GroupRow(group: entry.group, projects: model.activeFirst(entry.projects))
+                }
+                ForEach(model.activeFirst(sections.ungrouped)) { ProjectRow(project: $0) }
             } header: {
                 HStack {
                     Text("Projeler")
@@ -96,6 +93,16 @@ struct GroupRow: View {
                 Spacer()
                 AggregateBadge(sessionIDs: projects.flatMap { model.deck.sessions(in: $0.id).map(\.id) })
                 Text("\(projects.count)").font(.caption).foregroundStyle(.tertiary)
+                Menu {
+                    Button("Bu gruba proje ekle…") { model.presentAddProject(toGroup: group.id) }
+                    Button("Projeleri seç…") { pickingProjects = true }
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .help("Gruba proje ekle")
             }
             .contextMenu { GroupMenu(group: group, pickingProjects: $pickingProjects) }
             .sheet(isPresented: $pickingProjects) { GroupProjectsSheet(group: group) }
@@ -332,7 +339,13 @@ struct SessionMenu: View {
             }
         }
         Divider()
-        Button("Bitir ve listeden kaldır", role: .destructive) { model.removeSession(session.id) }
+        Button("Bitir ve listeden kaldır…", role: .destructive) {
+            if Confirm.ask("\"\(session.name)\" bitirilip listeden kaldırılsın mı?",
+                           detail: "Çalışan süreç kapatılır. Claude konuşma geçmişi silinmez; projenin \"Eski oturumu devam ettir…\" menüsünden geri açılabilir.",
+                           action: "Bitir ve kaldır") {
+                model.removeSession(session.id)
+            }
+        }
     }
 }
 
@@ -395,7 +408,14 @@ struct ProjectMenu: View {
             Button("VS Code'da aç") { VSCode.open(URL(fileURLWithPath: project.path)) }
         }
         Divider()
-        Button("Projeyi kaldır", role: .destructive) { model.removeProject(project.id) }
+        Button("Projeyi kaldır…", role: .destructive) {
+            let count = model.deck.sessions(in: project.id).count
+            if Confirm.ask("\"\(project.name)\" listeden kaldırılsın mı?",
+                           detail: (count > 0 ? "\(count) oturumu bitirilip kaldırılır. " : "") + "Klasöre ve dosyalara dokunulmaz.",
+                           action: "Kaldır") {
+                model.removeProject(project.id)
+            }
+        }
     }
 }
 
@@ -418,7 +438,11 @@ struct GroupMenu: View {
             }
         }
         Divider()
-        Button("Grubu sil", role: .destructive) { model.mutate { $0.removeGroup(group.id) } }
+        Button("Grubu sil…", role: .destructive) {
+            if Confirm.ask("\"\(group.name)\" grubu silinsin mi?", detail: "İçindeki projeler silinmez, gruptan çıkar.", action: "Grubu sil") {
+                model.mutate { $0.removeGroup(group.id) }
+            }
+        }
     }
 }
 
@@ -502,5 +526,20 @@ struct GroupProjectsSheet: View {
             }
         }
         dismiss()
+    }
+}
+
+/// "Emin misin?" confirmation for destructive actions.
+enum Confirm {
+    @MainActor
+    static func ask(_ title: String, detail: String, action: String) -> Bool {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = title
+        alert.informativeText = detail
+        alert.addButton(withTitle: action)
+        alert.addButton(withTitle: "Vazgeç")
+        alert.buttons.first?.hasDestructiveAction = true
+        return alert.runModal() == .alertFirstButtonReturn
     }
 }
