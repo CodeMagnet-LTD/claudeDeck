@@ -1,5 +1,6 @@
 #!/bin/sh
-# Builds build/ClaudeDeck.app from the Swift package.
+# Builds build/ClaudeDeck.app (with the desktop widget extension) via XcodeGen + xcodebuild.
+# Without xcodegen it falls back to packaging the Swift package binary (no widget).
 #   ./build.sh            release build
 #   ./build.sh debug      debug build
 #   ./build.sh run        release build, then (re)launch the app
@@ -8,11 +9,24 @@ set -eu
 cd "$(dirname "$0")"
 CONFIG=release
 [ "${1:-}" = "debug" ] && CONFIG=debug
+APP=build/ClaudeDeck.app
 
+if command -v xcodegen >/dev/null 2>&1; then
+  # SwiftPM can't build app extensions: the Xcode project (generated from project.yml) builds the
+  # app + widget and signs both automatically with the team in project.yml.
+  XCONFIG=Release
+  [ "$CONFIG" = "debug" ] && XCONFIG=Debug
+  xcodegen generate --quiet
+  xcodebuild -project ClaudeDeck.xcodeproj -scheme ClaudeDeck -configuration "$XCONFIG" \
+    -destination "generic/platform=macOS" -derivedDataPath build/xcode -skipPackagePluginValidation -quiet build
+  rm -rf "$APP"
+  ditto "build/xcode/Build/Products/$XCONFIG/ClaudeDeck.app" "$APP"
+  echo "Signed by xcodebuild: $(codesign -dvv "$APP" 2>&1 | sed -n 's/^Authority=//p' | head -1)"
+else
+echo "xcodegen not found — SwiftPM build without the widget (brew install xcodegen)"
 swift build -c "$CONFIG" --product ClaudeDeck
 BIN="$(swift build -c "$CONFIG" --show-bin-path)"
 
-APP=build/ClaudeDeck.app
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN/ClaudeDeck" "$APP/Contents/MacOS/ClaudeDeck"
@@ -42,6 +56,7 @@ if [ -n "$IDENTITY" ]; then
 else
   codesign --force --deep --sign - "$APP" >/dev/null
   echo "Signed ad-hoc (no Apple Development certificate for team ${TEAM:-?})"
+fi
 fi
 echo "Built $APP"
 

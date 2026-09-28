@@ -43,15 +43,23 @@ struct ClaudeDeckApp: App {
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let model = AppModel()
     private var attention: AttentionCenter?
+    private lazy var widget = WidgetBridge(model: model)
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         attention = AttentionCenter(model: model)
+        widget.attach()
         model.start()
         DebugSnapshot.startIfRequested(model: model)
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         model.prepareForQuit()
+        widget.publishQuit()
+    }
+
+    /// `claudedeck://session/<uuid>` from the desktop widget.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls { WidgetBridge.handle(url, model: model) }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
