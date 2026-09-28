@@ -12,7 +12,8 @@ struct SidebarView: View {
             if !waiting.isEmpty {
                 Section("Bekleyenler") {
                     ForEach(waiting) { session in
-                        AttentionRow(session: session).tag(session.id)
+                        // No selection tag: the same session is also listed under its project.
+                        AttentionRow(session: session)
                     }
                 }
             }
@@ -96,6 +97,17 @@ struct ProjectRow: View {
     let project: Project
     @State private var showResume = false
 
+    /// Clicking a project opens its most recently active session, or toggles it when empty.
+    private func openProject(_ sessions: [DeckSession]) {
+        let recent = sessions.max { ($0.lastActivityAt ?? $0.createdAt) < ($1.lastActivityAt ?? $1.createdAt) }
+        if let recent {
+            if project.collapsed { model.mutate { $0.updateProject(project.id) { $0.collapsed = false } } }
+            model.selectedSessionID = recent.id
+        } else {
+            model.mutate { $0.updateProject(project.id) { $0.collapsed.toggle() } }
+        }
+    }
+
     var body: some View {
         let sessions = model.deck.sessions(in: project.id)
         DisclosureGroup(isExpanded: Binding(
@@ -130,6 +142,8 @@ struct ProjectRow: View {
                 .help("Yeni Claude oturumu")
             }
             .help(project.path)
+            .contentShape(Rectangle())
+            .onTapGesture { openProject(sessions) }
             .contextMenu { ProjectMenu(project: project, showResume: $showResume) }
         }
         .sheet(isPresented: $showResume) { ResumeSheet(project: project) }
@@ -171,6 +185,8 @@ struct AttentionRow: View {
         }
         .padding(.vertical, 3)
         .flashOnStateChange(status.display)
+        .contentShape(Rectangle())
+        .onTapGesture { model.selectedSessionID = session.id }
         .contextMenu { SessionMenu(session: session) }
         .onDrag { NSItemProvider(object: session.id.uuidString as NSString) }
         .listRowBackground(
@@ -219,6 +235,8 @@ struct SessionRow: View {
         }
         .padding(.vertical, 3)
         .flashOnStateChange(status.display)
+        .contentShape(Rectangle())
+        .onTapGesture { model.selectedSessionID = session.id }
         .contextMenu { SessionMenu(session: session) }
         .onDrag { NSItemProvider(object: session.id.uuidString as NSString) }
     }
@@ -300,6 +318,9 @@ struct ProjectMenu: View {
             }
         }
         Button("Finder'da göster") { NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: project.path) }
+        if VSCode.isInstalled {
+            Button("VS Code'da aç") { VSCode.open(URL(fileURLWithPath: project.path)) }
+        }
         Divider()
         Button("Projeyi kaldır", role: .destructive) { model.removeProject(project.id) }
     }

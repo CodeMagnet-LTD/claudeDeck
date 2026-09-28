@@ -3,6 +3,7 @@ import SwiftUI
 
 struct ContentView: View {
     @Environment(AppModel.self) private var model
+    @AppStorage("showFiles") private var showFiles = false
 
     var body: some View {
         NavigationSplitView {
@@ -10,8 +11,29 @@ struct ContentView: View {
                 .navigationSplitViewColumnWidth(min: 240, ideal: 290, max: 420)
         } detail: {
             DetailView()
+                .inspector(isPresented: $showFiles) {
+                    FileBrowserPanel()
+                        .inspectorColumnWidth(min: 220, ideal: 290, max: 520)
+                }
         }
         .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                if VSCode.isInstalled, let path = focusedProjectPath {
+                    Button {
+                        VSCode.open(URL(fileURLWithPath: path))
+                    } label: {
+                        Label("VS Code'da aç", systemImage: "chevron.left.forwardslash.chevron.right")
+                    }
+                    .help("Projeyi VS Code'da aç")
+                }
+                Button {
+                    showFiles.toggle()
+                } label: {
+                    Label("Dosyalar", systemImage: "sidebar.right")
+                }
+                .help("Proje dosyaları (⌘⇧E)")
+                .keyboardShortcut("e", modifiers: [.command, .shift])
+            }
             ToolbarItem(placement: .navigation) {
                 Button {
                     model.presentAddProject()
@@ -26,6 +48,12 @@ struct ContentView: View {
         } message: {
             Text(model.hookError ?? "")
         }
+    }
+}
+
+extension ContentView {
+    var focusedProjectPath: String? {
+        model.selectedSessionID.flatMap { model.deck.session($0) }.flatMap { model.deck.project($0.projectID)?.path }
     }
 }
 
