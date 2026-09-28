@@ -97,6 +97,8 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     public var compactThresholdKB = 800
     public var notifications = true
     public var bounceDock = true
+    /// Sync projects and groups through iCloud Drive (see DeckSync).
+    public var iCloudSync = false
 
     public init() {}
 
@@ -108,6 +110,7 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         compactThresholdKB = try c.decodeIfPresent(Int.self, forKey: .compactThresholdKB) ?? d.compactThresholdKB
         notifications = try c.decodeIfPresent(Bool.self, forKey: .notifications) ?? d.notifications
         bounceDock = try c.decodeIfPresent(Bool.self, forKey: .bounceDock) ?? d.bounceDock
+        iCloudSync = try c.decodeIfPresent(Bool.self, forKey: .iCloudSync) ?? d.iCloudSync
     }
 }
 
@@ -121,6 +124,8 @@ public struct DeckData: Codable, Sendable, Equatable {
     public var selectedSessionID: UUID?
     /// Sessions shown side by side in the detail area, left to right.
     public var panes: [UUID] = []
+    /// iCloud sync bookkeeping (per-item stamps, local tombstones). See DeckSync.
+    public var syncState = DeckSyncState()
 
     public static let maxPanes = 4
 
@@ -135,6 +140,7 @@ public struct DeckData: Codable, Sendable, Equatable {
         settings = try c.decodeIfPresent(DeckSettings.self, forKey: .settings) ?? DeckSettings()
         selectedSessionID = try c.decodeIfPresent(UUID.self, forKey: .selectedSessionID)
         panes = try c.decodeIfPresent([UUID].self, forKey: .panes) ?? []
+        syncState = try c.decodeIfPresent(DeckSyncState.self, forKey: .syncState) ?? DeckSyncState()
     }
 
     // MARK: Mutations

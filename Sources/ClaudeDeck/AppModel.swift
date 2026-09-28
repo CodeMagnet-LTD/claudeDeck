@@ -59,6 +59,9 @@ final class AppModel {
     @ObservationIgnored var onCountsChanged: (() -> Void)?
     /// Opens the main window scene (set by a SwiftUI view that has `openWindow`).
     @ObservationIgnored var openMainWindow: (() -> Void)?
+    // MARK: iCloud sync (DeckSyncController) — begin
+    @ObservationIgnored let sync = DeckSyncController()
+    // MARK: iCloud sync — end
 
     init(store: DeckDataStore = .default()) {
         self.store = store
@@ -82,6 +85,7 @@ final class AppModel {
         watcher?.start()
         reloadStatuses(initial: true)
         cleanupStatusFiles()
+        sync.start(model: self) // iCloud sync (no-op unless enabled)
         // Resolving `claude` runs the login shell; keep it off the main thread.
         Task { @MainActor in
             claudePath = await Task.detached { ShellEnvironment.resolveClaude() }.value
@@ -493,6 +497,8 @@ final class AppModel {
     }
 
     func saveNow() {
+        // iCloud sync: stamp local project/group edits and write the shared file.
+        if let synced = sync.prepareSave(deck) { deck = synced }
         try? store.save(deck)
     }
 }

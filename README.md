@@ -54,6 +54,25 @@ SwiftTerm'in build eklentisi için "Trust & Enable" sorar.
 - ⌘V: panoda yalnızca görüntü varsa Claude'a resim olarak eklenir.
 - Veriler: `~/Library/Application Support/ClaudeDeck/deck.json`.
 
+## iCloud eşitleme (isteğe bağlı)
+
+Ayarlar › iCloud › "Projeleri ve grupları iCloud Drive ile eşitle" (varsayılan kapalı). Entitlement
+gerekmez: düz bir dosya kullanılır — `~/Library/Mobile Documents/com~apple~CloudDocs/ClaudeDeck/projects.json`.
+iCloud Drive kapalıysa (`com~apple~CloudDocs` klasörü yoksa) seçenek devre dışıdır.
+
+- **Eşitlenen:** gruplar (kimlik, ad, renk) ve projeler (yol, ad, grup, sabitleme). Ev klasörü altındaki
+  yollar `~/…` olarak yazılır, farklı kullanıcı adlı Mac'lerde de eşleşir.
+- **Eşitlenmeyen:** oturumlar, bölmeler, seçim, ayarlar, grupların/projelerin açık-kapalı durumu,
+  terminal / Claude oturum kimlikleri.
+- **Birleştirme:** projeler yola, gruplar kimliğe göre birleştirilir; eksik olanlar eklenir, iki tarafta da
+  olan öğede son değiştiren kazanır (öğe başına `modifiedAt`). Açılışta, dosya değişince (klasör izlenir)
+  ve yerel proje/grup değişikliğinden sonra çalışır; dosya geçici dosyaya yazılıp yerine taşınır.
+- **Silme yayılmaz:** bir Mac'te silinen proje/grup diğerlerinde kalır ve dosyada durur (dosya yalnızca
+  büyür). Silen Mac onu geri getirmez; ancak başka bir Mac o öğeyi silmeden *sonra* değiştirirse geri
+  eklenir. Tamamen sıfırlamak için `projects.json`'u sil. Eşitleme hiçbir zaman yerel proje ya da oturum silmez.
+- Bu Mac'te bulunmayan yollar da listeye eklenir; orada açılan terminal ev klasöründe başlar.
+- iCloud dosyayı henüz indirmediyse (`.projects.json.icloud`) üzerine yazılmaz; indirme beklenir.
+
 ## Geliştirme notu
 
 `CLAUDEDECK_SNAPSHOT_DIR=<dir> open build/ClaudeDeck.app` pencereleri periyodik olarak PNG'ye yazar ve

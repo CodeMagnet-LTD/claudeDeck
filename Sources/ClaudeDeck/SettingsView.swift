@@ -39,6 +39,31 @@ struct SettingsView: View {
                 Toggle("Bildirim göster (izin / soru / bitti)", isOn: setting(\.notifications))
                 Toggle("Dock ikonunu zıplat", isOn: setting(\.bounceDock))
             }
+            Section("iCloud") {
+                Toggle("Projeleri ve grupları iCloud Drive ile eşitle", isOn: Binding(
+                    get: { model.deck.settings.iCloudSync },
+                    set: { on in
+                        model.mutate { $0.settings.iCloudSync = on }
+                        model.sync.refresh()
+                    }
+                ))
+                .disabled(!DeckSyncController.isAvailable && !model.deck.settings.iCloudSync)
+                if DeckSyncController.isAvailable {
+                    Text("Proje listesi ve gruplar (ad, renk, sabitleme, grup ataması) iCloud Drive › ClaudeDeck › projects.json üzerinden diğer Mac'lerinle birleştirilir. Oturumlar, bölmeler, seçim ve ayarlar eşitlenmez. Silme işlemleri diğer Mac'lere yansımaz.")
+                        .font(.caption).foregroundStyle(.secondary)
+                } else {
+                    Text("iCloud Drive bu Mac'te açık değil (~/Library/Mobile Documents/com~apple~CloudDocs yok). Sistem Ayarları › Apple Hesabı › iCloud › iCloud Drive'ı aç.")
+                        .font(.caption).foregroundStyle(.orange)
+                }
+                if model.deck.settings.iCloudSync {
+                    if let error = model.sync.lastError {
+                        Text(error).font(.caption).foregroundStyle(.red)
+                    } else if let at = model.sync.lastSyncAt {
+                        Text("Son eşitleme: \(at.formatted(date: .omitted, time: .standard))")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                }
+            }
             Section("Claude Code hook'ları") {
                 LabeledContent("Durum") {
                     Text(installed ? "Kurulu" : "Kurulu değil")
