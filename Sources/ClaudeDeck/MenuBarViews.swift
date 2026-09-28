@@ -109,10 +109,13 @@ struct MenuSessionRow: View {
         Button(action: action) {
             HStack(spacing: 8) {
                 StatusDot(display: status.display, unseen: model.isUnseenIdle(session.id))
-                VStack(alignment: .leading, spacing: 1) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(session.name).lineLimit(1)
-                    if let detail = status.detail {
-                        Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    HStack(spacing: 6) {
+                        StatusPill(display: status.display, unseen: model.isUnseenIdle(session.id))
+                        if let detail = status.detail {
+                            Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        }
                     }
                 }
                 Spacer()
@@ -127,5 +130,6 @@ struct MenuSessionRow: View {
         }
         .buttonStyle(.plain)
         .onHover { hovering = $0 }
+        .contextMenu { SessionMenu(session: session) }
     }
 }

@@ -64,8 +64,8 @@ struct GroupRow: View {
                 AggregateBadge(sessionIDs: projects.flatMap { model.deck.sessions(in: $0.id).map(\.id) })
                 Text("\(projects.count)").font(.caption).foregroundStyle(.tertiary)
             }
+            .contextMenu { GroupMenu(group: group) }
         }
-        .contextMenu { GroupMenu(group: group) }
     }
 }
 
@@ -108,8 +108,8 @@ struct ProjectRow: View {
                 .help("Yeni Claude oturumu")
             }
             .help(project.path)
+            .contextMenu { ProjectMenu(project: project, showResume: $showResume) }
         }
-        .contextMenu { ProjectMenu(project: project, showResume: $showResume) }
         .sheet(isPresented: $showResume) { ResumeSheet(project: project) }
     }
 }
@@ -132,9 +132,7 @@ struct AttentionRow: View {
                         Text(project).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
-                Text(AttentionText.headline(status.display))
-                    .font(.caption.weight(.medium))
-                    .foregroundStyle(StatusStyle.color(for: status.display))
+                StatusPill(display: status.display, unseen: true)
                 if let detail = status.detail {
                     Text(detail)
                         .font(.caption)
@@ -150,6 +148,8 @@ struct AttentionRow: View {
             }
         }
         .padding(.vertical, 3)
+        .flashOnStateChange(status.display)
+        .contextMenu { SessionMenu(session: session) }
         .listRowBackground(
             status.display.isBlocked
                 ? RoundedRectangle(cornerRadius: 6).fill(StatusStyle.blocked.opacity(0.12)).padding(.horizontal, 4)
@@ -158,76 +158,68 @@ struct AttentionRow: View {
     }
 }
 
-enum AttentionText {
-    static func headline(_ display: DisplayState) -> String {
-        switch display {
-        case .activity(.needsPermission): "İzin istiyor"
-        case .activity(.needsAnswer): "Soru soruyor"
-        case .activity(.idle): "Bitti — sıra sende"
-        default: ""
-        }
-    }
-}
-
 struct SessionRow: View {
     @Environment(AppModel.self) private var model
     let session: DeckSession
-    @State private var renaming = false
-    @State private var draft = ""
 
     var body: some View {
         let status = model.status(of: session.id)
         HStack(spacing: 8) {
             StatusDot(display: status.display, unseen: model.isUnseenIdle(session.id))
-            VStack(alignment: .leading, spacing: 1) {
-                Text(session.name).lineLimit(1)
-                if let detail = status.detail ?? label(for: status.display) {
-                    Text(detail)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(session.name).lineLimit(1)
+                    Spacer(minLength: 4)
+                    if let at = status.updatedAt {
+                        TimelineView(.periodic(from: .now, by: 15)) { _ in
+                            Text(RelativeTime.short(at))
+                                .font(.caption2.monospacedDigit())
+                                .foregroundStyle(.tertiary)
+                        }
+                    }
                 }
-            }
-            Spacer(minLength: 4)
-            if let at = status.updatedAt {
-                TimelineView(.periodic(from: .now, by: 15)) { _ in
-                    Text(RelativeTime.short(at))
-                        .font(.caption2.monospacedDigit())
-                        .foregroundStyle(.tertiary)
+                HStack(spacing: 6) {
+                    StatusPill(display: status.display, unseen: model.isUnseenIdle(session.id))
+                    if let detail = status.detail {
+                        Text(detail)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .id(detail)
+                            .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity), removal: .opacity))
+                    }
                 }
+                .animation(.snappy(duration: 0.25), value: status.detail)
+                .clipped()
             }
         }
-        .padding(.vertical, 2)
-        .contextMenu {
-            if model.terminals.isRunning(session.id) {
-                Button("Oturumu bitir") { model.stop(session.id) }
-            } else {
-                Button("Devam et") { model.launch(session.id, resume: true); model.selectedSessionID = session.id }
-                Button("Yeni başlat") { model.launch(session.id, resume: false); model.selectedSessionID = session.id }
-            }
-            Divider()
-            Button("Yeniden adlandır…") { draft = session.name; renaming = true }
-            Divider()
-            Button("Bitir ve listeden kaldır", role: .destructive) { model.removeSession(session.id) }
-        }
-        .alert("Oturumu yeniden adlandır", isPresented: $renaming) {
-            TextField("Ad", text: $draft)
-            Button("Kaydet") { model.renameSession(session.id, to: draft) }
-            Button("Vazgeç", role: .cancel) {}
-        }
+        .padding(.vertical, 3)
+        .flashOnStateChange(status.display)
+        .contextMenu { SessionMenu(session: session) }
     }
+}
 
-    private func label(for display: DisplayState) -> String? {
-        switch display {
-        case .notStarted: "Durdu"
-        case .starting: "Başlıyor…"
-        case .activity(.running): "Çalışıyor"
-        case .activity(.needsPermission): "İzin bekliyor"
-        case .activity(.needsAnswer): "Cevap bekliyor"
-        case .activity(.idle): "Sıra sende"
-        case .activity(.ended): "Bitti"
+/// Right-click menu for a session — same in the sidebar, the waiting list and the menu bar.
+struct SessionMenu: View {
+    @Environment(AppModel.self) private var model
+    let session: DeckSession
+
+    var body: some View {
+        if model.terminals.isRunning(session.id) {
+            Button("Oturumu bitir") { model.stop(session.id) }
+        } else {
+            Button("Devam et") { model.launch(session.id, resume: true); model.selectedSessionID = session.id }
+            Button("Yeni başlat") { model.launch(session.id, resume: false); model.selectedSessionID = session.id }
         }
+        Divider()
+        Button("Yeniden adlandır…") {
+            if let name = TextPrompt.ask(title: "Oturumu yeniden adlandır", placeholder: "Ad", initial: session.name) {
+                model.renameSession(session.id, to: name)
+            }
+        }
+        Divider()
+        Button("Bitir ve listeden kaldır", role: .destructive) { model.removeSession(session.id) }
     }
 }
 

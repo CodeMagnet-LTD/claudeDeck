@@ -7,6 +7,21 @@ enum StatusStyle {
     static let idle = Color.yellow
     static let inactive = Color.secondary.opacity(0.5)
 
+    static func label(for display: DisplayState) -> String {
+        switch display {
+        case .notStarted, .activity(.ended): "Durdu"
+        case .starting: "Başlıyor"
+        case .activity(.running): "Çalışıyor"
+        case .activity(.needsPermission): "İzin bekliyor"
+        case .activity(.needsAnswer): "Soru soruyor"
+        case .activity(.idle): "Sıra sende"
+        }
+    }
+
+    static func pillText(for display: DisplayState) -> Color {
+        display.isIdle ? .black.opacity(0.8) : .white
+    }
+
     static func color(for display: DisplayState) -> Color {
         switch display {
         case .activity(.running): running
@@ -58,6 +73,72 @@ struct StatusDot: View {
         case .starting: "Başlıyor"
         }
     }
+}
+
+/// Colored, labeled status chip — readable at a glance, not just a dot.
+/// Running shows flowing dots, waiting-for-you pulses.
+struct StatusPill: View {
+    let display: DisplayState
+    var unseen = false
+    @State private var pulse = false
+
+    var body: some View {
+        let inactive = display == .notStarted || display == .activity(.ended)
+        // Seen "your turn" stays yellow but softer than a fresh one.
+        let fill: Color = inactive ? Color.secondary.opacity(0.18)
+            : display.isIdle && !unseen ? StatusStyle.idle.opacity(0.45)
+            : StatusStyle.color(for: display)
+        HStack(spacing: 0) {
+            Text(StatusStyle.label(for: display))
+            if display.isRunning || display == .starting {
+                TimelineView(.periodic(from: .now, by: 0.35)) { context in
+                    let step = Int(context.date.timeIntervalSinceReferenceDate / 0.35) % 4
+                    Text(String(repeating: "·", count: step) + String(repeating: " ", count: 3 - step))
+                        .monospaced()
+                }
+            }
+        }
+        .font(.caption2.weight(.bold))
+        .padding(.horizontal, 7)
+        .padding(.vertical, 2)
+        .foregroundStyle(inactive ? AnyShapeStyle(.secondary) : AnyShapeStyle(StatusStyle.pillText(for: display)))
+        .background(Capsule().fill(fill))
+        .overlay {
+            if display.isBlocked {
+                Capsule()
+                    .stroke(StatusStyle.blocked, lineWidth: 2)
+                    .scaleEffect(pulse ? 1.25 : 1)
+                    .opacity(pulse ? 0 : 0.8)
+                    .animation(.easeOut(duration: 1.1).repeatForever(autoreverses: false), value: pulse)
+            }
+        }
+        .fixedSize()
+        .animation(.snappy, value: display)
+        .onAppear { pulse = true }
+    }
+}
+
+/// Briefly lights up a row when its state changes.
+struct StateChangeFlash: ViewModifier {
+    let display: DisplayState
+    @State private var flash = false
+
+    func body(content: Content) -> some View {
+        content
+            .background(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(StatusStyle.color(for: display).opacity(flash ? 0.22 : 0))
+                    .padding(.horizontal, -4)
+            )
+            .onChange(of: display) { _, _ in
+                withAnimation(.easeIn(duration: 0.15)) { flash = true }
+                withAnimation(.easeOut(duration: 1.2).delay(0.25)) { flash = false }
+            }
+    }
+}
+
+extension View {
+    func flashOnStateChange(_ display: DisplayState) -> some View { modifier(StateChangeFlash(display: display)) }
 }
 
 /// Worst state among sessions: red > green > unseen yellow.

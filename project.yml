@@ -1,0 +1,61 @@
+# Xcode project for ClaudeDeck. Generate with:  xcodegen generate
+# (ClaudeDeck.xcodeproj is generated — edit this file, not the project.)
+name: ClaudeDeck
+options:
+  bundleIdPrefix: dev.medeni
+  deploymentTarget:
+    macOS: "15.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    # Keep the team here: the .xcodeproj is regenerated from this file.
+    DEVELOPMENT_TEAM: V6G4B5T63L
+    CODE_SIGN_STYLE: Automatic
+packages:
+  SwiftTerm:
+    url: https://github.com/migueldeicaza/SwiftTerm
+    from: 1.20.0
+targets:
+  ClaudeDeckCore:
+    type: library.static
+    platform: macOS
+    sources: [Sources/ClaudeDeckCore]
+  ClaudeDeck:
+    type: application
+    platform: macOS
+    sources: [Sources/ClaudeDeck]
+    dependencies:
+      - target: ClaudeDeckCore
+      - package: SwiftTerm
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.medeni.ClaudeDeck
+        PRODUCT_NAME: ClaudeDeck
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: ClaudeDeck
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
+        INFOPLIST_KEY_NSPrincipalClass: NSApplication
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 1
+        # Needs a real pty, ~/.claude and the user's shell: no App Sandbox.
+        ENABLE_APP_SANDBOX: NO
+        ENABLE_HARDENED_RUNTIME: YES
+  ClaudeDeckCoreTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [Tests/ClaudeDeckCoreTests]
+    dependencies:
+      - target: ClaudeDeckCore
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  ClaudeDeck:
+    build:
+      targets:
+        ClaudeDeck: all
+        ClaudeDeckCoreTests: [test]
+    test:
+      targets: [ClaudeDeckCoreTests]

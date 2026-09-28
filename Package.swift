@@ -22,7 +22,7 @@ let package = Package(
         .testTarget(
             name: "ClaudeDeckCoreTests",
             dependencies: ["ClaudeDeckCore"],
-            resources: [.copy("Fixtures")]
+            exclude: ["Fixtures"]
         ),
     ]
 )

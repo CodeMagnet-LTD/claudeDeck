@@ -5,8 +5,13 @@ import Testing
 @Suite struct HookInstallerTests {
     let command = "/Users/me/.claude/deck/bin/deck-hook.sh"
 
+    /// Works under both `swift test` and Xcode (no Bundle.module there).
+    static let fixtureURL = URL(fileURLWithPath: #filePath)
+        .deletingLastPathComponent()
+        .appending(path: "Fixtures/settings-existing.json")
+
     func fixture() throws -> [String: Any] {
-        let url = try #require(Bundle.module.url(forResource: "Fixtures/settings-existing", withExtension: "json"))
+        let url = Self.fixtureURL
         return try #require(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
     }
 
@@ -71,8 +76,7 @@ import Testing
         defer { try? FileManager.default.removeItem(at: dir) }
         try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         let settings = dir.appending(path: "settings.json")
-        let fixtureURL = try #require(Bundle.module.url(forResource: "Fixtures/settings-existing", withExtension: "json"))
-        try FileManager.default.copyItem(at: fixtureURL, to: settings)
+        try FileManager.default.copyItem(at: Self.fixtureURL, to: settings)
 
         let installer = HookInstaller(settingsURL: settings, scriptURL: dir.appending(path: ".claude/deck/bin/deck-hook.sh"))
         #expect(try installer.install() == true)
