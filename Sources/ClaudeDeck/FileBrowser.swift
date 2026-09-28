@@ -486,7 +486,7 @@ enum FileActions {
         alert.informativeText = "Çöp sepetinden geri alınabilir."
         alert.addButton(withTitle: "Çöpe taşı")
         alert.addButton(withTitle: "Vazgeç")
-        guard alert.runModal() == .alertFirstButtonReturn else { return }
+        guard alert.runAsSheet() == .alertFirstButtonReturn else { return }
         NSWorkspace.shared.recycle(urls) { _, error in
             Task { @MainActor in
                 if let error { fail(error.localizedDescription) }
@@ -499,6 +499,6 @@ enum FileActions {
         let alert = NSAlert()
         alert.messageText = "İşlem yapılamadı"
         alert.informativeText = message
-        alert.runModal()
+        alert.runAsSheet()
     }
 }

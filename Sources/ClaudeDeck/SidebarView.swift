@@ -86,6 +86,12 @@ struct GroupRow: View {
             set: { expanded in model.mutate { $0.updateGroup(group.id) { $0.collapsed = !expanded } } }
         )) {
             ForEach(projects) { ProjectRow(project: $0) }
+                .environment(\.groupTint, GroupPalette.color(group.colorIndex))
+            // Closing edge so it's clear where the group ends.
+            Color.clear
+                .frame(height: 2)
+                .listRowBackground(GroupBand(color: GroupPalette.color(group.colorIndex), edge: .bottom))
+                .selectionDisabled()
         } label: {
             HStack(spacing: 6) {
                 Circle().fill(GroupPalette.color(group.colorIndex)).frame(width: 8, height: 8)
@@ -107,11 +113,13 @@ struct GroupRow: View {
             .contextMenu { GroupMenu(group: group, pickingProjects: $pickingProjects) }
             .sheet(isPresented: $pickingProjects) { GroupProjectsSheet(group: group) }
         }
+        .listRowBackground(GroupBand(color: GroupPalette.color(group.colorIndex), edge: .top))
     }
 }
 
 struct ProjectRow: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.groupTint) private var groupTint
     let project: Project
     @State private var showResume = false
     @State private var openedWhileIdle = false
@@ -176,6 +184,7 @@ struct ProjectRow: View {
             .contextMenu { ProjectMenu(project: project, showResume: $showResume) }
         }
         .sheet(isPresented: $showResume) { ResumeSheet(project: project) }
+        .listRowBackground(groupTint.map { GroupBand(color: $0, edge: nil) })
     }
 }
 
@@ -229,6 +238,7 @@ struct AttentionRow: View {
 
 struct SessionRow: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.groupTint) private var groupTint
     let session: DeckSession
 
     var body: some View {
@@ -280,6 +290,7 @@ struct SessionRow: View {
         .onTapGesture { model.selectedSessionID = session.id }
         .contextMenu { SessionMenu(session: session) }
         .onDrag { NSItemProvider(object: session.id.uuidString as NSString) }
+        .listRowBackground(groupTint.map { GroupBand(color: $0, edge: nil) })
     }
 }
 
@@ -460,7 +471,7 @@ enum TextPrompt {
         alert.addButton(withTitle: "Kaydet")
         alert.addButton(withTitle: "Vazgeç")
         alert.window.initialFirstResponder = field
-        guard alert.runModal() == .alertFirstButtonReturn else { return nil }
+        guard alert.runAsSheet() == .alertFirstButtonReturn else { return nil }
         let value = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
         return value.isEmpty && !allowEmpty ? nil : value
     }
@@ -540,6 +551,39 @@ enum Confirm {
         alert.addButton(withTitle: action)
         alert.addButton(withTitle: "Vazgeç")
         alert.buttons.first?.hasDestructiveAction = true
-        return alert.runModal() == .alertFirstButtonReturn
+        return alert.runAsSheet() == .alertFirstButtonReturn
+    }
+}
+
+/// Tinted band behind every row of a group: a colored left rail, a stronger header with a top
+/// rule, and a closing rule at the bottom — so the group's extent is obvious.
+struct GroupBand: View {
+    let color: Color
+    /// .top = group header, .bottom = closing row, nil = member row.
+    let edge: VerticalEdge?
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            color.opacity(edge == .top ? 0.16 : 0.07)
+            Rectangle().fill(color).frame(width: 3)
+            if edge == .top {
+                VStack { Rectangle().fill(color.opacity(0.8)).frame(height: 1.5); Spacer() }
+            } else if edge == .bottom {
+                VStack { Spacer(); Rectangle().fill(color.opacity(0.8)).frame(height: 1.5) }
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+}
+
+private struct GroupTintKey: EnvironmentKey {
+    static let defaultValue: Color? = nil
+}
+
+extension EnvironmentValues {
+    /// Set for rows inside a project group.
+    var groupTint: Color? {
+        get { self[GroupTintKey.self] }
+        set { self[GroupTintKey.self] = newValue }
     }
 }

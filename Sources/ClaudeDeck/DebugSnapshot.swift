@@ -56,7 +56,19 @@ enum DebugSnapshot {
         }
     }
 
+    /// Row counts of every table/outline view (glass sidebars don't render into snapshots).
+    private static func writeRowCounts(to dir: String) {
+        var lines: [String] = []
+        func walk(_ v: NSView) {
+            if let t = v as? NSTableView { lines.append("\(type(of: t)) rows=\(t.numberOfRows) frame=\(t.frame.integral)") }
+            v.subviews.forEach(walk)
+        }
+        for w in NSApp.windows where w.isVisible { if let c = w.contentView?.superview ?? w.contentView { walk(c) } }
+        try? lines.joined(separator: "\n").write(toFile: (dir as NSString).appendingPathComponent("rows.txt"), atomically: true, encoding: .utf8)
+    }
+
     private static func write(to dir: String) {
+        writeRowCounts(to: dir)
         for (i, window) in NSApp.windows.enumerated() where window.isVisible {
             guard let view = window.contentView?.superview ?? window.contentView else { continue }
             guard let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { continue }

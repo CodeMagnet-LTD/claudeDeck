@@ -42,7 +42,7 @@ extension AppModel {
         panel.allowsMultipleSelection = true
         panel.prompt = "Ekle"
         panel.message = "Claude oturumu açılacak proje klasörünü seç"
-        guard panel.runModal() == .OK else { return [] }
+        guard panel.runAsSheet() == .OK else { return [] }
         return panel.urls.map { addProject(path: $0.path) }
     }
 
@@ -124,5 +124,28 @@ extension AppModel {
         if let window = NSApp.windows.first(where: { $0.identifier?.rawValue == "main" || $0.title == "ClaudeDeck" || $0.canBecomeMain }) {
             window.makeKeyAndOrderFront(nil)
         }
+    }
+}
+
+extension NSAlert {
+    /// Shows the alert as a sheet on the app's window (not a free-floating panel in the middle of
+    /// the screen) while keeping the synchronous call style.
+    @MainActor
+    func runAsSheet() -> NSApplication.ModalResponse {
+        guard let window = NSApp.keyWindow ?? NSApp.mainWindow ?? NSApp.windows.first(where: { $0.isVisible && $0.canBecomeMain }) else {
+            return runModal()
+        }
+        beginSheetModal(for: window) { NSApp.stopModal(withCode: $0) }
+        return NSApp.runModal(for: self.window)
+    }
+}
+
+extension NSOpenPanel {
+    /// Folder picker as a sheet on the app's window.
+    @MainActor
+    func runAsSheet() -> NSApplication.ModalResponse {
+        guard let window = NSApp.keyWindow ?? NSApp.mainWindow else { return runModal() }
+        beginSheetModal(for: window) { NSApp.stopModal(withCode: $0) }
+        return NSApp.runModal(for: self)
     }
 }
