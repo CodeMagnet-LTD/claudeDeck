@@ -64,6 +64,11 @@ final class AppModel {
         self.deck = store.load()
         terminals.onExit = { [weak self] id, _ in self?.terminalExited(id) }
         terminals.onUserInput = { [weak self] id, data in self?.userTyped(id, data) }
+        // Clicking into a pane's terminal focuses that session.
+        terminals.onFocus = { [weak self] id in
+            guard let self, self.deck.selectedSessionID != id else { return }
+            self.selectedSessionID = id
+        }
     }
 
     // MARK: Lifecycle
@@ -259,7 +264,7 @@ final class AppModel {
             defer { lastNotified[session.id] = key }
             guard let activity = status.display.activityValue, key != lastNotified[session.id], activity.isAttention else { continue }
             // Finished while the user is looking at it: already seen.
-            if activity == .idle, focusedSessionID == session.id { seenAt[session.id] = Date() }
+            if activity == .idle, isVisible(session.id) { seenAt[session.id] = Date() }
             // Esc / denied permission: the user did it themselves — no notification, not "unseen".
             if activity == .idle, endedByUser(session.id) {
                 seenAt[session.id] = Date()
@@ -335,8 +340,8 @@ final class AppModel {
     var selectedSessionID: UUID? {
         get { deck.selectedSessionID }
         set {
-            guard deck.selectedSessionID != newValue else { return }
-            deck.selectedSessionID = newValue
+            guard deck.selectedSessionID != newValue || (newValue.map { !deck.panes.contains($0) } ?? false) else { return }
+            deck.select(newValue)
             if let newValue {
                 markSeen(newValue)
                 // Selecting a session not yet started in this app run continues it automatically.
@@ -350,6 +355,29 @@ final class AppModel {
     /// The session currently in front of the user (app active + selected).
     var focusedSessionID: UUID? {
         NSApp.isActive && NSApp.keyWindow != nil ? deck.selectedSessionID : nil
+    }
+
+    /// Sessions whose terminal the user can currently see (all split panes of the active window).
+    func isVisible(_ id: UUID) -> Bool {
+        NSApp.isActive && NSApp.keyWindow != nil && deck.visiblePanes.contains(id)
+    }
+
+    // MARK: Split panes
+
+    /// Shows a session in a new pane beside `anchor` (or the focused pane).
+    func openBeside(_ id: UUID, anchor: UUID? = nil, before: Bool = false) {
+        guard deck.openPane(id, besideOf: anchor, before: before) else {
+            NSSound.beep()
+            return
+        }
+        markSeen(id)
+        if terminals.view(for: id) == nil { launch(id, resume: true) }
+        scheduleSave()
+    }
+
+    func closePane(_ id: UUID) {
+        deck.closePane(id)
+        scheduleSave()
     }
 
     // MARK: Deck mutations

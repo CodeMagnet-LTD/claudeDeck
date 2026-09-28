@@ -89,6 +89,10 @@ public struct DeckData: Codable, Sendable, Equatable {
     public var sessions: [DeckSession] = []
     public var settings = DeckSettings()
     public var selectedSessionID: UUID?
+    /// Sessions shown side by side in the detail area, left to right.
+    public var panes: [UUID] = []
+
+    public static let maxPanes = 4
 
     public init() {}
 
@@ -100,6 +104,7 @@ public struct DeckData: Codable, Sendable, Equatable {
         sessions = try c.decodeIfPresent([DeckSession].self, forKey: .sessions) ?? []
         settings = try c.decodeIfPresent(DeckSettings.self, forKey: .settings) ?? DeckSettings()
         selectedSessionID = try c.decodeIfPresent(UUID.self, forKey: .selectedSessionID)
+        panes = try c.decodeIfPresent([UUID].self, forKey: .panes) ?? []
     }
 
     // MARK: Mutations
@@ -151,7 +156,63 @@ public struct DeckData: Codable, Sendable, Equatable {
 
     public mutating func removeSession(_ id: UUID) {
         sessions.removeAll { $0.id == id }
-        if selectedSessionID == id { selectedSessionID = nil }
+        closePane(id)
+        if selectedSessionID == id { selectedSessionID = panes.first }
+    }
+
+    // MARK: Split panes
+
+    /// Selecting a session: focus its pane if visible, else show it in the focused pane.
+    public mutating func select(_ id: UUID?) {
+        defer { selectedSessionID = id }
+        guard let id else { return }
+        if panes.contains(id) { return }
+        if let focused = selectedSessionID, let i = panes.firstIndex(of: focused) {
+            panes[i] = id
+        } else if panes.isEmpty {
+            panes = [id]
+        } else {
+            panes[panes.count - 1] = id
+        }
+    }
+
+    /// Adds a pane next to `anchor` (default: the focused pane). Returns false when full.
+    @discardableResult
+    public mutating func openPane(_ id: UUID, besideOf anchor: UUID? = nil, before: Bool = false) -> Bool {
+        if panes.isEmpty, let current = selectedSessionID, current != id { panes = [current] }
+        if let existing = panes.firstIndex(of: id) {
+            // Moving an already visible session next to another pane.
+            guard let anchor, anchor != id, panes.contains(anchor) else { selectedSessionID = id; return true }
+            panes.remove(at: existing)
+            let a = panes.firstIndex(of: anchor)!
+            panes.insert(id, at: before ? a : a + 1)
+            selectedSessionID = id
+            return true
+        }
+        guard panes.count < Self.maxPanes else { return false }
+        let target = anchor ?? selectedSessionID
+        if let target, let a = panes.firstIndex(of: target) {
+            panes.insert(id, at: before ? a : a + 1)
+        } else {
+            panes.append(id)
+        }
+        selectedSessionID = id
+        return true
+    }
+
+    public mutating func closePane(_ id: UUID) {
+        guard let i = panes.firstIndex(of: id) else { return }
+        panes.remove(at: i)
+        if selectedSessionID == id {
+            selectedSessionID = panes.isEmpty ? nil : panes[min(i, panes.count - 1)]
+        }
+    }
+
+    /// Visible panes, dropping ids of sessions that no longer exist.
+    public var visiblePanes: [UUID] {
+        let valid = panes.filter { id in sessions.contains { $0.id == id } }
+        if !valid.isEmpty { return valid }
+        return selectedSessionID.map { [$0] } ?? []
     }
 
     public mutating func updateSession(_ id: UUID, _ change: (inout DeckSession) -> Void) {

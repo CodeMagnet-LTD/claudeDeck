@@ -84,6 +84,7 @@ final class DeckTerminalView: LocalProcessTerminalView {
     required init?(coder: NSCoder) { fatalError("not used") }
 
     var onInput: ((ArraySlice<UInt8>) -> Void)?
+    var onFocus: (() -> Void)?
 
     override func send(source: TerminalView, data: ArraySlice<UInt8>) {
         onInput?(data)
@@ -101,6 +102,23 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
     @ObservationIgnored private var views: [UUID: DeckTerminalView] = [:]
     @ObservationIgnored var onExit: ((UUID, Int32?) -> Void)?
 
+    @ObservationIgnored private var clickMonitor: Any?
+
+    override init() {
+        super.init()
+        // Clicking into a terminal focuses its session (TerminalView's responder methods aren't open).
+        clickMonitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseDown) { event in
+            MainActor.assumeIsolated {
+                if let hit = event.window?.contentView?.hitTest(event.locationInWindow) {
+                    var view: NSView? = hit
+                    while let v = view, !(v is DeckTerminalView) { view = v.superview }
+                    (view as? DeckTerminalView)?.onFocus?()
+                }
+            }
+            return event
+        }
+    }
+
     func isRunning(_ id: UUID) -> Bool { running.contains(id) }
 
     func view(for id: UUID) -> DeckTerminalView? { views[id] }
@@ -109,6 +127,7 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         let view = views[id] ?? DeckTerminalView(sessionID: id)
         view.processDelegate = self
         view.onInput = { [weak self] data in self?.onUserInput?(id, data) }
+        view.onFocus = { [weak self] in self?.onFocus?(id) }
         views[id] = view
         if running.contains(id) { return }
 
@@ -166,6 +185,7 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
 
     /// Remaining input hook: called with every chunk the user types into a terminal.
     @ObservationIgnored var onUserInput: ((UUID, ArraySlice<UInt8>) -> Void)?
+    @ObservationIgnored var onFocus: ((UUID) -> Void)?
 
     func discard(_ id: UUID) {
         views[id]?.removeFromSuperview()

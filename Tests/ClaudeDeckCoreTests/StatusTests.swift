@@ -189,6 +189,48 @@ import Testing
         #expect(normalized == deck)
     }
 
+    @Test func panes() {
+        var deck = DeckData()
+        let p = deck.addProject(path: "/w/a")
+        let a = deck.addSession(to: p.id)!.id, b = deck.addSession(to: p.id)!.id
+        let c = deck.addSession(to: p.id)!.id, d = deck.addSession(to: p.id)!.id, e = deck.addSession(to: p.id)!.id
+
+        deck.select(a)
+        #expect(deck.panes == [a])
+        let openedB = deck.openPane(b)                  // beside focused a
+        #expect(openedB)
+        #expect(deck.panes == [a, b] && deck.selectedSessionID == b)
+        let openedC = deck.openPane(c, besideOf: a, before: true)
+        #expect(openedC)
+        #expect(deck.panes == [c, a, b])
+        deck.select(a)                                 // visible: just focus
+        #expect(deck.panes == [c, a, b] && deck.selectedSessionID == a)
+        deck.select(d)                                 // not visible: replaces focused pane
+        #expect(deck.panes == [c, d, b])
+        let openedA = deck.openPane(a)
+        #expect(openedA)
+        let openedE = deck.openPane(e)                 // max 4
+        #expect(!openedE)
+        let moved = deck.openPane(b, besideOf: c, before: true)
+        #expect(moved)
+        #expect(deck.panes == [b, c, d, a])
+        deck.closePane(a)                              // not focused: focus stays on b
+        #expect(deck.panes == [b, c, d] && deck.selectedSessionID == b)
+        deck.closePane(b)                              // focused: focus moves to its neighbour
+        #expect(deck.panes == [c, d] && deck.selectedSessionID == c)
+        deck.removeSession(c)
+        #expect(deck.panes == [d] && deck.selectedSessionID == d)
+    }
+
+    @Test func openingBesideSingleViewKeepsCurrent() {
+        var deck = DeckData()
+        let p = deck.addProject(path: "/w/a")
+        let a = deck.addSession(to: p.id)!.id, b = deck.addSession(to: p.id)!.id
+        deck.selectedSessionID = a                     // legacy data: no panes yet
+        deck.openPane(b)
+        #expect(deck.panes == [a, b])
+    }
+
     @Test func toleratesMissingKeys() throws {
         let deck = try JSONDecoder().decode(DeckData.self, from: Data(#"{"projects":[]}"#.utf8))
         #expect(deck.settings == DeckSettings())

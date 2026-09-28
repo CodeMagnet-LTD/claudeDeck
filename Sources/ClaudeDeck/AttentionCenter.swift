@@ -22,8 +22,8 @@ final class AttentionCenter: NSObject, UNUserNotificationCenterDelegate {
 
     private func handle(_ event: AttentionEvent) {
         updateBadge()
-        // The user is already looking at this terminal.
-        if model.focusedSessionID == event.sessionID { return }
+        // The user is already looking at this terminal (it's in a visible pane).
+        if model.isVisible(event.sessionID) { return }
         let settings = model.deck.settings
 
         if settings.bounceDock, !NSApp.isActive {
@@ -46,9 +46,8 @@ final class AttentionCenter: NSObject, UNUserNotificationCenterDelegate {
         let counts = model.counts
         let waiting = counts.blocked + counts.unseen
         NSApp.dockTile.badgeLabel = waiting > 0 ? "\(waiting)" : nil
-        if let selected = model.focusedSessionID, !model.needsAttention(selected) {
-            center?.removeDeliveredNotifications(withIdentifiers: [selected.uuidString])
-        }
+        let seen = model.deck.visiblePanes.filter { model.isVisible($0) && !model.needsAttention($0) }
+        if !seen.isEmpty { center?.removeDeliveredNotifications(withIdentifiers: seen.map(\.uuidString)) }
     }
 
     // MARK: UNUserNotificationCenterDelegate

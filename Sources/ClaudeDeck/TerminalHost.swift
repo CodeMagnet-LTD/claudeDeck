@@ -8,6 +8,8 @@ struct TerminalHost: NSViewRepresentable {
     let registry: TerminalRegistry
     /// Changes when the process (re)starts so the host re-attaches the view.
     let generation: Bool
+    /// Only the focused pane takes keyboard focus.
+    var isFocused = true
 
     func makeNSView(context: Context) -> NSView {
         let container = NSView()
@@ -26,6 +28,7 @@ struct TerminalHost: NSViewRepresentable {
             terminal.autoresizingMask = [.width, .height]
             container.addSubview(terminal)
         }
+        guard isFocused else { return }
         DispatchQueue.main.async {
             if terminal.window != nil, terminal.window?.firstResponder !== terminal {
                 terminal.window?.makeFirstResponder(terminal)

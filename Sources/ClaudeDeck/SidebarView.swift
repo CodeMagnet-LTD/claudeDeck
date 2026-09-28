@@ -172,6 +172,7 @@ struct AttentionRow: View {
         .padding(.vertical, 3)
         .flashOnStateChange(status.display)
         .contextMenu { SessionMenu(session: session) }
+        .onDrag { NSItemProvider(object: session.id.uuidString as NSString) }
         .listRowBackground(
             status.display.isBlocked
                 ? RoundedRectangle(cornerRadius: 6).fill(StatusStyle.blocked.opacity(0.12)).padding(.horizontal, 4)
@@ -219,6 +220,7 @@ struct SessionRow: View {
         .padding(.vertical, 3)
         .flashOnStateChange(status.display)
         .contextMenu { SessionMenu(session: session) }
+        .onDrag { NSItemProvider(object: session.id.uuidString as NSString) }
     }
 }
 
@@ -228,6 +230,12 @@ struct SessionMenu: View {
     let session: DeckSession
 
     var body: some View {
+        if !model.deck.visiblePanes.contains(session.id) {
+            Button("Yanına aç") { model.openBeside(session.id) }
+        } else if model.deck.panes.count > 1 {
+            Button("Bölmeyi kapat") { model.closePane(session.id) }
+        }
+        Divider()
         if model.terminals.isRunning(session.id) {
             Button("Oturumu bitir") { model.stop(session.id) }
         } else {
@@ -253,7 +261,15 @@ struct ProjectMenu: View {
     var body: some View {
         Button("Yeni Claude oturumu") { model.newSession(in: project.id) }
         Button("Eski oturumu devam ettir…") { showResume = true }
-        let running = model.deck.sessions(in: project.id).filter { model.terminals.isRunning($0.id) }
+        let projectSessions = model.deck.sessions(in: project.id)
+        if projectSessions.count > 1 {
+            Button("Oturumlarını yan yana aç") {
+                for s in projectSessions.prefix(DeckData.maxPanes) where !model.deck.visiblePanes.contains(s.id) {
+                    model.openBeside(s.id, anchor: model.deck.panes.last)
+                }
+            }
+        }
+        let running = projectSessions.filter { model.terminals.isRunning($0.id) }
         if !running.isEmpty {
             Button("Tüm oturumları bitir (\(running.count))") { running.forEach { model.stop($0.id) } }
         }
