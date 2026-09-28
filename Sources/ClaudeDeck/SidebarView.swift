@@ -96,43 +96,37 @@ struct ProjectRow: View {
     @Environment(AppModel.self) private var model
     let project: Project
     @State private var showResume = false
+    @State private var openedWhileIdle = false
 
     /// Clicking a project opens its most recently active session, or toggles it when empty.
     private func openProject(_ sessions: [DeckSession]) {
         let recent = sessions.max { ($0.lastActivityAt ?? $0.createdAt) < ($1.lastActivityAt ?? $1.createdAt) }
         if let recent {
             if project.collapsed { model.mutate { $0.updateProject(project.id) { $0.collapsed = false } } }
+            openedWhileIdle = true
             model.selectedSessionID = recent.id
         } else {
-            model.mutate { $0.updateProject(project.id) { $0.collapsed.toggle() } }
+            openedWhileIdle.toggle()
         }
     }
 
     var body: some View {
         let sessions = model.deck.sessions(in: project.id)
+        let active = sessions.contains { model.terminals.isRunning($0.id) }
+        // Projects without a running session start collapsed; with one, the saved state applies.
         DisclosureGroup(isExpanded: Binding(
-            get: { !project.collapsed },
-            set: { expanded in model.mutate { $0.updateProject(project.id) { $0.collapsed = !expanded } } }
+            get: { active ? !project.collapsed : openedWhileIdle },
+            set: { expanded in
+                if active {
+                    model.mutate { $0.updateProject(project.id) { $0.collapsed = !expanded } }
+                } else {
+                    openedWhileIdle = expanded
+                }
+            }
         )) {
             ForEach(sessions) { session in
                 SessionRow(session: session).tag(session.id)
             }
-            HStack(spacing: 14) {
-                Button {
-                    model.newSession(in: project.id)
-                } label: {
-                    Label("Yeni Claude oturumu", systemImage: "plus")
-                }
-                Button {
-                    model.newShell(in: project.id)
-                } label: {
-                    Label("Terminal", systemImage: "apple.terminal")
-                }
-                .help("Proje klasöründe boş terminal aç (⌥⌘T)")
-            }
-            .font(.callout)
-            .buttonStyle(.plain)
-            .foregroundStyle(.secondary)
         } label: {
             HStack(spacing: 6) {
                 Image(systemName: project.pinned ? "pin.fill" : "folder")
@@ -140,7 +134,7 @@ struct ProjectRow: View {
                     .frame(width: 16)
                 Text(project.name).fontWeight(.medium).lineLimit(1)
                 Spacer(minLength: 4)
-                if project.collapsed { AggregateBadge(sessionIDs: sessions.map(\.id)) }
+                if project.collapsed || !active { AggregateBadge(sessionIDs: sessions.map(\.id)) }
                 Button {
                     model.newShell(in: project.id)
                 } label: {
