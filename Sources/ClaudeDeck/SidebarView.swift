@@ -122,14 +122,13 @@ struct ProjectRow: View {
     @State private var showResume = false
     @State private var openedWhileIdle = false
 
-    /// Clicking a project opens its most recently active session, or toggles it when empty.
+    /// Clicking a project shows its files and opens/closes it. It never changes the terminal
+    /// view — only clicking a session does.
     private func openProject(_ sessions: [DeckSession]) {
         model.browsedProjectID = project.id
-        let recent = sessions.max { ($0.lastActivityAt ?? $0.createdAt) < ($1.lastActivityAt ?? $1.createdAt) }
-        if let recent {
-            if project.collapsed { model.mutate { $0.updateProject(project.id) { $0.collapsed = false } } }
-            openedWhileIdle = true
-            model.selectedSessionID = recent.id
+        let active = sessions.contains { model.terminals.isRunning($0.id) }
+        if active {
+            model.mutate { $0.updateProject(project.id) { $0.collapsed.toggle() } }
         } else {
             openedWhileIdle.toggle()
         }
