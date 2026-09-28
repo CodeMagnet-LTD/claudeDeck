@@ -126,6 +126,10 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     public static let defaultFontSize: Double = 13
     public static let fontSizeRange: ClosedRange<Double> = 9...32
     public var theme: AppTheme = .system
+    /// ⌘Q asks first while terminals are running.
+    public var confirmQuit = true
+    /// Closing the window hides the Dock icon; the app lives in the menu bar.
+    public var hideDockWhenClosed = false
     /// Sync projects and groups through iCloud Drive (see DeckSync).
     public var iCloudSync = false
 
@@ -142,6 +146,8 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         bounceDock = try c.decodeIfPresent(Bool.self, forKey: .bounceDock) ?? d.bounceDock
         terminalFontSize = try c.decodeIfPresent(Double.self, forKey: .terminalFontSize) ?? d.terminalFontSize
         theme = (try? c.decodeIfPresent(AppTheme.self, forKey: .theme)) ?? d.theme
+        confirmQuit = try c.decodeIfPresent(Bool.self, forKey: .confirmQuit) ?? d.confirmQuit
+        hideDockWhenClosed = try c.decodeIfPresent(Bool.self, forKey: .hideDockWhenClosed) ?? d.hideDockWhenClosed
         iCloudSync = try c.decodeIfPresent(Bool.self, forKey: .iCloudSync) ?? d.iCloudSync
     }
 }

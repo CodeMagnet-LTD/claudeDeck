@@ -18,6 +18,10 @@ struct SettingsView: View {
                     ForEach(AppTheme.allCases, id: \.self) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented)
+                Toggle("Çıkarken sor (açık terminaller varken ⌘Q)", isOn: setting(\.confirmQuit))
+                Toggle("Pencere kapanınca Dock'tan gizle (yalnızca menü çubuğunda çalışsın)", isOn: setting(\.hideDockWhenClosed))
+                Text("Pencereyi kapatmak (X) hiçbir oturumu durdurmaz; uygulama menü çubuğunda çalışmaya devam eder.")
+                    .font(.caption).foregroundStyle(.secondary)
                 Toggle("Bilgisayar açılınca ClaudeDeck'i başlat", isOn: Binding(
                     get: { launchAtLogin },
                     set: { setLaunchAtLogin($0) }
