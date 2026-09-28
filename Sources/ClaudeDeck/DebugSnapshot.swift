@@ -34,6 +34,11 @@ enum DebugSnapshot {
             try? FileManager.default.removeItem(atPath: path)
             if let project = UUID(uuidString: String(file.dropLast(6))) { model.newShell(in: project) }
         }
+        for file in files where file.hasSuffix(".paste") {
+            let path = (dir as NSString).appendingPathComponent(file)
+            try? FileManager.default.removeItem(atPath: path)
+            if let id = UUID(uuidString: String(file.dropLast(6))) { model.terminals.view(for: id)?.paste(NSApp as Any) }
+        }
         for file in files where file.hasSuffix(".in") {
             let path = (dir as NSString).appendingPathComponent(file)
             defer { try? FileManager.default.removeItem(atPath: path) }

@@ -27,6 +27,16 @@ enum ShellEnvironment {
             || key == "CLAUDE_PROJECT_DIR" || key == "CLAUDE_ENV_FILE" || key.hasPrefix("CLAUDE_PLUGIN_")
     }
 
+    /// Backslash-escapes a path the way Terminal.app does for dropped files.
+    static func escapedPath(_ path: String) -> String {
+        var out = ""
+        for ch in path {
+            if " '\"\\()[]{}&;|<>*?!$`#~".contains(ch) { out.append("\\") }
+            out.append(ch)
+        }
+        return out
+    }
+
     static var cleanEnvironment: [String: String] {
         ProcessInfo.processInfo.environment.filter { !isInheritedMarker($0.key) }
     }
@@ -85,6 +95,29 @@ final class DeckTerminalView: LocalProcessTerminalView {
 
     var onInput: ((ArraySlice<UInt8>) -> Void)?
     var onFocus: (() -> Void)?
+    /// Claude sessions read images from the clipboard themselves on Ctrl+V.
+    var isClaude = true
+
+    /// ⌘V: SwiftTerm only pastes text. With an image (screenshot, copied photo) and no text on
+    /// the clipboard, send Ctrl+V so Claude attaches the clipboard image — like in Terminal.app.
+    /// Copied Finder files paste as escaped paths.
+    override func paste(_ sender: Any) {
+        let pb = NSPasteboard.general
+        let hasText = !(pb.string(forType: .string) ?? "").isEmpty
+        if !hasText {
+            if let urls = pb.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL],
+               !urls.isEmpty {
+                send(txt: urls.map { ShellEnvironment.escapedPath($0.path) }.joined(separator: " ") + " ")
+                return
+            }
+            let hasImage = pb.canReadObject(forClasses: [NSImage.self], options: nil)
+            if hasImage, isClaude {
+                send(txt: "\u{16}")
+                return
+            }
+        }
+        super.paste(sender)
+    }
 
     override func send(source: TerminalView, data: ArraySlice<UInt8>) {
         onInput?(data)
@@ -156,6 +189,7 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         view.processDelegate = self
         view.onInput = { [weak self] data in self?.onUserInput?(id, data) }
         view.onFocus = { [weak self] in self?.onFocus?(id) }
+        view.isClaude = false
         views[id] = view
         if running.contains(id) { return }
         let shell = ShellEnvironment.loginShell
