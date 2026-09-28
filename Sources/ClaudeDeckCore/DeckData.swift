@@ -99,6 +99,18 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
     }
 }
 
+public enum AppTheme: String, Codable, Sendable, CaseIterable {
+    case system, light, dark
+
+    public var title: String {
+        switch self {
+        case .system: "Sistem"
+        case .light: "Açık"
+        case .dark: "Koyu"
+        }
+    }
+}
+
 public struct DeckSettings: Codable, Sendable, Equatable {
     public var resumeOnLaunch = true
     public var compactOnResume = true
@@ -109,6 +121,11 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     public var compactThresholdTokens = 200_000
     public var notifications = true
     public var bounceDock = true
+    /// Terminal font size in points (⌘+ / ⌘- / ⌘0).
+    public var terminalFontSize: Double = DeckSettings.defaultFontSize
+    public static let defaultFontSize: Double = 13
+    public static let fontSizeRange: ClosedRange<Double> = 9...32
+    public var theme: AppTheme = .system
     /// Sync projects and groups through iCloud Drive (see DeckSync).
     public var iCloudSync = false
 
@@ -123,6 +140,8 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         compactThresholdTokens = try c.decodeIfPresent(Int.self, forKey: .compactThresholdTokens) ?? d.compactThresholdTokens
         notifications = try c.decodeIfPresent(Bool.self, forKey: .notifications) ?? d.notifications
         bounceDock = try c.decodeIfPresent(Bool.self, forKey: .bounceDock) ?? d.bounceDock
+        terminalFontSize = try c.decodeIfPresent(Double.self, forKey: .terminalFontSize) ?? d.terminalFontSize
+        theme = (try? c.decodeIfPresent(AppTheme.self, forKey: .theme)) ?? d.theme
         iCloudSync = try c.decodeIfPresent(Bool.self, forKey: .iCloudSync) ?? d.iCloudSync
     }
 }

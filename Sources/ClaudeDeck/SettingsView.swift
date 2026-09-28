@@ -11,6 +11,13 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("Genel") {
+                Picker("Tema", selection: Binding(
+                    get: { model.deck.settings.theme },
+                    set: { model.setTheme($0) }
+                )) {
+                    ForEach(AppTheme.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                .pickerStyle(.segmented)
                 Toggle("Bilgisayar açılınca ClaudeDeck'i başlat", isOn: Binding(
                     get: { launchAtLogin },
                     set: { setLaunchAtLogin($0) }

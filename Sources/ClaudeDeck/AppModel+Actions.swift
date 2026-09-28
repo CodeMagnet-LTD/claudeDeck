@@ -2,6 +2,29 @@ import AppKit
 import ClaudeDeckCore
 
 extension AppModel {
+    func setTheme(_ theme: AppTheme) {
+        mutate { $0.settings.theme = theme }
+        applyTheme()
+    }
+
+    /// App-wide appearance; terminals follow through `viewDidChangeEffectiveAppearance`.
+    func applyTheme() {
+        switch deck.settings.theme {
+        case .system: NSApp.appearance = nil
+        case .light: NSApp.appearance = NSAppearance(named: .aqua)
+        case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
+        }
+    }
+
+    /// ⌘+ / ⌘- / ⌘0 — nil resets to the default size.
+    func zoomTerminals(by step: Double?) {
+        let current = deck.settings.terminalFontSize
+        let next = step.map { current + $0 } ?? DeckSettings.defaultFontSize
+        let clamped = min(max(next, DeckSettings.fontSizeRange.lowerBound), DeckSettings.fontSizeRange.upperBound)
+        mutate { $0.settings.terminalFontSize = clamped }
+        terminals.fontSize = clamped
+    }
+
     /// Clicking a project: show its files; if it has a running session, show that session (most
     /// recently active); otherwise leave the terminal view alone, start nothing, just open/close it.
     func openProject(_ id: UUID) {

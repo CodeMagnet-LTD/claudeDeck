@@ -1,4 +1,5 @@
 import AppKit
+import ClaudeDeckCore
 import SwiftUI
 
 @main
@@ -20,6 +21,22 @@ struct ClaudeDeckApp: App {
                     .keyboardShortcut("t")
                 Button("Yeni Terminal") { delegate.model.newShellInSelectedProject() }
                     .keyboardShortcut("t", modifiers: [.command, .option])
+            }
+            CommandGroup(after: .toolbar) {
+                Button("Terminali Büyüt") { delegate.model.zoomTerminals(by: 1) }
+                    .keyboardShortcut("+")
+                Button("Terminali Küçült") { delegate.model.zoomTerminals(by: -1) }
+                    .keyboardShortcut("-")
+                Button("Gerçek Boyut") { delegate.model.zoomTerminals(by: nil) }
+                    .keyboardShortcut("0")
+                Divider()
+                Picker("Tema", selection: Binding(
+                    get: { delegate.model.deck.settings.theme },
+                    set: { delegate.model.setTheme($0) }
+                )) {
+                    ForEach(AppTheme.allCases, id: \.self) { Text($0.title).tag($0) }
+                }
+                Divider()
             }
         }
 
@@ -48,6 +65,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         attention = AttentionCenter(model: model)
         widget.attach()
+        model.applyTheme()
         model.start()
         DebugSnapshot.startIfRequested(model: model)
     }

@@ -78,20 +78,43 @@ enum ShellEnvironment {
 }
 
 final class DeckTerminalView: LocalProcessTerminalView {
-    static let background = NSColor(calibratedRed: 0.09, green: 0.09, blue: 0.1, alpha: 1)
+    /// Terminal background for the current appearance (dark: near-black, light: near-white).
+    static let background = NSColor(name: nil) { appearance in
+        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            ? NSColor(calibratedRed: 0.09, green: 0.09, blue: 0.1, alpha: 1)
+            : NSColor(calibratedRed: 0.98, green: 0.98, blue: 0.97, alpha: 1)
+    }
+    static let foreground = NSColor(name: nil) { appearance in
+        appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
+            ? NSColor(calibratedWhite: 0.9, alpha: 1)
+            : NSColor(calibratedWhite: 0.12, alpha: 1)
+    }
     let sessionID: UUID
 
-    init(sessionID: UUID) {
+    init(sessionID: UUID, fontSize: CGFloat = 13) {
         self.sessionID = sessionID
         super.init(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
-        font = NSFont.monospacedSystemFont(ofSize: 13, weight: .regular)
+        font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
         optionAsMetaKey = true
-        nativeBackgroundColor = Self.background
-        nativeForegroundColor = NSColor(calibratedWhite: 0.9, alpha: 1)
+        applyColors()
         autoresizingMask = [.width, .height]
     }
 
     required init?(coder: NSCoder) { fatalError("not used") }
+
+    /// Resolve the dynamic colors for the view's current appearance (SwiftTerm stores concrete colors).
+    private func applyColors() {
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            nativeBackgroundColor = Self.background.usingColorSpace(.deviceRGB) ?? Self.background
+            nativeForegroundColor = Self.foreground.usingColorSpace(.deviceRGB) ?? Self.foreground
+            caretColor = nativeForegroundColor
+        }
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        applyColors()
+    }
 
     var onInput: ((ArraySlice<UInt8>) -> Void)?
     var onFocus: (() -> Void)?
@@ -154,10 +177,19 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
 
     func isRunning(_ id: UUID) -> Bool { running.contains(id) }
 
+    /// Font size for every terminal (existing and future); the pty is resized to the new grid.
+    @ObservationIgnored var fontSize: CGFloat = 13 {
+        didSet {
+            guard fontSize != oldValue else { return }
+            let font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
+            for view in views.values { view.font = font }
+        }
+    }
+
     func view(for id: UUID) -> DeckTerminalView? { views[id] }
 
     func start(id: UUID, cwd: String, claudePath: String?, args: [String]) {
-        let view = views[id] ?? DeckTerminalView(sessionID: id)
+        let view = views[id] ?? DeckTerminalView(sessionID: id, fontSize: fontSize)
         view.processDelegate = self
         view.onInput = { [weak self] data in self?.onUserInput?(id, data) }
         view.onFocus = { [weak self] in self?.onFocus?(id) }
@@ -185,7 +217,7 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
     /// A plain interactive login shell in `cwd` (no ClaudeDeck terminal id: claude started
     /// inside it is not tracked as this session).
     func startShell(id: UUID, cwd: String) {
-        let view = views[id] ?? DeckTerminalView(sessionID: id)
+        let view = views[id] ?? DeckTerminalView(sessionID: id, fontSize: fontSize)
         view.processDelegate = self
         view.onInput = { [weak self] data in self?.onUserInput?(id, data) }
         view.onFocus = { [weak self] in self?.onFocus?(id) }
