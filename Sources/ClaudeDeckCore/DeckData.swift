@@ -40,6 +40,8 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
     public var name: String
     /// Last known Claude `session_id` (from hooks) — used for `--resume` on relaunch.
     public var claudeSessionID: String?
+    /// Transcript of `claudeSessionID`; resume is only possible once it exists on disk.
+    public var transcriptPath: String?
     public var createdAt: Date
     public var lastActivityAt: Date?
     /// Whether the terminal was running when the app last saved; such sessions are resumed on launch.
@@ -51,6 +53,7 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
         self.projectID = projectID
         self.name = name
         self.claudeSessionID = claudeSessionID
+        self.transcriptPath = nil
         self.createdAt = createdAt
         self.lastActivityAt = lastActivityAt
         self.isOpen = isOpen
@@ -134,6 +137,16 @@ public struct DeckData: Codable, Sendable, Equatable {
         var n = 2
         while taken.contains("\(project.name) · \(n)") { n += 1 }
         return "\(project.name) · \(n)"
+    }
+
+    /// The Claude session id to pass to `--resume`, if its transcript exists.
+    public func resumableID(for id: UUID, fileExists: (String) -> Bool = { FileManager.default.fileExists(atPath: $0) }) -> String? {
+        guard let session = session(id), let sid = session.claudeSessionID else { return nil }
+        let path = session.transcriptPath ?? project(session.projectID).map {
+            TranscriptIndex.defaultRoot().appending(path: Transcript.projectDirectoryName(for: $0.path)).appending(path: "\(sid).jsonl").path
+        }
+        guard let path, fileExists(path) else { return nil }
+        return sid
     }
 
     public mutating func removeSession(_ id: UUID) {
