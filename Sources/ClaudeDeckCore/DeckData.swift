@@ -268,10 +268,13 @@ public struct DeckData: Codable, Sendable, Equatable {
         return session
     }
 
-    /// Sessions to start when the app launches.
+    /// Sessions to start when the app launches. Terminals with a startup command follow only their
+    /// own "auto start" switch (off = never started on launch, even if open at quit); everything
+    /// else comes back if it was open at quit and resuming is enabled.
     public func sessionsToStartOnLaunch(resumeOpen: Bool) -> [DeckSession] {
         sessions.filter { s in
-            (s.kind == .shell && s.autoStart && s.startupCommand != nil) || (resumeOpen && s.isOpen)
+            if s.kind == .shell, s.startupCommand != nil { return s.autoStart }
+            return resumeOpen && s.isOpen
         }
     }
 

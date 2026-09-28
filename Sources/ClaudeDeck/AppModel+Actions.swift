@@ -2,6 +2,22 @@ import AppKit
 import ClaudeDeckCore
 
 extension AppModel {
+    /// Clicking a project: show its files; if it has a running session, show that session (most
+    /// recently active); otherwise leave the terminal view alone, start nothing, just open/close it.
+    func openProject(_ id: UUID) {
+        guard let project = deck.project(id) else { return }
+        browsedProjectID = id
+        let running = deck.sessions(in: id).filter { terminals.isRunning($0.id) }
+        if let recent = running.max(by: { ($0.lastActivityAt ?? $0.createdAt) < ($1.lastActivityAt ?? $1.createdAt) }) {
+            if project.collapsed { mutate { $0.updateProject(id) { $0.collapsed = false } } }
+            selectedSessionID = recent.id
+        } else if idleExpandedProjects.contains(id) {
+            idleExpandedProjects.remove(id)
+        } else {
+            idleExpandedProjects.insert(id)
+        }
+    }
+
     /// Projects waiting for the user first, then ones with a running session; otherwise saved order.
     func activeFirst(_ projects: [Project]) -> [Project] {
         func rank(_ p: Project) -> Int {

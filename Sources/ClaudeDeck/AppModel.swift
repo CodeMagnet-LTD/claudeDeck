@@ -40,6 +40,8 @@ final class AppModel {
     var hookError: String?
     /// Project shown in the file browser: the last project or session clicked in the sidebar.
     var browsedProjectID: UUID?
+    /// Projects without a running session that the user opened in the sidebar (not persisted).
+    var idleExpandedProjects: Set<UUID> = []
     var claudePath: String?
 
     @ObservationIgnored let terminals = TerminalRegistry()

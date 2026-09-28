@@ -279,6 +279,12 @@ import Testing
         #expect(!deck.sessionsToStartOnLaunch(resumeOpen: false).map(\.id).contains(claude.id))
         deck.updateSession(web.id) { $0.autoStart = false }
         #expect(!deck.sessionsToStartOnLaunch(resumeOpen: false).map(\.id).contains(web.id))
+        // Auto start off wins even when the terminal was open at quit.
+        deck.updateSession(web.id) { $0.isOpen = true }
+        #expect(!deck.sessionsToStartOnLaunch(resumeOpen: true).map(\.id).contains(web.id))
+        // Plain terminals without a command come back if they were open.
+        let plain = deck.addSession(to: p.id, kind: .shell)!
+        #expect(deck.sessionsToStartOnLaunch(resumeOpen: true).map(\.id).contains(plain.id))
     }
 
     @Test func toleratesMissingKeys() throws {

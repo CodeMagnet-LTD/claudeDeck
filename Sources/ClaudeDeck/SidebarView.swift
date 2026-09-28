@@ -8,7 +8,15 @@ struct SidebarView: View {
         @Bindable var model = model
         let sections = model.deck.sections
         let waiting = model.attentionSessions
-        List(selection: $model.selectedSessionID) {
+        // Project header rows carry the project id as their tag: the list's own click handling
+        // is the only reliable way to catch a click on a DisclosureGroup header.
+        List(selection: Binding(
+            get: { model.selectedSessionID },
+            set: { id in
+                guard let id else { return }
+                if model.deck.project(id) != nil { model.openProject(id) } else { model.selectedSessionID = id }
+            }
+        )) {
             if !waiting.isEmpty {
                 Section("Bekleyenler") {
                     ForEach(waiting) { session in
@@ -120,20 +128,6 @@ struct ProjectRow: View {
     @Environment(AppModel.self) private var model
     let project: Project
     @State private var showResume = false
-    @State private var openedWhileIdle = false
-
-    /// Clicking a project shows its files. If it has a running session, that session is shown
-    /// (most recently active); otherwise the terminal view is left alone and nothing is started.
-    private func openProject(_ sessions: [DeckSession]) {
-        model.browsedProjectID = project.id
-        let running = sessions.filter { model.terminals.isRunning($0.id) }
-        if let recent = running.max(by: { ($0.lastActivityAt ?? $0.createdAt) < ($1.lastActivityAt ?? $1.createdAt) }) {
-            if project.collapsed { model.mutate { $0.updateProject(project.id) { $0.collapsed = false } } }
-            model.selectedSessionID = recent.id
-        } else {
-            openedWhileIdle.toggle()
-        }
-    }
 
     var body: some View {
         let sessions = model.deck.sessions(in: project.id)
@@ -142,12 +136,12 @@ struct ProjectRow: View {
         // Projects without a running session start collapsed; with one, the saved state applies.
         // A session waiting for the user (permission, question, unseen finish) forces it open.
         DisclosureGroup(isExpanded: Binding(
-            get: { attention || (active ? !project.collapsed : openedWhileIdle) },
+            get: { attention || (active ? !project.collapsed : model.idleExpandedProjects.contains(project.id)) },
             set: { expanded in
                 if active {
                     model.mutate { $0.updateProject(project.id) { $0.collapsed = !expanded } }
                 } else {
-                    openedWhileIdle = expanded
+                    if expanded { model.idleExpandedProjects.insert(project.id) } else { model.idleExpandedProjects.remove(project.id) }
                 }
             }
         )) {
@@ -179,9 +173,9 @@ struct ProjectRow: View {
             }
             .help(project.path)
             .contentShape(Rectangle())
-            .onTapGesture { openProject(sessions) }
             .contextMenu { ProjectMenu(project: project, showResume: $showResume) }
         }
+        .tag(project.id)
         .sheet(isPresented: $showResume) { ResumeSheet(project: project) }
     }
 }
