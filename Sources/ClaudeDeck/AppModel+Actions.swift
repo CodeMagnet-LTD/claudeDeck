@@ -39,6 +39,9 @@ extension AppModel {
         } else {
             idleExpandedProjects.insert(id)
         }
+        // Keep the highlight on the project that was clicked (selecting the session moved it).
+        sidebarSelection = id
+        browsedProjectID = id
     }
 
     /// Projects waiting for the user first, then ones with a running session; otherwise saved order.

@@ -10,8 +10,10 @@ struct SidebarView: View {
         let waiting = model.attentionSessions
         // Project header rows carry the project id as their tag: the list's own click handling
         // is the only reliable way to catch a click on a DisclosureGroup header.
+        // The highlight is the last row the user clicked (project or session), not the terminal
+        // that happens to be shown.
         List(selection: Binding(
-            get: { model.selectedSessionID },
+            get: { model.sidebarSelection },
             set: { id in
                 guard let id else { return }
                 if model.deck.project(id) != nil { model.openProject(id) } else { model.selectedSessionID = id }

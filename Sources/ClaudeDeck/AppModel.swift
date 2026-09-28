@@ -40,6 +40,8 @@ final class AppModel {
     var hookError: String?
     /// Project shown in the file browser: the last project or session clicked in the sidebar.
     var browsedProjectID: UUID?
+    /// Highlighted sidebar row: a project or session id — whatever was clicked last.
+    var sidebarSelection: UUID?
     /// Projects without a running session that the user opened in the sidebar (not persisted).
     var idleExpandedProjects: Set<UUID> = []
     var claudePath: String?
@@ -379,6 +381,7 @@ final class AppModel {
     var selectedSessionID: UUID? {
         get { deck.selectedSessionID }
         set {
+            sidebarSelection = newValue
             guard deck.selectedSessionID != newValue || (newValue.map { !deck.panes.contains($0) } ?? false) else { return }
             deck.select(newValue)
             if let newValue {
