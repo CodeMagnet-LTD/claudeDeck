@@ -5,6 +5,9 @@ import UserNotifications
 /// Notifications, Dock badge and Dock bounce for session state changes.
 @MainActor
 final class AttentionCenter: NSObject, UNUserNotificationCenterDelegate {
+    nonisolated static let permissionCategory = "permission"
+    nonisolated static let approveAction = "approve"
+    nonisolated static let denyAction = "deny"
     private let model: AppModel
     private var center: UNUserNotificationCenter? {
         // UNUserNotificationCenter crashes outside an app bundle (e.g. `swift run`).
@@ -15,6 +18,15 @@ final class AttentionCenter: NSObject, UNUserNotificationCenterDelegate {
         self.model = model
         super.init()
         center?.delegate = self
+        // Answered in place: the keystroke goes into the terminal, no need to bring the app up.
+        center?.setNotificationCategories([UNNotificationCategory(
+            identifier: Self.permissionCategory,
+            actions: [
+                UNNotificationAction(identifier: Self.approveAction, title: "İzin ver", options: []),
+                UNNotificationAction(identifier: Self.denyAction, title: "Reddet", options: [.destructive]),
+            ],
+            intentIdentifiers: []
+        )])
         center?.requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
         model.onAttention = { [weak self] event in self?.handle(event) }
         model.onCountsChanged = { [weak self] in self?.updateBadge() }
@@ -35,6 +47,11 @@ final class AttentionCenter: NSObject, UNUserNotificationCenterDelegate {
         content.body = event.body
         content.sound = event.activity.isBlocked ? .default : nil
         content.userInfo = ["sessionID": event.sessionID.uuidString]
+        // The stamp ties the actions to this prompt; a later one must not be answered by them.
+        if event.activity == .needsPermission, let stamp = model.pendingPermissionStamp(event.sessionID) {
+            content.categoryIdentifier = Self.permissionCategory
+            content.userInfo["stamp"] = stamp.timeIntervalSince1970
+        }
         content.threadIdentifier = event.sessionID.uuidString
         content.interruptionLevel = event.activity.isBlocked ? .timeSensitive : .active
         // One notification per session: a newer state replaces the older one.
@@ -53,9 +70,15 @@ final class AttentionCenter: NSObject, UNUserNotificationCenterDelegate {
     // MARK: UNUserNotificationCenterDelegate
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        let raw = response.notification.request.content.userInfo["sessionID"] as? String
+        let userInfo = response.notification.request.content.userInfo
+        let raw = userInfo["sessionID"] as? String
         guard let raw, let id = UUID(uuidString: raw) else { return }
+        let action = response.actionIdentifier
+        let stamp = (userInfo["stamp"] as? Double).map { Date(timeIntervalSince1970: $0) }
         await MainActor.run {
+            // Only if that same prompt is still open; otherwise show the session instead.
+            if action == Self.approveAction, self.model.approvePermission(id, expectedAt: stamp) { return }
+            if action == Self.denyAction, self.model.denyPermission(id, expectedAt: stamp) { return }
             self.model.openMainWindow?()
             self.model.reveal(id)
         }
