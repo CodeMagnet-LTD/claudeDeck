@@ -8,14 +8,33 @@ hook'ların aynen geçerlidir.
 ## Derleme
 
 ```sh
-./build.sh          # release → build/ClaudeDeck.app (takım sertifikasıyla imzalı)
+./build.sh          # release → build/ClaudeDeck.app (widget dahil, takımla otomatik imzalı)
+./build.sh debug    # debug derleme
 ./build.sh run      # derle ve (yeniden) başlat
+swift build         # yalnızca SwiftPM (widget'sız) hızlı derleme
 swift test          # Core birim testleri
 xcodegen generate   # ClaudeDeck.xcodeproj'u project.yml'den üret, sonra Xcode'da aç
 ```
 
+`build.sh` artık `xcodegen generate` + `xcodebuild` (şema `ClaudeDeck`, `build/xcode` altında) ile derler
+ve çıkan `ClaudeDeck.app`'i `build/ClaudeDeck.app`'e kopyalar: SwiftPM uygulama uzantısı (widget)
+derleyemez. İmzalamayı xcodebuild yapar (otomatik imzalama, `DEVELOPMENT_TEAM` = V6G4B5T63L).
+`xcodegen` kurulu değilse eski SwiftPM paketleme yoluna düşer (widget olmadan).
+
 Xcode projesi üretilir; ayarları (takım, bundle id) `project.yml` içinde değiştir. Xcode ilk açılışta
 SwiftTerm'in build eklentisi için "Trust & Enable" sorar.
+
+## Masaüstü widget'ı
+
+Küçük ve orta boy WidgetKit widget'ı (masaüstü / Bildirim Merkezi): kırmızı bekleyen, yeşil çalışan,
+sarı sıra sende sayıları; orta boyda dikkat bekleyen ilk 4 oturum (proje, durum, kısa ayrıntı).
+Tıklamak uygulamayı o oturumda açar (`claudedeck://session/<uuid>`). Eklemek için: uygulamayı en az bir
+kez çalıştır, masaüstünde sağ tık › "Widget'ları Düzenle…" › ClaudeDeck.
+
+Uygulama durum sayıları değiştikçe (~1 sn gecikmeyle) App Group kapsayıcısına
+(`~/Library/Group Containers/V6G4B5T63L.dev.medeni.ClaudeDeck/widget-snapshot.json`) küçük bir
+özet yazar. Uygulama sandbox'sızdır (pty/shell için); widget uzantısı sandbox'lıdır. SwiftPM
+derlemesinde App Group yetkisi olmadığından bu adım sessizce atlanır.
 
 ## Durum nasıl bilinir (ekran okuma yok)
 

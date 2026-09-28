@@ -29,11 +29,19 @@ targets:
     dependencies:
       - target: ClaudeDeckCore
       - package: SwiftTerm
+      - target: ClaudeDeckWidget   # embedded in Contents/PlugIns
+    entitlements:
+      path: Support/ClaudeDeck.entitlements
+      properties:
+        # App Group shared with the widget (team-prefixed: no provisioning profile needed on macOS).
+        com.apple.security.application-groups: [V6G4B5T63L.dev.medeni.ClaudeDeck]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: dev.medeni.ClaudeDeck
         PRODUCT_NAME: ClaudeDeck
         GENERATE_INFOPLIST_FILE: YES
+        # Merged with the generated keys; carries CFBundleURLTypes (claudedeck://) for widget taps.
+        INFOPLIST_FILE: Support/Info.plist
         INFOPLIST_KEY_CFBundleDisplayName: ClaudeDeck
         INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
         INFOPLIST_KEY_NSPrincipalClass: NSApplication
@@ -42,6 +50,36 @@ targets:
         # Needs a real pty, ~/.claude and the user's shell: no App Sandbox.
         ENABLE_APP_SANDBOX: NO
         ENABLE_HARDENED_RUNTIME: YES
+  ClaudeDeckWidget:
+    type: app-extension
+    platform: macOS
+    sources: [Widget]
+    dependencies:
+      - target: ClaudeDeckCore
+      - sdk: WidgetKit.framework
+      - sdk: SwiftUI.framework
+    info:
+      path: Widget/Info.plist
+      properties:
+        CFBundleDisplayName: ClaudeDeck
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    entitlements:
+      path: Widget/ClaudeDeckWidget.entitlements
+      properties:
+        # Widget extensions must be sandboxed.
+        com.apple.security.app-sandbox: true
+        com.apple.security.application-groups: [V6G4B5T63L.dev.medeni.ClaudeDeck]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.medeni.ClaudeDeck.Widget
+        PRODUCT_NAME: ClaudeDeckWidget
+        MARKETING_VERSION: 0.1.0
+        CURRENT_PROJECT_VERSION: 1
+        ENABLE_HARDENED_RUNTIME: YES
+        SKIP_INSTALL: YES
   ClaudeDeckCoreTests:
     type: bundle.unit-test
     platform: macOS
