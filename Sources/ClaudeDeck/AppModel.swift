@@ -211,6 +211,10 @@ final class AppModel {
                     $0.claudeSessionID = status.sessionID
                     $0.transcriptPath = status.transcriptPath
                     $0.lastActivityAt = status.updatedAt
+                    // The worktree Claude created; only SessionStart, cwd may drift later.
+                    if $0.worktreeName != nil, let cwd = status.cwd, status.event == "SessionStart" || $0.workingDirectory == nil {
+                        $0.workingDirectory = cwd
+                    }
                 }
                 scheduleSave()
             }
@@ -323,12 +327,15 @@ final class AppModel {
         let sid = resumeID ?? (resume ? deck.resumableID(for: id) : nil)
         var args = ["--name", session.name]
         if let sid { args += ["--resume", sid] }
+        // Worktree sessions run in their worktree; `--worktree` only when it doesn't exist yet.
+        let worktreeDir = session.workingDirectory.flatMap { FileManager.default.fileExists(atPath: $0) ? $0 : nil }
+        if sid == nil, worktreeDir == nil, let worktree = session.worktreeName { args += ["--worktree", worktree] }
         if automatic, sid != nil, deck.settings.compactOnResume { pendingCompact.insert(id) }
         transcriptSignals[id] = nil
         answeredAt[id] = nil
         hookStatuses[id] = nil
         launchedAt[id] = Date()
-        terminals.start(id: id, cwd: project.path, claudePath: claudePath, args: args)
+        terminals.start(id: id, cwd: worktreeDir ?? project.path, claudePath: claudePath, args: args)
         deck.updateSession(id) { $0.isOpen = true }
         lastNotified[id] = nil
         scheduleSave()

@@ -72,6 +72,12 @@ betik hiçbir şey derlemeden/göndermeden açıklamayla durur.
   uygulama açılışında başlar. Projenin menüsünde "Yeni terminal (komutla)…".
 - Ayarlar › "Bilgisayar açılınca ClaudeDeck'i başlat" (giriş öğesi). Uygulamanın /Applications'da olması
   gerekir: `./build.sh install`.
+- Ayrı worktree: projenin menüsünde "Yeni Claude oturumu (ayrı worktree)…" (yalnızca git deposunda)
+  `claude --name … --worktree <ad>` ile kendi git worktree'sinde (`<repo>/.claude/worktrees/<ad>`, dal
+  `worktree-<ad>`) çalışan bir oturum açar; aynı projedeki paralel oturumlar aynı dosyaları düzenlemez.
+  Ad varsayılan olarak `<proje>-2`, `<proje>-3`…; yalnızca `A-Z a-z 0-9 . _ -`. Gerçek klasör hook'ların
+  bildirdiği `cwd`'den öğrenilir; devam ettirme (`--resume`) o klasörde çalışır, `--worktree` tekrar verilmez.
+  Sidebar'da dal simgesi + worktree adı görünür; Dosyalar paneli worktree klasörünü gösterir.
 - ⌘V: panoda yalnızca görüntü varsa Claude'a resim olarak eklenir.
 - Veriler: `~/Library/Application Support/ClaudeDeck/deck.json`.
 

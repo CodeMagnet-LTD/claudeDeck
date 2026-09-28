@@ -134,9 +134,12 @@ struct FileBrowserPanel: View {
         return URL(fileURLWithPath: path)
     }
 
+    /// The focused session's project; for worktree sessions rooted at the session's worktree.
     private var focusedProject: Project? {
-        model.selectedSessionID.flatMap { model.deck.session($0) }.flatMap { model.deck.project($0.projectID) }
-            ?? model.deck.projects.first
+        let session = model.selectedSessionID.flatMap { model.deck.session($0) }
+        guard var project = session.flatMap({ model.deck.project($0.projectID) }) else { return model.deck.projects.first }
+        if let wd = session?.workingDirectory, FileManager.default.fileExists(atPath: wd) { project.path = wd }
+        return project
     }
 
     private func tree(for project: Project) -> FileTree {

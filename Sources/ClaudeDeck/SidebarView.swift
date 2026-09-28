@@ -234,6 +234,14 @@ struct SessionRow: View {
                         Image(systemName: "apple.terminal").font(.caption).foregroundStyle(.secondary)
                     }
                     Text(session.name).lineLimit(1)
+                    if let worktree = session.worktreeName {
+                        Label(worktree, systemImage: "arrow.triangle.branch")
+                            .labelStyle(.titleAndIcon)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .help("Ayrı git worktree: \(session.workingDirectory ?? worktree)")
+                    }
                     Spacer(minLength: 4)
                     if let at = status.updatedAt {
                         TimelineView(.periodic(from: .now, by: 15)) { _ in
@@ -335,6 +343,8 @@ struct ProjectMenu: View {
 
     var body: some View {
         Button("Yeni Claude oturumu") { model.newSession(in: project.id) }
+        Button("Yeni Claude oturumu (ayrı worktree)…") { model.promptWorktreeSession(in: project) }
+            .disabled(!model.isGitRepository(project))
         Button("Yeni terminal") { model.newShell(in: project.id) }
         Button("Yeni terminal (komutla)…") {
             if let command = TextPrompt.ask(title: "Açılışta çalışacak komut", placeholder: "yarn start") {
