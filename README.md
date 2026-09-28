@@ -46,6 +46,12 @@ SwiftTerm'in build eklentisi için "Trust & Enable" sorar.
 - Dosyalar paneli (⌘⇧E): odaktaki oturumun projesi; aç, VS Code'da aç, Finder'da göster, Claude'a
   `@dosya` olarak ekle, yolu kopyala, yeni dosya/klasör, yeniden adlandır, çöpe taşı. Çift tık = VS Code
   (kuruluysa) ya da varsayılan uygulama. Araç çubuğundaki `</>` projeyi VS Code'da açar.
+- Düz terminal (⌥⌘T): proje klasöründe login shell. Sağ tık › "Başlangıç komutu…" ile her açılışta
+  yazılıp çalıştırılan komut (ör. `yarn start`); "Uygulama açılınca otomatik başlat" ile kapalı olsa bile
+  uygulama açılışında başlar. Projenin menüsünde "Yeni terminal (komutla)…".
+- Ayarlar › "Bilgisayar açılınca ClaudeDeck'i başlat" (giriş öğesi). Uygulamanın /Applications'da olması
+  gerekir: `./build.sh install`.
+- ⌘V: panoda yalnızca görüntü varsa Claude'a resim olarak eklenir.
 - Veriler: `~/Library/Application Support/ClaudeDeck/deck.json`.
 
 ## Geliştirme notu

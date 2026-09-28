@@ -54,6 +54,10 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
     public var lastActivityAt: Date?
     /// Whether the terminal was running when the app last saved; such sessions are resumed on launch.
     public var isOpen: Bool
+    /// Shell sessions: typed into the shell every time it starts (e.g. "yarn start").
+    public var startupCommand: String?
+    /// Shell sessions: start whenever the app launches, even if closed at quit.
+    public var autoStart: Bool
 
     public init(id: UUID = UUID(), projectID: UUID, name: String, kind: SessionKind = .claude, claudeSessionID: String? = nil,
                 createdAt: Date = Date(), lastActivityAt: Date? = nil, isOpen: Bool = true) {
@@ -66,6 +70,8 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
         self.createdAt = createdAt
         self.lastActivityAt = lastActivityAt
         self.isOpen = isOpen
+        self.startupCommand = nil
+        self.autoStart = false
     }
     /// Tolerant decoding: files written by older versions lack newer keys (e.g. `kind`).
     public init(from decoder: Decoder) throws {
@@ -79,6 +85,8 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
         createdAt = try c.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
         lastActivityAt = try c.decodeIfPresent(Date.self, forKey: .lastActivityAt)
         isOpen = try c.decodeIfPresent(Bool.self, forKey: .isOpen) ?? false
+        startupCommand = try c.decodeIfPresent(String.self, forKey: .startupCommand)
+        autoStart = try c.decodeIfPresent(Bool.self, forKey: .autoStart) ?? false
     }
 }
 
@@ -176,6 +184,31 @@ public struct DeckData: Codable, Sendable, Equatable {
         }
         guard let path, fileExists(path) else { return nil }
         return sid
+    }
+
+    /// A terminal that runs `command` on start and auto-starts with the app: "app · yarn start".
+    @discardableResult
+    public mutating func addCommandShell(to projectID: UUID, command: String) -> DeckSession? {
+        guard let project = project(projectID) else { return nil }
+        let taken = Set(sessions.filter { $0.projectID == projectID }.map(\.name))
+        var name = "\(project.name) · \(command.prefix(40))"
+        var n = 2
+        while taken.contains(name) { name = "\(project.name) · \(command.prefix(40)) \(n)"; n += 1 }
+        guard var session = addSession(to: projectID, kind: .shell, name: name) else { return nil }
+        updateSession(session.id) {
+            $0.startupCommand = command
+            $0.autoStart = true
+        }
+        session.startupCommand = command
+        session.autoStart = true
+        return session
+    }
+
+    /// Sessions to start when the app launches.
+    public func sessionsToStartOnLaunch(resumeOpen: Bool) -> [DeckSession] {
+        sessions.filter { s in
+            (s.kind == .shell && s.autoStart && s.startupCommand != nil) || (resumeOpen && s.isOpen)
+        }
     }
 
     public func nextShellName(for project: Project) -> String {

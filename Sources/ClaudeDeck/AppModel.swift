@@ -90,12 +90,11 @@ final class AppModel {
     }
 
     private func launchInitialSessions() {
-        let toResume = deck.sessions.filter(\.isOpen)
-        if deck.settings.resumeOnLaunch {
-            for session in toResume { launch(session.id, resume: true, automatic: true) }
-        } else {
-            for session in toResume { deck.updateSession(session.id) { $0.isOpen = false } }
+        let toStart = deck.sessionsToStartOnLaunch(resumeOpen: deck.settings.resumeOnLaunch)
+        for session in deck.sessions where session.isOpen && !toStart.contains(where: { $0.id == session.id }) {
+            deck.updateSession(session.id) { $0.isOpen = false }
         }
+        for session in toStart { launch(session.id, resume: true, automatic: true) }
         if let selected = deck.selectedSessionID, deck.session(selected) != nil, !terminals.isRunning(selected) {
             launch(selected, resume: true, automatic: true)
         }
@@ -304,6 +303,14 @@ final class AppModel {
         if terminals.isRunning(id) { return }
         if session.kind == .shell {
             terminals.startShell(id: id, cwd: project.path)
+            if let command = session.startupCommand?.trimmingCharacters(in: .whitespacesAndNewlines), !command.isEmpty {
+                // Typed like the user would once the shell had a moment to load its rc files
+                // (the pty buffers it meanwhile), so it lands in history and Ctrl+C keeps the shell.
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(600))
+                    terminals.type(command + "\r", into: id)
+                }
+            }
             deck.updateSession(id) { $0.isOpen = true }
             scheduleSave()
             onCountsChanged?()
@@ -423,6 +430,14 @@ final class AppModel {
     @discardableResult
     func newShell(in projectID: UUID) -> UUID? {
         guard let session = deck.addSession(to: projectID, kind: .shell) else { return nil }
+        launch(session.id, resume: false)
+        selectedSessionID = session.id
+        return session.id
+    }
+
+    @discardableResult
+    func newCommandShell(in projectID: UUID, command: String) -> UUID? {
+        guard let session = deck.addCommandShell(to: projectID, command: command) else { return nil }
         launch(session.id, resume: false)
         selectedSessionID = session.id
         return session.id

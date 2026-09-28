@@ -1,12 +1,32 @@
 import ClaudeDeckCore
+import ServiceManagement
 import SwiftUI
 
 struct SettingsView: View {
     @Environment(AppModel.self) private var model
     @State private var installed = false
+    @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
+    @State private var loginError: String?
 
     var body: some View {
         Form {
+            Section("Genel") {
+                Toggle("Bilgisayar açılınca ClaudeDeck'i başlat", isOn: Binding(
+                    get: { launchAtLogin },
+                    set: { setLaunchAtLogin($0) }
+                ))
+                if SMAppService.mainApp.status == .requiresApproval {
+                    Text("Sistem Ayarları › Genel › Giriş Öğeleri'nden onay bekliyor.")
+                        .font(.caption).foregroundStyle(.orange)
+                }
+                if !Bundle.main.bundlePath.hasPrefix("/Applications") {
+                    Text("Uygulama /Applications dışında çalışıyor (\(Bundle.main.bundlePath)). Kalıcı giriş öğesi için `./build.sh install` ile /Applications'a kur.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+                if let loginError {
+                    Text(loginError).font(.caption).foregroundStyle(.red)
+                }
+            }
             Section("Oturumlar") {
                 Toggle("Açılışta açık oturumları otomatik devam ettir", isOn: setting(\.resumeOnLaunch))
                 Toggle("Devam ettirilen büyük oturumlarda /compact çalıştır", isOn: setting(\.compactOnResume))
@@ -41,6 +61,16 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(width: 520)
         .onAppear { installed = model.hooksInstalled }
+    }
+
+    private func setLaunchAtLogin(_ on: Bool) {
+        do {
+            if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+            loginError = nil
+        } catch {
+            loginError = error.localizedDescription
+        }
+        launchAtLogin = SMAppService.mainApp.status == .enabled
     }
 
     private func setting<T>(_ keyPath: WritableKeyPath<DeckSettings, T>) -> Binding<T> {

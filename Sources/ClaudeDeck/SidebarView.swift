@@ -237,7 +237,7 @@ struct SessionRow: View {
                 }
                 HStack(spacing: 6) {
                     StatusPill(display: status.display, unseen: model.isUnseenIdle(session.id))
-                    if let detail = status.detail {
+                    if let detail = status.detail ?? session.startupCommand.map({ "▶︎ " + $0 }) {
                         Text(detail)
                             .font(.caption)
                             .foregroundStyle(.secondary)
@@ -280,6 +280,30 @@ struct SessionMenu: View {
             Button("Devam et") { model.launch(session.id, resume: true); model.selectedSessionID = session.id }
             Button("Yeni başlat") { model.launch(session.id, resume: false); model.selectedSessionID = session.id }
         }
+        if session.kind == .shell {
+            Divider()
+            Button(session.startupCommand == nil ? "Başlangıç komutu…" : "Başlangıç komutu: \(session.startupCommand!)…") {
+                if let command = TextPrompt.ask(
+                    title: "Terminal açılınca çalışacak komut",
+                    placeholder: "yarn start (boş bırak = yok)",
+                    initial: session.startupCommand ?? "",
+                    allowEmpty: true
+                ) {
+                    model.mutate {
+                        $0.updateSession(session.id) {
+                            $0.startupCommand = command.isEmpty ? nil : command
+                            if command.isEmpty { $0.autoStart = false } else if session.startupCommand == nil { $0.autoStart = true }
+                        }
+                    }
+                }
+            }
+            if session.startupCommand != nil {
+                Toggle("Uygulama açılınca otomatik başlat", isOn: Binding(
+                    get: { session.autoStart },
+                    set: { value in model.mutate { $0.updateSession(session.id) { $0.autoStart = value } } }
+                ))
+            }
+        }
         Divider()
         Button("Yeniden adlandır…") {
             if let name = TextPrompt.ask(title: "Oturumu yeniden adlandır", placeholder: "Ad", initial: session.name) {
@@ -299,6 +323,11 @@ struct ProjectMenu: View {
     var body: some View {
         Button("Yeni Claude oturumu") { model.newSession(in: project.id) }
         Button("Yeni terminal") { model.newShell(in: project.id) }
+        Button("Yeni terminal (komutla)…") {
+            if let command = TextPrompt.ask(title: "Açılışta çalışacak komut", placeholder: "yarn start") {
+                model.newCommandShell(in: project.id, command: command)
+            }
+        }
         Button("Eski oturumu devam ettir…") { showResume = true }
         let projectSessions = model.deck.sessions(in: project.id)
         if projectSessions.count > 1 {
@@ -370,7 +399,8 @@ struct GroupMenu: View {
 /// Small modal text prompt (context menus can't host SwiftUI alerts reliably).
 enum TextPrompt {
     @MainActor
-    static func ask(title: String, placeholder: String, initial: String = "") -> String? {
+    /// Returns nil on cancel; "" only when `allowEmpty` (e.g. clearing a value).
+    static func ask(title: String, placeholder: String, initial: String = "", allowEmpty: Bool = false) -> String? {
         let alert = NSAlert()
         alert.messageText = title
         let field = NSTextField(frame: NSRect(x: 0, y: 0, width: 260, height: 24))
@@ -382,6 +412,6 @@ enum TextPrompt {
         alert.window.initialFirstResponder = field
         guard alert.runModal() == .alertFirstButtonReturn else { return nil }
         let value = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        return value.isEmpty ? nil : value
+        return value.isEmpty && !allowEmpty ? nil : value
     }
 }

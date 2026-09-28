@@ -3,6 +3,7 @@
 #   ./build.sh            release build
 #   ./build.sh debug      debug build
 #   ./build.sh run        release build, then (re)launch the app
+#   ./build.sh install    release build, copy to /Applications and launch from there
 set -eu
 cd "$(dirname "$0")"
 CONFIG=release
@@ -43,6 +44,15 @@ else
   echo "Signed ad-hoc (no Apple Development certificate for team ${TEAM:-?})"
 fi
 echo "Built $APP"
+
+if [ "${1:-}" = "install" ]; then
+  pkill -x ClaudeDeck 2>/dev/null || true
+  sleep 0.5
+  rm -rf /Applications/ClaudeDeck.app
+  cp -R "$APP" /Applications/ClaudeDeck.app
+  echo "Installed /Applications/ClaudeDeck.app"
+  open /Applications/ClaudeDeck.app
+fi
 
 if [ "${1:-}" = "run" ]; then
   pkill -x ClaudeDeck 2>/dev/null || true

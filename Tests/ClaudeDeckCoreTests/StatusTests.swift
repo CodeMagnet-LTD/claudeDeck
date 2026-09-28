@@ -249,6 +249,26 @@ import Testing
         #expect(deck.addSession(to: p.id, kind: .shell, claudeSessionID: "x")?.claudeSessionID == nil)
     }
 
+    @Test func commandShellsAutoStart() {
+        var deck = DeckData()
+        let p = deck.addProject(path: "/w/web")
+        let web = deck.addCommandShell(to: p.id, command: "yarn start")!
+        #expect(web.name == "web · yarn start")
+        #expect(deck.session(web.id)?.startupCommand == "yarn start")
+        #expect(deck.addCommandShell(to: p.id, command: "yarn start")?.name == "web · yarn start 2")
+        let claude = deck.addSession(to: p.id)!
+        deck.updateSession(web.id) { $0.isOpen = false }
+        deck.updateSession(claude.id) { $0.isOpen = false }
+        // Command shells start even when closed at quit; others only if open and resuming.
+        #expect(deck.sessionsToStartOnLaunch(resumeOpen: true).map(\.id).contains(web.id))
+        #expect(!deck.sessionsToStartOnLaunch(resumeOpen: true).map(\.id).contains(claude.id))
+        deck.updateSession(claude.id) { $0.isOpen = true }
+        #expect(deck.sessionsToStartOnLaunch(resumeOpen: false).map(\.id).contains(web.id))
+        #expect(!deck.sessionsToStartOnLaunch(resumeOpen: false).map(\.id).contains(claude.id))
+        deck.updateSession(web.id) { $0.autoStart = false }
+        #expect(!deck.sessionsToStartOnLaunch(resumeOpen: false).map(\.id).contains(web.id))
+    }
+
     @Test func toleratesMissingKeys() throws {
         let deck = try JSONDecoder().decode(DeckData.self, from: Data(#"{"projects":[]}"#.utf8))
         #expect(deck.settings == DeckSettings())
