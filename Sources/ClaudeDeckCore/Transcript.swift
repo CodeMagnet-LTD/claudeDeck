@@ -37,6 +37,30 @@ public enum Transcript {
         return f.date(from: string)
     }
 
+    /// Current context size in tokens: the usage of the last main-thread assistant message
+    /// (input + cache read + cache creation). Reads only the tail of the file.
+    public static func contextTokens(of url: URL, tailBytes: Int = 1_048_576) -> Int? {
+        guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
+        defer { try? handle.close() }
+        let size = (try? handle.seekToEnd()) ?? 0
+        try? handle.seek(toOffset: size > UInt64(tailBytes) ? size - UInt64(tailBytes) : 0)
+        guard let data = try? handle.readToEnd() else { return nil }
+        return contextTokens(inTail: String(decoding: data, as: UTF8.self))
+    }
+
+    public static func contextTokens(inTail text: String) -> Int? {
+        for line in text.split(separator: "\n").reversed() where line.contains("\"usage\"") && line.contains("\"assistant\"") {
+            guard let obj = try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any],
+                  obj["type"] as? String == "assistant",
+                  obj["isSidechain"] as? Bool != true,
+                  let usage = (obj["message"] as? [String: Any])?["usage"] as? [String: Any]
+            else { continue }
+            let keys = ["input_tokens", "cache_read_input_tokens", "cache_creation_input_tokens"]
+            return keys.reduce(0) { $0 + ((usage[$1] as? Int) ?? 0) }
+        }
+        return nil
+    }
+
     /// Claude Code's directory name for a project path: every non-alphanumeric character becomes "-".
     public static func projectDirectoryName(for path: String) -> String {
         String(path.unicodeScalars.map { scalar in

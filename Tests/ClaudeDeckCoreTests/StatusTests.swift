@@ -101,6 +101,18 @@ import Testing
         #expect(Transcript.lastSignal(in: chunk)?.kind == .toolDenied)
     }
 
+    @Test func contextTokensFromLastMainAssistantMessage() {
+        let tail = """
+        {"type":"assistant","message":{"usage":{"input_tokens":5,"cache_read_input_tokens":1000,"cache_creation_input_tokens":20,"output_tokens":9}}}
+        {"type":"user","message":{"content":"hi"}}
+        {"type":"assistant","isSidechain":false,"message":{"usage":{"input_tokens":2,"cache_read_input_tokens":477492,"cache_creation_input_tokens":1714,"output_tokens":484}}}
+        {"type":"assistant","isSidechain":true,"message":{"usage":{"input_tokens":1,"cache_read_input_tokens":10,"cache_creation_input_tokens":0}}}
+        {"type":"user","message":{"content":"[Request interrupted by user]"}}
+        """
+        #expect(Transcript.contextTokens(inTail: tail) == 479_208)
+        #expect(Transcript.contextTokens(inTail: "{\"type\":\"user\"}") == nil)
+    }
+
     @Test func projectDirectoryName() {
         #expect(Transcript.projectDirectoryName(for: "/Users/me/Desktop/Projects/my.app") == "-Users-me-Desktop-Projects-my-app")
         #expect(Transcript.projectDirectoryName(for: "/private/tmp/claude-501/x_y") == "-private-tmp-claude-501-x-y")

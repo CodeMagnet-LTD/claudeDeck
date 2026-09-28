@@ -344,10 +344,13 @@ final class AppModel {
 
     private func compactIfNeeded(_ id: UUID, transcript: String?) {
         guard pendingCompact.remove(id) != nil, let transcript else { return }
-        let size = (try? FileManager.default.attributesOfItem(atPath: transcript)[.size] as? Int) ?? 0
-        guard size > deck.settings.compactThresholdKB * 1024 else { return }
-        // Give the TUI a moment to draw its prompt, then type /compact like the user would.
+        let threshold = deck.settings.compactThresholdTokens
         Task { @MainActor in
+            // The real context size (not the transcript file size, which never shrinks).
+            let url = URL(fileURLWithPath: transcript)
+            let tokens = await Task.detached { Transcript.contextTokens(of: url) }.value ?? 0
+            guard tokens > threshold else { return }
+            // Give the TUI a moment to draw its prompt, then type /compact like the user would.
             try? await Task.sleep(for: .seconds(2))
             terminals.type("/compact\r", into: id)
         }

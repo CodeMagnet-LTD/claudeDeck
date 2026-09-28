@@ -103,7 +103,10 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     public var resumeOnLaunch = true
     public var compactOnResume = true
     /// Transcripts bigger than this get `/compact` after an automatic resume.
+    /// Legacy (transcript file size); kept so old settings files decode. Not used any more.
     public var compactThresholdKB = 800
+    /// Resumed sessions whose context is above this many tokens get `/compact`.
+    public var compactThresholdTokens = 200_000
     public var notifications = true
     public var bounceDock = true
     /// Sync projects and groups through iCloud Drive (see DeckSync).
@@ -117,6 +120,7 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         resumeOnLaunch = try c.decodeIfPresent(Bool.self, forKey: .resumeOnLaunch) ?? d.resumeOnLaunch
         compactOnResume = try c.decodeIfPresent(Bool.self, forKey: .compactOnResume) ?? d.compactOnResume
         compactThresholdKB = try c.decodeIfPresent(Int.self, forKey: .compactThresholdKB) ?? d.compactThresholdKB
+        compactThresholdTokens = try c.decodeIfPresent(Int.self, forKey: .compactThresholdTokens) ?? d.compactThresholdTokens
         notifications = try c.decodeIfPresent(Bool.self, forKey: .notifications) ?? d.notifications
         bounceDock = try c.decodeIfPresent(Bool.self, forKey: .bounceDock) ?? d.bounceDock
         iCloudSync = try c.decodeIfPresent(Bool.self, forKey: .iCloudSync) ?? d.iCloudSync

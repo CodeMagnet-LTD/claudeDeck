@@ -30,8 +30,8 @@ struct SettingsView: View {
             Section("Oturumlar") {
                 Toggle("Açılışta açık oturumları otomatik devam ettir", isOn: setting(\.resumeOnLaunch))
                 Toggle("Devam ettirilen büyük oturumlarda /compact çalıştır", isOn: setting(\.compactOnResume))
-                Stepper(value: setting(\.compactThresholdKB), in: 100...20_000, step: 100) {
-                    Text("Compact eşiği: \(model.deck.settings.compactThresholdKB) KB transcript")
+                Stepper(value: setting(\.compactThresholdTokens), in: 50_000...1_000_000, step: 25_000) {
+                    Text("Compact eşiği: context \(model.deck.settings.compactThresholdTokens / 1000) bin token üstü")
                 }
                 .disabled(!model.deck.settings.compactOnResume)
             }
