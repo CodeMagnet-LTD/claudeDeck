@@ -104,18 +104,19 @@ struct FileBrowserPanel: View {
             VStack(spacing: 0) {
                 header(project: project, tree: tree)
                 Divider()
-                VSplitView {
-                    List(selection: $selection) {
-                        ForEach(tree.children(of: tree.root)) { entry in
-                            FileNode(entry: entry, tree: tree, selection: $selection, project: project)
-                        }
+                // Plain stack, not VSplitView: a split view inside the inspector could enter an
+                // endless constraint-update loop (crash) when the history pane appeared.
+                List(selection: $selection) {
+                    ForEach(tree.children(of: tree.root)) { entry in
+                        FileNode(entry: entry, tree: tree, selection: $selection, project: project)
                     }
-                    .listStyle(.sidebar)
-                    .frame(minHeight: 160)
-                    if let file = selectedFile, tree.gitRoot != nil {
-                        FileHistoryView(file: file, tree: tree)
-                            .frame(minHeight: 120, idealHeight: 240)
-                    }
+                }
+                .listStyle(.sidebar)
+                .frame(maxHeight: .infinity)
+                if let file = selectedFile, tree.gitRoot != nil {
+                    Divider()
+                    FileHistoryView(file: file, tree: tree)
+                        .frame(height: 240)
                 }
             }
             .onChange(of: project.path) { _, _ in selection = [] }

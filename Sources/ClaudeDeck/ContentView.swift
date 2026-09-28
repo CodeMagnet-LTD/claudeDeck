@@ -119,9 +119,7 @@ struct PaneView: View {
                         .allowsHitTesting(false)
                 }
             }
-            .background(GeometryReader { geo in
-                Color.clear.onAppear { width = geo.size.width }.onChange(of: geo.size.width) { _, w in width = w }
-            })
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
             .onDrop(of: PaneDropDelegate.types, delegate: PaneDropDelegate(
                 width: width, side: $dropSide,
                 onSession: { droppedID, side in
