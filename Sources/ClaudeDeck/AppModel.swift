@@ -75,6 +75,7 @@ final class AppModel {
         terminals.onExit = { [weak self] id, _ in self?.terminalExited(id) }
         terminals.onUserInput = { [weak self] id, data in self?.userTyped(id, data) }
         terminals.fontSize = deck.settings.terminalFontSize
+        terminals.onZoom = { [weak self] step in self?.zoomTerminals(by: Double(step)) }
         // Clicking into a pane's terminal focuses that session.
         terminals.onFocus = { [weak self] id in
             guard let self, self.deck.selectedSessionID != id else { return }

@@ -23,6 +23,8 @@ struct ClaudeDeckApp: App {
                 Button("Yeni Terminal") { delegate.model.newShellInSelectedProject() }
                     .keyboardShortcut("t", modifiers: [.command, .option])
             }
+            // No help book: frees ⌘? (on Turkish keyboards the "+" key area produces it) for zoom.
+            CommandGroup(replacing: .help) {}
             CommandGroup(after: .toolbar) {
                 Button("Terminali Büyüt") { delegate.model.zoomTerminals(by: 1) }
                     .keyboardShortcut("+")
@@ -70,6 +72,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         widget.attach()
         model.applyTheme()
         observeWindowsAndPower()
+        installZoomKeys()
         model.start()
         DebugSnapshot.startIfRequested(model: model)
     }
@@ -85,6 +88,36 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+
+    // MARK: Terminal zoom keys
+
+    private var zoomMonitor: Any?
+
+    /// Zoom shortcuts by character, whatever the keyboard layout: ⌘+ ⌘= ⌘* ⌘? and keypad + zoom in,
+    /// ⌘- and keypad - zoom out, ⌘0 resets.
+    private func installZoomKeys() {
+        zoomMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            let mods = event.modifierFlags.intersection([.command, .option, .control])
+            guard mods == .command else { return event }
+            let keys = [event.charactersIgnoringModifiers ?? "", event.characters ?? ""]
+            let step: Double??
+            if keys.contains(where: { ["+", "=", "*", "?"].contains($0) }) || event.keyCode == 69 {
+                step = .some(1)
+            } else if keys.contains("-") || event.keyCode == 78 {
+                step = .some(-1)
+            } else if keys.contains("0") {
+                step = .some(nil)
+            } else {
+                return event
+            }
+            let handled = MainActor.assumeIsolated { () -> Bool in
+                guard let self, let step else { return false }
+                self.model.zoomTerminals(by: step)
+                return true
+            }
+            return handled ? nil : event
+        }
+    }
 
     // MARK: Quit confirmation / background mode
 

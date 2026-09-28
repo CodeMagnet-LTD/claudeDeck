@@ -111,6 +111,19 @@ final class DeckTerminalView: LocalProcessTerminalView {
         }
     }
 
+    /// Trackpad pinch zooms all terminals.
+    var onMagnify: ((CGFloat) -> Void)?
+    private var pinch: CGFloat = 0
+
+    override func magnify(with event: NSEvent) {
+        pinch += event.magnification
+        if abs(pinch) >= 0.15 {
+            onMagnify?(pinch > 0 ? 1 : -1)
+            pinch = 0
+        }
+        if event.phase == .ended || event.phase == .cancelled { pinch = 0 }
+    }
+
     override func viewDidChangeEffectiveAppearance() {
         super.viewDidChangeEffectiveAppearance()
         applyColors()
@@ -193,6 +206,7 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         view.processDelegate = self
         view.onInput = { [weak self] data in self?.onUserInput?(id, data) }
         view.onFocus = { [weak self] in self?.onFocus?(id) }
+        view.onMagnify = { [weak self] step in self?.onZoom?(step) }
         views[id] = view
         if running.contains(id) { return }
 
@@ -221,6 +235,7 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         view.processDelegate = self
         view.onInput = { [weak self] data in self?.onUserInput?(id, data) }
         view.onFocus = { [weak self] in self?.onFocus?(id) }
+        view.onMagnify = { [weak self] step in self?.onZoom?(step) }
         view.isClaude = false
         views[id] = view
         if running.contains(id) { return }
@@ -280,6 +295,7 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
     /// Remaining input hook: called with every chunk the user types into a terminal.
     @ObservationIgnored var onUserInput: ((UUID, ArraySlice<UInt8>) -> Void)?
     @ObservationIgnored var onFocus: ((UUID) -> Void)?
+    @ObservationIgnored var onZoom: ((CGFloat) -> Void)?
 
     func discard(_ id: UUID) {
         views[id]?.removeFromSuperview()
