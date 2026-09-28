@@ -25,13 +25,51 @@ extension AppModel {
         }
     }
 
+    /// `claude --worktree` needs a git repository (`.git` is a file inside worktrees / submodules).
+    func isGitRepository(_ project: Project) -> Bool {
+        FileManager.default.fileExists(atPath: URL(fileURLWithPath: project.path).appending(path: ".git").path)
+    }
+
+    /// Unique default name, skipping worktrees Claude already created in `<repo>/.claude/worktrees`.
+    func defaultWorktreeName(for project: Project) -> String {
+        let dir = URL(fileURLWithPath: project.path).appending(path: ".claude/worktrees").path
+        let existing = (try? FileManager.default.contentsOfDirectory(atPath: dir)) ?? []
+        return deck.nextWorktreeName(for: project, existing: Set(existing))
+    }
+
+    /// A Claude session in its own git worktree (`claude --worktree <name>`), so parallel sessions
+    /// in one project don't edit the same files.
+    @discardableResult
+    func newWorktreeSession(in projectID: UUID, worktreeName: String) -> UUID? {
+        guard DeckData.isValidWorktreeName(worktreeName) else { return nil }
+        var created: DeckSession?
+        mutate { created = $0.addWorktreeSession(to: projectID, worktreeName: worktreeName) }
+        guard let session = created else { return nil }
+        launch(session.id, resume: false)
+        selectedSessionID = session.id
+        return session.id
+    }
+
+    /// Asks for a worktree name (prefilled with a unique default) and starts the session.
+    func promptWorktreeSession(in project: Project) {
+        var initial = defaultWorktreeName(for: project)
+        while let name = TextPrompt.ask(title: "Yeni worktree oturumu — worktree adı", placeholder: "ad (A-Z a-z 0-9 . _ -)", initial: initial) {
+            if DeckData.isValidWorktreeName(name) {
+                newWorktreeSession(in: project.id, worktreeName: name)
+                return
+            }
+            NSSound.beep()
+            initial = name
+        }
+    }
+
     /// Types dropped files into a terminal: `@relative/path` for Claude, a quoted path for shells.
     func insertPaths(_ urls: [URL], into id: UUID) {
         guard let session = deck.session(id), terminals.isRunning(id), !urls.isEmpty else { return }
         let text: String
         let images: Set<String> = ["png", "jpg", "jpeg", "gif", "webp", "heic", "tiff", "bmp"]
         if session.kind == .claude {
-            let root = URL(fileURLWithPath: deck.project(session.projectID)?.path ?? "/")
+            let root = URL(fileURLWithPath: session.workingDirectory ?? deck.project(session.projectID)?.path ?? "/")
             // Images as full paths: Claude attaches dropped image paths as images.
             text = urls.map {
                 images.contains($0.pathExtension.lowercased())

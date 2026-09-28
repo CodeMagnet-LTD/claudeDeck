@@ -58,9 +58,14 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
     public var startupCommand: String?
     /// Shell sessions: start whenever the app launches, even if closed at quit.
     public var autoStart: Bool
+    /// Claude sessions started with `claude --worktree <name>` (own git worktree and branch).
+    public var worktreeName: String?
+    /// Directory Claude actually runs in (hook `cwd`), i.e. the worktree for worktree sessions.
+    /// Transcripts are stored per cwd, so `--resume` must run here.
+    public var workingDirectory: String?
 
     public init(id: UUID = UUID(), projectID: UUID, name: String, kind: SessionKind = .claude, claudeSessionID: String? = nil,
-                createdAt: Date = Date(), lastActivityAt: Date? = nil, isOpen: Bool = true) {
+                createdAt: Date = Date(), lastActivityAt: Date? = nil, isOpen: Bool = true, worktreeName: String? = nil) {
         self.id = id
         self.projectID = projectID
         self.name = name
@@ -72,6 +77,8 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
         self.isOpen = isOpen
         self.startupCommand = nil
         self.autoStart = false
+        self.worktreeName = worktreeName
+        self.workingDirectory = nil
     }
     /// Tolerant decoding: files written by older versions lack newer keys (e.g. `kind`).
     public init(from decoder: Decoder) throws {
@@ -87,6 +94,8 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
         isOpen = try c.decodeIfPresent(Bool.self, forKey: .isOpen) ?? false
         startupCommand = try c.decodeIfPresent(String.self, forKey: .startupCommand)
         autoStart = try c.decodeIfPresent(Bool.self, forKey: .autoStart) ?? false
+        worktreeName = try c.decodeIfPresent(String.self, forKey: .worktreeName)
+        workingDirectory = try c.decodeIfPresent(String.self, forKey: .workingDirectory)
     }
 }
 
@@ -179,11 +188,56 @@ public struct DeckData: Codable, Sendable, Equatable {
     /// The Claude session id to pass to `--resume`, if its transcript exists.
     public func resumableID(for id: UUID, fileExists: (String) -> Bool = { FileManager.default.fileExists(atPath: $0) }) -> String? {
         guard let session = session(id), let sid = session.claudeSessionID else { return nil }
-        let path = session.transcriptPath ?? project(session.projectID).map {
-            TranscriptIndex.defaultRoot().appending(path: Transcript.projectDirectoryName(for: $0.path)).appending(path: "\(sid).jsonl").path
+        // Deleted worktree: claude can't find the transcript from any other directory.
+        if let wd = session.workingDirectory, !fileExists(wd) { return nil }
+        let cwd = session.workingDirectory ?? project(session.projectID)?.path
+        let path = session.transcriptPath ?? cwd.map {
+            TranscriptIndex.defaultRoot().appending(path: Transcript.projectDirectoryName(for: $0)).appending(path: "\(sid).jsonl").path
         }
         guard let path, fileExists(path) else { return nil }
         return sid
+    }
+
+    // MARK: Worktree sessions
+
+    private static func isWorktreeNameCharacter(_ ch: Unicode.Scalar) -> Bool {
+        ("a"..."z").contains(ch) || ("A"..."Z").contains(ch) || ("0"..."9").contains(ch) || ch == "." || ch == "_" || ch == "-"
+    }
+
+    /// A name `claude --worktree` / git accept: only [A-Za-z0-9._-], not starting with "." or "-",
+    /// no "..", not ending in "." or ".lock".
+    public static func isValidWorktreeName(_ name: String) -> Bool {
+        guard !name.isEmpty, name.count <= 100, !name.hasPrefix("."), !name.hasPrefix("-"), !name.contains(".."),
+              !name.hasSuffix("."), !name.hasSuffix(".lock") else { return false }
+        return name.unicodeScalars.allSatisfy(isWorktreeNameCharacter)
+    }
+
+    /// Default worktree name: "<project>-2", "<project>-3"…, skipping the project's other worktree
+    /// sessions and `existing` (e.g. folders already in `.claude/worktrees`). Other characters become "-".
+    public func nextWorktreeName(for project: Project, existing: Set<String> = []) -> String {
+        var base = String(String.UnicodeScalarView(project.name.unicodeScalars.map {
+            Self.isWorktreeNameCharacter($0) && $0 != "." ? $0 : "-"
+        }))
+        while base.hasPrefix("-") { base.removeFirst() }
+        if base.isEmpty { base = "worktree" }
+        let taken = existing.union(sessions.filter { $0.projectID == project.id }.compactMap(\.worktreeName))
+        var n = 2
+        while taken.contains("\(base)-\(n)") { n += 1 }
+        return "\(base)-\(n)"
+    }
+
+    /// A Claude session that runs in its own git worktree: "app · app-2".
+    @discardableResult
+    public mutating func addWorktreeSession(to projectID: UUID, worktreeName: String) -> DeckSession? {
+        guard let project = project(projectID) else { return nil }
+        let taken = Set(sessions.filter { $0.projectID == projectID }.map(\.name))
+        var name = "\(project.name) · \(worktreeName)"
+        var n = 2
+        while taken.contains(name) { name = "\(project.name) · \(worktreeName) \(n)"; n += 1 }
+        guard var session = addSession(to: projectID, name: name) else { return nil }
+        updateSession(session.id) { $0.worktreeName = worktreeName }
+        session.worktreeName = worktreeName
+        return session
     }
 
     /// A terminal that runs `command` on start and auto-starts with the app: "app · yarn start".
