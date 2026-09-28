@@ -1,17 +1,20 @@
 # Sonraki faz notları
 
-## İzni uygulamadan / bildirimden onaylamak
-Resmi dokümanda doğrulandı: `PermissionRequest` hook'u karar döndürebilir.
+## Yapıldı: izni bildirimden / uygulamadan onaylamak
+İzin isteyen oturumun bildiriminde "İzin ver / Reddet" aksiyonları var (kategori `permission`); aynı
+düğmeler "Bekleyenler" satırında, bölme başlığında ve oturumun sağ tık menüsünde de çıkıyor.
 
-```json
-{ "hookSpecificOutput": { "hookEventName": "PermissionRequest",
-    "decision": { "behavior": "allow" } } }
-```
-(`"deny"` da mümkün; `updatedPermissions` ile mod değiştirilebilir.)
-Plan: hook, ClaudeDeck terminalindeyse durum dosyasını yazıp uygulamanın kararını kısa süre bekler
-(ör. `~/.claude/deck/decisions/<session>.json`, zaman aşımında hiçbir şey döndürmez → normal terminal
-istemi). Bildirime "İzin ver / Reddet" aksiyonları eklenir. Hook zaman aşımı ve terminaldeki istemle
-yarış durumu dikkatle ele alınmalı.
+Tasarım: pty zaten uygulamada, o yüzden kullanıcının basacağı tuşu yazıyoruz — onay = `1` (Evet,
+Enter'sız), ret = Esc. Durum mevcut yollardan çözülüyor: `1` terminal girdisi olarak `userTyped`'a
+düşer ve `answeredAt`'i ayarlar (→ çalışıyor); Esc transkripte "[Request interrupted by user for tool
+use]" yazdırır ve tailer bunu `toolDenied` olarak okur (→ "İzin reddedildi — sıra sende").
+Güvenlik: yalnızca `.claude` oturumu, terminal çalışıyor, çözülmüş durum `needsPermission` (soru
+değil) ve hook'un `updated_at`'i bildirimin/düğmenin oluşturulduğu damgayla aynıysa. Aksi halde
+bildirim aksiyonu sadece oturumu açar. `ExitPlanMode` hariç: orada 1 aynı zamanda izin modunu değiştirir.
+
+Neden bloklayan `PermissionRequest` hook'u değil: hook uygulamanın kararını beklerken Claude
+terminaldeki istemi göstermeyi geciktirir, zaman aşımı ile terminalden verilen cevap yarışır ve
+terminalde doğrudan cevap vermek bozulabilir. Hook betiği ve settings.json'a hiç dokunulmadı.
 
 ## Diğer fikirler
 - Widget (WidgetKit): XcodeGen'e app extension hedefi + App Group; uygulama `WidgetCenter.reloadAllTimelines()` çağırır.

@@ -149,6 +149,7 @@ struct PaneHeader: View {
                 Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }
             Spacer(minLength: 4)
+            PermissionButtons(sessionID: session.id).fixedSize()
             Button {
                 model.closePane(session.id)
             } label: {

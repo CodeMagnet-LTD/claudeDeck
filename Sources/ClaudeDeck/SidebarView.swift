@@ -197,6 +197,7 @@ struct AttentionRow: View {
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                 }
+                PermissionButtons(sessionID: session.id).padding(.top, 2)
             }
             Spacer(minLength: 4)
             if let at = status.updatedAt {
@@ -273,6 +274,11 @@ struct SessionMenu: View {
     let session: DeckSession
 
     var body: some View {
+        if let stamp = model.pendingPermissionStamp(session.id) {
+            Button("İzin ver") { model.approvePermission(session.id, expectedAt: stamp) }
+            Button("Reddet") { model.denyPermission(session.id, expectedAt: stamp) }
+            Divider()
+        }
         if !model.deck.visiblePanes.contains(session.id) {
             Button("Yanına aç") { model.openBeside(session.id) }
         } else if model.deck.panes.count > 1 {

@@ -485,6 +485,12 @@ final class AppModel {
         scheduleSave()
     }
 
+    // MARK: Permission actions support
+
+    /// Prompts already denied from the app (see PermissionActions.swift): Esc leaves the state
+    /// blocked until the transcript records the denial, and a second Esc would open the rewind picker.
+    @ObservationIgnored var deniedPermissionStamps: [UUID: Date] = [:]
+
     // MARK: Persistence
 
     private func scheduleSave() {
