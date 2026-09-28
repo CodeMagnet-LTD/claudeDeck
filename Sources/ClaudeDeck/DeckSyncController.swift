@@ -100,7 +100,7 @@ final class DeckSyncController {
             // Never overwrite a file iCloud hasn't downloaded yet; the watcher fires once it arrives.
             return
         case .unreadable:
-            lastError = "iCloud'daki \(DeckSync.fileName) okunamadı; üzerine yazılmadı."
+            lastError = String(localized: "Couldn't read \(DeckSync.fileName) in iCloud; it was not overwritten.")
             return
         }
         let data = DeckSync.combine(DeckSync.payload(from: deck), remote).encoded()

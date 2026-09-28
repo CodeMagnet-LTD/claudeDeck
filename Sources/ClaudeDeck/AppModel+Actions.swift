@@ -99,8 +99,8 @@ extension AppModel {
         panel.canChooseDirectories = true
         panel.canChooseFiles = false
         panel.allowsMultipleSelection = true
-        panel.prompt = "Ekle"
-        panel.message = "Claude oturumu açılacak proje klasörünü seç"
+        panel.prompt = String(localized: "Add")
+        panel.message = String(localized: "Choose the project folder to run Claude sessions in")
         guard panel.runAsSheet() == .OK else { return [] }
         return panel.urls.map { addProject(path: $0.path) }
     }
@@ -145,7 +145,7 @@ extension AppModel {
     /// Asks for a worktree name (prefilled with a unique default) and starts the session.
     func promptWorktreeSession(in project: Project) {
         var initial = defaultWorktreeName(for: project)
-        while let name = TextPrompt.ask(title: "Yeni worktree oturumu — worktree adı", placeholder: "ad (A-Z a-z 0-9 . _ -)", initial: initial) {
+        while let name = TextPrompt.ask(title: String(localized: "New Worktree Session — Worktree Name"), placeholder: String(localized: "name (A-Z a-z 0-9 . _ -)"), initial: initial) {
             if DeckData.isValidWorktreeName(name) {
                 newWorktreeSession(in: project.id, worktreeName: name)
                 return

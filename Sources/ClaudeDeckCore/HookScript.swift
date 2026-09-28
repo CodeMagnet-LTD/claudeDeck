@@ -7,11 +7,11 @@ import Foundation
 /// and atomically writes `~/.claude/deck/sessions/<session_id>.json`.
 /// `$PPID` is the `claude` process itself (verified), so the app can check liveness.
 public enum HookScript {
-    public static let version = 3
+    public static let version = 4
 
     public static let source = #"""
 #!/bin/sh
-# ClaudeDeck status hook v3 — managed by ClaudeDeck.app, do not edit.
+# ClaudeDeck status hook v4 — managed by ClaudeDeck.app, do not edit.
 [ -n "$CLAUDEDECK_TERMINAL_ID" ] || { cat >/dev/null; exit 0; }
 JQ=/usr/bin/jq
 [ -x "$JQ" ] || JQ=$(command -v jq) || exit 0
@@ -34,7 +34,7 @@ def tooldetail: (.tool_input // {}) as $t
       elif $t.pattern then ": " + ($t.pattern | tostring)
       elif $t.description then ": " + ($t.description | tostring)
       else "" end);
-def question: (.tool_input.questions[0].question // .tool_input.question // "Claude bir soru soruyor");
+def question: (.tool_input.questions[0].question // .tool_input.question // "Claude is asking a question");
 def waiting: $prev != null and ($prev.state == "needsPermission" or $prev.state == "needsAnswer");
 def sig: ((.tool_name // "") + ":" + ((.tool_input // {}) | tojson)) | .[0:300];
 # While a prompt is open, tool events of *other* (parallel) tools must not hide it.
@@ -62,7 +62,7 @@ def othertool: waiting and (
        elif $prev != null and $prev.state == .state and $prev.detail != null then .detail = $prev.detail
        else .detail = ($in.message | clip(200)) end
    elif $e == "Stop" then {state: "idle", detail: (.last_assistant_message | clip(300))}
-   elif $e == "StopFailure" then {state: "idle", detail: ("Hata: " + ((.error_type // .error // "API") | tostring) | clip(200))}
+   elif $e == "StopFailure" then {state: "idle", detail: ("Error: " + ((.error_type // .error // "API") | tostring) | clip(200))}
    elif $e == "SessionStart" then
      (if .source == "compact" and $prev != null and (($prev.detail // "") | startswith("/compact") | not)
         then {state: $prev.state, detail: $prev.detail}

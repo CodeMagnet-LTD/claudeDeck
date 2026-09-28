@@ -20,7 +20,7 @@ struct SidebarView: View {
             }
         )) {
             if !waiting.isEmpty {
-                Section("Bekleyenler") {
+                Section("Needs Attention") {
                     ForEach(waiting) { session in
                         // No selection tag: the same session is also listed under its project.
                         AttentionRow(session: session)
@@ -28,11 +28,11 @@ struct SidebarView: View {
                 }
             }
             if !sections.pinned.isEmpty {
-                Section("Sabitlenenler") {
+                Section("Pinned") {
                     ForEach(model.activeFirst(sections.pinned)) { ProjectRow(project: $0) }
                 }
             }
-            // Groups live inside "Projeler" like folders; busy groups and projects float to the top.
+            // Groups live inside "Projects" like folders; busy groups and projects float to the top.
             Section {
                 ForEach(model.activeFirst(sections.groups), id: \.group.id) { entry in
                     GroupRow(group: entry.group, projects: model.activeFirst(entry.projects))
@@ -40,12 +40,12 @@ struct SidebarView: View {
                 ForEach(model.activeFirst(sections.ungrouped)) { ProjectRow(project: $0) }
             } header: {
                 HStack {
-                    Text("Projeler")
+                    Text("Projects")
                     Spacer()
                     Menu {
-                        Button("Proje ekle…") { model.presentAddProject() }
-                        Button("Yeni grup…") {
-                            if let name = TextPrompt.ask(title: "Yeni grup", placeholder: "Grup adı") {
+                        Button("Add Project…") { model.presentAddProject() }
+                        Button("New Group…") {
+                            if let name = TextPrompt.ask(title: String(localized: "New Group"), placeholder: String(localized: "Group name")) {
                                 model.mutate { $0.addGroup(name: name) }
                             }
                         }
@@ -55,7 +55,7 @@ struct SidebarView: View {
                     .menuStyle(.borderlessButton)
                     .menuIndicator(.hidden)
                     .fixedSize()
-                    .help("Proje ekle / yeni grup")
+                    .help("Add project / new group")
                 }
             }
         }
@@ -65,7 +65,7 @@ struct SidebarView: View {
                 Button {
                     model.presentAddProject()
                 } label: {
-                    Label("Proje ekle", systemImage: "folder.badge.plus")
+                    Label("Add Project", systemImage: "folder.badge.plus")
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(.borderless)
@@ -73,7 +73,7 @@ struct SidebarView: View {
                     Image(systemName: "gearshape")
                 }
                 .buttonStyle(.borderless)
-                .help("Ayarlar — otomatik devam, /compact, bildirimler (⌘,)")
+                .help("Settings — auto-resume, /compact, notifications (⌘,)")
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
@@ -104,15 +104,15 @@ struct GroupRow: View {
                 AggregateBadge(sessionIDs: projects.flatMap { model.deck.sessions(in: $0.id).map(\.id) })
                 Text("\(projects.count)").font(.caption).foregroundStyle(.tertiary)
                 Menu {
-                    Button("Bu gruba proje ekle…") { model.presentAddProject(toGroup: group.id) }
-                    Button("Projeleri seç…") { pickingProjects = true }
+                    Button("Add Project to This Group…") { model.presentAddProject(toGroup: group.id) }
+                    Button("Choose Projects…") { pickingProjects = true }
                 } label: {
                     Image(systemName: "plus")
                 }
                 .menuStyle(.borderlessButton)
                 .menuIndicator(.hidden)
                 .fixedSize()
-                .help("Gruba proje ekle")
+                .help("Add projects to the group")
             }
             .contextMenu { GroupMenu(group: group, pickingProjects: $pickingProjects) }
             .sheet(isPresented: $pickingProjects) { GroupProjectsSheet(group: group) }
@@ -164,14 +164,14 @@ struct ProjectRow: View {
                     Image(systemName: "apple.terminal")
                 }
                 .buttonStyle(.borderless)
-                .help("Proje klasöründe boş terminal aç")
+                .help("Open a plain terminal in the project folder")
                 Button {
                     model.newSession(in: project.id)
                 } label: {
                     Image(systemName: "plus")
                 }
                 .buttonStyle(.borderless)
-                .help("Yeni Claude oturumu")
+                .help("New Claude Session")
             }
             .help(project.path)
             .contentShape(Rectangle())
@@ -254,7 +254,7 @@ struct SessionRow: View {
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
-                            .help("Ayrı git worktree: \(session.workingDirectory ?? worktree)")
+                            .help("Separate git worktree: \(session.workingDirectory ?? worktree)")
                     }
                     Spacer(minLength: 4)
                     if let at = status.updatedAt {
@@ -302,30 +302,30 @@ struct SessionMenu: View {
 
     var body: some View {
         if let stamp = model.pendingPermissionStamp(session.id) {
-            Button("İzin ver") { model.approvePermission(session.id, expectedAt: stamp) }
-            Button("Reddet") { model.denyPermission(session.id, expectedAt: stamp) }
+            Button("Allow") { model.approvePermission(session.id, expectedAt: stamp) }
+            Button("Deny") { model.denyPermission(session.id, expectedAt: stamp) }
             Divider()
         }
         if !model.deck.visiblePanes.contains(session.id) {
-            Button("Yanına aç") { model.openBeside(session.id) }
+            Button("Open Beside") { model.openBeside(session.id) }
         } else if model.deck.panes.count > 1 {
-            Button("Bölmeyi kapat") { model.closePane(session.id) }
+            Button("Close Pane") { model.closePane(session.id) }
         }
         Divider()
         if model.terminals.isRunning(session.id) {
-            Button(session.kind == .shell ? "Terminali kapat" : "Oturumu bitir") { model.stop(session.id) }
+            Button(session.kind == .shell ? String(localized: "Close Terminal") : String(localized: "End Session")) { model.stop(session.id) }
         } else if session.kind == .shell {
-            Button("Yeniden aç") { model.launch(session.id, resume: false); model.selectedSessionID = session.id }
+            Button("Reopen") { model.launch(session.id, resume: false); model.selectedSessionID = session.id }
         } else {
-            Button("Devam et") { model.launch(session.id, resume: true); model.selectedSessionID = session.id }
-            Button("Yeni başlat") { model.launch(session.id, resume: false); model.selectedSessionID = session.id }
+            Button("Resume") { model.launch(session.id, resume: true); model.selectedSessionID = session.id }
+            Button("Start Fresh") { model.launch(session.id, resume: false); model.selectedSessionID = session.id }
         }
         if session.kind == .shell {
             Divider()
-            Button(session.startupCommand == nil ? "Başlangıç komutu…" : "Başlangıç komutu: \(session.startupCommand!)…") {
+            Button(session.startupCommand == nil ? String(localized: "Startup Command…") : String(localized: "Startup Command: \(session.startupCommand!)…")) {
                 if let command = TextPrompt.ask(
-                    title: "Terminal açılınca çalışacak komut",
-                    placeholder: "yarn start (boş bırak = yok)",
+                    title: String(localized: "Command to run when the terminal opens"),
+                    placeholder: String(localized: "yarn start (leave empty for none)"),
                     initial: session.startupCommand ?? "",
                     allowEmpty: true
                 ) {
@@ -338,23 +338,23 @@ struct SessionMenu: View {
                 }
             }
             if session.startupCommand != nil {
-                Toggle("Uygulama açılınca otomatik başlat", isOn: Binding(
+                Toggle("Start Automatically When the App Opens", isOn: Binding(
                     get: { session.autoStart },
                     set: { value in model.mutate { $0.updateSession(session.id) { $0.autoStart = value } } }
                 ))
             }
         }
         Divider()
-        Button("Yeniden adlandır…") {
-            if let name = TextPrompt.ask(title: "Oturumu yeniden adlandır", placeholder: "Ad", initial: session.name) {
+        Button("Rename…") {
+            if let name = TextPrompt.ask(title: String(localized: "Rename Session"), placeholder: String(localized: "Name"), initial: session.name) {
                 model.renameSession(session.id, to: name)
             }
         }
         Divider()
-        Button("Bitir ve listeden kaldır…", role: .destructive) {
-            if Confirm.ask("\"\(session.name)\" bitirilip listeden kaldırılsın mı?",
-                           detail: "Çalışan süreç kapatılır. Claude konuşma geçmişi silinmez; projenin \"Eski oturumu devam ettir…\" menüsünden geri açılabilir.",
-                           action: "Bitir ve kaldır") {
+        Button("End and Remove…", role: .destructive) {
+            if Confirm.ask(String(localized: "End \"\(session.name)\" and remove it from the list?"),
+                           detail: String(localized: "The running process is stopped. The Claude conversation history is kept and can be reopened from the project's \"Resume Previous Conversation…\" menu."),
+                           action: String(localized: "End and Remove")) {
                 model.removeSession(session.id)
             }
         }
@@ -367,19 +367,19 @@ struct ProjectMenu: View {
     @Binding var showResume: Bool
 
     var body: some View {
-        Button("Yeni Claude oturumu") { model.newSession(in: project.id) }
-        Button("Yeni Claude oturumu (ayrı worktree)…") { model.promptWorktreeSession(in: project) }
+        Button("New Claude Session") { model.newSession(in: project.id) }
+        Button("New Claude Session (Separate Worktree)…") { model.promptWorktreeSession(in: project) }
             .disabled(!model.isGitRepository(project))
-        Button("Yeni terminal") { model.newShell(in: project.id) }
-        Button("Yeni terminal (komutla)…") {
-            if let command = TextPrompt.ask(title: "Açılışta çalışacak komut", placeholder: "yarn start") {
+        Button("New Terminal") { model.newShell(in: project.id) }
+        Button("New Terminal with Command…") {
+            if let command = TextPrompt.ask(title: String(localized: "Command to run on open"), placeholder: "yarn start") {
                 model.newCommandShell(in: project.id, command: command)
             }
         }
-        Button("Eski oturumu devam ettir…") { showResume = true }
+        Button("Resume Previous Conversation…") { showResume = true }
         let projectSessions = model.deck.sessions(in: project.id)
         if projectSessions.count > 1 {
-            Button("Oturumlarını yan yana aç") {
+            Button("Open Sessions Side by Side") {
                 for s in projectSessions.prefix(DeckData.maxPanes) where !model.deck.visiblePanes.contains(s.id) {
                     model.openBeside(s.id, anchor: model.deck.panes.last)
                 }
@@ -387,22 +387,22 @@ struct ProjectMenu: View {
         }
         let running = projectSessions.filter { model.terminals.isRunning($0.id) }
         if !running.isEmpty {
-            Button("Tüm oturumları bitir (\(running.count))") { running.forEach { model.stop($0.id) } }
+            Button("End All Sessions (\(running.count))") { running.forEach { model.stop($0.id) } }
         }
         Divider()
-        Button(project.pinned ? "Sabitlemeyi kaldır" : "Sabitle") {
+        Button(project.pinned ? String(localized: "Unpin") : String(localized: "Pin")) {
             model.mutate { $0.updateProject(project.id) { $0.pinned.toggle() } }
         }
-        Menu("Gruba taşı") {
+        Menu("Move to Group") {
             ForEach(model.deck.groups) { group in
                 Button(group.name) { model.mutate { $0.updateProject(project.id) { $0.groupID = group.id } } }
             }
             if project.groupID != nil {
-                Button("Gruptan çıkar") { model.mutate { $0.updateProject(project.id) { $0.groupID = nil } } }
+                Button("Remove from Group") { model.mutate { $0.updateProject(project.id) { $0.groupID = nil } } }
             }
             Divider()
-            Button("Yeni grup…") {
-                if let name = TextPrompt.ask(title: "Yeni grup", placeholder: "Grup adı") {
+            Button("New Group…") {
+                if let name = TextPrompt.ask(title: String(localized: "New Group"), placeholder: String(localized: "Group name")) {
                     model.mutate {
                         let g = $0.addGroup(name: name)
                         $0.updateProject(project.id) { $0.groupID = g.id }
@@ -410,21 +410,21 @@ struct ProjectMenu: View {
                 }
             }
         }
-        Button("Yeniden adlandır…") {
-            if let name = TextPrompt.ask(title: "Projeyi yeniden adlandır", placeholder: "Ad", initial: project.name) {
+        Button("Rename…") {
+            if let name = TextPrompt.ask(title: String(localized: "Rename Project"), placeholder: String(localized: "Name"), initial: project.name) {
                 model.mutate { $0.updateProject(project.id) { $0.name = name } }
             }
         }
-        Button("Finder'da göster") { NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: project.path) }
+        Button("Reveal in Finder") { NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: project.path) }
         if VSCode.isInstalled {
-            Button("VS Code'da aç") { VSCode.open(URL(fileURLWithPath: project.path)) }
+            Button("Open in VS Code") { VSCode.open(URL(fileURLWithPath: project.path)) }
         }
         Divider()
-        Button("Projeyi kaldır…", role: .destructive) {
+        Button("Remove Project…", role: .destructive) {
             let count = model.deck.sessions(in: project.id).count
-            if Confirm.ask("\"\(project.name)\" listeden kaldırılsın mı?",
-                           detail: (count > 0 ? "\(count) oturumu bitirilip kaldırılır. " : "") + "Klasöre ve dosyalara dokunulmaz.",
-                           action: "Kaldır") {
+            if Confirm.ask(String(localized: "Remove \"\(project.name)\" from the list?"),
+                           detail: (count > 0 ? String(localized: "Its \(count) sessions are ended and removed. ") : "") + String(localized: "The folder and its files are not touched."),
+                           action: String(localized: "Remove")) {
                 model.removeProject(project.id)
             }
         }
@@ -437,21 +437,21 @@ struct GroupMenu: View {
     @Binding var pickingProjects: Bool
 
     var body: some View {
-        Button("Projeleri seç…") { pickingProjects = true }
+        Button("Choose Projects…") { pickingProjects = true }
         Divider()
-        Button("Yeniden adlandır…") {
-            if let name = TextPrompt.ask(title: "Grubu yeniden adlandır", placeholder: "Ad", initial: group.name) {
+        Button("Rename…") {
+            if let name = TextPrompt.ask(title: String(localized: "Rename Group"), placeholder: String(localized: "Name"), initial: group.name) {
                 model.mutate { $0.updateGroup(group.id) { $0.name = name } }
             }
         }
-        Menu("Renk") {
+        Menu("Color") {
             ForEach(0..<GroupPalette.count, id: \.self) { i in
                 Button(GroupPalette.names[i]) { model.mutate { $0.updateGroup(group.id) { $0.colorIndex = i } } }
             }
         }
         Divider()
-        Button("Grubu sil…", role: .destructive) {
-            if Confirm.ask("\"\(group.name)\" grubu silinsin mi?", detail: "İçindeki projeler silinmez, gruptan çıkar.", action: "Grubu sil") {
+        Button("Delete Group…", role: .destructive) {
+            if Confirm.ask(String(localized: "Delete the group \"\(group.name)\"?"), detail: String(localized: "Its projects are not deleted; they just leave the group."), action: String(localized: "Delete Group")) {
                 model.mutate { $0.removeGroup(group.id) }
             }
         }
@@ -469,8 +469,8 @@ enum TextPrompt {
         field.placeholderString = placeholder
         field.stringValue = initial
         alert.accessoryView = field
-        alert.addButton(withTitle: "Kaydet")
-        alert.addButton(withTitle: "Vazgeç")
+        alert.addButton(withTitle: String(localized: "Save"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
         alert.window.initialFirstResponder = field
         guard alert.runAsSheet() == .alertFirstButtonReturn else { return nil }
         let value = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -488,8 +488,8 @@ struct GroupProjectsSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("\(group.name) — projeler").font(.headline)
-            TextField("Ara", text: $filter).textFieldStyle(.roundedBorder)
+            Text("\(group.name) — Projects").font(.headline)
+            TextField("Search", text: $filter).textFieldStyle(.roundedBorder)
             List {
                 ForEach(visibleProjects) { project in
                     Toggle(isOn: Binding(
@@ -509,11 +509,11 @@ struct GroupProjectsSheet: View {
             }
             .frame(minHeight: 280)
             HStack {
-                Button("Tümünü seç") { chosen.formUnion(visibleProjects.map(\.id)) }
-                Button("Hiçbiri") { chosen.subtract(visibleProjects.map(\.id)) }
+                Button("Select All") { chosen.formUnion(visibleProjects.map(\.id)) }
+                Button("None") { chosen.subtract(visibleProjects.map(\.id)) }
                 Spacer()
-                Button("Vazgeç") { dismiss() }.keyboardShortcut(.cancelAction)
-                Button("Kaydet") { save() }.keyboardShortcut(.defaultAction)
+                Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Save") { save() }.keyboardShortcut(.defaultAction)
             }
         }
         .padding(16)
@@ -541,7 +541,7 @@ struct GroupProjectsSheet: View {
     }
 }
 
-/// "Emin misin?" confirmation for destructive actions.
+/// "Are you sure?" confirmation for destructive actions.
 enum Confirm {
     @MainActor
     static func ask(_ title: String, detail: String, action: String) -> Bool {
@@ -550,7 +550,7 @@ enum Confirm {
         alert.messageText = title
         alert.informativeText = detail
         alert.addButton(withTitle: action)
-        alert.addButton(withTitle: "Vazgeç")
+        alert.addButton(withTitle: String(localized: "Cancel"))
         alert.buttons.first?.hasDestructiveAction = true
         return alert.runAsSheet() == .alertFirstButtonReturn
     }

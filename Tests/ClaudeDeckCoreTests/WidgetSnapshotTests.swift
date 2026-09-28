@@ -37,7 +37,7 @@ import Testing
         #expect(s.generatedAt == Date(timeIntervalSince1970: 1_700_000_000))
         #expect(s.items.first?.state == .needsAnswer)
         #expect(s.items.first?.detail == nil)
-        #expect(s.items.first?.state.label == "Soru soruyor")
+        #expect(s.items.first?.state.label == "Asking a question")
     }
 
     @Test func sameContentIgnoresTimestamp() {

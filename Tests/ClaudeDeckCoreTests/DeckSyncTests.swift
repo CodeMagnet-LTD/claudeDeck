@@ -31,7 +31,7 @@ import Testing
         #expect(deck.projects.count == 1)
         #expect(deck.projects.first?.name == "api")
         #expect(deck.projects.first?.pinned == true)
-        #expect(deck.groups.first?.name == "İş")
+        #expect(deck.groups.first?.name == "Work")
         #expect(deck.groups.first?.collapsed == true)
         #expect(deck.sessions.count == 1)
         #expect(deck.settings.bounceDock == false)

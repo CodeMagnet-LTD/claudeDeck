@@ -53,7 +53,10 @@ final class AppModel {
 
     @ObservationIgnored let terminals = TerminalRegistry()
     @ObservationIgnored private let store: DeckDataStore
-    @ObservationIgnored private let statusDir = StatusDirectory.defaultURL()
+    @ObservationIgnored private let statusDir = ProcessInfo.processInfo.environment["CLAUDEDECK_STATE_DIR"]
+        .map { URL(fileURLWithPath: $0) } ?? StatusDirectory.defaultURL()
+    /// Demo mode (tools/demo.sh): fixture data only — never touches ~/.claude/settings.json or iCloud.
+    static let isDemo = ProcessInfo.processInfo.environment["CLAUDEDECK_DEMO"] != nil
     @ObservationIgnored private var watcher: DirectoryWatcher?
     @ObservationIgnored private var tailers: [UUID: FileTailer] = [:]
     @ObservationIgnored private var saveTask: Task<Void, Never>?
@@ -91,14 +94,14 @@ final class AppModel {
     // MARK: Lifecycle
 
     func start() {
-        installHooks()
+        if !Self.isDemo { installHooks() }
         watcher = DirectoryWatcher(url: statusDir) { [weak self] in
             Task { @MainActor in self?.reloadStatuses() }
         }
         watcher?.start()
         reloadStatuses(initial: true)
         cleanupStatusFiles()
-        sync.start(model: self) // iCloud sync (no-op unless enabled)
+        if !Self.isDemo { sync.start(model: self) } // iCloud sync (no-op unless enabled)
         // Resolving `claude` runs the login shell; keep it off the main thread.
         Task { @MainActor in
             claudePath = await Task.detached { ShellEnvironment.resolveClaude() }.value
@@ -301,9 +304,9 @@ final class AppModel {
             let project = deck.project(session.projectID)?.name ?? ""
             let title = session.name == project || project.isEmpty ? session.name : "\(session.name) — \(project)"
             let body: String = switch activity {
-            case .needsPermission: "İzin istiyor" + (status.detail.map { ": \($0)" } ?? "")
-            case .needsAnswer: "Soru soruyor" + (status.detail.map { ": \($0)" } ?? "")
-            case .idle: status.detail.map { "Bitti — \($0)" } ?? "Bitti — sıra sende"
+            case .needsPermission: String(localized: "Needs permission") + (status.detail.map { ": \($0)" } ?? "")
+            case .needsAnswer: String(localized: "Asking a question") + (status.detail.map { ": \($0)" } ?? "")
+            case .idle: status.detail.map { String(localized: "Done — \($0)") } ?? String(localized: "Done — your turn")
             default: ""
             }
             onAttention?(AttentionEvent(sessionID: session.id, activity: activity, title: title, body: body))
@@ -394,7 +397,7 @@ final class AppModel {
                 browsedProjectID = deck.session(newValue)?.projectID
                 markSeen(newValue)
                 // Selecting a session not yet started in this app run continues it automatically.
-                // Sessions ended during this run (/exit, "Oturumu bitir") wait for "Devam et".
+                // Sessions ended during this run (/exit, "End Session") wait for "Resume".
                 if terminals.view(for: newValue) == nil { launch(newValue, resume: true) }
             }
             scheduleSave()

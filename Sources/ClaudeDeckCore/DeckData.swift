@@ -104,9 +104,9 @@ public enum AppTheme: String, Codable, Sendable, CaseIterable {
 
     public var title: String {
         switch self {
-        case .system: "Sistem"
-        case .light: "Açık"
-        case .dark: "Koyu"
+        case .system: String(localized: "System")
+        case .light: String(localized: "Light")
+        case .dark: String(localized: "Dark")
         }
     }
 }
@@ -436,7 +436,11 @@ public struct DeckDataStore: Sendable {
 
     public init(url: URL) { self.url = url }
 
+    /// `CLAUDEDECK_DATA_DIR` points it elsewhere (demo mode, see tools/demo.sh).
     public static func `default`() -> DeckDataStore {
+        if let dir = ProcessInfo.processInfo.environment["CLAUDEDECK_DATA_DIR"], !dir.isEmpty {
+            return DeckDataStore(url: URL(fileURLWithPath: dir).appending(path: "deck.json"))
+        }
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         return DeckDataStore(url: base.appending(path: "ClaudeDeck/deck.json"))
     }

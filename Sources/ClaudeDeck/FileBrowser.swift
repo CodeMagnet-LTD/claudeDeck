@@ -121,7 +121,7 @@ struct FileBrowserPanel: View {
             }
             .onChange(of: project.path) { _, _ in selection = [] }
         } else {
-            Text("Dosyaları görmek için bir oturum seç")
+            Text("Select a session to see its files")
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -165,20 +165,20 @@ struct FileBrowserPanel: View {
             }
             .toggleStyle(.button)
             .buttonStyle(.borderless)
-            .help("Gizli dosyaları göster")
+            .help("Show Hidden Files")
             if VSCode.isInstalled {
                 Button { VSCode.open(tree.root) } label: {
                     Image(systemName: "chevron.left.forwardslash.chevron.right")
                 }
                 .buttonStyle(.borderless)
-                .help("Projeyi VS Code'da aç")
+                .help("Open Project in VS Code")
             }
             Menu {
-                Button("Yeni dosya…") { FileActions.newFile(in: tree.root, tree: tree) }
-                Button("Yeni klasör…") { FileActions.newFolder(in: tree.root, tree: tree) }
+                Button("New File…") { FileActions.newFile(in: tree.root, tree: tree) }
+                Button("New Folder…") { FileActions.newFolder(in: tree.root, tree: tree) }
                 Divider()
-                Button("Finder'da göster") { NSWorkspace.shared.activateFileViewerSelecting([tree.root]) }
-                Button("Yenile") { tree.reloadAll() }
+                Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([tree.root]) }
+                Button("Refresh") { tree.reloadAll() }
             } label: {
                 Image(systemName: "ellipsis.circle")
             }
@@ -284,7 +284,7 @@ struct FileHistoryView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Image(systemName: "clock.arrow.circlepath").foregroundStyle(.secondary)
-                Text("Geçmiş").font(.subheadline.weight(.semibold))
+                Text("History").font(.subheadline.weight(.semibold))
                 Text(file.lastPathComponent).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                 Spacer()
             }
@@ -294,11 +294,11 @@ struct FileHistoryView: View {
             List {
                 if let state = tree.gitState(of: file), state != .untracked {
                     Button {
-                        show(title: "Kaydedilmemiş değişiklikler") { repo in Git.workingDiff(of: file, in: repo) }
+                        show(title: String(localized: "Uncommitted Changes")) { repo in Git.workingDiff(of: file, in: repo) }
                     } label: {
                         HStack {
                             Circle().fill(GitStyle.color(state)).frame(width: 7, height: 7)
-                            Text("Kaydedilmemiş değişiklikler").font(.callout)
+                            Text("Uncommitted Changes").font(.callout)
                         }
                     }
                     .buttonStyle(.plain)
@@ -323,10 +323,10 @@ struct FileHistoryView: View {
                     .padding(.vertical, 2)
                 }
                 if !loading && commits.isEmpty && tree.gitState(of: file) == nil {
-                    Text("Bu dosya için commit yok").foregroundStyle(.secondary).font(.callout)
+                    Text("No commits for this file").foregroundStyle(.secondary).font(.callout)
                 }
                 if tree.gitState(of: file) == .untracked {
-                    Text("Git'e eklenmemiş yeni dosya").foregroundStyle(.secondary).font(.callout)
+                    Text("New file, not yet added to Git").foregroundStyle(.secondary).font(.callout)
                 }
             }
             .listStyle(.plain)
@@ -369,7 +369,7 @@ struct DiffSheet: View {
                     Text(content.file).font(.caption).foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("Kapat") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Close") { dismiss() }.keyboardShortcut(.cancelAction)
             }
             .padding(12)
             Divider()
@@ -416,30 +416,30 @@ struct FileMenu: View {
         if let url = urls.first {
             let isDir = (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
             if VSCode.isInstalled {
-                Button("VS Code'da aç") { urls.forEach(VSCode.open) }
+                Button("Open in VS Code") { urls.forEach(VSCode.open) }
             }
-            Button("Aç") { urls.forEach { NSWorkspace.shared.open($0) } }
-            Button("Finder'da göster") { NSWorkspace.shared.activateFileViewerSelecting(urls) }
+            Button("Open") { urls.forEach { NSWorkspace.shared.open($0) } }
+            Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting(urls) }
             if let session = model.selectedSessionID, model.terminals.isRunning(session) {
-                Button("Claude'a ekle (@\(urls.count > 1 ? "\(urls.count) dosya" : url.lastPathComponent))") {
+                Button(urls.count > 1 ? String(localized: "Add \(urls.count) Files to Claude") : String(localized: "Add @\(url.lastPathComponent) to Claude")) {
                     let mentions = urls.map { "@" + FileListing.relativePath(of: $0, in: tree.root) }.joined(separator: " ")
                     model.terminals.type(mentions + " ", into: session)
                 }
             }
             Divider()
-            Button("Yolu kopyala") { FileActions.copy(urls.map(\.path).joined(separator: "\n")) }
-            Button("Göreli yolu kopyala") {
+            Button("Copy Path") { FileActions.copy(urls.map(\.path).joined(separator: "\n")) }
+            Button("Copy Relative Path") {
                 FileActions.copy(urls.map { FileListing.relativePath(of: $0, in: tree.root) }.joined(separator: "\n"))
             }
             Divider()
             let parent = isDir ? url : url.deletingLastPathComponent()
-            Button("Yeni dosya…") { FileActions.newFile(in: parent, tree: tree) }
-            Button("Yeni klasör…") { FileActions.newFolder(in: parent, tree: tree) }
+            Button("New File…") { FileActions.newFile(in: parent, tree: tree) }
+            Button("New Folder…") { FileActions.newFolder(in: parent, tree: tree) }
             if urls.count == 1 {
-                Button("Yeniden adlandır…") { FileActions.rename(url, tree: tree) }
+                Button("Rename…") { FileActions.rename(url, tree: tree) }
             }
             Divider()
-            Button("Çöp sepetine taşı", role: .destructive) { FileActions.trash(urls, tree: tree) }
+            Button("Move to Trash", role: .destructive) { FileActions.trash(urls, tree: tree) }
         }
     }
 }
@@ -457,9 +457,9 @@ enum FileActions {
     }
 
     static func newFile(in dir: URL, tree: FileTree) {
-        guard let name = TextPrompt.ask(title: "Yeni dosya", placeholder: "dosya.txt") else { return }
+        guard let name = TextPrompt.ask(title: String(localized: "New File"), placeholder: String(localized: "file.txt")) else { return }
         let url = dir.appending(path: name)
-        guard !FileManager.default.fileExists(atPath: url.path) else { return fail("\(name) zaten var.") }
+        guard !FileManager.default.fileExists(atPath: url.path) else { return fail(String(localized: "\(name) already exists.")) }
         do {
             try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
             try Data().write(to: url)
@@ -469,7 +469,7 @@ enum FileActions {
     }
 
     static func newFolder(in dir: URL, tree: FileTree) {
-        guard let name = TextPrompt.ask(title: "Yeni klasör", placeholder: "klasör") else { return }
+        guard let name = TextPrompt.ask(title: String(localized: "New Folder"), placeholder: String(localized: "folder")) else { return }
         do {
             try FileManager.default.createDirectory(at: dir.appending(path: name), withIntermediateDirectories: false)
         } catch { return fail(error.localizedDescription) }
@@ -478,7 +478,7 @@ enum FileActions {
     }
 
     static func rename(_ url: URL, tree: FileTree) {
-        guard let name = TextPrompt.ask(title: "Yeniden adlandır", placeholder: "Ad", initial: url.lastPathComponent),
+        guard let name = TextPrompt.ask(title: String(localized: "Rename"), placeholder: String(localized: "Name"), initial: url.lastPathComponent),
               name != url.lastPathComponent else { return }
         do {
             try FileManager.default.moveItem(at: url, to: url.deletingLastPathComponent().appending(path: name))
@@ -488,10 +488,10 @@ enum FileActions {
 
     static func trash(_ urls: [URL], tree: FileTree) {
         let alert = NSAlert()
-        alert.messageText = urls.count == 1 ? "\"\(urls[0].lastPathComponent)\" çöp sepetine taşınsın mı?" : "\(urls.count) öğe çöp sepetine taşınsın mı?"
-        alert.informativeText = "Çöp sepetinden geri alınabilir."
-        alert.addButton(withTitle: "Çöpe taşı")
-        alert.addButton(withTitle: "Vazgeç")
+        alert.messageText = urls.count == 1 ? String(localized: "Move “\(urls[0].lastPathComponent)” to the Trash?") : String(localized: "Move \(urls.count) items to the Trash?")
+        alert.informativeText = String(localized: "You can restore items from the Trash.")
+        alert.addButton(withTitle: String(localized: "Move to Trash"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
         guard alert.runAsSheet() == .alertFirstButtonReturn else { return }
         NSWorkspace.shared.recycle(urls) { _, error in
             Task { @MainActor in
@@ -503,7 +503,7 @@ enum FileActions {
 
     static func fail(_ message: String) {
         let alert = NSAlert()
-        alert.messageText = "İşlem yapılamadı"
+        alert.messageText = String(localized: "The operation couldn’t be completed")
         alert.informativeText = message
         alert.runAsSheet()
     }

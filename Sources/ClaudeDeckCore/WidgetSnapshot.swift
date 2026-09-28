@@ -12,10 +12,10 @@ public struct WidgetSnapshot: Codable, Sendable, Equatable {
 
         public var label: String {
             switch self {
-            case .needsPermission: "İzin bekliyor"
-            case .needsAnswer: "Soru soruyor"
-            case .idle: "Sıra sende"
-            case .running: "Çalışıyor"
+            case .needsPermission: String(localized: "Needs permission")
+            case .needsAnswer: String(localized: "Asking a question")
+            case .idle: String(localized: "Your turn")
+            case .running: String(localized: "Running")
             }
         }
 
@@ -115,23 +115,23 @@ public struct WidgetSnapshot: Codable, Sendable, Equatable {
 
     // MARK: Shared container
 
-    /// macOS team-prefixed App Group shared by the app and the widget extension.
-    public static let appGroupID = "V6G4B5T63L.dev.medeni.ClaudeDeck"
+    /// macOS team-prefixed App Group shared by the app and the widget extension. Read from this
+    /// process's own entitlements (set from DECK_APP_GROUP at build time), so a build signed with
+    /// another team just works; nil when not entitled (e.g. the SwiftPM build).
+    public static let appGroupID: String? = {
+        guard let task = SecTaskCreateFromSelf(nil) else { return nil }
+        let value = SecTaskCopyValueForEntitlement(task, "com.apple.security.application-groups" as CFString, nil)
+        return (value as? [String])?.first
+    }()
     public static let fileName = "widget-snapshot.json"
 
     /// The snapshot file in the App Group container, or nil when this process isn't entitled
-    /// to the group (e.g. the SwiftPM build). On macOS `containerURL` returns a path even without
-    /// the entitlement and touching it can trigger a privacy prompt, so check the entitlement first.
+    /// to a group. On macOS `containerURL` returns a path even without the entitlement and
+    /// touching it can trigger a privacy prompt, so check the entitlement first.
     public static func sharedFileURL() -> URL? {
-        guard hasAppGroupEntitlement() else { return nil }
+        guard let appGroupID else { return nil }
         return FileManager.default
             .containerURL(forSecurityApplicationGroupIdentifier: appGroupID)?
             .appendingPathComponent(fileName)
-    }
-
-    static func hasAppGroupEntitlement() -> Bool {
-        guard let task = SecTaskCreateFromSelf(nil) else { return false }
-        let value = SecTaskCopyValueForEntitlement(task, "com.apple.security.application-groups" as CFString, nil)
-        return (value as? [String])?.contains(appGroupID) ?? false
     }
 }

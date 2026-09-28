@@ -22,8 +22,8 @@ final class AttentionCenter: NSObject, UNUserNotificationCenterDelegate {
         center?.setNotificationCategories([UNNotificationCategory(
             identifier: Self.permissionCategory,
             actions: [
-                UNNotificationAction(identifier: Self.approveAction, title: "İzin ver", options: []),
-                UNNotificationAction(identifier: Self.denyAction, title: "Reddet", options: [.destructive]),
+                UNNotificationAction(identifier: Self.approveAction, title: String(localized: "Allow"), options: []),
+                UNNotificationAction(identifier: Self.denyAction, title: String(localized: "Deny"), options: [.destructive]),
             ],
             intentIdentifiers: []
         )])

@@ -46,7 +46,7 @@ extension AppModel {
     private static func same(_ a: Date, _ b: Date) -> Bool { abs(a.timeIntervalSince(b)) < 0.001 }
 }
 
-/// "İzin ver" / "Reddet" for a session showing a permission prompt; empty otherwise.
+/// "Allow" / "Deny" for a session showing a permission prompt; empty otherwise.
 struct PermissionButtons: View {
     @Environment(AppModel.self) private var model
     let sessionID: UUID
@@ -54,12 +54,12 @@ struct PermissionButtons: View {
     var body: some View {
         if let stamp = model.pendingPermissionStamp(sessionID) {
             HStack(spacing: 6) {
-                Button("İzin ver") { model.approvePermission(sessionID, expectedAt: stamp) }
+                Button("Allow") { model.approvePermission(sessionID, expectedAt: stamp) }
                     .buttonStyle(.borderedProminent)
-                    .help("Terminalde 1'e (Evet) basar")
-                Button("Reddet", role: .destructive) { model.denyPermission(sessionID, expectedAt: stamp) }
+                    .help("Presses 1 (Yes) in the terminal")
+                Button("Deny", role: .destructive) { model.denyPermission(sessionID, expectedAt: stamp) }
                     .buttonStyle(.bordered)
-                    .help("Terminalde Esc'ye basar")
+                    .help("Presses Esc in the terminal")
             }
             .controlSize(.small)
         }

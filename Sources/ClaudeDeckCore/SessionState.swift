@@ -133,8 +133,8 @@ public struct EffectiveStatus: Sendable, Equatable {
             status.activity = .idle
             status.updatedAt = transcript.at
             status.detail = switch transcript.kind {
-            case .interrupted: "Kesildi — sıra sende"
-            case .toolDenied: "İzin reddedildi — sıra sende"
+            case .interrupted: String(localized: "Interrupted — your turn")
+            case .toolDenied: String(localized: "Permission denied — your turn")
             }
         }
         if !processAlive, status.activity != .ended {

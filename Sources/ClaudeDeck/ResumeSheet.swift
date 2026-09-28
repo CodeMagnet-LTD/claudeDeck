@@ -12,12 +12,12 @@ struct ResumeSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("\(project.name) — eski oturumlar").font(.headline)
+            Text("\(project.name) — Previous Conversations").font(.headline)
             Group {
                 if !loaded {
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else if sessions.isEmpty {
-                    Text("Bu proje için kayıtlı Claude oturumu yok.")
+                    Text("No saved Claude conversations for this project.")
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
@@ -39,9 +39,9 @@ struct ResumeSheet: View {
             .frame(minHeight: 280)
             HStack {
                 Spacer()
-                Button("Vazgeç") { dismiss() }
+                Button("Cancel") { dismiss() }
                     .keyboardShortcut(.cancelAction)
-                Button("Devam ettir") { if let selection { resume(selection) } }
+                Button("Resume") { if let selection { resume(selection) } }
                     .keyboardShortcut(.defaultAction)
                     .disabled(selection == nil)
             }

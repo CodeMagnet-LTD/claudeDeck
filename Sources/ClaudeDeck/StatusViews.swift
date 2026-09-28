@@ -9,13 +9,13 @@ enum StatusStyle {
 
     static func label(for display: DisplayState) -> String {
         switch display {
-        case .notStarted, .activity(.ended): "Durdu"
-        case .starting: "Başlıyor"
-        case .shell: "Terminal"
-        case .activity(.running): "Çalışıyor"
-        case .activity(.needsPermission): "İzin bekliyor"
-        case .activity(.needsAnswer): "Soru soruyor"
-        case .activity(.idle): "Sıra sende"
+        case .notStarted, .activity(.ended): String(localized: "Stopped")
+        case .starting: String(localized: "Starting")
+        case .shell: String(localized: "Terminal")
+        case .activity(.running): String(localized: "Running")
+        case .activity(.needsPermission): String(localized: "Needs permission")
+        case .activity(.needsAnswer): String(localized: "Asking a question")
+        case .activity(.idle): String(localized: "Your turn")
         }
     }
 
@@ -67,13 +67,13 @@ struct StatusDot: View {
 
     private var accessibility: String {
         switch display {
-        case .activity(.running): "Çalışıyor"
-        case .activity(.needsPermission): "İzin bekliyor"
-        case .activity(.needsAnswer): "Cevap bekliyor"
-        case .activity(.idle): "Sıra sende"
-        case .activity(.ended), .notStarted: "Durdu"
-        case .starting: "Başlıyor"
-        case .shell: "Terminal"
+        case .activity(.running): String(localized: "Running")
+        case .activity(.needsPermission): String(localized: "Needs permission")
+        case .activity(.needsAnswer): String(localized: "Waiting for an answer")
+        case .activity(.idle): String(localized: "Your turn")
+        case .activity(.ended), .notStarted: String(localized: "Stopped")
+        case .starting: String(localized: "Starting")
+        case .shell: String(localized: "Terminal")
         }
     }
 }
@@ -171,7 +171,8 @@ struct AggregateBadge: View {
 
 enum GroupPalette {
     static let colors: [Color] = [.blue, .purple, .pink, .red, .orange, .yellow, .green, .teal]
-    static let names = ["Mavi", "Mor", "Pembe", "Kırmızı", "Turuncu", "Sarı", "Yeşil", "Turkuaz"]
+    static let names = [String(localized: "Blue"), String(localized: "Purple"), String(localized: "Pink"), String(localized: "Red"),
+                         String(localized: "Orange"), String(localized: "Yellow"), String(localized: "Green"), String(localized: "Teal")]
     static var count: Int { colors.count }
     static func color(_ i: Int) -> Color { colors[((i % count) + count) % count] }
 }
@@ -180,11 +181,11 @@ enum RelativeTime {
     static func short(_ date: Date, now: Date = Date()) -> String {
         let s = max(0, Int(now.timeIntervalSince(date)))
         switch s {
-        case ..<10: return "şimdi"
-        case ..<60: return "\(s) sn"
-        case ..<3600: return "\(s / 60) dk"
-        case ..<86400: return "\(s / 3600) sa"
-        default: return "\(s / 86400) g"
+        case ..<10: return String(localized: "now")
+        case ..<60: return String(localized: "\(s)s")
+        case ..<3600: return String(localized: "\(s / 60)m")
+        case ..<86400: return String(localized: "\(s / 3600)h")
+        default: return String(localized: "\(s / 86400)d")
         }
     }
 }
@@ -197,7 +198,7 @@ struct ShellStartBadge: View {
     var body: some View {
         if session.kind == .shell, let command = session.startupCommand {
             let auto = session.autoStart
-            Label(auto ? "Otomatik" : "Komutlu", systemImage: auto ? "bolt.fill" : "play.fill")
+            Label(auto ? String(localized: "Auto") : String(localized: "Command"), systemImage: auto ? "bolt.fill" : "play.fill")
                 .labelStyle(.titleAndIcon)
                 .font(.caption2.weight(.semibold))
                 .padding(.horizontal, 6)
@@ -205,7 +206,7 @@ struct ShellStartBadge: View {
                 .foregroundStyle(auto ? Color.orange : Color.secondary)
                 .background(Capsule().strokeBorder(auto ? Color.orange.opacity(0.7) : Color.secondary.opacity(0.5), lineWidth: 1))
                 .fixedSize()
-                .help(auto ? "Uygulama açılınca otomatik başlar: \(command)" : "Açılınca çalışan komut: \(command)")
+                .help(auto ? String(localized: "Starts automatically when the app launches: \(command)") : String(localized: "Runs when opened: \(command)"))
         }
     }
 }

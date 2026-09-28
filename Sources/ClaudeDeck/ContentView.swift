@@ -23,29 +23,29 @@ struct ContentView: View {
                     Button {
                         VSCode.open(URL(fileURLWithPath: path))
                     } label: {
-                        Label("VS Code'da aç", systemImage: "chevron.left.forwardslash.chevron.right")
+                        Label("Open in VS Code", systemImage: "chevron.left.forwardslash.chevron.right")
                     }
-                    .help("Projeyi VS Code'da aç")
+                    .help("Open Project in VS Code")
                 }
                 Button {
                     showFiles.toggle()
                 } label: {
-                    Label("Dosyalar", systemImage: "sidebar.right")
+                    Label("Files", systemImage: "sidebar.right")
                 }
-                .help("Proje dosyaları (⌘⇧E)")
+                .help("Project Files (⌘⇧E)")
                 .keyboardShortcut("e", modifiers: [.command, .shift])
             }
             ToolbarItem(placement: .navigation) {
                 Button {
                     model.presentAddProject()
                 } label: {
-                    Label("Proje Ekle", systemImage: "folder.badge.plus")
+                    Label("Add Project", systemImage: "folder.badge.plus")
                 }
-                .help("Proje ekle (⌘O)")
+                .help("Add Project (⌘O)")
             }
         }
-        .alert("Hook kurulamadı", isPresented: .constant(model.hookError != nil)) {
-            Button("Tamam") { model.hookError = nil }
+        .alert("Couldn’t Install the Hook", isPresented: .constant(model.hookError != nil)) {
+            Button("OK") { model.hookError = nil }
         } message: {
             Text(model.hookError ?? "")
         }
@@ -222,7 +222,7 @@ struct PaneHeader: View {
                 Image(systemName: "xmark")
             }
             .buttonStyle(.borderless)
-            .help("Bölmeyi kapat (oturum çalışmaya devam eder)")
+            .help("Close Pane (the session keeps running)")
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
@@ -293,20 +293,20 @@ struct ExitedBar: View {
         HStack(spacing: 10) {
             Image(systemName: "stop.circle").foregroundStyle(.secondary)
             if session.kind == .shell {
-                Text("Terminal kapandı").foregroundStyle(.secondary)
+                Text("Terminal closed").foregroundStyle(.secondary)
                 Spacer()
-                Button("Yeniden aç") { model.launch(session.id, resume: false) }
+                Button("Reopen") { model.launch(session.id, resume: false) }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)
             } else {
                 if model.claudePath == nil {
-                    Text("`claude` login shell'de bulunamadı. Claude Code kurulu mu?").foregroundStyle(.red)
+                    Text("`claude` wasn’t found in your login shell. Is Claude Code installed?").foregroundStyle(.red)
                 } else {
-                    Text("Claude oturumu kapandı").foregroundStyle(.secondary)
+                    Text("Claude session ended").foregroundStyle(.secondary)
                 }
                 Spacer()
-                Button("Yeni başlat") { model.launch(session.id, resume: false) }
-                Button("Devam et") { model.launch(session.id, resume: true) }
+                Button("Start Fresh") { model.launch(session.id, resume: false) }
+                Button("Resume") { model.launch(session.id, resume: true) }
                     .buttonStyle(.borderedProminent)
                     .keyboardShortcut(.defaultAction)
             }
@@ -325,10 +325,10 @@ struct EmptyStateView: View {
             Image(systemName: "rectangle.stack.badge.play")
                 .font(.system(size: 44, weight: .light))
                 .foregroundStyle(.secondary)
-            Text(model.deck.projects.isEmpty ? "Başlamak için bir proje ekle" : "Bir oturum seç ya da yeni oturum aç")
+            Text(model.deck.projects.isEmpty ? LocalizedStringKey("Add a project to get started") : LocalizedStringKey("Select a session or start a new one"))
                 .font(.title3)
             if model.deck.projects.isEmpty {
-                Button("Proje Ekle…") { model.presentAddProject() }
+                Button("Add Project…") { model.presentAddProject() }
                     .buttonStyle(.borderedProminent)
             }
         }

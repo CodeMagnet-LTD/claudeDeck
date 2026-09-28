@@ -17,7 +17,7 @@ import Testing
         let hook = status("s", "T", .needsPermission, at: 100)
         let r = EffectiveStatus.resolve(hook: hook, transcript: .init(kind: .toolDenied, at: Date(timeIntervalSince1970: 105)), processAlive: true)
         #expect(r?.activity == .idle)
-        #expect(r?.detail?.contains("reddedildi") == true)
+        #expect(r?.detail?.contains("denied") == true)
     }
 
     @Test func answeringAPermissionMeansRunningAgain() {

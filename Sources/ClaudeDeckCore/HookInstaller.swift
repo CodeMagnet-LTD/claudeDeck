@@ -97,8 +97,8 @@ public struct HookInstaller: Sendable {
         case unexpectedShape(String)
         public var errorDescription: String? {
             switch self {
-            case .unreadableSettings(let why): "~/.claude/settings.json okunamadı: \(why)"
-            case .unexpectedShape(let key): "~/.claude/settings.json içindeki \"\(key)\" beklenmeyen biçimde; dokunulmadı."
+            case .unreadableSettings(let why): String(localized: "Couldn’t read ~/.claude/settings.json: \(why)")
+            case .unexpectedShape(let key): String(localized: "\"\(key)\" in ~/.claude/settings.json has an unexpected format; left untouched.")
             }
         }
     }
@@ -153,7 +153,7 @@ public struct HookInstaller: Sendable {
         if data.isEmpty { return [:] }
         do {
             guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                throw InstallError.unreadableSettings("kök nesne bir JSON objesi değil")
+                throw InstallError.unreadableSettings(String(localized: "the root value is not a JSON object"))
             }
             return object
         } catch let error as InstallError {

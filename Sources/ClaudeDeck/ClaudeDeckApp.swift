@@ -16,24 +16,24 @@ struct ClaudeDeckApp: App {
         .defaultSize(width: 1200, height: 760)
         .commands {
             CommandGroup(replacing: .newItem) {
-                Button("Proje Ekle…") { delegate.model.presentAddProject() }
+                Button("Add Project…") { delegate.model.presentAddProject() }
                     .keyboardShortcut("o")
-                Button("Yeni Claude Oturumu") { delegate.model.newSessionInSelectedProject() }
+                Button("New Claude Session") { delegate.model.newSessionInSelectedProject() }
                     .keyboardShortcut("t")
-                Button("Yeni Terminal") { delegate.model.newShellInSelectedProject() }
+                Button("New Terminal") { delegate.model.newShellInSelectedProject() }
                     .keyboardShortcut("t", modifiers: [.command, .option])
             }
             // No help book: frees ⌘? (on Turkish keyboards the "+" key area produces it) for zoom.
             CommandGroup(replacing: .help) {}
             CommandGroup(after: .toolbar) {
-                Button("Terminali Büyüt") { delegate.model.zoomTerminals(by: 1) }
+                Button("Zoom In") { delegate.model.zoomTerminals(by: 1) }
                     .keyboardShortcut("+")
-                Button("Terminali Küçült") { delegate.model.zoomTerminals(by: -1) }
+                Button("Zoom Out") { delegate.model.zoomTerminals(by: -1) }
                     .keyboardShortcut("-")
-                Button("Gerçek Boyut") { delegate.model.zoomTerminals(by: nil) }
+                Button("Actual Size") { delegate.model.zoomTerminals(by: nil) }
                     .keyboardShortcut("0")
                 Divider()
-                Picker("Tema", selection: Binding(
+                Picker("Theme", selection: Binding(
                     get: { delegate.model.deck.settings.theme },
                     set: { delegate.model.setTheme($0) }
                 )) {
@@ -130,14 +130,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let working = running.filter { model.status(of: $0.id).display.isRunning || model.status(of: $0.id).display.isBlocked }.count
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = "ClaudeDeck'ten çıkılsın mı?"
-        var detail = "\(running.count) terminal açık"
-        if working > 0 { detail += ", \(working) Claude oturumu şu an çalışıyor" }
-        detail += ". Çıkarsan hepsi kapanır (Claude oturumları sonraki açılışta kaldığı yerden devam eder). Arka planda bırakırsan pencere kapanır, her şey çalışmaya devam eder."
+        alert.messageText = String(localized: "Quit ClaudeDeck?")
+        var detail = String(localized: "Open terminals: \(running.count)")
+        if working > 0 { detail += String(localized: ", Claude sessions working right now: \(working)") }
+        detail += String(localized: ". Quitting closes them all (Claude sessions resume where they left off next launch). Keep running in the background to close the window while everything keeps working.")
         alert.informativeText = detail
-        alert.addButton(withTitle: "Arka planda çalışsın")
-        alert.addButton(withTitle: "Çık")
-        alert.addButton(withTitle: "Vazgeç")
+        alert.addButton(withTitle: String(localized: "Keep Running in Background"))
+        alert.addButton(withTitle: String(localized: "Quit"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
         alert.buttons[1].hasDestructiveAction = true
         switch alert.runAsSheet() {
         case .alertFirstButtonReturn:

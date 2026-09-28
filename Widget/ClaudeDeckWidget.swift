@@ -44,7 +44,7 @@ struct ClaudeDeckWidget: Widget {
                 .containerBackground(.fill.tertiary, for: .widget)
         }
         .configurationDisplayName("ClaudeDeck")
-        .description("Claude oturumlarının durumu: bekleyen, çalışan ve sırası gelenler.")
+        .description("Status of your Claude sessions: waiting, running and ready for you.")
         .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
@@ -92,11 +92,11 @@ struct DeckWidgetView: View {
                 .foregroundStyle(.secondary)
             Spacer(minLength: 0)
             if snapshot.appRunning {
-                CountRow(color: Palette.blocked, count: snapshot.blocked, label: "Bekliyor")
-                CountRow(color: Palette.running, count: snapshot.running, label: "Çalışıyor")
-                CountRow(color: Palette.unseen, count: snapshot.unseen, label: "Sıra sende")
+                CountRow(color: Palette.blocked, count: snapshot.blocked, label: "Waiting")
+                CountRow(color: Palette.running, count: snapshot.running, label: "Running")
+                CountRow(color: Palette.unseen, count: snapshot.unseen, label: "Your turn")
             } else {
-                Text("Uygulama kapalı")
+                Text("App not running")
                     .font(.callout)
                     .foregroundStyle(.secondary)
             }
@@ -108,9 +108,9 @@ struct DeckWidgetView: View {
         if snapshot.items.isEmpty {
             VStack(alignment: .leading, spacing: 4) {
                 Spacer(minLength: 0)
-                Text(snapshot.appRunning ? "Seni bekleyen oturum yok" : "Oturumlar durdu")
+                Text(snapshot.appRunning ? "No sessions waiting for you" : "Sessions stopped")
                     .font(.callout.weight(.medium))
-                Text(snapshot.appRunning && snapshot.running > 0 ? "\(snapshot.running) oturum çalışıyor" : " ")
+                Text(snapshot.appRunning && snapshot.running > 0 ? "\(snapshot.running) running" : " ")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer(minLength: 0)
@@ -187,7 +187,7 @@ extension WidgetSnapshot {
         blocked: 1, running: 2, unseen: 1,
         items: [
             .init(id: UUID(), name: "api", project: "api", state: .needsPermission, detail: "Bash: npm test"),
-            .init(id: UUID(), name: "web", project: "web", state: .idle, detail: "Bitti"),
+            .init(id: UUID(), name: "web", project: "web", state: .idle, detail: "Done"),
         ]
     )
 }

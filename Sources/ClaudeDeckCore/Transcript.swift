@@ -107,7 +107,7 @@ public enum TranscriptIndex {
             .prefix(limit)
             .compactMap { url, date, size in
                 guard size > 0 else { return nil }
-                let title = title(of: url) ?? "Adsız oturum"
+                let title = title(of: url) ?? String(localized: "Untitled session")
                 return ResumableSession(id: url.deletingPathExtension().lastPathComponent, title: title, modifiedAt: date, size: size)
             }
     }

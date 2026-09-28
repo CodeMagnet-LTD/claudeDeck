@@ -52,7 +52,9 @@ enum ShellEnvironment {
     }
 
     /// Absolute path of `claude` as the login shell sees it (nil if not installed).
+    /// `CLAUDEDECK_CLAUDE_PATH` overrides it (demo mode runs a stand-in).
     static func resolveClaude() -> String? {
+        if let path = ProcessInfo.processInfo.environment["CLAUDEDECK_CLAUDE_PATH"], !path.isEmpty { return path }
         for flags in ["-lc", "-lic"] {
             let p = Process()
             p.executableURL = URL(fileURLWithPath: loginShell)

@@ -30,9 +30,9 @@ struct MenuBarContent: View {
             HStack {
                 Text("ClaudeDeck").font(.headline)
                 Spacer()
-                counter(c.blocked, StatusStyle.blocked, "bekliyor")
-                counter(c.running, StatusStyle.running, "çalışıyor")
-                counter(c.unseen, StatusStyle.idle, "sıra sende")
+                counter(c.blocked, StatusStyle.blocked, "waiting")
+                counter(c.running, StatusStyle.running, "running")
+                counter(c.unseen, StatusStyle.idle, "your turn")
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
@@ -41,7 +41,7 @@ struct MenuBarContent: View {
                 VStack(alignment: .leading, spacing: 2) {
                     let sessions = orderedSessions
                     if sessions.isEmpty {
-                        Text("Oturum yok").foregroundStyle(.secondary).padding(12)
+                        Text("No Sessions").foregroundStyle(.secondary).padding(12)
                     }
                     ForEach(sessions) { session in
                         MenuSessionRow(session: session) {
@@ -56,13 +56,13 @@ struct MenuBarContent: View {
             .frame(maxHeight: 420)
             Divider()
             HStack {
-                Button("Pencereyi aç") {
+                Button("Open Window") {
                     openWindow(id: "main")
                     NSApp.activate()
                     dismiss()
                 }
                 Spacer()
-                Button("Çık") { NSApp.terminate(nil) }
+                Button("Quit") { NSApp.terminate(nil) }
             }
             .buttonStyle(.borderless)
             .padding(10)
@@ -87,7 +87,7 @@ struct MenuBarContent: View {
         }
     }
 
-    private func counter(_ n: Int, _ color: Color, _ label: String) -> some View {
+    private func counter(_ n: Int, _ color: Color, _ label: LocalizedStringKey) -> some View {
         HStack(spacing: 3) {
             Circle().fill(color).frame(width: 7, height: 7)
             Text("\(n)").monospacedDigit()
