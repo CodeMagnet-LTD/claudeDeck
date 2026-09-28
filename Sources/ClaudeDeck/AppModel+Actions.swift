@@ -25,6 +25,20 @@ extension AppModel {
         }
     }
 
+    /// Types dropped files into a terminal: `@relative/path` for Claude, a quoted path for shells.
+    func insertPaths(_ urls: [URL], into id: UUID) {
+        guard let session = deck.session(id), terminals.isRunning(id), !urls.isEmpty else { return }
+        let text: String
+        if session.kind == .claude {
+            let root = URL(fileURLWithPath: deck.project(session.projectID)?.path ?? "/")
+            text = urls.map { "@" + FileListing.relativePath(of: $0, in: root) }.joined(separator: " ")
+        } else {
+            text = urls.map { "'" + $0.path.replacingOccurrences(of: "'", with: "'\\''") + "'" }.joined(separator: " ")
+        }
+        terminals.type(text + " ", into: id)
+        selectedSessionID = id
+    }
+
     /// Brings the main window forward and selects a session (notification / menu bar click).
     func reveal(_ id: UUID) {
         selectedSessionID = id

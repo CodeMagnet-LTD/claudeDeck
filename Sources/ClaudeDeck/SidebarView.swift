@@ -117,12 +117,20 @@ struct ProjectRow: View {
             ForEach(sessions) { session in
                 SessionRow(session: session).tag(session.id)
             }
-            Button {
-                model.newSession(in: project.id)
-            } label: {
-                Label("Yeni Claude oturumu", systemImage: "plus")
-                    .font(.callout)
+            HStack(spacing: 14) {
+                Button {
+                    model.newSession(in: project.id)
+                } label: {
+                    Label("Yeni Claude oturumu", systemImage: "plus")
+                }
+                Button {
+                    model.newShell(in: project.id)
+                } label: {
+                    Label("Terminal", systemImage: "apple.terminal")
+                }
+                .help("Proje klasöründe boş terminal aç (⌥⌘T)")
             }
+            .font(.callout)
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
         } label: {
@@ -133,6 +141,13 @@ struct ProjectRow: View {
                 Text(project.name).fontWeight(.medium).lineLimit(1)
                 Spacer(minLength: 4)
                 if project.collapsed { AggregateBadge(sessionIDs: sessions.map(\.id)) }
+                Button {
+                    model.newShell(in: project.id)
+                } label: {
+                    Image(systemName: "apple.terminal")
+                }
+                .buttonStyle(.borderless)
+                .help("Proje klasöründe boş terminal aç")
                 Button {
                     model.newSession(in: project.id)
                 } label: {
@@ -207,6 +222,9 @@ struct SessionRow: View {
             StatusDot(display: status.display, unseen: model.isUnseenIdle(session.id))
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
+                    if session.kind == .shell {
+                        Image(systemName: "apple.terminal").font(.caption).foregroundStyle(.secondary)
+                    }
                     Text(session.name).lineLimit(1)
                     Spacer(minLength: 4)
                     if let at = status.updatedAt {
@@ -255,7 +273,9 @@ struct SessionMenu: View {
         }
         Divider()
         if model.terminals.isRunning(session.id) {
-            Button("Oturumu bitir") { model.stop(session.id) }
+            Button(session.kind == .shell ? "Terminali kapat" : "Oturumu bitir") { model.stop(session.id) }
+        } else if session.kind == .shell {
+            Button("Yeniden aç") { model.launch(session.id, resume: false); model.selectedSessionID = session.id }
         } else {
             Button("Devam et") { model.launch(session.id, resume: true); model.selectedSessionID = session.id }
             Button("Yeni başlat") { model.launch(session.id, resume: false); model.selectedSessionID = session.id }
@@ -278,6 +298,7 @@ struct ProjectMenu: View {
 
     var body: some View {
         Button("Yeni Claude oturumu") { model.newSession(in: project.id) }
+        Button("Yeni terminal") { model.newShell(in: project.id) }
         Button("Eski oturumu devam ettir…") { showResume = true }
         let projectSessions = model.deck.sessions(in: project.id)
         if projectSessions.count > 1 {

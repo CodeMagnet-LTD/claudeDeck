@@ -11,6 +11,7 @@ enum StatusStyle {
         switch display {
         case .notStarted, .activity(.ended): "Durdu"
         case .starting: "Başlıyor"
+        case .shell: "Terminal"
         case .activity(.running): "Çalışıyor"
         case .activity(.needsPermission): "İzin bekliyor"
         case .activity(.needsAnswer): "Soru soruyor"
@@ -28,6 +29,7 @@ enum StatusStyle {
         case .activity(.needsPermission), .activity(.needsAnswer): blocked
         case .activity(.idle): idle
         case .starting: running.opacity(0.5)
+        case .shell: .blue
         case .notStarted, .activity(.ended): inactive
         }
     }
@@ -71,6 +73,7 @@ struct StatusDot: View {
         case .activity(.idle): "Sıra sende"
         case .activity(.ended), .notStarted: "Durdu"
         case .starting: "Başlıyor"
+        case .shell: "Terminal"
         }
     }
 }

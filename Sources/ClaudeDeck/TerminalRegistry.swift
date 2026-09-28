@@ -149,6 +149,34 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
 
     /// Types text like a user would. A trailing "\r" is sent separately after a short pause,
     /// otherwise Claude's TUI treats text+Enter as a paste and inserts a newline instead of submitting.
+    /// A plain interactive login shell in `cwd` (no ClaudeDeck terminal id: claude started
+    /// inside it is not tracked as this session).
+    func startShell(id: UUID, cwd: String) {
+        let view = views[id] ?? DeckTerminalView(sessionID: id)
+        view.processDelegate = self
+        view.onInput = { [weak self] data in self?.onUserInput?(id, data) }
+        view.onFocus = { [weak self] in self?.onFocus?(id) }
+        views[id] = view
+        if running.contains(id) { return }
+        let shell = ShellEnvironment.loginShell
+        let dir = FileManager.default.fileExists(atPath: cwd) ? cwd : NSHomeDirectory()
+        var env = ShellEnvironment.cleanEnvironment
+        env["TERM"] = "xterm-256color"
+        env["COLORTERM"] = "truecolor"
+        env["TERM_PROGRAM"] = "ClaudeDeck"
+        if env["LANG"] == nil { env["LANG"] = "en_US.UTF-8" }
+        view.getTerminal().resetToInitialState()
+        view.startProcess(
+            executable: shell,
+            args: ["-l"],
+            environment: env.map { "\($0.key)=\($0.value)" },
+            execName: "-" + (shell as NSString).lastPathComponent,
+            currentDirectory: dir
+        )
+        running.insert(id)
+        titles[id] = nil
+    }
+
     func type(_ text: String, into id: UUID) {
         guard let view = views[id], running.contains(id) else { return }
         guard text.hasSuffix("\r"), text.count > 1 else { view.send(txt: text); return }

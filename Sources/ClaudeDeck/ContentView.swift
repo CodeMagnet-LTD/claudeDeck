@@ -1,5 +1,6 @@
 import ClaudeDeckCore
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct ContentView: View {
     @Environment(AppModel.self) private var model
@@ -121,12 +122,14 @@ struct PaneView: View {
             .background(GeometryReader { geo in
                 Color.clear.onAppear { width = geo.size.width }.onChange(of: geo.size.width) { _, w in width = w }
             })
-            .onDrop(of: [.utf8PlainText, .plainText], delegate: PaneDropDelegate(
-                width: width, side: $dropSide
-            ) { droppedID, side in
-                guard droppedID != sessionID else { return }
-                model.openBeside(droppedID, anchor: sessionID, before: side == .before)
-            })
+            .onDrop(of: PaneDropDelegate.types, delegate: PaneDropDelegate(
+                width: width, side: $dropSide,
+                onSession: { droppedID, side in
+                    guard droppedID != sessionID else { return }
+                    model.openBeside(droppedID, anchor: sessionID, before: side == .before)
+                },
+                onFiles: { urls in model.insertPaths(urls, into: sessionID) }
+            ))
         }
     }
 }
@@ -164,19 +167,23 @@ struct PaneHeader: View {
     }
 }
 
+/// Sessions from the sidebar open a pane on the drop side; files from the file browser or
+/// Finder are typed into the terminal as paths.
 struct PaneDropDelegate: DropDelegate {
+    static let types: [UTType] = [.fileURL, .utf8PlainText, .plainText]
     let width: CGFloat
     @Binding var side: PaneView.DropSide?
-    let onDrop: (UUID, PaneView.DropSide) -> Void
+    let onSession: (UUID, PaneView.DropSide) -> Void
+    let onFiles: ([URL]) -> Void
 
     private func side(for info: DropInfo) -> PaneView.DropSide {
         info.location.x < width / 2 ? .before : .after
     }
 
-    func validateDrop(info: DropInfo) -> Bool { info.hasItemsConforming(to: [.utf8PlainText, .plainText]) }
-    func dropEntered(info: DropInfo) { side = side(for: info) }
+    func validateDrop(info: DropInfo) -> Bool { info.hasItemsConforming(to: Self.types) }
+    func dropEntered(info: DropInfo) { side = info.hasItemsConforming(to: [.fileURL]) ? nil : side(for: info) }
     func dropUpdated(info: DropInfo) -> DropProposal? {
-        side = side(for: info)
+        side = info.hasItemsConforming(to: [.fileURL]) ? nil : side(for: info)
         return DropProposal(operation: .copy)
     }
     func dropExited(info: DropInfo) { side = nil }
@@ -184,10 +191,20 @@ struct PaneDropDelegate: DropDelegate {
     func performDrop(info: DropInfo) -> Bool {
         let where_ = side(for: info)
         side = nil
+        let fileProviders = info.itemProviders(for: [.fileURL])
+        if !fileProviders.isEmpty {
+            let collector = URLCollector(count: fileProviders.count, done: onFiles)
+            for provider in fileProviders {
+                _ = provider.loadObject(ofClass: NSURL.self) { object, _ in
+                    collector.add(object as? URL)
+                }
+            }
+            return true
+        }
         guard let provider = info.itemProviders(for: [.utf8PlainText, .plainText]).first else { return false }
         _ = provider.loadObject(ofClass: NSString.self) { object, _ in
             guard let text = object as? String, let id = UUID(uuidString: text) else { return }
-            Task { @MainActor in onDrop(id, where_) }
+            Task { @MainActor in onSession(id, where_) }
         }
         return true
     }
@@ -201,16 +218,24 @@ struct ExitedBar: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: "stop.circle").foregroundStyle(.secondary)
-            if model.claudePath == nil {
-                Text("`claude` login shell'de bulunamadı. Claude Code kurulu mu?").foregroundStyle(.red)
+            if session.kind == .shell {
+                Text("Terminal kapandı").foregroundStyle(.secondary)
+                Spacer()
+                Button("Yeniden aç") { model.launch(session.id, resume: false) }
+                    .buttonStyle(.borderedProminent)
+                    .keyboardShortcut(.defaultAction)
             } else {
-                Text("Claude oturumu kapandı").foregroundStyle(.secondary)
+                if model.claudePath == nil {
+                    Text("`claude` login shell'de bulunamadı. Claude Code kurulu mu?").foregroundStyle(.red)
+                } else {
+                    Text("Claude oturumu kapandı").foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Yeni başlat") { model.launch(session.id, resume: false) }
+                Button("Devam et") { model.launch(session.id, resume: true) }
+                    .buttonStyle(.borderedProminent)
+                    .keyboardShortcut(.defaultAction)
             }
-            Spacer()
-            Button("Yeni başlat") { model.launch(session.id, resume: false) }
-            Button("Devam et") { model.launch(session.id, resume: true) }
-                .buttonStyle(.borderedProminent)
-                .keyboardShortcut(.defaultAction)
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
@@ -234,5 +259,28 @@ struct EmptyStateView: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// Gathers asynchronously loaded file URLs and delivers them once, in drop order, on the main actor.
+final class URLCollector: @unchecked Sendable {
+    private let lock = NSLock()
+    private var urls: [URL] = []
+    private var remaining: Int
+    private let done: ([URL]) -> Void
+
+    init(count: Int, done: @escaping ([URL]) -> Void) {
+        remaining = count
+        self.done = done
+    }
+
+    func add(_ url: URL?) {
+        lock.lock()
+        if let url { urls.append(url) }
+        remaining -= 1
+        let finished = remaining == 0
+        let result = urls
+        lock.unlock()
+        if finished { Task { @MainActor in self.done(result) } }
     }
 }

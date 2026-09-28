@@ -7,6 +7,7 @@ import Observation
 enum DisplayState: Equatable {
     case notStarted       // no terminal process (app just launched, or closed)
     case starting         // process running, no hook event yet
+    case shell            // plain terminal (no Claude status)
     case activity(SessionActivity)
 
     var isBlocked: Bool { if case .activity(let a) = self { a.isBlocked } else { false } }
@@ -136,6 +137,11 @@ final class AppModel {
     // MARK: Status
 
     func status(of id: UUID) -> SessionStatus {
+        if deck.session(id)?.kind == .shell {
+            return terminals.isRunning(id)
+                ? SessionStatus(display: .shell, detail: terminals.titles[id], updatedAt: nil)
+                : SessionStatus(display: .notStarted, detail: nil, updatedAt: nil)
+        }
         guard terminals.isRunning(id) else {
             return SessionStatus(display: .notStarted, detail: nil, updatedAt: deck.session(id)?.lastActivityAt)
         }
@@ -296,6 +302,13 @@ final class AppModel {
     func launch(_ id: UUID, resume: Bool, automatic: Bool = false, resumeID: String? = nil) {
         guard let session = deck.session(id), let project = deck.project(session.projectID) else { return }
         if terminals.isRunning(id) { return }
+        if session.kind == .shell {
+            terminals.startShell(id: id, cwd: project.path)
+            deck.updateSession(id) { $0.isOpen = true }
+            scheduleSave()
+            onCountsChanged?()
+            return
+        }
         let sid = resumeID ?? (resume ? deck.resumableID(for: id) : nil)
         var args = ["--name", session.name]
         if let sid { args += ["--resume", sid] }
@@ -406,6 +419,19 @@ final class AppModel {
         return session.id
     }
 
+    /// A plain terminal in the project folder.
+    @discardableResult
+    func newShell(in projectID: UUID) -> UUID? {
+        guard let session = deck.addSession(to: projectID, kind: .shell) else { return nil }
+        launch(session.id, resume: false)
+        selectedSessionID = session.id
+        return session.id
+    }
+
+    func newShellInSelectedProject() {
+        if let projectID = selectedProjectID ?? deck.projects.first?.id { newShell(in: projectID) }
+    }
+
     func removeSession(_ id: UUID) {
         terminals.terminate(id)
         terminals.discard(id)
@@ -434,7 +460,7 @@ final class AppModel {
         guard !trimmed.isEmpty else { return }
         deck.updateSession(id) { $0.name = trimmed }
         // Running claude keeps its name until next start; /rename updates the live session.
-        if terminals.isRunning(id), status(of: id).display.isIdle {
+        if deck.session(id)?.kind == .claude, terminals.isRunning(id), status(of: id).display.isIdle {
             terminals.type("/rename \(trimmed)\r", into: id)
         }
         scheduleSave()

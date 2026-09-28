@@ -231,6 +231,24 @@ import Testing
         #expect(deck.panes == [a, b])
     }
 
+    @Test func readsDataWrittenBeforeSessionKinds() throws {
+        let json = #"{"projects":[{"id":"11111111-1111-1111-1111-111111111111","path":"/w/a","name":"a","pinned":false,"collapsed":false}],"sessions":[{"id":"22222222-2222-2222-2222-222222222222","projectID":"11111111-1111-1111-1111-111111111111","name":"a","createdAt":0,"isOpen":true}]}"#
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .secondsSince1970
+        let deck = try decoder.decode(DeckData.self, from: Data(json.utf8))
+        #expect(deck.sessions.first?.kind == .claude)
+        #expect(deck.sessions.first?.isOpen == true)
+    }
+
+    @Test func shellSessionNames() {
+        var deck = DeckData()
+        let p = deck.addProject(path: "/w/app")
+        #expect(deck.addSession(to: p.id, kind: .shell)?.name == "app · terminal")
+        #expect(deck.addSession(to: p.id, kind: .shell)?.name == "app · terminal 2")
+        #expect(deck.addSession(to: p.id)?.name == "app")
+        #expect(deck.addSession(to: p.id, kind: .shell, claudeSessionID: "x")?.claudeSessionID == nil)
+    }
+
     @Test func toleratesMissingKeys() throws {
         let deck = try JSONDecoder().decode(DeckData.self, from: Data(#"{"projects":[]}"#.utf8))
         #expect(deck.settings == DeckSettings())

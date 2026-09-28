@@ -18,6 +18,8 @@ struct ClaudeDeckApp: App {
                     .keyboardShortcut("o")
                 Button("Yeni Claude Oturumu") { delegate.model.newSessionInSelectedProject() }
                     .keyboardShortcut("t")
+                Button("Yeni Terminal") { delegate.model.newShellInSelectedProject() }
+                    .keyboardShortcut("t", modifiers: [.command, .option])
             }
         }
 

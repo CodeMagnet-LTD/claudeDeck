@@ -32,12 +32,20 @@ public struct Project: Codable, Identifiable, Sendable, Equatable {
     }
 }
 
+public enum SessionKind: String, Codable, Sendable {
+    /// Runs `claude` (status via hooks).
+    case claude
+    /// A plain login shell in the project folder.
+    case shell
+}
+
 /// A ClaudeDeck terminal slot. Its `id` is the `CLAUDEDECK_TERMINAL_ID`, stable across
 /// app restarts so the hook files keep mapping to it after `claude --resume`.
 public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
     public var id: UUID
     public var projectID: UUID
     public var name: String
+    public var kind: SessionKind
     /// Last known Claude `session_id` (from hooks) — used for `--resume` on relaunch.
     public var claudeSessionID: String?
     /// Transcript of `claudeSessionID`; resume is only possible once it exists on disk.
@@ -47,16 +55,30 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
     /// Whether the terminal was running when the app last saved; such sessions are resumed on launch.
     public var isOpen: Bool
 
-    public init(id: UUID = UUID(), projectID: UUID, name: String, claudeSessionID: String? = nil,
+    public init(id: UUID = UUID(), projectID: UUID, name: String, kind: SessionKind = .claude, claudeSessionID: String? = nil,
                 createdAt: Date = Date(), lastActivityAt: Date? = nil, isOpen: Bool = true) {
         self.id = id
         self.projectID = projectID
         self.name = name
+        self.kind = kind
         self.claudeSessionID = claudeSessionID
         self.transcriptPath = nil
         self.createdAt = createdAt
         self.lastActivityAt = lastActivityAt
         self.isOpen = isOpen
+    }
+    /// Tolerant decoding: files written by older versions lack newer keys (e.g. `kind`).
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        projectID = try c.decode(UUID.self, forKey: .projectID)
+        name = try c.decode(String.self, forKey: .name)
+        kind = try c.decodeIfPresent(SessionKind.self, forKey: .kind) ?? .claude
+        claudeSessionID = try c.decodeIfPresent(String.self, forKey: .claudeSessionID)
+        transcriptPath = try c.decodeIfPresent(String.self, forKey: .transcriptPath)
+        createdAt = try c.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+        lastActivityAt = try c.decodeIfPresent(Date.self, forKey: .lastActivityAt)
+        isOpen = try c.decodeIfPresent(Bool.self, forKey: .isOpen) ?? false
     }
 }
 
@@ -124,13 +146,15 @@ public struct DeckData: Codable, Sendable, Equatable {
     }
 
     /// New session named after the project: "app", then "app · 2", "app · 3"…
+    /// Shell sessions: "app · terminal", "app · terminal 2"…
     @discardableResult
-    public mutating func addSession(to projectID: UUID, claudeSessionID: String? = nil, name: String? = nil) -> DeckSession? {
+    public mutating func addSession(to projectID: UUID, kind: SessionKind = .claude, claudeSessionID: String? = nil, name: String? = nil) -> DeckSession? {
         guard let project = projects.first(where: { $0.id == projectID }) else { return nil }
         let session = DeckSession(
             projectID: projectID,
-            name: name ?? nextSessionName(for: project),
-            claudeSessionID: claudeSessionID
+            name: name ?? (kind == .shell ? nextShellName(for: project) : nextSessionName(for: project)),
+            kind: kind,
+            claudeSessionID: kind == .claude ? claudeSessionID : nil
         )
         sessions.append(session)
         return session
@@ -152,6 +176,15 @@ public struct DeckData: Codable, Sendable, Equatable {
         }
         guard let path, fileExists(path) else { return nil }
         return sid
+    }
+
+    public func nextShellName(for project: Project) -> String {
+        let taken = Set(sessions.filter { $0.projectID == project.id }.map(\.name))
+        let base = "\(project.name) · terminal"
+        if !taken.contains(base) { return base }
+        var n = 2
+        while taken.contains("\(base) \(n)") { n += 1 }
+        return "\(base) \(n)"
     }
 
     public mutating func removeSession(_ id: UUID) {

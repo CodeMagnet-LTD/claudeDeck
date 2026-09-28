@@ -15,7 +15,8 @@ enum DebugSnapshot {
     }
 
     /// `<dir>/<session-uuid>.in` files are typed into that session's terminal, then deleted;
-    /// an empty `<dir>/<session-uuid>.select` selects that session, `.beside` opens it in a new pane.
+    /// an empty `<dir>/<session-uuid>.select` selects that session, `.beside` opens it in a new pane,
+    /// `<project-uuid>.shell` opens a plain terminal in that project.
     private static func typePendingInput(from dir: String, model: AppModel) {
         let files = (try? FileManager.default.contentsOfDirectory(atPath: dir)) ?? []
         for file in files where file.hasSuffix(".select") {
@@ -27,6 +28,11 @@ enum DebugSnapshot {
             let path = (dir as NSString).appendingPathComponent(file)
             try? FileManager.default.removeItem(atPath: path)
             if let id = UUID(uuidString: String(file.dropLast(7))) { model.openBeside(id) }
+        }
+        for file in files where file.hasSuffix(".shell") {
+            let path = (dir as NSString).appendingPathComponent(file)
+            try? FileManager.default.removeItem(atPath: path)
+            if let project = UUID(uuidString: String(file.dropLast(6))) { model.newShell(in: project) }
         }
         for file in files where file.hasSuffix(".in") {
             let path = (dir as NSString).appendingPathComponent(file)

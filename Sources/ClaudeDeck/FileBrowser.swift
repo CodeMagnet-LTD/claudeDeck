@@ -28,8 +28,32 @@ final class FileTree {
     var expanded: Set<String> = []
     private var entries: [String: [FileEntry]] = [:]
     @ObservationIgnored private var watchers: [String: DirectoryWatcher] = [:]
+    private(set) var gitRoot: URL?
+    private(set) var gitStatus: [String: GitFileState] = [:]
+    @ObservationIgnored private var gitTask: Task<Void, Never>?
 
-    init(root: URL) { self.root = root }
+    init(root: URL) {
+        self.root = root
+        refreshGit()
+    }
+
+    func gitState(of url: URL) -> GitFileState? { gitStatus[url.resolvingSymlinksInPath().path] ?? gitStatus[url.path] }
+
+    /// Re-reads `git status` off the main thread (coalesced).
+    func refreshGit() {
+        gitTask?.cancel()
+        let root = self.root
+        gitTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(250))
+            guard !Task.isCancelled else { return }
+            let (repo, status) = await Task.detached { () -> (URL?, [String: GitFileState]) in
+                guard let repo = Git.root(of: root) else { return (nil, [:]) }
+                return (repo, Git.status(in: repo))
+            }.value
+            self?.gitRoot = repo
+            self?.gitStatus = status
+        }
+    }
 
     func children(of dir: URL) -> [FileEntry] {
         if let cached = entries[dir.path] { return cached }
@@ -42,6 +66,7 @@ final class FileTree {
 
     func reload(_ dir: URL) {
         entries[dir.path] = FileListing.children(of: dir, showHidden: showHidden)
+        refreshGit()
     }
 
     func reloadAll() {
@@ -79,23 +104,34 @@ struct FileBrowserPanel: View {
             VStack(spacing: 0) {
                 header(project: project, tree: tree)
                 Divider()
-                List(selection: $selection) {
-                    ForEach(tree.children(of: tree.root)) { entry in
-                        FileNode(entry: entry, tree: tree)
+                VSplitView {
+                    List(selection: $selection) {
+                        ForEach(tree.children(of: tree.root)) { entry in
+                            FileNode(entry: entry, tree: tree, selection: $selection, project: project)
+                        }
+                    }
+                    .listStyle(.sidebar)
+                    .frame(minHeight: 160)
+                    if let file = selectedFile, tree.gitRoot != nil {
+                        FileHistoryView(file: file, tree: tree)
+                            .frame(minHeight: 120, idealHeight: 240)
                     }
                 }
-                .listStyle(.sidebar)
-                .contextMenu(forSelectionType: String.self) { paths in
-                    FileMenu(urls: paths.map { URL(fileURLWithPath: $0) }, tree: tree, project: project)
-                } primaryAction: { paths in
-                    for path in paths { openDefault(URL(fileURLWithPath: path)) }
-                }
             }
+            .onChange(of: project.path) { _, _ in selection = [] }
         } else {
             Text("Dosyaları görmek için bir oturum seç")
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+    }
+
+    /// The single selected regular file (history is per file).
+    private var selectedFile: URL? {
+        guard selection.count == 1, let path = selection.first else { return nil }
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: path, isDirectory: &isDir), !isDir.boolValue else { return nil }
+        return URL(fileURLWithPath: path)
     }
 
     private var focusedProject: Project? {
@@ -143,49 +179,221 @@ struct FileBrowserPanel: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
     }
-
-    private func openDefault(_ url: URL) {
-        var isDir: ObjCBool = false
-        FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir)
-        if isDir.boolValue { return }
-        if VSCode.isInstalled { VSCode.open(url) } else { NSWorkspace.shared.open(url) }
-    }
 }
 
+/// One row of the tree. Click handling is explicit: a drag source on a List row swallows the
+/// list's own click-to-select on macOS.
 struct FileNode: View {
     let entry: FileEntry
     let tree: FileTree
+    @Binding var selection: Set<String>
+    let project: Project
 
     var body: some View {
         if entry.isDirectory {
             DisclosureGroup(isExpanded: tree.isExpanded(entry)) {
                 if tree.expanded.contains(entry.id) {
                     ForEach(tree.children(of: entry.url)) { child in
-                        AnyView(FileNode(entry: child, tree: tree))
+                        AnyView(FileNode(entry: child, tree: tree, selection: $selection, project: project))
                     }
                 }
             } label: {
-                FileLabel(entry: entry)
+                row
             }
             .tag(entry.id)
         } else {
-            FileLabel(entry: entry).tag(entry.id)
+            row.tag(entry.id)
         }
+    }
+
+    private var row: some View {
+        FileLabel(entry: entry, state: tree.gitState(of: entry.url))
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .onTapGesture(count: 2) {
+                if entry.isDirectory { tree.isExpanded(entry).wrappedValue.toggle() } else { FileActions.openDefault(entry.url) }
+            }
+            .onTapGesture {
+                if NSEvent.modifierFlags.contains(.command) {
+                    if selection.contains(entry.id) { selection.remove(entry.id) } else { selection.insert(entry.id) }
+                } else {
+                    selection = [entry.id]
+                }
+            }
+            .contextMenu {
+                let urls = selection.contains(entry.id) ? selection.map { URL(fileURLWithPath: $0) } : [entry.url]
+                FileMenu(urls: urls, tree: tree, project: project)
+            }
+            .onDrag { NSItemProvider(object: entry.url as NSURL) }
     }
 }
 
 struct FileLabel: View {
     let entry: FileEntry
+    var state: GitFileState?
 
     var body: some View {
-        Label {
-            Text(entry.name).lineLimit(1).truncationMode(.middle)
-        } icon: {
+        HStack(spacing: 6) {
             Image(nsImage: NSWorkspace.shared.icon(forFile: entry.url.path))
                 .resizable()
                 .frame(width: 16, height: 16)
+            Text(entry.name)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .foregroundStyle(state.map(GitStyle.color) ?? .primary)
+            Spacer(minLength: 4)
+            if let state, !entry.isDirectory {
+                Text(state.rawValue)
+                    .font(.caption.monospaced().weight(.bold))
+                    .foregroundStyle(GitStyle.color(state))
+            } else if state != nil {
+                Circle().fill(GitStyle.color(.modified).opacity(0.7)).frame(width: 5, height: 5)
+            }
         }
-        .onDrag { NSItemProvider(object: entry.url as NSURL) }
+    }
+}
+
+enum GitStyle {
+    static func color(_ state: GitFileState) -> Color {
+        switch state {
+        case .modified, .renamed: .orange
+        case .added, .untracked: .green
+        case .deleted, .conflicted: .red
+        }
+    }
+}
+
+/// Commit history of one file; click a commit to see its diff.
+struct FileHistoryView: View {
+    let file: URL
+    let tree: FileTree
+    @State private var commits: [GitCommit] = []
+    @State private var loading = true
+    @State private var shownDiff: DiffSheet.Content?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Image(systemName: "clock.arrow.circlepath").foregroundStyle(.secondary)
+                Text("Geçmiş").font(.subheadline.weight(.semibold))
+                Text(file.lastPathComponent).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                Spacer()
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            Divider()
+            List {
+                if let state = tree.gitState(of: file), state != .untracked {
+                    Button {
+                        show(title: "Kaydedilmemiş değişiklikler") { repo in Git.workingDiff(of: file, in: repo) }
+                    } label: {
+                        HStack {
+                            Circle().fill(GitStyle.color(state)).frame(width: 7, height: 7)
+                            Text("Kaydedilmemiş değişiklikler").font(.callout)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+                ForEach(commits) { commit in
+                    Button {
+                        show(title: "\(commit.shortHash) — \(commit.subject)") { repo in Git.diff(of: file, at: commit.hash, in: repo) }
+                    } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(commit.subject).font(.callout).lineLimit(2)
+                            HStack(spacing: 6) {
+                                Text(commit.shortHash).monospaced()
+                                Text(commit.author)
+                                Text(commit.date.formatted(.relative(presentation: .named)))
+                            }
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.vertical, 2)
+                }
+                if !loading && commits.isEmpty && tree.gitState(of: file) == nil {
+                    Text("Bu dosya için commit yok").foregroundStyle(.secondary).font(.callout)
+                }
+                if tree.gitState(of: file) == .untracked {
+                    Text("Git'e eklenmemiş yeni dosya").foregroundStyle(.secondary).font(.callout)
+                }
+            }
+            .listStyle(.plain)
+            .overlay { if loading { ProgressView().controlSize(.small) } }
+        }
+        .task(id: file) {
+            loading = true
+            let root = tree.gitRoot
+            commits = await Task.detached { root.map { Git.log(of: file, in: $0) } ?? [] }.value
+            loading = false
+        }
+        .sheet(item: $shownDiff) { DiffSheet(content: $0) }
+    }
+
+    private func show(title: String, _ load: @escaping @Sendable (URL) -> String) {
+        guard let repo = tree.gitRoot else { return }
+        Task {
+            let text = await Task.detached { load(repo) }.value
+            shownDiff = DiffSheet.Content(title: title, file: file.lastPathComponent, text: text)
+        }
+    }
+}
+
+struct DiffSheet: View {
+    struct Content: Identifiable {
+        let id = UUID()
+        var title: String
+        var file: String
+        var text: String
+    }
+
+    let content: Content
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(content.title).font(.headline).lineLimit(1)
+                    Text(content.file).font(.caption).foregroundStyle(.secondary)
+                }
+                Spacer()
+                Button("Kapat") { dismiss() }.keyboardShortcut(.cancelAction)
+            }
+            .padding(12)
+            Divider()
+            ScrollView([.vertical, .horizontal]) {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    ForEach(Array(content.text.split(separator: "\n", omittingEmptySubsequences: false).enumerated()), id: \.offset) { _, line in
+                        Text(line.isEmpty ? " " : String(line))
+                            .font(.system(size: 12, design: .monospaced))
+                            .foregroundStyle(color(for: line))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(background(for: line))
+                    }
+                }
+                .textSelection(.enabled)
+                .padding(8)
+            }
+            .background(Color(nsColor: .textBackgroundColor))
+        }
+        .frame(minWidth: 720, minHeight: 480)
+    }
+
+    private func color(for line: Substring) -> Color {
+        if line.hasPrefix("@@") { return .purple }
+        if line.hasPrefix("+++") || line.hasPrefix("---") || line.hasPrefix("diff ") { return .secondary }
+        if line.hasPrefix("+") { return .green }
+        if line.hasPrefix("-") { return .red }
+        return .primary
+    }
+
+    private func background(for line: Substring) -> Color {
+        if line.hasPrefix("+"), !line.hasPrefix("+++") { return .green.opacity(0.08) }
+        if line.hasPrefix("-"), !line.hasPrefix("---") { return .red.opacity(0.08) }
+        return .clear
     }
 }
 
@@ -229,6 +437,11 @@ struct FileMenu: View {
 
 @MainActor
 enum FileActions {
+    /// Double-click: VS Code if installed, else the default app.
+    static func openDefault(_ url: URL) {
+        if VSCode.isInstalled { VSCode.open(url) } else { NSWorkspace.shared.open(url) }
+    }
+
     static func copy(_ text: String) {
         NSPasteboard.general.clearContents()
         NSPasteboard.general.setString(text, forType: .string)
