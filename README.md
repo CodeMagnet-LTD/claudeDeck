@@ -17,6 +17,27 @@ xcodegen generate   # ClaudeDeck.xcodeproj'u project.yml'den üret, sonra Xcode'
 Xcode projesi üretilir; ayarları (takım, bundle id) `project.yml` içinde değiştir. Xcode ilk açılışta
 SwiftTerm'in build eklentisi için "Trust & Enable" sorar.
 
+Uygulama ikonu kodla çizilir: `swift tools/make-icon.swift Support` → `Support/AppIcon.icns`
+(`build.sh` kopyalar) ve `Support/Assets.xcassets/AppIcon.appiconset` (Xcode derlemesi kullanır).
+
+## Dağıtım / Notarization
+
+```sh
+./notarize.sh   # derle → Developer ID ile imzala → notarize et → zımbala (staple) → spctl ile doğrula
+```
+
+Başka Mac'lerde Gatekeeper uyarısı olmadan açılması için gerekir. Ön koşullar (bir kez):
+
+1. Anahtar zincirinde **Developer ID Application** sertifikası (Xcode › Settings › Accounts ›
+   Manage Certificates › "+"; Apple Development sertifikası yetmez). Birden fazlaysa
+   `DEVELOPER_ID="Developer ID Application: Ad (TAKIMID)"` ile seç.
+2. notarytool profili (app-specific password ile):
+   `xcrun notarytool store-credentials claudedeck --apple-id <e-posta> --team-id V6G4B5T63L --password <app-specific-password>`
+   Farklı ad için `NOTARY_PROFILE=<ad>`.
+
+Çıktı: zımbalanmış `build/ClaudeDeck.app` ve dağıtılacak `build/ClaudeDeck.zip`. Sertifika yoksa
+betik hiçbir şey derlemeden/göndermeden açıklamayla durur.
+
 ## Durum nasıl bilinir (ekran okuma yok)
 
 1. İlk açılışta `~/.claude/settings.json` dosyasına ClaudeDeck hook'u **eklenir** (önce
