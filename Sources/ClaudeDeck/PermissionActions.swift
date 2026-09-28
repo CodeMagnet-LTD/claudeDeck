@@ -2,10 +2,6 @@ import ClaudeDeckCore
 import Foundation
 import SwiftUI
 
-/// Stamps of prompts already denied from the app: Esc leaves the state blocked until the
-/// transcript records the denial, and a second Esc at Claude's prompt would open the rewind picker.
-@MainActor private var deniedStamps: [UUID: Date] = [:]
-
 /// Approving / denying a permission prompt from a notification or a button. The app owns the pty,
 /// so it types exactly what the user would: "1" (Yes) or Esc (No). State follows from the
 /// existing paths — `userTyped` records the digit as an answer, the transcript records the denial.
@@ -19,7 +15,7 @@ extension AppModel {
         else { return nil }
         // Plan approval: option 1 also switches the permission mode — only in the terminal.
         // A later Notification event drops tool_name but keeps the detail ("ExitPlanMode…").
-        if hook.toolName == "ExitPlanMode" || hook.detail?.hasPrefix("ExitPlanMode") == true { return nil }
+        if hook.toolName == "ExitPlanMode" || hook.detail?.contains("ExitPlanMode") == true { return nil }
         return hook.updatedAt
     }
 
@@ -32,10 +28,10 @@ extension AppModel {
 
     @discardableResult
     func denyPermission(_ id: UUID, expectedAt: Date?) -> Bool {
-        guard let stamp = matchingStamp(id, expectedAt), deniedStamps[id].map({ !Self.same($0, stamp) }) ?? true else {
+        guard let stamp = matchingStamp(id, expectedAt), deniedPermissionStamps[id].map({ !Self.same($0, stamp) }) ?? true else {
             return false
         }
-        deniedStamps[id] = stamp
+        deniedPermissionStamps[id] = stamp
         terminals.type("\u{1b}", into: id)
         return true
     }
