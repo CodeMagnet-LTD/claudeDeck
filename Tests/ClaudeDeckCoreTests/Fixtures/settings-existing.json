@@ -1,0 +1,17 @@
+{
+  "model": "opus",
+  "remoteControlAtStartup": true,
+  "permissions": { "allow": ["Bash(git status)"] },
+  "hooks": {
+    "SessionStart": [
+      { "hooks": [ { "type": "command", "command": "node \"/opt/tools/check-update.js\"" } ] }
+    ],
+    "PostToolUse": [
+      { "hooks": [ { "type": "command", "command": "node \"/opt/tools/context-monitor.js\"" } ] }
+    ],
+    "PreToolUse": [
+      { "matcher": "Bash|Grep", "hooks": [ { "type": "command", "command": "/opt/tools/guard search" } ] },
+      { "matcher": "Read|Glob", "hooks": [ { "type": "command", "command": "/opt/tools/guard read" } ] }
+    ]
+  }
+}
