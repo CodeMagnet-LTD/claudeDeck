@@ -39,6 +39,14 @@ enum DebugSnapshot {
             try? FileManager.default.removeItem(atPath: path)
             if let id = UUID(uuidString: String(file.dropLast(6))) { model.terminals.view(for: id)?.paste(NSApp as Any) }
         }
+        for file in files where file.hasSuffix(".approve") || file.hasSuffix(".deny") {
+            let path = (dir as NSString).appendingPathComponent(file)
+            try? FileManager.default.removeItem(atPath: path)
+            let approve = file.hasSuffix(".approve")
+            guard let id = UUID(uuidString: String(file.prefix(36))) else { continue }
+            let stamp = model.pendingPermissionStamp(id)
+            _ = approve ? model.approvePermission(id, expectedAt: stamp) : model.denyPermission(id, expectedAt: stamp)
+        }
         for file in files where file.hasSuffix(".in") {
             let path = (dir as NSString).appendingPathComponent(file)
             defer { try? FileManager.default.removeItem(atPath: path) }
