@@ -106,9 +106,13 @@ public struct EffectiveStatus: Sendable, Equatable {
 
     /// Combines the latest hook status, the latest transcript signal and process liveness.
     /// Only concrete events change the state — never timers or guesses.
+    /// - Parameter answeredAt: when the user last submitted input (Enter / choice) in the terminal.
+    ///   Approving a permission fires no hook until the tool finishes, so an answer given after
+    ///   the blocking event means Claude is running again.
     public static func resolve(
         hook: HookStatus?,
         transcript: TranscriptSignal?,
+        answeredAt: Date? = nil,
         processAlive: Bool
     ) -> EffectiveStatus? {
         guard let hook else { return nil }
@@ -119,6 +123,10 @@ public struct EffectiveStatus: Sendable, Equatable {
             claudeSessionID: hook.sessionID,
             transcriptPath: hook.transcriptPath
         )
+        if let answeredAt, answeredAt > hook.updatedAt, hook.state.isBlocked {
+            status.activity = .running
+            status.updatedAt = answeredAt
+        }
         if let transcript, transcript.at > hook.updatedAt, hook.state != .idle, hook.state != .ended {
             status.activity = .idle
             status.updatedAt = transcript.at

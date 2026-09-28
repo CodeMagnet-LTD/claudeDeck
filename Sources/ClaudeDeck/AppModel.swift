@@ -45,7 +45,11 @@ final class AppModel {
     @ObservationIgnored private var watcher: DirectoryWatcher?
     @ObservationIgnored private var tailers: [UUID: FileTailer] = [:]
     @ObservationIgnored private var saveTask: Task<Void, Never>?
-    @ObservationIgnored private var lastNotified: [UUID: SessionActivity] = [:]
+    /// Last notified state per session. Blocked states include the hook timestamp so a second
+    /// permission request in the same turn notifies again.
+    @ObservationIgnored private var lastNotified: [UUID: String] = [:]
+    /// When the user last submitted input (Enter / a choice) while the session was blocked.
+    private var answeredAt: [UUID: Date] = [:]
     @ObservationIgnored private var pendingCompact: Set<UUID> = []
     /// Hook files older than the terminal's launch belong to a previous process.
     @ObservationIgnored private var launchedAt: [UUID: Date] = [:]
@@ -59,20 +63,27 @@ final class AppModel {
         self.store = store
         self.deck = store.load()
         terminals.onExit = { [weak self] id, _ in self?.terminalExited(id) }
+        terminals.onUserInput = { [weak self] id, data in self?.userTyped(id, data) }
     }
 
     // MARK: Lifecycle
 
     func start() {
         installHooks()
-        claudePath = ShellEnvironment.resolveClaude()
         watcher = DirectoryWatcher(url: statusDir) { [weak self] in
             Task { @MainActor in self?.reloadStatuses() }
         }
         watcher?.start()
         reloadStatuses(initial: true)
         cleanupStatusFiles()
+        // Resolving `claude` runs the login shell; keep it off the main thread.
+        Task { @MainActor in
+            claudePath = await Task.detached { ShellEnvironment.resolveClaude() }.value
+            launchInitialSessions()
+        }
+    }
 
+    private func launchInitialSessions() {
         let toResume = deck.sessions.filter(\.isOpen)
         if deck.settings.resumeOnLaunch {
             for session in toResume { launch(session.id, resume: true, automatic: true) }
@@ -123,7 +134,9 @@ final class AppModel {
         guard terminals.isRunning(id) else {
             return SessionStatus(display: .notStarted, detail: nil, updatedAt: deck.session(id)?.lastActivityAt)
         }
-        guard let resolved = EffectiveStatus.resolve(hook: hookStatuses[id], transcript: transcriptSignals[id], processAlive: true) else {
+        guard let resolved = EffectiveStatus.resolve(
+            hook: hookStatuses[id], transcript: transcriptSignals[id], answeredAt: answeredAt[id], processAlive: true
+        ) else {
             return SessionStatus(display: .starting, detail: nil, updatedAt: nil)
         }
         return SessionStatus(display: .activity(resolved.activity), detail: resolved.detail, updatedAt: resolved.updatedAt)
@@ -191,7 +204,7 @@ final class AppModel {
             if status.event == "SessionStart", status.source == "resume" { compactIfNeeded(id, transcript: status.transcriptPath) }
         }
         if initial {
-            for id in next.keys { lastNotified[id] = status(of: id).display.activityValue }
+            for id in next.keys { lastNotified[id] = notifyKey(id) }
         } else {
             emitAttentionChanges()
         }
@@ -202,12 +215,13 @@ final class AppModel {
         guard let path else { return }
         if tailers[id]?.url.path == path { return }
         tailers[id]?.stop()
+        tailers[id] = nil
         let tailer = FileTailer(url: URL(fileURLWithPath: path)) { [weak self] chunk in
             guard let signal = Transcript.lastSignal(in: chunk) else { return }
             Task { @MainActor in self?.receive(signal, for: id) }
         }
-        tailer.start()
-        tailers[id] = tailer
+        // The transcript appears with the first message; retried on the next status update.
+        if tailer.start() { tailers[id] = tailer }
     }
 
     private func receive(_ signal: TranscriptSignal, for id: UUID) {
@@ -216,12 +230,28 @@ final class AppModel {
         onCountsChanged?()
     }
 
+    private func notifyKey(_ id: UUID) -> String? {
+        guard let activity = status(of: id).display.activityValue else { return nil }
+        if activity.isBlocked, let at = hookStatuses[id]?.updatedAt { return "\(activity)|\(at.timeIntervalSince1970)" }
+        return activity.rawValue
+    }
+
+    /// Enter or a numbered choice while blocked = the user answered the prompt.
+    private func userTyped(_ id: UUID, _ data: ArraySlice<UInt8>) {
+        guard status(of: id).display.isBlocked else { return }
+        let answered = data.contains(13) || (data.count == 1 && (0x31...0x39).contains(data.first!))
+        guard answered else { return }
+        answeredAt[id] = Date()
+        lastNotified[id] = notifyKey(id)
+        onCountsChanged?()
+    }
+
     private func emitAttentionChanges() {
         for session in deck.sessions {
             let status = status(of: session.id)
-            let activity = status.display.activityValue
-            defer { lastNotified[session.id] = activity }
-            guard let activity, activity != lastNotified[session.id], activity.isAttention else { continue }
+            let key = notifyKey(session.id)
+            defer { lastNotified[session.id] = key }
+            guard let activity = status.display.activityValue, key != lastNotified[session.id], activity.isAttention else { continue }
             // Finished while the user is looking at it: already seen.
             if activity == .idle, focusedSessionID == session.id { seenAt[session.id] = Date() }
             // Startup / resume sessions land in idle — that's not news.
@@ -255,6 +285,7 @@ final class AppModel {
         if let sid { args += ["--resume", sid] }
         if automatic, sid != nil, deck.settings.compactOnResume { pendingCompact.insert(id) }
         transcriptSignals[id] = nil
+        answeredAt[id] = nil
         hookStatuses[id] = nil
         launchedAt[id] = Date()
         terminals.start(id: id, cwd: project.path, claudePath: claudePath, args: args)
@@ -343,6 +374,12 @@ final class AppModel {
         tailers[id] = nil
         deck.removeSession(id)
         hookStatuses[id] = nil
+        transcriptSignals[id] = nil
+        answeredAt[id] = nil
+        seenAt[id] = nil
+        launchedAt[id] = nil
+        lastNotified[id] = nil
+        pendingCompact.remove(id)
         scheduleSave()
         onCountsChanged?()
     }

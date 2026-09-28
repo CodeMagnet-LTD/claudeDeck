@@ -20,6 +20,15 @@ import Testing
         #expect(r?.detail?.contains("reddedildi") == true)
     }
 
+    @Test func answeringAPermissionMeansRunningAgain() {
+        let hook = status("s", "T", .needsPermission, at: 100)
+        let r = EffectiveStatus.resolve(hook: hook, transcript: nil, answeredAt: Date(timeIntervalSince1970: 101), processAlive: true)
+        #expect(r?.activity == .running)
+        // An answer given before the prompt appeared doesn't count.
+        let old = EffectiveStatus.resolve(hook: hook, transcript: nil, answeredAt: Date(timeIntervalSince1970: 99), processAlive: true)
+        #expect(old?.activity == .needsPermission)
+    }
+
     @Test func olderInterruptIsIgnored() {
         let hook = status("s", "T", .running, at: 100)
         let r = EffectiveStatus.resolve(hook: hook, transcript: .init(kind: .interrupted, at: Date(timeIntervalSince1970: 99)), processAlive: true)

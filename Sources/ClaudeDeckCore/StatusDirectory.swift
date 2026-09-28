@@ -114,15 +114,18 @@ public final class FileTailer: @unchecked Sendable {
     }
 
     /// Starts at the current end of file; only new lines are reported.
-    public func start() {
+    /// Returns false if the file doesn't exist yet (Claude creates it on the first message).
+    @discardableResult
+    public func start() -> Bool {
         let fd = open(url.path, O_EVTONLY)
-        guard fd >= 0 else { return }
+        guard fd >= 0 else { return false }
         offset = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? UInt64) ?? 0
         let source = DispatchSource.makeFileSystemObjectSource(fileDescriptor: fd, eventMask: [.extend, .write], queue: queue)
         source.setEventHandler { [weak self] in self?.readNew() }
         source.setCancelHandler { close(fd) }
         source.resume()
         self.source = source
+        return true
     }
 
     public func stop() {

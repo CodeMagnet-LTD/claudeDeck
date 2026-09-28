@@ -82,6 +82,20 @@ import Testing
         #expect(s.state == .ended)
     }
 
+    @Test func repeatedNotificationKeepsTimestamp() throws {
+        let stop = try #require(try run(#"{"session_id":"s1","hook_event_name":"Stop","last_assistant_message":"ok"}"#))
+        Thread.sleep(forTimeInterval: 0.05)
+        let idle = try #require(try run(#"{"session_id":"s1","hook_event_name":"Notification","notification_type":"idle_prompt","message":"waiting"}"#))
+        #expect(idle.state == .idle)
+        #expect(idle.updatedAt == stop.updatedAt)
+    }
+
+    @Test func manualCompactEndsIdle() throws {
+        try run(#"{"session_id":"s1","hook_event_name":"UserPromptSubmit","prompt":"/compact"}"#)
+        let s = try #require(try run(#"{"session_id":"s1","hook_event_name":"SessionStart","source":"compact"}"#))
+        #expect(s.state == .idle)
+    }
+
     @Test func unknownNotificationDoesNotWrite() throws {
         #expect(try run(#"{"session_id":"s1","hook_event_name":"Notification","notification_type":"auth_success"}"#) == nil)
     }

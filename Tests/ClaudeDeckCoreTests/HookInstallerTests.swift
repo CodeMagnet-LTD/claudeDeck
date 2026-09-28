@@ -88,6 +88,31 @@ import Testing
         #expect(!installer.isInstalled())
     }
 
+    @Test func refusesUnexpectedHookShapes() {
+        #expect(throws: HookInstaller.InstallError.self) {
+            try HookInstaller.validateShape(["hooks": ["Stop": "oops"]], events: HookScript.events)
+        }
+        #expect(throws: HookInstaller.InstallError.self) {
+            try HookInstaller.validateShape(["hooks": [1, 2]], events: HookScript.events)
+        }
+        #expect(throws: Never.self) { try HookInstaller.validateShape(try fixture(), events: HookScript.events) }
+    }
+
+    @Test func writesThroughSymlink() throws {
+        let dir = FileManager.default.temporaryDirectory.appending(path: "deck-\(UUID())")
+        defer { try? FileManager.default.removeItem(at: dir) }
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let real = dir.appending(path: "dotfiles-settings.json")
+        try FileManager.default.copyItem(at: Self.fixtureURL, to: real)
+        let link = dir.appending(path: "settings.json")
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: real)
+        let installer = HookInstaller(settingsURL: link, scriptURL: dir.appending(path: ".claude/deck/bin/deck-hook.sh"))
+        try installer.install()
+        let attrs = try FileManager.default.attributesOfItem(atPath: link.path)
+        #expect(attrs[.type] as? FileAttributeType == .typeSymbolicLink)
+        #expect(installer.isInstalled())
+    }
+
     @Test func refusesToOverwriteInvalidSettings() throws {
         let dir = FileManager.default.temporaryDirectory.appending(path: "deck-\(UUID())")
         defer { try? FileManager.default.removeItem(at: dir) }

@@ -5,10 +5,15 @@ import SwiftTerm
 
 /// The user's login shell and a clean environment for launching `claude` in it.
 enum ShellEnvironment {
+    /// The user's login shell if it is POSIX-compatible (the launch script uses "$0" "$@"),
+    /// otherwise zsh.
     static var loginShell: String {
         if let pw = getpwuid(getuid()), let shell = pw.pointee.pw_shell {
             let path = String(cString: shell)
-            if FileManager.default.isExecutableFile(atPath: path) { return path }
+            let posix: Set<String> = ["zsh", "bash", "sh", "dash", "ksh"]
+            if posix.contains((path as NSString).lastPathComponent), FileManager.default.isExecutableFile(atPath: path) {
+                return path
+            }
         }
         return "/bin/zsh"
     }
@@ -48,7 +53,10 @@ enum ShellEnvironment {
             p.standardError = FileHandle.nullDevice
             p.standardInput = FileHandle.nullDevice
             guard (try? p.run()) != nil else { continue }
-            p.waitUntilExit()
+            // A prompting or slow rc file must not hang the app.
+            let deadline = Date().addingTimeInterval(8)
+            while p.isRunning && Date() < deadline { usleep(50_000) }
+            if p.isRunning { p.terminate(); continue }
             let text = String(decoding: out.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
             if let line = text.split(separator: "\n").last.map(String.init)?.trimmingCharacters(in: .whitespaces),
                line.hasPrefix("/") {
@@ -74,6 +82,13 @@ final class DeckTerminalView: LocalProcessTerminalView {
     }
 
     required init?(coder: NSCoder) { fatalError("not used") }
+
+    var onInput: ((ArraySlice<UInt8>) -> Void)?
+
+    override func send(source: TerminalView, data: ArraySlice<UInt8>) {
+        onInput?(data)
+        super.send(source: source, data: data)
+    }
 }
 
 /// Owns every terminal view + process for the app's lifetime. Views are re-parented when
@@ -93,6 +108,7 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
     func start(id: UUID, cwd: String, claudePath: String?, args: [String]) {
         let view = views[id] ?? DeckTerminalView(sessionID: id)
         view.processDelegate = self
+        view.onInput = { [weak self] data in self?.onUserInput?(id, data) }
         views[id] = view
         if running.contains(id) { return }
 
@@ -125,10 +141,31 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         }
     }
 
+    /// Ends the claude process. SwiftTerm's `terminate()` cancels its own exit monitor, so the
+    /// exit is reported here and the child is reaped in the background (SIGKILL after 5 s).
     func terminate(_ id: UUID) {
         guard let view = views[id], running.contains(id) else { return }
+        let pid = view.process.shellPid
         view.terminate()
+        running.remove(id)
+        onExit?(id, nil)
+        if pid > 0 { Self.reap(pid) }
     }
+
+    nonisolated static func reap(_ pid: pid_t) {
+        DispatchQueue.global(qos: .utility).async {
+            var status: Int32 = 0
+            for _ in 0..<50 {
+                if waitpid(pid, &status, WNOHANG) != 0 { return }
+                usleep(100_000)
+            }
+            kill(pid, SIGKILL)
+            waitpid(pid, &status, 0)
+        }
+    }
+
+    /// Remaining input hook: called with every chunk the user types into a terminal.
+    @ObservationIgnored var onUserInput: ((UUID, ArraySlice<UInt8>) -> Void)?
 
     func discard(_ id: UUID) {
         views[id]?.removeFromSuperview()
@@ -136,8 +173,14 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         running.remove(id)
     }
 
+    /// On quit: signal every process without reporting exits (quit keeps `isOpen` for auto-resume).
     func terminateAll() {
-        for id in running { views[id]?.terminate() }
+        for id in running {
+            guard let view = views[id] else { continue }
+            let pid = view.process.shellPid
+            view.terminate()
+            if pid > 0 { kill(pid, SIGHUP) }
+        }
     }
 
     // MARK: LocalProcessTerminalViewDelegate

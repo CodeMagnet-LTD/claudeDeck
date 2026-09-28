@@ -7,11 +7,11 @@ import Foundation
 /// and atomically writes `~/.claude/deck/sessions/<session_id>.json`.
 /// `$PPID` is the `claude` process itself (verified), so the app can check liveness.
 public enum HookScript {
-    public static let version = 1
+    public static let version = 2
 
     public static let source = #"""
 #!/bin/sh
-# ClaudeDeck status hook v1 — managed by ClaudeDeck.app, do not edit.
+# ClaudeDeck status hook v2 — managed by ClaudeDeck.app, do not edit.
 [ -n "$CLAUDEDECK_TERMINAL_ID" ] || { cat >/dev/null; exit 0; }
 JQ=/usr/bin/jq
 [ -x "$JQ" ] || JQ=$(command -v jq) || exit 0
@@ -57,7 +57,8 @@ def waiting: $prev != null and ($prev.state == "needsPermission" or $prev.state 
    elif $e == "Stop" then {state: "idle", detail: (.last_assistant_message | clip(300))}
    elif $e == "StopFailure" then {state: "idle", detail: ("Hata: " + ((.error_type // .error // "API") | tostring) | clip(200))}
    elif $e == "SessionStart" then
-     (if .source == "compact" and $prev != null then {state: $prev.state, detail: $prev.detail}
+     (if .source == "compact" and $prev != null and (($prev.detail // "") | startswith("/compact") | not)
+        then {state: $prev.state, detail: $prev.detail}
       else {state: "idle", detail: null} end)
    elif $e == "SessionEnd" then {state: "ended", detail: .reason}
    else null end) as $s
@@ -65,7 +66,8 @@ def waiting: $prev != null and ($prev.state == "needsPermission" or $prev.state 
   { session_id, terminal_id: $tid, pid: $pid, cwd, transcript_path,
     state: $s.state, event: $e, detail: $s.detail,
     tool_name: (.tool_name // null), notification_type: (.notification_type // null),
-    source: (.source // null), updated_at: now }
+    source: (.source // null),
+    updated_at: (if $e == "Notification" and $prev != null and $prev.state == $s.state then $prev.updated_at else now end) }
   end' 2>/dev/null) || exit 0
 [ -n "$OUT" ] || exit 0
 TMP="$DIR/.$SID.$$.tmp"

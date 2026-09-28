@@ -94,9 +94,22 @@ public struct HookInstaller: Sendable {
 
     public enum InstallError: Error, LocalizedError {
         case unreadableSettings(String)
+        case unexpectedShape(String)
         public var errorDescription: String? {
             switch self {
             case .unreadableSettings(let why): "~/.claude/settings.json okunamadı: \(why)"
+            case .unexpectedShape(let key): "~/.claude/settings.json içindeki \"\(key)\" beklenmeyen biçimde; dokunulmadı."
+            }
+        }
+    }
+
+    /// Refuses to merge into `hooks` values we don't understand instead of replacing them.
+    static func validateShape(_ settings: [String: Any], events: [String]) throws {
+        guard let raw = settings["hooks"] else { return }
+        guard let hooks = raw as? [String: Any] else { throw InstallError.unexpectedShape("hooks") }
+        for event in events {
+            if let value = hooks[event], !(value is [[String: Any]]) {
+                throw InstallError.unexpectedShape("hooks.\(event)")
             }
         }
     }
@@ -107,6 +120,7 @@ public struct HookInstaller: Sendable {
     public func install() throws -> Bool {
         try writeScript()
         let current = try readSettings()
+        try Self.validateShape(current, events: HookScript.events)
         let next = Self.installing(command: command, events: HookScript.events, into: current)
         return try writeIfChanged(current: current, next: next)
     }
@@ -158,13 +172,14 @@ public struct HookInstaller: Sendable {
             let backup = settingsURL.deletingLastPathComponent()
                 .appending(path: "settings.json.claudedeck-backup-\(stamp)")
             try? fm.removeItem(at: backup)
-            try fm.copyItem(at: settingsURL, to: backup)
+            try fm.copyItem(at: settingsURL.resolvingSymlinksInPath(), to: backup)
         }
         let data = try JSONSerialization.data(
             withJSONObject: next,
             options: [.prettyPrinted, .sortedKeys, .withoutEscapingSlashes]
         )
-        try data.write(to: settingsURL, options: .atomic)
+        // Write through a symlinked settings.json (dotfile managers) instead of replacing the link.
+        try data.write(to: settingsURL.resolvingSymlinksInPath(), options: .atomic)
         return true
     }
 }

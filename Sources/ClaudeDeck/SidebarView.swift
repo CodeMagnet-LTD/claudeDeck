@@ -28,20 +28,35 @@ struct SidebarView: View {
                     }
                 }
             }
-            Section("Projeler") {
+            Section {
                 ForEach(sections.ungrouped) { ProjectRow(project: $0) }
-                if model.deck.projects.isEmpty {
+            } header: {
+                HStack {
+                    Text("Projeler")
+                    Spacer()
                     Button {
                         model.presentAddProject()
                     } label: {
-                        Label("Proje ekle…", systemImage: "plus")
+                        Image(systemName: "plus")
                     }
-                    .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
+                    .buttonStyle(.borderless)
+                    .help("Proje ekle (⌘O)")
                 }
             }
         }
         .listStyle(.sidebar)
+        .safeAreaInset(edge: .bottom) {
+            Button {
+                model.presentAddProject()
+            } label: {
+                Label("Proje ekle", systemImage: "folder.badge.plus")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.borderless)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .background(.bar)
+        }
     }
 }
 
