@@ -188,3 +188,24 @@ enum RelativeTime {
         }
     }
 }
+
+/// How a terminal session starts: ⚡ auto-starts with the app (startup command), ▶︎ has a startup
+/// command but starts only when opened. Plain terminals and Claude sessions show nothing.
+struct ShellStartBadge: View {
+    let session: DeckSession
+
+    var body: some View {
+        if session.kind == .shell, let command = session.startupCommand {
+            let auto = session.autoStart
+            Label(auto ? "Otomatik" : "Komutlu", systemImage: auto ? "bolt.fill" : "play.fill")
+                .labelStyle(.titleAndIcon)
+                .font(.caption2.weight(.semibold))
+                .padding(.horizontal, 6)
+                .padding(.vertical, 1.5)
+                .foregroundStyle(auto ? Color.orange : Color.secondary)
+                .background(Capsule().strokeBorder(auto ? Color.orange.opacity(0.7) : Color.secondary.opacity(0.5), lineWidth: 1))
+                .fixedSize()
+                .help(auto ? "Uygulama açılınca otomatik başlar: \(command)" : "Açılınca çalışan komut: \(command)")
+        }
+    }
+}

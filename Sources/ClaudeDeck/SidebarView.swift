@@ -267,6 +267,7 @@ struct SessionRow: View {
                 }
                 HStack(spacing: 6) {
                     StatusPill(display: status.display, unseen: model.isUnseenIdle(session.id))
+                    ShellStartBadge(session: session)
                     if let detail = status.detail ?? session.startupCommand.map({ "▶︎ " + $0 }) {
                         Text(detail)
                             .font(.caption)
