@@ -106,12 +106,13 @@ struct GroupRow: View {
             }
             .contextMenu { GroupMenu(group: group, pickingProjects: $pickingProjects) }
             .sheet(isPresented: $pickingProjects) { GroupProjectsSheet(group: group) }
+            // Only the title row is tinted (on the DisclosureGroup it would tint every child row).
+            .listRowBackground(
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(GroupPalette.color(group.colorIndex).opacity(0.16))
+                    .padding(.horizontal, 4)
+            )
         }
-        .listRowBackground(
-            RoundedRectangle(cornerRadius: 6)
-                .fill(GroupPalette.color(group.colorIndex).opacity(0.16))
-                .padding(.horizontal, 4)
-        )
     }
 }
 
@@ -123,6 +124,7 @@ struct ProjectRow: View {
 
     /// Clicking a project opens its most recently active session, or toggles it when empty.
     private func openProject(_ sessions: [DeckSession]) {
+        model.browsedProjectID = project.id
         let recent = sessions.max { ($0.lastActivityAt ?? $0.createdAt) < ($1.lastActivityAt ?? $1.createdAt) }
         if let recent {
             if project.collapsed { model.mutate { $0.updateProject(project.id) { $0.collapsed = false } } }

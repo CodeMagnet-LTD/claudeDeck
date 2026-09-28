@@ -38,6 +38,8 @@ final class AppModel {
     /// Last time the user looked at a session while it was idle (clears the yellow "unseen" badge).
     private var seenAt: [UUID: Date] = [:]
     var hookError: String?
+    /// Project shown in the file browser: the last project or session clicked in the sidebar.
+    var browsedProjectID: UUID?
     var claudePath: String?
 
     @ObservationIgnored let terminals = TerminalRegistry()
@@ -377,6 +379,7 @@ final class AppModel {
             guard deck.selectedSessionID != newValue || (newValue.map { !deck.panes.contains($0) } ?? false) else { return }
             deck.select(newValue)
             if let newValue {
+                browsedProjectID = deck.session(newValue)?.projectID
                 markSeen(newValue)
                 // Selecting a session not yet started in this app run continues it automatically.
                 // Sessions ended during this run (/exit, "Oturumu bitir") wait for "Devam et".

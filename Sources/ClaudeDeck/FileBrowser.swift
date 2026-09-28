@@ -137,7 +137,12 @@ struct FileBrowserPanel: View {
 
     /// The focused session's project; for worktree sessions rooted at the session's worktree.
     private var focusedProject: Project? {
-        let session = model.selectedSessionID.flatMap { model.deck.session($0) }
+        let selected = model.selectedSessionID.flatMap { model.deck.session($0) }
+        // A project clicked in the sidebar wins over the selected session's project.
+        if let browsed = model.browsedProjectID, let p = model.deck.project(browsed), selected?.projectID != browsed {
+            return p
+        }
+        let session = selected
         guard var project = session.flatMap({ model.deck.project($0.projectID) }) else { return model.deck.projects.first }
         if let wd = session?.workingDirectory, FileManager.default.fileExists(atPath: wd) { project.path = wd }
         return project

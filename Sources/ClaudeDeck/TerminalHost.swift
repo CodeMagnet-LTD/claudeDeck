@@ -36,6 +36,11 @@ struct TerminalHost: NSViewRepresentable {
         }
     }
 
+    /// Take whatever space is offered; never report a size of our own to SwiftUI layout.
+    func sizeThatFits(_ proposal: ProposedViewSize, nsView: NSView, context: Context) -> CGSize? {
+        proposal.replacingUnspecifiedDimensions(by: CGSize(width: 400, height: 300))
+    }
+
     static func dismantleNSView(_ container: NSView, coordinator: ()) {
         // Detach only — the registry keeps the view and its process alive.
         container.subviews.forEach { $0.removeFromSuperview() }

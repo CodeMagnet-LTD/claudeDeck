@@ -67,15 +67,80 @@ struct DetailView: View {
             EmptyStateView()
         } else {
             let focused = model.selectedSessionID.flatMap { model.deck.session($0) }
-            HSplitView {
-                ForEach(panes, id: \.self) { id in
-                    PaneView(sessionID: id, split: panes.count > 1)
-                        .frame(minWidth: 280, maxWidth: .infinity, maxHeight: .infinity)
-                }
-            }
+            // Own split layout instead of HSplitView: NSSplitView's min-size updates entered an
+            // endless constraint-update loop with the terminal views (crash on click).
+            PaneSplit(panes: panes)
             .navigationTitle(focused?.name ?? "ClaudeDeck")
             .navigationSubtitle(focused.flatMap { model.deck.project($0.projectID)?.path } ?? "")
         }
+    }
+}
+
+/// Panes side by side with draggable dividers. Widths are fractions kept in view state;
+/// nothing here feeds sizes back into AppKit constraints.
+struct PaneSplit: View {
+    let panes: [UUID]
+    @State private var fractions: [UUID: CGFloat] = [:]
+    private let minWidth: CGFloat = 240
+    private let divider: CGFloat = 6
+
+    var body: some View {
+        if panes.count == 1, let id = panes.first {
+            PaneView(sessionID: id, split: false)
+        } else {
+            GeometryReader { geo in
+                let widths = widths(total: geo.size.width - divider * CGFloat(panes.count - 1))
+                HStack(spacing: 0) {
+                    ForEach(Array(panes.enumerated()), id: \.element) { index, id in
+                        PaneView(sessionID: id, split: true)
+                            .frame(width: widths[index])
+                        if index < panes.count - 1 {
+                            PaneDivider(width: divider) { delta in
+                                resize(index, by: delta, widths: widths)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func widths(total: CGFloat) -> [CGFloat] {
+        let raw = panes.map { fractions[$0] ?? 1 }
+        let sum = raw.reduce(0, +)
+        return raw.map { max(minWidth, total * $0 / sum) }
+    }
+
+    private func resize(_ index: Int, by delta: CGFloat, widths: [CGFloat]) {
+        var w = widths
+        let pair = w[index] + w[index + 1]
+        w[index] = min(max(minWidth, w[index] + delta), pair - minWidth)
+        w[index + 1] = pair - w[index]
+        let total = w.reduce(0, +)
+        for (i, id) in panes.enumerated() { fractions[id] = w[i] / total * CGFloat(panes.count) }
+    }
+}
+
+struct PaneDivider: View {
+    let width: CGFloat
+    let onDrag: (CGFloat) -> Void
+    @State private var last: CGFloat = 0
+
+    var body: some View {
+        Rectangle()
+            .fill(Color(nsColor: .separatorColor))
+            .frame(width: 1)
+            .frame(width: width)
+            .contentShape(Rectangle())
+            .onHover { inside in if inside { NSCursor.resizeLeftRight.push() } else { NSCursor.pop() } }
+            .gesture(
+                DragGesture(minimumDistance: 1, coordinateSpace: .global)
+                    .onChanged { value in
+                        onDrag(value.translation.width - last)
+                        last = value.translation.width
+                    }
+                    .onEnded { _ in last = 0 }
+            )
     }
 }
 
