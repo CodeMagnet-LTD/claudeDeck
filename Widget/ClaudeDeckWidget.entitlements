@@ -6,7 +6,7 @@
 	<true/>
 	<key>com.apple.security.application-groups</key>
 	<array>
-		<string>V6G4B5T63L.dev.medeni.ClaudeDeck</string>
+		<string>$(DECK_APP_GROUP)</string>
 	</array>
 </dict>
 </plist>

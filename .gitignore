@@ -5,3 +5,6 @@ build/
 DerivedData/
 .DS_Store
 .claude/worktrees/
+Config/Local.xcconfig
+RELEASING.md
+NOTES.md

@@ -1,0 +1,18 @@
+// Build settings shared by every target. project.yml points both configurations here.
+//
+// Building your own copy? Don't edit this file: copy Local.xcconfig.example to Local.xcconfig
+// (git-ignored) and set your own team and bundle prefix there.
+
+// Official release signing identity.
+DEVELOPMENT_TEAM = V6G4B5T63L
+// Bundle IDs are $(DECK_BUNDLE_PREFIX).ClaudeDeck and $(DECK_BUNDLE_PREFIX).ClaudeDeck.Widget.
+DECK_BUNDLE_PREFIX = dev.medeni
+
+// Single source of truth for the version (release.sh tags v$(MARKETING_VERSION)).
+MARKETING_VERSION = 0.1.0
+CURRENT_PROJECT_VERSION = 1
+
+#include? "Local.xcconfig"
+
+// Team-prefixed App Group shared by the app and the widget (no provisioning profile needed on macOS).
+DECK_APP_GROUP = $(DEVELOPMENT_TEAM).$(DECK_BUNDLE_PREFIX).ClaudeDeck

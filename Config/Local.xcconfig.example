@@ -1,0 +1,7 @@
+// Copy to Config/Local.xcconfig (git-ignored) to build ClaudeDeck with your own Apple team.
+// Find your Team ID at developer.apple.com › Account › Membership, or in Xcode › Settings › Accounts.
+// A free Apple ID's personal team works for local builds.
+
+DEVELOPMENT_TEAM = ABCDE12345
+// Must differ from the official one: automatic signing registers these bundle IDs in your team.
+DECK_BUNDLE_PREFIX = com.example

@@ -14,10 +14,37 @@ public enum GitFileState: String, Sendable {
     case modified = "M", added = "A", deleted = "D", renamed = "R", untracked = "?", conflicted = "U"
 }
 
-/// Read-only git queries for the file browser. Everything runs `/usr/bin/git` synchronously —
+/// Read-only git queries for the file browser. Everything runs git synchronously —
 /// call from a background task.
 public enum Git {
     static let fieldSeparator = "\u{1f}"
+
+    /// A real git binary, or nil (git features stay off). `/usr/bin/git` is only a shim on a Mac
+    /// without the Command Line Tools: running it pops the "install developer tools" dialog,
+    /// so it is used only when `xcode-select -p` (which never prompts) names an installed toolchain.
+    static let executable: URL? = {
+        var candidates: [String] = []
+        if let dev = developerDirectory() { candidates.append(dev + "/usr/bin/git") }
+        candidates += ["/opt/homebrew/bin/git", "/usr/local/bin/git"]
+        return candidates.first { FileManager.default.isExecutableFile(atPath: $0) }
+            .map { URL(fileURLWithPath: $0) }
+    }()
+
+    private static func developerDirectory() -> String? {
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/usr/bin/xcode-select")
+        p.arguments = ["-p"]
+        let out = Pipe()
+        p.standardOutput = out
+        p.standardError = FileHandle.nullDevice
+        p.standardInput = FileHandle.nullDevice
+        guard (try? p.run()) != nil else { return nil }
+        let data = out.fileHandleForReading.readDataToEndOfFile()
+        p.waitUntilExit()
+        guard p.terminationStatus == 0 else { return nil }
+        let path = String(decoding: data, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+        return path.isEmpty ? nil : path
+    }
 
     /// Top-level directory of the repository containing `dir`, or nil if it isn't in one.
     public static func root(of dir: URL) -> URL? {
@@ -89,8 +116,9 @@ public enum Git {
     }
 
     static func run(_ args: [String], in dir: URL) -> String? {
+        guard let executable else { return nil }
         let p = Process()
-        p.executableURL = URL(fileURLWithPath: "/usr/bin/git")
+        p.executableURL = executable
         p.arguments = ["-c", "core.quotepath=off", "-c", "color.ui=false"] + args
         p.currentDirectoryURL = dir
         var env = ProcessInfo.processInfo.environment

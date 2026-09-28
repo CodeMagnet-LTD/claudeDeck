@@ -11,9 +11,19 @@ CONFIG=release
 [ "${1:-}" = "debug" ] && CONFIG=debug
 APP=build/ClaudeDeck.app
 
+# A setting from Config/Local.xcconfig, else Config/Shared.xcconfig (same precedence as Xcode).
+setting() {
+  for f in Config/Local.xcconfig Config/Shared.xcconfig; do
+    [ -f "$f" ] || continue
+    v=$(sed -n "s/^ *$1 *= *//p" "$f" | tail -1)
+    [ -n "$v" ] && { printf '%s' "$v"; return 0; }
+  done
+  return 0
+}
+
 if command -v xcodegen >/dev/null 2>&1; then
   # SwiftPM can't build app extensions: the Xcode project (generated from project.yml) builds the
-  # app + widget and signs both automatically with the team in project.yml.
+  # app + widget and signs both automatically with the team in Config/*.xcconfig.
   XCONFIG=Release
   [ "$CONFIG" = "debug" ] && XCONFIG=Debug
   xcodegen generate --quiet
@@ -31,6 +41,13 @@ rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp "$BIN/ClaudeDeck" "$APP/Contents/MacOS/ClaudeDeck"
 cp Support/Info.plist "$APP/Contents/Info.plist"
+# Xcode expands these build settings; do it by hand here.
+BUNDLE_ID="$(setting DECK_BUNDLE_PREFIX).ClaudeDeck"
+plutil -replace CFBundleIdentifier -string "$BUNDLE_ID" "$APP/Contents/Info.plist"
+plutil -replace CFBundleURLTypes.0.CFBundleURLName -string "$BUNDLE_ID" "$APP/Contents/Info.plist"
+plutil -replace CFBundleShortVersionString -string "$(setting MARKETING_VERSION)" "$APP/Contents/Info.plist"
+plutil -replace CFBundleVersion -string "$(setting CURRENT_PROJECT_VERSION)" "$APP/Contents/Info.plist"
+cp Support/THIRD_PARTY_LICENSES.txt "$APP/Contents/Resources/"
 [ -f Support/AppIcon.icns ] && cp Support/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
 # SwiftPM resource bundles (e.g. from dependencies) go into Resources.
 for b in "$BIN"/*.bundle; do [ -e "$b" ] && cp -R "$b" "$APP/Contents/Resources/"; done
@@ -38,7 +55,7 @@ for b in "$BIN"/*.bundle; do [ -e "$b" ] && cp -R "$b" "$APP/Contents/Resources/
 # Sign with a stable Apple Development identity of the project's team so macOS keeps
 # granted permissions (folders, notifications) across rebuilds. Override with CODESIGN_IDENTITY;
 # falls back to ad-hoc signing when no matching certificate is installed.
-TEAM=$(sed -n 's/^ *DEVELOPMENT_TEAM: *//p' project.yml | head -1)
+TEAM=$(setting DEVELOPMENT_TEAM)
 IDENTITY="${CODESIGN_IDENTITY:-}"
 if [ -z "$IDENTITY" ] && [ -n "$TEAM" ]; then
   for hash in $(security find-identity -v -p codesigning | awk '/Apple Development/ {print $2}'); do
