@@ -107,6 +107,16 @@
         }
       }
     },
+    "Active": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktif"
+          }
+        }
+      }
+    },
     "Actual Size": {
       "localizations": {
         "tr": {
@@ -680,6 +690,16 @@
         }
       }
     },
+    "Inactive": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pasif"
+          }
+        }
+      }
+    },
     "Installed": {
       "localizations": {
         "tr": {
@@ -966,6 +986,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu dosya için commit yok"
+          }
+        }
+      }
+    },
+    "No running sessions": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalışan oturum yok"
           }
         }
       }

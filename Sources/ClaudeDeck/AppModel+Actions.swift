@@ -61,30 +61,33 @@ extension AppModel {
         browsedProjectID = id
     }
 
-    /// Projects waiting for the user first, then ones with a running session; otherwise saved order.
-    func activeFirst(_ projects: [Project]) -> [Project] {
-        func rank(_ p: Project) -> Int {
-            let sessions = deck.sessions(in: p.id)
-            if sessions.contains(where: { needsAttention($0.id) }) { return 0 }
-            if sessions.contains(where: { terminals.isRunning($0.id) }) { return 1 }
-            return 2
-        }
-        return projects.enumerated()
-            .sorted { (rank($0.element), $0.offset) < (rank($1.element), $1.offset) }
-            .map(\.element)
+    /// A project is active while one of its terminals runs.
+    func isActive(_ project: Project) -> Bool {
+        deck.sessions(in: project.id).contains { terminals.isRunning($0.id) }
     }
 
-    func activeFirst(_ groups: [(group: ProjectGroup, projects: [Project])]) -> [(group: ProjectGroup, projects: [Project])] {
-        func rank(_ projects: [Project]) -> Int {
-            activeFirst(projects).first.map { p in
-                let sessions = deck.sessions(in: p.id)
-                if sessions.contains(where: { needsAttention($0.id) }) { return 0 }
-                return sessions.contains(where: { terminals.isRunning($0.id) }) ? 1 : 2
-            } ?? 2
+    /// Active projects in the order they became active — stable: status changes (permission,
+    /// finished) never reorder them; a project that becomes active is appended at the bottom.
+    func activeInOrder(_ projects: [Project]) -> [Project] {
+        let active = projects.filter(isActive)
+        let ids = Set(active.map(\.id))
+        for p in active where !activationOrder.contains(p.id) { activationOrder.append(p.id) }
+        let rank = Dictionary(uniqueKeysWithValues: activationOrder.enumerated().filter { ids.contains($0.element) }.map { ($0.element, $0.offset) })
+        return active.sorted { (rank[$0.id] ?? .max) < (rank[$1.id] ?? .max) }
+    }
+
+    /// Groups with an active project, ordered by their earliest-activated project.
+    func activeGroupsInOrder(_ groups: [(group: ProjectGroup, projects: [Project])]) -> [(group: ProjectGroup, projects: [Project])] {
+        let active = groups.filter { $0.projects.contains(where: isActive) }
+        func first(_ entry: (group: ProjectGroup, projects: [Project])) -> Int {
+            activeInOrder(entry.projects).first.flatMap { activationOrder.firstIndex(of: $0.id) } ?? .max
         }
-        return groups.enumerated()
-            .sorted { (rank($0.element.projects), $0.offset) < (rank($1.element.projects), $1.offset) }
-            .map(\.element)
+        return active.sorted { first($0) < first($1) }
+    }
+
+    /// Forget projects that are no longer active (so re-activation appends them again).
+    func pruneActivationOrder() {
+        activationOrder.removeAll { id in deck.project(id).map { !isActive($0) } ?? true }
     }
 
     /// Adds (or picks existing) folders and puts them in the group.

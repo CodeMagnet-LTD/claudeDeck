@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SidebarView: View {
     @Environment(AppModel.self) private var model
+    @AppStorage("sidebar.inactiveExpanded") private var inactiveExpanded = true
 
     var body: some View {
         @Bindable var model = model
@@ -29,18 +30,25 @@ struct SidebarView: View {
             }
             if !sections.pinned.isEmpty {
                 Section("Pinned") {
-                    ForEach(model.activeFirst(sections.pinned)) { ProjectRow(project: $0) }
+                    ForEach(sections.pinned) { ProjectRow(project: $0) }
                 }
             }
-            // Groups live inside "Projects" like folders; busy groups and projects float to the top.
+            // Active: projects with a running terminal, in the order they became active (stable),
+            // then groups that contain an active project.
+            let activeProjects = model.activeInOrder(sections.ungrouped)
+            let activeGroups = model.activeGroupsInOrder(sections.groups)
+            let _ = model.pruneActivationOrder()
             Section {
-                ForEach(model.activeFirst(sections.groups), id: \.group.id) { entry in
-                    GroupRow(group: entry.group, projects: model.activeFirst(entry.projects))
+                ForEach(activeProjects) { ProjectRow(project: $0) }
+                ForEach(activeGroups, id: \.group.id) { entry in
+                    GroupRow(group: entry.group, projects: entry.projects)
                 }
-                ForEach(model.activeFirst(sections.ungrouped)) { ProjectRow(project: $0) }
+                if activeProjects.isEmpty && activeGroups.isEmpty {
+                    Text("No running sessions").font(.callout).foregroundStyle(.tertiary)
+                }
             } header: {
                 HStack {
-                    Text("Projects")
+                    Text("Active")
                     Spacer()
                     Menu {
                         Button("Add Project…") { model.presentAddProject() }
@@ -56,6 +64,21 @@ struct SidebarView: View {
                     .menuIndicator(.hidden)
                     .fixedSize()
                     .help("Add project / new group")
+                }
+            }
+            // Inactive: everything else in its saved order, collapsible like an accordion.
+            let activeGroupIDs = Set(activeGroups.map(\.group.id))
+            let idleGroups = sections.groups.filter { !activeGroupIDs.contains($0.group.id) }
+            let idleProjects = sections.ungrouped.filter { !model.isActive($0) }
+            Section(isExpanded: $inactiveExpanded) {
+                ForEach(idleGroups, id: \.group.id) { entry in
+                    GroupRow(group: entry.group, projects: entry.projects)
+                }
+                ForEach(idleProjects) { ProjectRow(project: $0) }
+            } header: {
+                HStack(spacing: 4) {
+                    Text("Inactive")
+                    Text("\(idleGroups.count + idleProjects.count)").foregroundStyle(.tertiary)
                 }
             }
         }

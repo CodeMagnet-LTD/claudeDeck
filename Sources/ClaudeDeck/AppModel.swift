@@ -43,6 +43,8 @@ final class AppModel {
     /// Session being dragged from the sidebar (set when the drag starts; the drop uses it directly
     /// instead of decoding the item provider).
     @ObservationIgnored var draggedSessionID: UUID?
+    /// Project ids in the order they became active (sidebar "Active" section).
+    @ObservationIgnored var activationOrder: [UUID] = []
     /// Last sidebar drag (not cleared by the drop) — tells a click from the start of a drag.
     @ObservationIgnored var lastDraggedSessionID: UUID?
     /// Highlighted sidebar row: a project or session id — whatever was clicked last.
