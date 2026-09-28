@@ -40,6 +40,9 @@ final class AppModel {
     var hookError: String?
     /// Project shown in the file browser: the last project or session clicked in the sidebar.
     var browsedProjectID: UUID?
+    /// Session being dragged from the sidebar (set when the drag starts; the drop uses it directly
+    /// instead of decoding the item provider).
+    @ObservationIgnored var draggedSessionID: UUID?
     /// Highlighted sidebar row: a project or session id — whatever was clicked last.
     var sidebarSelection: UUID?
     /// Projects without a running session that the user opened in the sidebar (not persisted).

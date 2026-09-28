@@ -187,7 +187,9 @@ struct PaneView: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
             .onDrop(of: PaneDropDelegate.types, delegate: PaneDropDelegate(
                 width: width, side: $dropSide,
+                draggedSession: { model.draggedSessionID },
                 onSession: { droppedID, side in
+                    model.draggedSessionID = nil
                     guard droppedID != sessionID else { return }
                     model.openBeside(droppedID, anchor: sessionID, before: side == .before)
                 },
@@ -237,6 +239,8 @@ struct PaneDropDelegate: DropDelegate {
     static let types: [UTType] = [.fileURL, .utf8PlainText, .plainText]
     let width: CGFloat
     @Binding var side: PaneView.DropSide?
+    /// The sidebar drag in progress, if any (reliable path; the item provider is the fallback).
+    let draggedSession: () -> UUID?
     let onSession: (UUID, PaneView.DropSide) -> Void
     let onFiles: ([URL]) -> Void
 
@@ -265,9 +269,14 @@ struct PaneDropDelegate: DropDelegate {
             }
             return true
         }
+        if let id = draggedSession() {
+            onSession(id, where_)
+            return true
+        }
         guard let provider = info.itemProviders(for: [.utf8PlainText, .plainText]).first else { return false }
         _ = provider.loadObject(ofClass: NSString.self) { object, _ in
-            guard let text = object as? String, let id = UUID(uuidString: text) else { return }
+            guard let text = (object as? NSString).map({ $0 as String }),
+                  let id = UUID(uuidString: text.trimmingCharacters(in: .whitespacesAndNewlines)) else { return }
             Task { @MainActor in onSession(id, where_) }
         }
         return true

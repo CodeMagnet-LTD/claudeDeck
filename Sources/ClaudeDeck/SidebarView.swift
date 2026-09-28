@@ -221,7 +221,10 @@ struct AttentionRow: View {
         .contentShape(Rectangle())
         .onTapGesture { model.selectedSessionID = session.id }
         .contextMenu { SessionMenu(session: session) }
-        .onDrag { NSItemProvider(object: session.id.uuidString as NSString) }
+        .onDrag {
+            model.draggedSessionID = session.id
+            return NSItemProvider(object: session.id.uuidString as NSString)
+        }
         .listRowBackground(
             status.display.isBlocked
                 ? RoundedRectangle(cornerRadius: 6).fill(StatusStyle.blocked.opacity(0.12)).padding(.horizontal, 4)
@@ -282,7 +285,10 @@ struct SessionRow: View {
         .contentShape(Rectangle())
         .onTapGesture { model.selectedSessionID = session.id }
         .contextMenu { SessionMenu(session: session) }
-        .onDrag { NSItemProvider(object: session.id.uuidString as NSString) }
+        .onDrag {
+            model.draggedSessionID = session.id
+            return NSItemProvider(object: session.id.uuidString as NSString)
+        }
     }
 }
 
