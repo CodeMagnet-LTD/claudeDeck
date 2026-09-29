@@ -8,3 +8,11 @@ DerivedData/
 Config/Local.xcconfig
 RELEASING.md
 NOTES.md
+
+# Signing material never goes into the repo
+*.p12
+*.p8
+*.cer
+*.certSigningRequest
+*.mobileprovision
+*.provisionprofile
