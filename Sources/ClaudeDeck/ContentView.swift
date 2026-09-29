@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct ContentView: View {
     @Environment(AppModel.self) private var model
     @AppStorage("showFiles") private var showFiles = false
+    @AppStorage("inspectorTab") private var inspectorTab = InspectorTab.files
 
     var body: some View {
         NavigationSplitView {
@@ -13,7 +14,7 @@ struct ContentView: View {
         } detail: {
             DetailView()
                 .inspector(isPresented: $showFiles) {
-                    FileBrowserPanel()
+                    InspectorPanel(tab: $inspectorTab)
                         .inspectorColumnWidth(min: 220, ideal: 290, max: 520)
                 }
         }
@@ -34,6 +35,13 @@ struct ContentView: View {
                 }
                 .help("Project Files (⌘⇧E)")
                 .keyboardShortcut("e", modifiers: [.command, .shift])
+                Button {
+                    if showFiles && inspectorTab == .changes { showFiles = false } else { inspectorTab = .changes; showFiles = true }
+                } label: {
+                    Label("Changes", systemImage: "arrow.triangle.branch")
+                }
+                .help("Source Control Changes (⌘⇧G)")
+                .keyboardShortcut("g", modifiers: [.command, .shift])
             }
             ToolbarItem(placement: .navigation) {
                 Button {

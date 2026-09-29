@@ -87,6 +87,9 @@
         }
       }
     },
+    "+%lld": {
+      "shouldTranslate": false
+    },
     ", Claude sessions working right now: %lld": {
       "localizations": {
         "tr": {
@@ -247,6 +250,36 @@
         }
       }
     },
+    "Amend": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düzelt (amend)"
+          }
+        }
+      }
+    },
+    "Ask Claude about This Line…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude'a bu satırı sor…"
+          }
+        }
+      }
+    },
+    "Ask Claude about line %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude'a %lld. satırı sor"
+          }
+        }
+      }
+    },
     "Ask before quitting (⌘Q while terminals are open)": {
       "localizations": {
         "tr": {
@@ -273,6 +306,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Otomatik"
+          }
+        }
+      }
+    },
+    "Binary file": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İkili dosya"
           }
         }
       }
@@ -307,6 +350,26 @@
         }
       }
     },
+    "Changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Değişiklikler"
+          }
+        }
+      }
+    },
+    "Changes to tracked files are lost; new files are moved to the Trash.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzlenen dosyalardaki değişiklikler kaybolur; yeni dosyalar Çöp Sepeti'ne taşınır."
+          }
+        }
+      }
+    },
     "Choose Projects…": {
       "localizations": {
         "tr": {
@@ -337,12 +400,32 @@
         }
       }
     },
+    "Claude didn’t return a commit message.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude bir commit mesajı döndürmedi."
+          }
+        }
+      }
+    },
     "Claude session ended": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Claude oturumu bitti"
+          }
+        }
+      }
+    },
+    "Claude took too long to answer.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude'un yanıtı çok uzun sürdü."
           }
         }
       }
@@ -366,6 +449,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kapat"
+          }
+        }
+      }
+    },
+    "Close Diff": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Farkı kapat"
           }
         }
       }
@@ -450,6 +543,36 @@
         }
       }
     },
+    "Commit": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commit et"
+          }
+        }
+      }
+    },
+    "Commit & Push": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commit et ve gönder"
+          }
+        }
+      }
+    },
+    "Commit message": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commit mesajı"
+          }
+        }
+      }
+    },
     "Compact threshold: context above %lldK tokens": {
       "localizations": {
         "tr": {
@@ -466,6 +589,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kaldığın yerden devam et."
+          }
+        }
+      }
+    },
+    "Copy Line": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Satırı kopyala"
           }
         }
       }
@@ -570,6 +703,96 @@
         }
       }
     },
+    "Detached HEAD": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayrık HEAD"
+          }
+        }
+      }
+    },
+    "Discard": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "At"
+          }
+        }
+      }
+    },
+    "Discard All": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümünü at"
+          }
+        }
+      }
+    },
+    "Discard All Changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm değişiklikleri at"
+          }
+        }
+      }
+    },
+    "Discard Changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Değişiklikleri at"
+          }
+        }
+      }
+    },
+    "Discard Changes…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Değişiklikleri at…"
+          }
+        }
+      }
+    },
+    "Discard all changes?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm değişiklikler atılsın mı?"
+          }
+        }
+      }
+    },
+    "Discard changes to “%@”?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” dosyasındaki değişiklikler atılsın mı?"
+          }
+        }
+      }
+    },
+    "Dismiss": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapat"
+          }
+        }
+      }
+    },
     "Done — %@": {
       "localizations": {
         "tr": {
@@ -660,6 +883,26 @@
         }
       }
     },
+    "Generate Commit Message with Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commit mesajını Claude ile oluştur"
+          }
+        }
+      }
+    },
+    "Git reported an error.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Git bir hata bildirdi."
+          }
+        }
+      }
+    },
     "Green": {
       "localizations": {
         "tr": {
@@ -706,6 +949,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pasif"
+          }
+        }
+      }
+    },
+    "Inspector": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denetçi"
           }
         }
       }
@@ -786,6 +1039,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Açık"
+          }
+        }
+      }
+    },
+    "Mark as Resolved": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çözüldü olarak işaretle"
           }
         }
       }
@@ -1010,6 +1273,16 @@
         }
       }
     },
+    "No changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Değişiklik yok"
+          }
+        }
+      }
+    },
     "No commits for this file": {
       "localizations": {
         "tr": {
@@ -1036,6 +1309,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu proje için kayıtlı Claude konuşması yok."
+          }
+        }
+      }
+    },
+    "No textual changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metinsel değişiklik yok"
+          }
+        }
+      }
+    },
+    "No unstaged changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hazırlanmamış değişiklik yok"
+          }
+        }
+      }
+    },
+    "No upstream branch": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yukarı akış dalı yok"
           }
         }
       }
@@ -1250,12 +1553,42 @@
         }
       }
     },
+    "Publish Branch to origin": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dalı origin'e yayınla"
+          }
+        }
+      }
+    },
+    "Pull (fast-forward only)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çek (yalnızca ileri sarma)"
+          }
+        }
+      }
+    },
     "Purple": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Mor"
+          }
+        }
+      }
+    },
+    "Push": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gönder"
           }
         }
       }
@@ -1520,6 +1853,16 @@
         }
       }
     },
+    "Select a session to see its changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Değişikliklerini görmek için bir oturum seçin"
+          }
+        }
+      }
+    },
     "Select a session to see its files": {
       "localizations": {
         "tr": {
@@ -1586,6 +1929,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bildirim göster (izin / soru / bitti)"
+          }
+        }
+      }
+    },
+    "Source Control Changes (⌘⇧G)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaynak denetimi değişiklikleri (⌘⇧G)"
+          }
+        }
+      }
+    },
+    "Stage": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hazırla"
+          }
+        }
+      }
+    },
+    "Stage All": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümünü hazırla"
+          }
+        }
+      }
+    },
+    "Stage Hunk": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parçayı hazırla"
+          }
+        }
+      }
+    },
+    "Staged": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hazırlananlar"
           }
         }
       }
@@ -1723,6 +2116,16 @@
         }
       }
     },
+    "The file is moved to the Trash.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya Çöp Sepeti'ne taşınır."
+          }
+        }
+      }
+    },
     "The folder and its files are not touched.": {
       "localizations": {
         "tr": {
@@ -1773,6 +2176,46 @@
         }
       }
     },
+    "There are no changes to describe.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açıklanacak değişiklik yok."
+          }
+        }
+      }
+    },
+    "This can’t be undone.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu işlem geri alınamaz."
+          }
+        }
+      }
+    },
+    "This folder isn’t a Git repository": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu klasör bir Git deposu değil"
+          }
+        }
+      }
+    },
+    "Tracking %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ izleniyor"
+          }
+        }
+      }
+    },
     "Uncommitted Changes": {
       "localizations": {
         "tr": {
@@ -1799,6 +2242,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sabitlemeyi Kaldır"
+          }
+        }
+      }
+    },
+    "Unstage": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hazırlıktan çıkar"
+          }
+        }
+      }
+    },
+    "Unstage All": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümünü hazırlıktan çıkar"
+          }
+        }
+      }
+    },
+    "Unstage Hunk": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parçayı hazırlıktan çıkar"
           }
         }
       }
@@ -1833,6 +2306,16 @@
         }
       }
     },
+    "Working Tree": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalışma ağacı"
+          }
+        }
+      }
+    },
     "Yellow": {
       "localizations": {
         "tr": {
@@ -1849,6 +2332,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Öğeleri çöpten geri alabilirsin."
+          }
+        }
+      }
+    },
+    "Your question or comment": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sorunuz veya yorumunuz"
           }
         }
       }
@@ -2008,6 +2501,12 @@
           }
         }
       }
+    },
+    "↑%lld ↓%lld": {
+      "shouldTranslate": false
+    },
+    "−%lld": {
+      "shouldTranslate": false
     },
     "▶%lld": {
       "shouldTranslate": false

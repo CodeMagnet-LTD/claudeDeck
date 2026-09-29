@@ -2,6 +2,16 @@ import Foundation
 import Testing
 @testable import ClaudeDeckCore
 
+@Suite struct CommitMessagePromptTests {
+    @Test func capsPatchAndCleansReply() {
+        let prompt = CommitMessagePrompt.build(branch: "main", stat: "a | 1 +", patch: String(repeating: "x", count: 50_000))
+        #expect(prompt.contains("Branch: main"))
+        #expect(prompt.count < 47_000 && prompt.hasSuffix("(truncated)"))
+        #expect(CommitMessagePrompt.clean("```\nfeat: add x\n\nbody\n```\n") == "feat: add x\n\nbody")
+        #expect(CommitMessagePrompt.clean("  fix: y  ") == "fix: y")
+    }
+}
+
 @Suite struct GitChangesTests {
     @Test func parsesStatusV2() {
         let out = [
