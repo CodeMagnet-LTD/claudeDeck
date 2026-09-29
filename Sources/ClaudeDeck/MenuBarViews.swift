@@ -15,6 +15,7 @@ struct MenuBarLabel: View {
         }
         .onAppear {
             model.openMainWindow = { openWindow(id: "main") }
+            model.openEditorWindow = { openWindow(id: "editor", value: $0.standardizedFileURL) }
         }
     }
 }

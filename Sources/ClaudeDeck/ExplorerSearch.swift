@@ -217,7 +217,7 @@ struct QuickOpenView: View {
             guard let session = model.insertTargetSession else { return }
             model.insertPaths([url], into: session)
         } else {
-            FileActions.openDefault(url)
+            EditorOpener.openDefault(url, model: model)
         }
         close()
     }
@@ -387,7 +387,7 @@ struct FindInFilesView: View {
             guard let session = model.insertTargetSession else { return }
             model.terminals.type("@\(match.path)#L\(match.line) ", into: session)
         } else {
-            FileActions.openDefault(root.appending(path: match.path))
+            EditorOpener.openDefault(root.appending(path: match.path), model: model)
         }
         close()
     }

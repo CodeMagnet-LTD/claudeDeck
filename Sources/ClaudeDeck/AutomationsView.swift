@@ -53,15 +53,6 @@ private struct AutomationList: View {
                 Text("No Automations").foregroundStyle(.secondary)
             }
         }
-        .safeAreaInset(edge: .bottom) {
-            Label("Automations run only while ClaudeDeck is running. Keep it in the menu bar and open it at login to never miss one.", systemImage: "info.circle")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(10)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(.bar)
-        }
     }
 }
 
@@ -142,6 +133,10 @@ private struct AutomationEmptyState: View {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Automations").font(.title2.bold())
                 Text("Saved prompts that start a Claude session on a schedule or when you click Run Now. Permission prompts show up in Needs Attention like any other session.")
+                    .foregroundStyle(.secondary)
+                // Not in the sidebar: a wrapping label there inflated the whole window's height.
+                Label("Automations run only while ClaudeDeck is running. Keep it in the menu bar and open it at login to never miss one.", systemImage: "info.circle")
+                    .font(.caption)
                     .foregroundStyle(.secondary)
                 Text("Start from a template").font(.headline).padding(.top, 6)
                 LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 10)], spacing: 10) {

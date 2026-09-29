@@ -293,12 +293,17 @@ enum EditorOpener {
 
     /// Double-click in the Files panel.
     static func openDefault(_ url: URL, model: AppModel, openWindow: OpenWindowAction) {
-        // .pen files belong to Pen.app even though they may look like text.
-        if model.deck.settings.openFilesInBuiltInEditor, !PencilApp.isPenFile(url), TextFileIO.looksEditable(url) {
-            open(url, openWindow: openWindow)
-        } else {
-            FileActions.openDefault(url)
-        }
+        if opensInEditor(url, model: model) { open(url, openWindow: openWindow) } else { FileActions.openDefault(url) }
+    }
+
+    /// For callers without `openWindow` (Quick Open, Find in Files, Changes): same rule.
+    static func openDefault(_ url: URL, model: AppModel) {
+        if opensInEditor(url, model: model), let openEditor = model.openEditorWindow { openEditor(url) } else { FileActions.openDefault(url) }
+    }
+
+    /// .pen files belong to Pen.app even though they may look like text.
+    private static func opensInEditor(_ url: URL, model: AppModel) -> Bool {
+        model.deck.settings.openFilesInBuiltInEditor && !PencilApp.isPenFile(url) && TextFileIO.looksEditable(url)
     }
 }
 
@@ -319,7 +324,8 @@ struct EditorCommands: Commands {
     @FocusedValue(\.editorDocument) private var document
 
     var body: some Commands {
-        CommandGroup(replacing: .saveItem) {
+        // `after`, not `replacing`: the .saveItem group holds the system Close (⌘W).
+        CommandGroup(after: .saveItem) {
             Button("Save") { document?.save() }
                 .keyboardShortcut("s")
                 .disabled(document == nil)

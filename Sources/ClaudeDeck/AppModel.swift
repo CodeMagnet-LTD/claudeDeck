@@ -81,6 +81,8 @@ final class AppModel {
     @ObservationIgnored var onCountsChanged: (() -> Void)?
     /// Opens the main window scene (set by a SwiftUI view that has `openWindow`).
     @ObservationIgnored var openMainWindow: (() -> Void)?
+    /// Opens a file in the built-in editor window (set alongside `openMainWindow`).
+    @ObservationIgnored var openEditorWindow: ((URL) -> Void)?
     // MARK: iCloud sync (DeckSyncController) — begin
     @ObservationIgnored let sync = DeckSyncController()
     // MARK: iCloud sync — end

@@ -675,7 +675,7 @@ private struct ChangeRow: View {
         if let repo = changes.repo {
             let url = repo.appending(path: change.path)
             if change.state != .deleted {
-                Button("Open") { FileActions.openDefault(url) }
+                Button("Open") { EditorOpener.openDefault(url, model: model) }
                 Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
             }
             if let session = model.selectedSessionID, model.terminals.isRunning(session) {

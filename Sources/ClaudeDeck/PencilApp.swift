@@ -77,12 +77,15 @@ struct PencilSettingsSection: View {
 /// Small "Pencil" tag in the pane header of sessions launched with the Pencil MCP server.
 struct PencilBadge: View {
     var body: some View {
-        Label("Pencil", systemImage: "pencil.and.outline")
+        // Icon only: pane headers get narrow in splits and a text label would wrap.
+        Image(systemName: "pencil.and.outline")
             .font(.caption2)
             .foregroundStyle(.secondary)
             .padding(.horizontal, 5)
-            .padding(.vertical, 1)
+            .padding(.vertical, 2)
             .background(.quaternary, in: Capsule())
+            .fixedSize()
+            .accessibilityLabel("Pencil")
             .help("This session can use the Pencil (Pen.app) MCP tools")
     }
 }
