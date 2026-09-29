@@ -436,6 +436,10 @@ struct ProjectMenu: View {
             }
         }
         Button("Reveal in Finder") { NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: project.path) }
+        Button("Copy Path") {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(project.path, forType: .string)
+        }
         if VSCode.isInstalled {
             Button("Open in VS Code") { VSCode.open(URL(fileURLWithPath: project.path)) }
         }
