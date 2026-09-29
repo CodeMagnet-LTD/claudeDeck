@@ -890,6 +890,16 @@
         }
       }
     },
+    "New Claude session or terminal": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Claude oturumu ya da terminal"
+          }
+        }
+      }
+    },
     "New File": {
       "localizations": {
         "tr": {

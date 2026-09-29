@@ -181,20 +181,16 @@ struct ProjectRow: View {
                 Text(project.name).fontWeight(.medium).lineLimit(1)
                 Spacer(minLength: 4)
                 if project.collapsed || !active { AggregateBadge(sessionIDs: sessions.map(\.id)) }
-                Button {
-                    model.newShell(in: project.id)
-                } label: {
-                    Image(systemName: "apple.terminal")
-                }
-                .buttonStyle(.borderless)
-                .help("Open a plain terminal in the project folder")
-                Button {
-                    model.newSession(in: project.id)
+                // One "+" with every way to start something in this project.
+                Menu {
+                    NewSessionItems(project: project, showResume: $showResume)
                 } label: {
                     Image(systemName: "plus")
                 }
-                .buttonStyle(.borderless)
-                .help("New Claude Session")
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .help("New Claude session or terminal")
             }
             .help(project.path)
             .contentShape(Rectangle())
@@ -390,16 +386,7 @@ struct ProjectMenu: View {
     @Binding var showResume: Bool
 
     var body: some View {
-        Button("New Claude Session") { model.newSession(in: project.id) }
-        Button("New Claude Session (Separate Worktree)…") { model.promptWorktreeSession(in: project) }
-            .disabled(!model.isGitRepository(project))
-        Button("New Terminal") { model.newShell(in: project.id) }
-        Button("New Terminal with Command…") {
-            if let command = TextPrompt.ask(title: String(localized: "Command to run on open"), placeholder: "yarn start") {
-                model.newCommandShell(in: project.id, command: command)
-            }
-        }
-        Button("Resume Previous Conversation…") { showResume = true }
+        NewSessionItems(project: project, showResume: $showResume)
         let projectSessions = model.deck.sessions(in: project.id)
         if projectSessions.count > 1 {
             Button("Open Sessions Side by Side") {
@@ -579,3 +566,43 @@ enum Confirm {
     }
 }
 
+
+/// Everything that can be started in a project — shared by the project's "+" menu and its
+/// right-click menu so both offer the same choices.
+struct NewSessionItems: View {
+    @Environment(AppModel.self) private var model
+    let project: Project
+    @Binding var showResume: Bool
+
+    var body: some View {
+        Button {
+            model.newSession(in: project.id)
+        } label: {
+            Label("New Claude Session", systemImage: "sparkles")
+        }
+        Button {
+            model.promptWorktreeSession(in: project)
+        } label: {
+            Label("New Claude Session (Separate Worktree)…", systemImage: "arrow.triangle.branch")
+        }
+        .disabled(!model.isGitRepository(project))
+        Button {
+            showResume = true
+        } label: {
+            Label("Resume Previous Conversation…", systemImage: "clock.arrow.circlepath")
+        }
+        Divider()
+        Button {
+            model.newShell(in: project.id)
+        } label: {
+            Label("New Terminal", systemImage: "apple.terminal")
+        }
+        Button {
+            if let command = TextPrompt.ask(title: String(localized: "Command to run on open"), placeholder: "yarn start") {
+                model.newCommandShell(in: project.id, command: command)
+            }
+        } label: {
+            Label("New Terminal with Command…", systemImage: "bolt")
+        }
+    }
+}
