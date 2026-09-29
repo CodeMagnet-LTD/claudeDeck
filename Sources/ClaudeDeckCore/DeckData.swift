@@ -121,7 +121,9 @@ public enum AppTheme: String, Codable, Sendable, CaseIterable {
 
 public struct DeckSettings: Codable, Sendable, Equatable {
     public var resumeOnLaunch = true
-    public var compactOnResume = true
+    /// After an automatic resume, send `/compact` when the context is over the threshold. Off by
+    /// default: resumed sessions should simply carry on.
+    public var compactOnResume = false
     /// After an automatic resume, type a "continue" message into the session.
     public var continueAfterResume = false
     /// …only for sessions that were busy when the app quit.

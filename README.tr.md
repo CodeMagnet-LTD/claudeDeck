@@ -182,8 +182,8 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
 - ✅ **Uygulamadan "İzin ver / Reddet":** bildirimden, listeden ya da bölme başlığından.
 - 🗂 **Projeler ve gruplar:** sabitleme, renkli gruplar, bekleyen oturumlar en üstte.
 - 🪟 **Yan yana bölmeler:** sürükle-bırakla 4 bölmeye kadar.
-- ♻️ **Kalıcılık:** uygulama kapanıp açılınca oturumlar `claude --resume` ile geri gelir; context şişmişse
-  otomatik `/compact` gönderilir.
+- ♻️ **Kalıcılık:** uygulama kapanıp açılınca oturumlar `claude --resume` ile geri gelir ve olduğu gibi
+  devam eder. İstersen (Ayarlar, varsayılan kapalı) context şişmişse `/compact` gönderilir.
 - 🌿 **Worktree oturumları:** aynı projede `claude --worktree` ile birbirine karışmayan paralel oturumlar.
 - 📁 **Dosyalar paneli:** canlı dosya ağacı, git işaretleri, dosya geçmişi ve diff, Hızlı Aç (⌘P) ve
   Dosyalarda Bul (⌘⇧F). Dosyayı terminale sürükleyerek `@yol` olarak eklersin.
@@ -289,7 +289,7 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
 - **Kalıcılık:** uygulama kapanırken açık olan oturumlar açılışta `claude --resume <id>` ile kendiliğinden geri
   gelir. Durmuş bir oturumu seçmek de onu devam ettirir; `/exit` ile kapattığın ya da "Oturumu bitir" dediğin
   oturum ise "Devam et" deyince döner.
-- **Otomatik /compact:** geri gelen oturumun context'i eşiği aşıyorsa `/compact` gönderilir. Eşik gerçek
+- **Otomatik /compact (varsayılan kapalı):** açılırsa, geri gelen oturumun context'i eşiği aşıyorsa `/compact` gönderilir. Eşik gerçek
   context token'ıdır (transcript'teki son asistan mesajının `input + cache_read + cache_creation` toplamı;
   dosya boyutu değil). Ayarlar'dan açılır/kapanır, 50 bin – 1 milyon token (varsayılan 200 bin).
 - **Ayrı worktree:** projenin menüsü › "Yeni Claude oturumu (ayrı worktree)…" (yalnızca git deposunda).

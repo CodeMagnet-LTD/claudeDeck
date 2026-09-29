@@ -181,8 +181,8 @@ Billing, usage limits and sign-in stay entirely with Claude Code. ClaudeDeck doe
 - ✅ **Allow or Deny from the app:** from the notification, the list or the pane header.
 - 🗂 **Projects and groups:** pin projects, use colored groups, and sessions that need attention float to the top.
 - 🪟 **Side-by-side panes:** drag and drop up to four sessions next to each other.
-- ♻️ **Persistence:** open sessions come back with `claude --resume` after a restart. If the context
-  has grown too large, `/compact` is sent automatically.
+- ♻️ **Persistence:** open sessions come back with `claude --resume` after a restart and carry on as
+  they were. Optionally (Settings, off by default) `/compact` is sent when the context has grown too large.
 - 🌿 **Worktree sessions:** run parallel sessions in the same project, each in its own
   `claude --worktree`, so they never edit the same files.
 - 📁 **Files panel:** a live file tree with git status marks, per-file history and diffs, Quick Open (⌘P)
@@ -265,7 +265,7 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
   `claude --resume <id>`.
   - Selecting a stopped session resumes it.
   - Sessions you closed with `/exit` or End Session come back when you choose Resume.
-- **Auto /compact:** when a resumed session's context is above the threshold, `/compact` is sent.
+- **Auto /compact (off by default):** when turned on, `/compact` is sent to a resumed session whose context is above the threshold.
   - The threshold is measured in real context tokens: `input + cache_read + cache_creation` of the last
     assistant message, not the transcript file size.
   - Configurable in Settings: 50K to 1M tokens, 200K by default.
