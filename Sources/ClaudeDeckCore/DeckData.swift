@@ -154,6 +154,8 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     public var editorFontSize: Double = DeckSettings.defaultFontSize
     /// Built-in editor soft wrap.
     public var editorWrapLines = true
+    /// Files open in their own editor windows instead of tabs in the main window.
+    public var openFilesInSeparateWindow = false
 
     public init() {}
 
@@ -178,6 +180,7 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         openFilesInBuiltInEditor = try c.decodeIfPresent(Bool.self, forKey: .openFilesInBuiltInEditor) ?? d.openFilesInBuiltInEditor
         editorFontSize = try c.decodeIfPresent(Double.self, forKey: .editorFontSize) ?? d.editorFontSize
         editorWrapLines = try c.decodeIfPresent(Bool.self, forKey: .editorWrapLines) ?? d.editorWrapLines
+        openFilesInSeparateWindow = try c.decodeIfPresent(Bool.self, forKey: .openFilesInSeparateWindow) ?? d.openFilesInSeparateWindow
     }
 }
 
