@@ -404,9 +404,8 @@ final class TabMouseView: NSView {
 
     @MainActor static func installDragMonitor() {
         guard monitor == nil else { return }
-        monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp]) { event in
-            MainActor.assumeIsolated { handle(event) }
-            return event
+        monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp, .rightMouseDown]) { event in
+            MainActor.assumeIsolated { handle(event) } ? nil : event
         }
     }
 
@@ -415,30 +414,41 @@ final class TabMouseView: NSView {
         views.allObjects.first { $0.window === window && $0.bounds.contains($0.convert(location, from: nil)) }
     }
 
-    @MainActor private static func handle(_ event: NSEvent) {
+    /// The toolbar swallows right-clicks before hit-testing reaches the tab, so the context menu is
+    /// opened from here too. Returns true when the event was consumed.
+    @MainActor private static func handle(_ event: NSEvent) -> Bool {
+        let isMenuClick = event.type == .rightMouseDown || (event.type == .leftMouseDown && event.modifierFlags.contains(.control))
+        if isMenuClick {
+            guard let view = view(at: event.locationInWindow, in: event.window), let menu = view.menu(for: event) else { return false }
+            let point = view.convert(event.locationInWindow, from: nil)
+            // Outside the monitor callback: popping up runs its own tracking loop.
+            DispatchQueue.main.async { menu.popUp(positioning: nil, at: point, in: view) }
+            return true
+        }
         switch event.type {
         case .leftMouseDown:
             dragging = false
             pressed = nil
-            guard !event.modifierFlags.contains(.control), let view = view(at: event.locationInWindow, in: event.window) else { return }
+            guard let view = view(at: event.locationInWindow, in: event.window) else { return false }
             // Not from the close button (the trailing 18 pt of a closable tab).
             let local = view.convert(event.locationInWindow, from: nil)
-            if view.hasCloseButton && local.x > view.bounds.width - 18 { return }
-            if view.tab == .sessions { return }
+            if view.hasCloseButton && local.x > view.bounds.width - 18 { return false }
+            if view.tab == .sessions { return false }
             pressed = (view, event.locationInWindow)
         case .leftMouseDragged:
-            guard let pressed, pressed.view.window === event.window else { return }
+            guard let pressed, pressed.view.window === event.window else { return false }
             if !dragging {
-                guard hypot(event.locationInWindow.x - pressed.start.x, event.locationInWindow.y - pressed.start.y) > 4 else { return }
+                guard hypot(event.locationInWindow.x - pressed.start.x, event.locationInWindow.y - pressed.start.y) > 4 else { return false }
                 dragging = true
             }
-            guard let target = view(at: event.locationInWindow, in: event.window), target !== pressed.view else { return }
+            guard let target = view(at: event.locationInWindow, in: event.window), target !== pressed.view else { return false }
             let local = target.convert(event.locationInWindow, from: nil)
             target.onDragOver?(pressed.view.tab, target.bounds.width > 0 ? local.x / target.bounds.width : 0.5)
         default:
             pressed = nil
             dragging = false
         }
+        return false
     }
 }
 
