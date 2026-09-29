@@ -723,13 +723,16 @@ struct DiffPanel: View {
             Divider()
             ScrollView([.vertical, .horizontal]) {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(diffFiles.enumerated()), id: \.offset) { _, file in
+                    ForEach(Array(diffFiles.enumerated()), id: \.offset) { fileIndex, file in
                         if file.isBinary {
                             Text("Binary file").foregroundStyle(.secondary).padding(8)
                         }
                         ForEach(Array(file.hunks.enumerated()), id: \.offset) { index, hunk in
                             hunkHeader(hunk, index: index, file: file)
-                            ForEach(Array(hunk.lines.enumerated()), id: \.offset) { _, line in
+                            // Ids unique across hunks: with the bare line offset the lazy stack showed
+                            // only the first row per offset, leaving later hunks blank.
+                            ForEach(hunk.lines.indices.map { DiffRowID(file: fileIndex, hunk: index, line: $0) }, id: \.self) { id in
+                                let line = hunk.lines[id.line]
                                 DiffLineRow(line: line, width: gutterWidth, onAsk: askAction(line))
                             }
                         }
@@ -746,6 +749,8 @@ struct DiffPanel: View {
             .background(Color(nsColor: .textBackgroundColor))
         }
     }
+
+    private struct DiffRowID: Hashable { var file, hunk, line: Int }
 
     private var gutterWidth: CGFloat {
         let maxLine = diffFiles.flatMap(\.hunks).map { max($0.oldStart + $0.oldCount, $0.newStart + $0.newCount) }.max() ?? 1
