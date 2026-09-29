@@ -418,6 +418,9 @@ struct FileMenu: View {
             if VSCode.isInstalled {
                 Button("Open in VS Code") { urls.forEach(VSCode.open) }
             }
+            if PencilApp.isPenFile(url), PencilApp.isInstalled {
+                Button("Open in Pencil") { urls.filter(PencilApp.isPenFile).forEach(PencilApp.open) }
+            }
             Button("Open") { urls.forEach { NSWorkspace.shared.open($0) } }
             Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting(urls) }
             if let session = model.selectedSessionID, model.terminals.isRunning(session) {
@@ -446,8 +449,9 @@ struct FileMenu: View {
 
 @MainActor
 enum FileActions {
-    /// Double-click: VS Code if installed, else the default app.
+    /// Double-click: `.pen` files in Pencil, otherwise VS Code if installed, else the default app.
     static func openDefault(_ url: URL) {
+        if PencilApp.isPenFile(url), PencilApp.isInstalled { PencilApp.open(url); return }
         if VSCode.isInstalled { VSCode.open(url) } else { NSWorkspace.shared.open(url) }
     }
 

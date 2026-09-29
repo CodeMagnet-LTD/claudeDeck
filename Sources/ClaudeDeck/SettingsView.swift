@@ -81,6 +81,7 @@ struct SettingsView: View {
                     }
                 }
             }
+            PencilSettingsSection()
             Section("Claude Code Hooks") {
                 LabeledContent("Status") {
                     (installed ? Text("Installed") : Text("Not Installed"))
