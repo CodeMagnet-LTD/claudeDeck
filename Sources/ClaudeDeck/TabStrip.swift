@@ -3,28 +3,29 @@ import ClaudeDeckCore
 import SwiftUI
 import UniformTypeIdentifiers
 
-/// The main window's detail column: the tab strip (hidden while Sessions is the only tab) over the
-/// tab contents. Every editor tab and the Sessions tab stay alive underneath the selected one:
+/// The main window's detail column. With more than one tab, the tab strip sits in the toolbar in
+/// place of the window title (no extra row); with Sessions alone the title is as before. Every editor tab and the Sessions tab stay alive underneath the selected one:
 /// terminals must not be re-created, and an editor's text lives in its text view.
 struct WorkspaceView: View {
     @Environment(AppModel.self) private var model
+    @State private var width: CGFloat = 800
 
     var body: some View {
         let tabs = model.tabs
-        VStack(spacing: 0) {
-            if tabs.tabs.count > 1 {
-                TabStrip()
-                Divider()
-            }
-            ZStack {
-                layer(.sessions) { DetailView() }
-                ForEach(tabs.tabs.filter { $0 != .sessions }, id: \.key) { tab in
-                    layer(tab) { TabContent(tab: tab, isSelected: tabs.selected == tab) }
-                }
+        let showStrip = tabs.tabs.count > 1
+        ZStack {
+            layer(.sessions) { DetailView() }
+            ForEach(tabs.tabs.filter { $0 != .sessions }, id: \.key) { tab in
+                layer(tab) { TabContent(tab: tab, isSelected: tabs.selected == tab) }
             }
         }
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
         .navigationTitle(title)
-        .navigationSubtitle(subtitle)
+        .navigationSubtitle(showStrip ? "" : subtitle)
+        .toolbar(removing: showStrip ? .title : nil)
+        .toolbar {
+            if showStrip { TabStripToolbarItem(maxWidth: max(160, width - 190)) }
+        }
         .focusedSceneValue(\.editorDocument, tabs.selected.fileURL.flatMap { tabs.document(for: $0) })
         .background(MainWindowGlue(tabs: tabs, anyDirty: !tabs.dirtyDocuments.isEmpty))
     }
@@ -120,28 +121,47 @@ private struct EditorTabView: View {
 
 // MARK: - Strip
 
+/// The strip as a toolbar item, plain (no glass capsule). It spans the free toolbar width so the
+/// toolbar buttons stay on the right, where the title used to push them.
+private struct TabStripToolbarItem: ToolbarContent {
+    let maxWidth: CGFloat
+
+    var body: some ToolbarContent {
+        if #available(macOS 26, *) {
+            ToolbarItem(placement: .navigation) { TabStrip(maxWidth: maxWidth) }
+                .sharedBackgroundVisibility(.hidden)
+        } else {
+            ToolbarItem(placement: .navigation) { TabStrip(maxWidth: maxWidth) }
+        }
+    }
+}
+
 private struct TabStrip: View {
     @Environment(AppModel.self) private var model
+    let maxWidth: CGFloat
     @State private var dragging: WorkspaceTab?
+    @State private var contentWidth: CGFloat = 0
 
     var body: some View {
         let tabs = model.tabs
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 0) {
+                HStack(spacing: 2) {
                     ForEach(tabs.tabs, id: \.key) { tab in
                         TabItem(tab: tab, dragging: $dragging)
                             .id(tab.key)
-                        Divider().frame(height: 16)
                     }
                 }
+                .fixedSize()
+                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { contentWidth = $0 }
             }
             .onChange(of: tabs.selected) { _, tab in
                 withAnimation(.easeOut(duration: 0.15)) { proxy.scrollTo(tab.key) }
             }
         }
-        .frame(height: 30)
-        .background(.bar)
+        // A toolbar item needs a definite width: the tabs' own, up to what the toolbar can spare.
+        .frame(width: min(contentWidth, maxWidth), height: 26)
+        .frame(width: maxWidth, alignment: .leading)
     }
 }
 
@@ -156,29 +176,34 @@ private struct TabItem: View {
         let tabs = model.tabs
         let selected = tabs.selected == tab
         let preview = tabs.list.preview == tab
-        HStack(spacing: 6) {
-            icon.frame(width: 14, height: 14)
-            Text(verbatim: tab.title)
-                .font(.callout)
+        HStack(spacing: 5) {
+            icon.frame(width: 12, height: 12)
+                .foregroundStyle(selected ? .primary : .secondary)
+            Text(verbatim: tab == .sessions ? sessionsTitle : tab.title)
+                .font(.caption)
                 .italic(preview)
                 .lineLimit(1)
+                .truncationMode(.middle)
                 .foregroundStyle(selected ? .primary : .secondary)
             trailing(selected: selected)
         }
-        .padding(.leading, 10)
-        .padding(.trailing, tab == .sessions ? 10 : 6)
-        .frame(maxHeight: .infinity)
-        .frame(minWidth: 70, maxWidth: 280)
-        .background(selected ? Color(nsColor: .controlBackgroundColor) : Color.clear)
-        .overlay(alignment: .bottom) {
-            if selected { Rectangle().fill(Color.accentColor).frame(height: 2) }
+        .padding(.leading, 8)
+        .padding(.trailing, tab == .sessions ? 8 : 4)
+        .frame(height: 22)
+        .frame(maxWidth: 220)
+        .background {
+            if selected {
+                RoundedRectangle(cornerRadius: 6).fill(Color.primary.opacity(0.09))
+            } else if hovering {
+                RoundedRectangle(cornerRadius: 6).fill(Color.primary.opacity(0.04))
+            }
         }
         .contentShape(Rectangle())
         .onHover { hovering = $0 }
         .onTapGesture { tabs.select(tab) }
         .simultaneousGesture(TapGesture(count: 2).onEnded { tabs.pin(tab) })
         .overlay { MiddleClick { tabs.close(tab) } }
-        .help(tab.helpText)
+        .help(tab == .sessions ? sessionsHelp : tab.helpText)
         .contextMenu { menu }
         .onDrag {
             dragging = tab
@@ -189,10 +214,24 @@ private struct TabItem: View {
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
     }
 
+    /// The Sessions tab carries what the window title showed: the focused session's name…
+    private var sessionsTitle: String {
+        guard !model.deck.visiblePanes.isEmpty, let session = model.selectedSessionID.flatMap({ model.deck.session($0) }) else {
+            return WorkspaceTab.sessions.title
+        }
+        return session.name
+    }
+
+    /// …and its project path as the tooltip.
+    private var sessionsHelp: String {
+        let path = model.selectedSessionID.flatMap { model.deck.session($0) }.flatMap { model.deck.project($0.projectID)?.path }
+        return [WorkspaceTab.sessions.helpText, path.map { ($0 as NSString).abbreviatingWithTildeInPath }].compactMap { $0 }.joined(separator: "\n")
+    }
+
     @ViewBuilder private var icon: some View {
         switch tab {
         case .sessions: Image(systemName: "terminal")
-        case .file(let url): Image(nsImage: NSWorkspace.shared.icon(forFile: url.path)).resizable()
+        case .file(let url): Image(nsImage: NSWorkspace.shared.icon(forFile: url.path)).resizable().scaledToFit()
         case .diff: Image(systemName: "plus.forwardslash.minus").foregroundStyle(.orange)
         case .automations: Image(systemName: "clock.arrow.circlepath")
         }
@@ -205,16 +244,16 @@ private struct TabItem: View {
             ZStack {
                 if hovering || (selected && !dirty) {
                     Button { model.tabs.close(tab) } label: {
-                        Image(systemName: "xmark").font(.system(size: 9, weight: .bold))
+                        Image(systemName: "xmark").font(.system(size: 8, weight: .semibold)).foregroundStyle(.secondary)
                     }
                     .buttonStyle(.borderless)
                     .help("Close Tab (⌘W)")
                 } else if dirty {
-                    Circle().fill(Color.primary.opacity(0.6)).frame(width: 7, height: 7)
+                    Circle().fill(Color.primary.opacity(0.55)).frame(width: 6, height: 6)
                         .help("Unsaved changes")
                 }
             }
-            .frame(width: 16, height: 16)
+            .frame(width: 14, height: 14)
         }
     }
 
