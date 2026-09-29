@@ -112,6 +112,9 @@ final class AutomationScheduler {
             }
             sessionID = last
         }
+        if sessionID == nil, !automation.reuseSession, let previous = automation.lastSessionID {
+            retirePreviousRun(previous)
+        }
         if sessionID == nil { sessionID = createSession(for: automation, projectID: projectID) }
         guard let sessionID else { return finish(runID, .failed, error: String(localized: "Could not create a session.")) }
 
@@ -156,6 +159,18 @@ final class AutomationScheduler {
     }
 
     /// A new `.claude` session named after the automation (in a fresh worktree if configured).
+    /// "Start fresh each run" would otherwise leave one idle `claude` (and one sidebar row) behind
+    /// per run. Drop the previous run's session once the user has seen its result — never one that
+    /// still needs attention, is on screen, or has its own worktree (it may hold uncommitted work).
+    /// Its conversation stays in Claude's history (`claude --resume`).
+    private func retirePreviousRun(_ id: UUID) {
+        guard let session = model.deck.session(id), session.kind == .claude, session.worktreeName == nil,
+              model.terminals.isRunning(id), model.status(of: id).display.isIdle,
+              !model.needsAttention(id), !model.deck.panes.contains(id), model.deck.selectedSessionID != id
+        else { return }
+        model.removeSession(id)
+    }
+
     private func createSession(for automation: Automation, projectID: UUID) -> UUID? {
         guard let project = model.deck.project(projectID) else { return nil }
         let base = "\(project.name) · \(automation.name.isEmpty ? String(localized: "Automation") : String(automation.name.prefix(30)))"

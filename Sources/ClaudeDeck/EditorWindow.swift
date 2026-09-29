@@ -293,7 +293,8 @@ enum EditorOpener {
 
     /// Double-click in the Files panel.
     static func openDefault(_ url: URL, model: AppModel, openWindow: OpenWindowAction) {
-        if model.deck.settings.openFilesInBuiltInEditor, TextFileIO.looksEditable(url) {
+        // .pen files belong to Pen.app even though they may look like text.
+        if model.deck.settings.openFilesInBuiltInEditor, !PencilApp.isPenFile(url), TextFileIO.looksEditable(url) {
             open(url, openWindow: openWindow)
         } else {
             FileActions.openDefault(url)
