@@ -362,7 +362,8 @@ private struct RunHistory: View {
                             .buttonStyle(.borderless)
                             .help("Stop tracking this run; the session keeps going.")
                     }
-                    if let sid = run.sessionID {
+                    // A fresh-run session is dropped once a later run replaces it (AutomationScheduler).
+                    if let sid = run.sessionID, model.deck.session(sid) != nil {
                         Button("Open Session") {
                             model.openMainWindow?()
                             model.reveal(sid)

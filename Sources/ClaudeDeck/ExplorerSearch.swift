@@ -385,7 +385,7 @@ struct FindInFilesView: View {
     private func activate(_ match: SearchMatch, insert: Bool) {
         if insert {
             guard let session = model.insertTargetSession else { return }
-            model.terminals.type("@\(match.path):\(match.line) ", into: session)
+            model.terminals.type("@\(match.path)#L\(match.line) ", into: session)
         } else {
             FileActions.openDefault(root.appending(path: match.path))
         }

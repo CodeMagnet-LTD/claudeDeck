@@ -260,12 +260,18 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         titles[id] = nil
     }
 
+    /// Types `text`; a trailing `\r` is sent separately so it lands as Enter. Text containing
+    /// newlines goes in as a bracketed paste, since a raw newline in the pty would submit early.
     func type(_ text: String, into id: UUID) {
         guard let view = views[id], running.contains(id) else { return }
-        guard text.hasSuffix("\r"), text.count > 1 else { view.send(txt: text); return }
-        view.send(txt: String(text.dropLast()))
+        let submit = text.hasSuffix("\r") && text.count > 1
+        var body = submit ? String(text.dropLast()) : text
+        let multiline = body.contains(where: \.isNewline)
+        if multiline { body = "\u{1B}[200~" + body + "\u{1B}[201~" }
+        guard submit else { view.send(txt: body); return }
+        view.send(txt: body)
         Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .milliseconds(150))
+            try? await Task.sleep(for: .milliseconds(multiline ? 500 : 150))
             guard let self, self.running.contains(id) else { return }
             self.views[id]?.send(txt: "\r")
         }

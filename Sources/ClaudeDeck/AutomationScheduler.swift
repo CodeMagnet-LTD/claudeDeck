@@ -207,19 +207,9 @@ final class AutomationScheduler {
         return DeckData.isValidWorktreeName(candidate) && !clash ? candidate : model.defaultWorktreeName(for: project)
     }
 
-    /// Types the prompt like the user would. Multi-line prompts go in as a bracketed paste so their
-    /// newlines don't submit early; Enter follows once the paste has landed.
+    /// Types the prompt like the user would (multi-line text goes in as a bracketed paste).
     private func send(_ prompt: String, to id: UUID) {
-        let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
-        if text.contains(where: \.isNewline) {
-            model.terminals.type("\u{1B}[200~" + text + "\u{1B}[201~", into: id)
-            Task { @MainActor [weak self] in
-                try? await Task.sleep(for: .milliseconds(500))
-                self?.model.terminals.type("\r", into: id)
-            }
-        } else {
-            model.terminals.type(text + "\r", into: id)
-        }
+        model.terminals.type(prompt.trimmingCharacters(in: .whitespacesAndNewlines) + "\r", into: id)
     }
 
     private enum WaitResult: Equatable { case idle, failed(String), exited, timedOut, cancelled }

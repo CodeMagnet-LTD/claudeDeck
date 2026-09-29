@@ -767,7 +767,7 @@ private struct DiffPanel: View {
         .background(Color.purple.opacity(0.07))
     }
 
-    /// "Ask Claude about this line…": types `@path:LINE comment` into the selected Claude session.
+    /// "Ask Claude about this line…": types `@path#LLINE comment` into the selected Claude session.
     private func askAction(_ line: DiffLine) -> (() -> Void)? {
         guard let number = line.displayLine, let repo = changes.repo,
               let id = model.selectedSessionID, let session = model.deck.session(id),
@@ -779,7 +779,7 @@ private struct DiffPanel: View {
                 placeholder: String(localized: "Your question or comment"),
                 allowEmpty: true) else { return }
             let root = URL(fileURLWithPath: session.workingDirectory ?? model.deck.project(session.projectID)?.path ?? repo.path)
-            let mention = "@" + FileListing.relativePath(of: file.resolvingSymlinksInPath(), in: root.resolvingSymlinksInPath()) + ":\(number)"
+            let mention = "@" + FileListing.relativePath(of: file.resolvingSymlinksInPath(), in: root.resolvingSymlinksInPath()) + "#L\(number)"
             model.terminals.type(comment.isEmpty ? mention + " " : mention + " " + comment, into: id)
             model.selectedSessionID = id
         }
