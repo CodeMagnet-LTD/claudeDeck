@@ -382,16 +382,8 @@ struct ChangesView: View {
         }
     }
 
-    /// Same choice as the Files tab (`FileBrowserPanel.focusedProject`).
-    private var focusedDirectory: String? {
-        let selected = model.selectedSessionID.flatMap { model.deck.session($0) }
-        if let browsed = model.browsedProjectID, let p = model.deck.project(browsed), selected?.projectID != browsed {
-            return p.path
-        }
-        guard let project = selected.flatMap({ model.deck.project($0.projectID) }) else { return model.deck.projects.first?.path }
-        if let wd = selected?.workingDirectory, FileManager.default.fileExists(atPath: wd) { return wd }
-        return project.path
-    }
+    /// Same choice as the Files tab.
+    private var focusedDirectory: String? { model.explorerProject?.path }
 }
 
 private struct ChangesContent: View {
