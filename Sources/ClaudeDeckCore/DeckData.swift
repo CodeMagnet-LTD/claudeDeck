@@ -142,6 +142,8 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     public var hideDockWhenClosed = false
     /// Sync projects and groups through iCloud Drive (see DeckSync).
     public var iCloudSync = false
+    /// Give Claude sessions the Pencil (Pen.app) MCP server. Only takes effect when Pen.app is installed.
+    public var pencilMCP = true
 
     public init() {}
 
@@ -162,6 +164,7 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         confirmQuit = try c.decodeIfPresent(Bool.self, forKey: .confirmQuit) ?? d.confirmQuit
         hideDockWhenClosed = try c.decodeIfPresent(Bool.self, forKey: .hideDockWhenClosed) ?? d.hideDockWhenClosed
         iCloudSync = try c.decodeIfPresent(Bool.self, forKey: .iCloudSync) ?? d.iCloudSync
+        pencilMCP = try c.decodeIfPresent(Bool.self, forKey: .pencilMCP) ?? d.pencilMCP
     }
 }
 

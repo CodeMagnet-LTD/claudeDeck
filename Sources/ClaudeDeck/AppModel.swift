@@ -72,6 +72,8 @@ final class AppModel {
     @ObservationIgnored private var pendingContinue: Set<UUID> = []
     /// Hook files older than the terminal's launch belong to a previous process.
     @ObservationIgnored private var launchedAt: [UUID: Date] = [:]
+    /// Claude sessions launched with the Pencil (Pen.app) MCP server (PaneHeader badge).
+    private(set) var pencilSessions: Set<UUID> = []
     /// Set by the UI layer (notifications, dock, bounce).
     @ObservationIgnored var onAttention: ((AttentionEvent) -> Void)?
     @ObservationIgnored var onCountsChanged: (() -> Void)?
@@ -365,7 +367,10 @@ final class AppModel {
         answeredAt[id] = nil
         hookStatuses[id] = nil
         launchedAt[id] = Date()
-        terminals.start(id: id, cwd: worktreeDir ?? project.path, claudePath: claudePath, args: args)
+        // Pencil MCP first: `--mcp-config` is variadic and the following `--name` ends it.
+        let pencil = PencilApp.launchArgs(enabled: deck.settings.pencilMCP)
+        if pencil.isEmpty { pencilSessions.remove(id) } else { pencilSessions.insert(id) }
+        terminals.start(id: id, cwd: worktreeDir ?? project.path, claudePath: claudePath, args: pencil + args)
         deck.updateSession(id) { $0.isOpen = true }
         lastNotified[id] = nil
         scheduleSave()

@@ -211,6 +211,7 @@ struct PaneHeader: View {
             Text(session.name).font(.callout.weight(focused ? .semibold : .regular)).lineLimit(1)
             StatusPill(display: status.display, unseen: model.isUnseenIdle(session.id))
                     ShellStartBadge(session: session)
+            if model.pencilSessions.contains(session.id) { PencilBadge() }
             if let detail = status.detail {
                 Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(1)
             }

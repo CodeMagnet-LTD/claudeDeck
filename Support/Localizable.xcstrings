@@ -460,6 +460,16 @@
         }
       }
     },
+    "Connect Claude sessions to Pencil (Pen.app)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude oturumlarını Pencil'a (Pen.app) bağla"
+          }
+        }
+      }
+    },
     "Continue where you left off.": {
       "localizations": {
         "tr": {
@@ -870,6 +880,16 @@
         }
       }
     },
+    "New and resumed Claude sessions get Pencil's MCP server (as “pencil-desktop”, via --mcp-config), connected to the Pencil desktop app instead of the VS Code extension. Your global Claude configuration is not changed. Already running sessions need a restart.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni ve devam ettirilen Claude oturumları Pencil'ın MCP sunucusunu (“pencil-desktop” adıyla, --mcp-config ile) alır; VS Code eklentisi yerine Pencil masaüstü uygulamasına bağlanır. Genel Claude yapılandırmanız değişmez. Çalışan oturumların yeniden başlatılması gerekir."
+          }
+        }
+      }
+    },
     "New Claude Session": {
       "localizations": {
         "tr": {
@@ -1100,6 +1120,16 @@
         }
       }
     },
+    "Open in Pencil": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pencil'da Aç"
+          }
+        }
+      }
+    },
     "Open Project in VS Code": {
       "localizations": {
         "tr": {
@@ -1166,6 +1196,56 @@
           "stringUnit": {
             "state": "translated",
             "value": "Turuncu"
+          }
+        }
+      }
+    },
+    "Pen.app found, but not its MCP server": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pen.app bulundu, ancak MCP sunucusu bulunamadı"
+          }
+        }
+      }
+    },
+    "Pen.app not installed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pen.app yüklü değil"
+          }
+        }
+      }
+    },
+    "Pen.app not running · MCP server found": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pen.app çalışmıyor · MCP sunucusu bulundu"
+          }
+        }
+      }
+    },
+    "Pen.app running · MCP server found": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pen.app çalışıyor · MCP sunucusu bulundu"
+          }
+        }
+      }
+    },
+    "Pencil": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pencil"
           }
         }
       }
@@ -1769,6 +1849,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tema"
+          }
+        }
+      }
+    },
+    "This session can use the Pencil (Pen.app) MCP tools": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu oturum Pencil (Pen.app) MCP araçlarını kullanabilir"
           }
         }
       }
