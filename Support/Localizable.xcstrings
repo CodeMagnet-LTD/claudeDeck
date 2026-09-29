@@ -47,6 +47,16 @@
     "%lld": {
       "shouldTranslate": false
     },
+    "%lld of %lld sessions are working; restarting interrupts their current turn.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld oturumdan %1$lld tanesi çalışıyor; yeniden başlatmak mevcut turlarını yarıda keser."
+          }
+        }
+      }
+    },
     "%lldd": {
       "localizations": {
         "tr": {
@@ -297,6 +307,16 @@
         }
       }
     },
+    "Can't restart \"%@\"": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" yeniden başlatılamıyor"
+          }
+        }
+      }
+    },
     "Cancel": {
       "localizations": {
         "tr": {
@@ -337,6 +357,16 @@
         }
       }
     },
+    "Claude is working; restarting interrupts the current turn.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude çalışıyor; yeniden başlatmak mevcut turu yarıda keser."
+          }
+        }
+      }
+    },
     "Claude session ended": {
       "localizations": {
         "tr": {
@@ -356,6 +386,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ClaudeDeck, ~/.claude/settings.json dosyasına yalnızca kendi durum hook'unu ekler; diğer hook'lara dokunmaz ve her değişiklikten önce yedek alır. Hook yalnızca ClaudeDeck terminallerinde çalışır."
+          }
+        }
+      }
+    },
+    "ClaudeDeck doesn't know this session's conversation yet, so it will be restarted with --continue: the most recent conversation in its folder, which may belong to another session.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClaudeDeck bu oturumun konuşmasını henüz bilmiyor, bu yüzden --continue ile yeniden başlatılacak: klasördeki en son konuşma, başka bir oturuma ait olabilir."
           }
         }
       }
@@ -1410,6 +1450,86 @@
         }
       }
     },
+    "Restart": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden Başlat"
+          }
+        }
+      }
+    },
+    "Restart \"%@\" with the most recent conversation?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" en son konuşmayla yeniden başlatılsın mı?"
+          }
+        }
+      }
+    },
+    "Restart \"%@\"?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "\"%@\" yeniden başlatılsın mı?"
+          }
+        }
+      }
+    },
+    "Restart All": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümünü Yeniden Başlat"
+          }
+        }
+      }
+    },
+    "Restart All Claude Sessions": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm Claude Oturumlarını Yeniden Başlat"
+          }
+        }
+      }
+    },
+    "Restart Session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturumu Yeniden Başlat"
+          }
+        }
+      }
+    },
+    "Restart Terminal": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminali Yeniden Başlat"
+          }
+        }
+      }
+    },
+    "Restart all Claude sessions?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm Claude oturumları yeniden başlatılsın mı?"
+          }
+        }
+      }
+    },
     "Resume": {
       "localizations": {
         "tr": {
@@ -1590,6 +1710,16 @@
         }
       }
     },
+    "Skip Busy Sessions": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Meşgul Oturumları Atla"
+          }
+        }
+      }
+    },
     "Start Automatically When the App Opens": {
       "localizations": {
         "tr": {
@@ -1759,6 +1889,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Çalışan süreç durdurulur. Claude konuşma geçmişi silinmez; projenin \"Eski Oturumu Devam Ettir…\" menüsünden yeniden açılabilir."
+          }
+        }
+      }
+    },
+    "The session's worktree folder no longer exists.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturumun worktree klasörü artık yok."
           }
         }
       }

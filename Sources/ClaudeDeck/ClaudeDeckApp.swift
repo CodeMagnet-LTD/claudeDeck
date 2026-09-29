@@ -23,6 +23,10 @@ struct ClaudeDeckApp: App {
                 Button("New Terminal") { delegate.model.newShellInSelectedProject() }
                     .keyboardShortcut("t", modifiers: [.command, .option])
             }
+            CommandGroup(after: .newItem) {
+                Divider()
+                RestartCommands(model: delegate.model)
+            }
             // No help book: frees ⌘? (on Turkish keyboards the "+" key area produces it) for zoom.
             CommandGroup(replacing: .help) {}
             CommandGroup(after: .toolbar) {

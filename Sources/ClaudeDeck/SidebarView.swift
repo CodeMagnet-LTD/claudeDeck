@@ -332,6 +332,10 @@ struct SessionMenu: View {
         }
         Divider()
         if model.terminals.isRunning(session.id) {
+            Button(session.kind == .shell ? String(localized: "Restart Terminal") : String(localized: "Restart Session")) {
+                Task { await model.restartSession(session.id) }
+            }
+            .disabled(!model.canRestart(session.id))
             Button(session.kind == .shell ? String(localized: "Close Terminal") : String(localized: "End Session")) { model.stop(session.id) }
         } else if session.kind == .shell {
             Button("Reopen") { model.launch(session.id, resume: false); model.selectedSessionID = session.id }

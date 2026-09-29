@@ -168,7 +168,7 @@ struct PaneView: View {
                 } else {
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                if !running { ExitedBar(session: session) }
+                if !running && !model.restartingSessions.contains(sessionID) { ExitedBar(session: session) }
             }
             .overlay {
                 if split && focused {
