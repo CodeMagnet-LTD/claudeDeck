@@ -1,6 +1,6 @@
 # ClaudeDeck
 
-**English** · [Türkçe](README.tr.md)
+**English** · [Türkçe](README.tr.md) · [Website](https://codemagnet-ltd.github.io/claudeDeck/)
 
 **A native macOS app for running Claude Code sessions across many projects from one window.**
 

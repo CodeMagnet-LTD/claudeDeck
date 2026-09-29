@@ -1,6 +1,6 @@
 # ClaudeDeck
 
-[English](README.md) · **Türkçe**
+[English](README.md) · **Türkçe** · [Web sitesi](https://codemagnet-ltd.github.io/claudeDeck/tr/)
 
 **Birden fazla projede aynı anda çalışan Claude Code oturumlarını tek pencereden yöneten macOS uygulaması.**
 
