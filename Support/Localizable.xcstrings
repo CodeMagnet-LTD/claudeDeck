@@ -11,6 +11,26 @@
         }
       }
     },
+    "%@ (Staged)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (Hazırlanan)"
+          }
+        }
+      }
+    },
+    "%@ (Working Tree)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (Çalışma ağacı)"
+          }
+        }
+      }
+    },
     "%@ already exists.": {
       "localizations": {
         "tr": {
@@ -833,6 +853,16 @@
         }
       }
     },
+    "Close Other Tabs": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer sekmeleri kapat"
+          }
+        }
+      }
+    },
     "Close Pane": {
       "localizations": {
         "tr": {
@@ -849,6 +879,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bölmeyi kapat (oturum çalışmaya devam eder)"
+          }
+        }
+      }
+    },
+    "Close Tab": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sekmeyi kapat"
+          }
+        }
+      }
+    },
+    "Close Tab (⌘W)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sekmeyi kapat (⌘W)"
+          }
+        }
+      }
+    },
+    "Close Tabs to the Right": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sağdaki sekmeleri kapat"
           }
         }
       }
@@ -1803,6 +1863,16 @@
         }
       }
     },
+    "Keep Open": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık tut"
+          }
+        }
+      }
+    },
     "Keep Running in Background": {
       "localizations": {
         "tr": {
@@ -2483,6 +2553,16 @@
         }
       }
     },
+    "Open File": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyayı aç"
+          }
+        }
+      }
+    },
     "Open Project in VS Code": {
       "localizations": {
         "tr": {
@@ -2533,6 +2613,16 @@
         }
       }
     },
+    "Open files in separate windows instead of tabs": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyaları sekmeler yerine ayrı pencerelerde aç"
+          }
+        }
+      }
+    },
     "Open in Editor": {
       "localizations": {
         "tr": {
@@ -2549,6 +2639,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pencil'da Aç"
+          }
+        }
+      }
+    },
+    "Open in Separate Window": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayrı pencerede aç"
           }
         }
       }
@@ -3453,6 +3553,56 @@
         }
       }
     },
+    "Show Next Tab": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonraki sekmeyi göster"
+          }
+        }
+      }
+    },
+    "Show Previous Tab": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önceki sekmeyi göster"
+          }
+        }
+      }
+    },
+    "Show Sessions": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturumları göster"
+          }
+        }
+      }
+    },
+    "Show Staged Changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hazırlanan değişiklikleri göster"
+          }
+        }
+      }
+    },
+    "Show Working Tree Changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalışma ağacı değişikliklerini göster"
+          }
+        }
+      }
+    },
     "Show notifications (permission / question / done)": {
       "localizations": {
         "tr": {
@@ -3796,6 +3946,16 @@
         }
       }
     },
+    "Terminal sessions (⌘1)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminal oturumları (⌘1)"
+          }
+        }
+      }
+    },
     "Test health": {
       "localizations": {
         "tr": {
@@ -4102,6 +4262,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sabitlemeyi Kaldır"
+          }
+        }
+      }
+    },
+    "Unsaved changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydedilmemiş değişiklikler"
           }
         }
       }

@@ -83,6 +83,8 @@ final class AppModel {
     @ObservationIgnored var openMainWindow: (() -> Void)?
     /// Opens a file in the built-in editor window (set alongside `openMainWindow`).
     @ObservationIgnored var openEditorWindow: ((URL) -> Void)?
+    /// The main window's tabs (WorkspaceTabs.swift).
+    let tabs = WorkspaceTabs()
     // MARK: iCloud sync (DeckSyncController) — begin
     @ObservationIgnored let sync = DeckSyncController()
     // MARK: iCloud sync — end
@@ -443,6 +445,7 @@ final class AppModel {
         get { deck.selectedSessionID }
         set {
             sidebarSelection = newValue
+            if newValue != nil { tabs.selectSessions() } // a session was picked: show it
             guard deck.selectedSessionID != newValue || (newValue.map { !deck.panes.contains($0) } ?? false) else { return }
             deck.select(newValue)
             if let newValue {

@@ -23,13 +23,14 @@ struct ClaudeDeckApp: App {
                 Button("New Terminal") { delegate.model.newShellInSelectedProject() }
                     .keyboardShortcut("t", modifiers: [.command, .option])
                 Divider()
-                OpenAutomationsButton() // Automations window
+                OpenAutomationsButton(model: delegate.model) // Automations tab
             }
             CommandGroup(after: .newItem) {
                 Divider()
                 RestartCommands(model: delegate.model)
             }
             ExplorerCommands(model: delegate.model)
+            TabCommands(model: delegate.model)
             // No help book: frees ⌘? (on Turkish keyboards the "+" key area produces it) for zoom.
             CommandGroup(replacing: .help) {}
             CommandGroup(after: .toolbar) {
@@ -49,14 +50,6 @@ struct ClaudeDeckApp: App {
                 Divider()
             }
         }
-
-        Window("Automations", id: "automations") {
-            AutomationsView()
-                .environment(delegate.model)
-                .preferredColorScheme(delegate.model.deck.settings.theme.colorScheme)
-                .frame(minWidth: 720, minHeight: 460)
-        }
-        .defaultSize(width: 940, height: 640)
 
         // Built-in editor: one window per file (tabbed together); reopening a file focuses its window.
         WindowGroup("Editor", id: "editor", for: URL.self) { $url in
@@ -137,7 +130,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             let handled = MainActor.assumeIsolated { () -> Bool in
                 guard let self, let step else { return false }
-                if EditorRegistry.isEditorWindow(NSApp.keyWindow) { EditorRegistry.zoom(by: step, model: self.model); return true }
+                let editorTab = NSApp.keyWindow != nil && NSApp.keyWindow === self.model.tabs.mainWindow && self.model.tabs.selected.fileURL != nil
+                if editorTab || EditorRegistry.isEditorWindow(NSApp.keyWindow) { EditorRegistry.zoom(by: step, model: self.model); return true }
                 self.model.zoomTerminals(by: step)
                 return true
             }

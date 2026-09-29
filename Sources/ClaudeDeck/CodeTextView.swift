@@ -356,6 +356,8 @@ struct CodeEditorView: NSViewRepresentable {
     let document: EditorDocument
     var fontSize: Double
     var wrapLines: Bool
+    /// Background tabs stay alive (the text lives in the view) but are hidden and never take focus.
+    var isActive = true
 
     func makeCoordinator() -> Coordinator { Coordinator(document: document) }
 
@@ -392,7 +394,8 @@ struct CodeEditorView: NSViewRepresentable {
         document.attach(textView, colorizer: colorizer)
         ruler.updateThickness()
         colorizer.scheduleRecolor()
-        DispatchQueue.main.async { textView.window?.makeFirstResponder(textView) }
+        scroll.isHidden = !isActive
+        if isActive { DispatchQueue.main.async { textView.window?.makeFirstResponder(textView) } }
         return scroll
     }
 
@@ -406,6 +409,10 @@ struct CodeEditorView: NSViewRepresentable {
         }
         if context.coordinator.wrap != wrapLines { applyWrap(wrapLines, to: textView, in: scroll) }
         context.coordinator.wrap = wrapLines
+        if scroll.isHidden == isActive {
+            scroll.isHidden = !isActive
+            if isActive { DispatchQueue.main.async { textView.window?.makeFirstResponder(textView) } }
+        }
     }
 
     private func applyWrap(_ wrap: Bool, to textView: NSTextView, in scroll: NSScrollView) {

@@ -578,7 +578,7 @@ struct FileMenu: View {
         if let url = urls.first {
             let isDir = (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
             if !isDir {
-                Button("Open in Editor") { urls.forEach { EditorOpener.open($0, openWindow: openWindow) } }
+                Button("Open in Editor") { urls.forEach { EditorOpener.open($0, openWindow: openWindow, model: model) } }
             }
             if VSCode.isInstalled {
                 Button("Open in VS Code") { urls.forEach(VSCode.open) }

@@ -2,26 +2,38 @@ import AppKit
 import ClaudeDeckCore
 import SwiftUI
 
-/// The Automations window: saved prompts that start Claude sessions on a schedule or on demand.
+/// The Automations tab: saved prompts that start Claude sessions on a schedule or on demand.
+/// A plain list + divider (a NavigationSplitView can't nest inside the main window's).
 struct AutomationsView: View {
     @Environment(AppModel.self) private var model
     @State private var selection: UUID?
 
     var body: some View {
-        NavigationSplitView {
-            AutomationList(selection: $selection)
-                .navigationSplitViewColumnWidth(min: 230, ideal: 260, max: 340)
-        } detail: {
-            if let id = selection, model.deck.automation(id) != nil {
-                AutomationEditor(automationID: id)
-                    .id(id)
-            } else {
-                AutomationEmptyState(selection: $selection)
-            }
-        }
-        .toolbar {
-            ToolbarItem {
+        VStack(spacing: 0) {
+            HStack(spacing: 8) {
+                Label("Automations", systemImage: "clock.arrow.circlepath").font(.headline)
+                Spacer()
                 AddAutomationMenu(selection: $selection)
+                    .menuStyle(.borderlessButton)
+                    .fixedSize()
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .background(.bar)
+            Divider()
+            HStack(spacing: 0) {
+                AutomationList(selection: $selection)
+                    .frame(width: 260)
+                Divider()
+                Group {
+                    if let id = selection, model.deck.automation(id) != nil {
+                        AutomationEditor(automationID: id)
+                            .id(id)
+                    } else {
+                        AutomationEmptyState(selection: $selection)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .onAppear {
@@ -545,14 +557,11 @@ extension AutomationRunStatus {
     }
 }
 
-/// Menu item that opens the Automations window (commands can't read `openWindow` directly).
+/// Menu item that opens (or selects) the Automations tab.
 struct OpenAutomationsButton: View {
-    @Environment(\.openWindow) private var openWindow
+    let model: AppModel
 
     var body: some View {
-        Button("Automations…") {
-            openWindow(id: "automations")
-            NSApp.activate()
-        }
+        Button("Automations…") { model.showAutomations() }
     }
 }

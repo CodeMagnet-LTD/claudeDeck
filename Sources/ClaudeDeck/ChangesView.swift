@@ -60,9 +60,8 @@ final class ChangesModel {
     private(set) var repo: URL?
     private(set) var loaded = false
     private(set) var status = GitRepoStatus()
-    var selection: String? { didSet { if selection != oldValue { loadDiff() } } }
-    private(set) var diffFiles: [DiffFile] = []
-    @ObservationIgnored private var diffText = ""
+    /// The highlighted row; clicking a row opens its diff in a tab (DiffTab.swift).
+    var selection: String?
     var message = ""
     var amend = false { didSet { if amend && !oldValue { prefillAmend() } } }
     private(set) var busy = false
@@ -70,11 +69,12 @@ final class ChangesModel {
     private(set) var generating = false
 
     @ObservationIgnored private var refreshTask: Task<Void, Never>?
-    @ObservationIgnored private var diffTask: Task<Void, Never>?
     @ObservationIgnored private var generateTask: Task<Void, Never>?
     @ObservationIgnored private var generator: OneShotProcess?
     @ObservationIgnored private var watchers: [DirectoryWatcher] = []
-    @ObservationIgnored private var active = false
+    /// The inspector's Changes view and diff tabs each activate the model while shown.
+    @ObservationIgnored private var activations = 0
+    private var active: Bool { activations > 0 }
     @ObservationIgnored private var refreshing = false
     @ObservationIgnored private var pendingRefresh = false
 
@@ -90,12 +90,13 @@ final class ChangesModel {
     // MARK: Refresh
 
     func activate() {
-        active = true
+        activations += 1
         refresh(after: .zero)
     }
 
     func deactivate() {
-        active = false
+        activations = max(0, activations - 1)
+        guard !active else { return }
         watchers.forEach { $0.stop() }
         watchers = []
     }
@@ -138,8 +139,6 @@ final class ChangesModel {
         if let selection, selectedChange == nil {
             let path = selection.split(separator: ":", maxSplits: 1).last.map(String.init)
             self.selection = (new.staged + new.unstaged).first { $0.path == path }?.id
-        } else {
-            loadDiff()
         }
     }
 
@@ -154,21 +153,6 @@ final class ChangesModel {
                 watcher.start()
                 return watcher
             }
-        }
-    }
-
-    private func loadDiff() {
-        diffTask?.cancel()
-        guard let repo, let change = selectedChange else {
-            diffText = ""
-            diffFiles = []
-            return
-        }
-        diffTask = Task { [weak self] in
-            let text = await Task.detached { Git.changeDiff(change, in: repo) }.value
-            guard !Task.isCancelled, let self, text != self.diffText else { return }
-            self.diffText = text
-            self.diffFiles = UnifiedDiff.parse(text)
         }
     }
 
@@ -194,7 +178,7 @@ final class ChangesModel {
     func stageAll() { perform { Git.stageAll(in: $0) } }
     func unstageAll() { perform { Git.unstageAll(in: $0) } }
 
-    /// Stages (or, for a staged file, unstages) one hunk of the selected diff.
+    /// Stages (or, for a staged file, unstages) one hunk of a diff.
     func toggleHunk(_ index: Int, of file: DiffFile, change: GitChange) {
         let patch = UnifiedDiff.patch(file, hunks: [index])
         let reverse = change.area == .staged
@@ -389,7 +373,6 @@ struct ChangesView: View {
 private struct ChangesContent: View {
     @Environment(AppModel.self) private var model
     @Bindable var changes: ChangesModel
-    @State private var diffHeight: CGFloat = 300
 
     var body: some View {
         VStack(spacing: 0) {
@@ -407,11 +390,6 @@ private struct ChangesContent: View {
                 Divider()
                 ChangeList(changes: changes)
                     .frame(maxHeight: .infinity)
-                if let change = changes.selectedChange {
-                    HorizontalDivider { delta in diffHeight = min(max(120, diffHeight - delta), 900) }
-                    DiffPanel(changes: changes, change: change)
-                        .frame(height: diffHeight)
-                }
             }
         }
         .onAppear { changes.activate() }
@@ -547,11 +525,12 @@ private struct ErrorBanner: View {
 }
 
 private struct ChangeList: View {
+    @Environment(AppModel.self) private var model
     @Bindable var changes: ChangesModel
 
     var body: some View {
         let status = changes.status
-        List(selection: $changes.selection) {
+        List(selection: Binding(get: { changes.selection }, set: select)) {
             if !status.staged.isEmpty {
                 Section {
                     ForEach(status.staged) { ChangeRow(changes: changes, change: $0).tag($0.id) }
@@ -588,6 +567,14 @@ private struct ChangeList: View {
             }
         }
         .listStyle(.sidebar)
+    }
+
+    /// A click opens (or re-targets) the preview diff tab; programmatic selection changes don't.
+    private func select(_ id: String?) {
+        changes.selection = id
+        guard let change = changes.selectedChange else { return }
+        model.tabs.open(.diff(repo: changes.root.path, path: change.path, staged: change.isStaged), preview: true)
+        model.showMainWindow()
     }
 }
 
@@ -695,11 +682,13 @@ private struct ChangeRow: View {
     }
 }
 
-/// Embedded unified diff of the selected change with per-hunk stage/unstage.
-private struct DiffPanel: View {
+/// Unified diff of one change with per-hunk stage/unstage (the diff tab's content).
+struct DiffPanel: View {
     @Environment(AppModel.self) private var model
     let changes: ChangesModel
     let change: GitChange
+    let diffFiles: [DiffFile]
+    @State private var viewportWidth: CGFloat = 0
 
     var body: some View {
         VStack(spacing: 0) {
@@ -710,17 +699,25 @@ private struct DiffPanel: View {
                 Text(change.path).font(.caption).lineLimit(1).truncationMode(.head)
                 Text(change.isStaged ? LocalizedStringKey("Staged") : LocalizedStringKey("Working Tree")).font(.caption).foregroundStyle(.secondary)
                 Spacer()
-                Button { changes.selection = nil } label: { Image(systemName: "xmark") }
-                    .buttonStyle(.borderless)
-                    .help("Close Diff")
+                if changes.busy { ProgressView().controlSize(.small) }
+                if let repo = changes.repo, change.state != .deleted {
+                    Button("Open File") { EditorOpener.openDefault(repo.appending(path: change.path), model: model) }
+                }
+                if change.isStaged {
+                    Button("Unstage") { changes.unstage([change]) }.disabled(changes.busy)
+                } else {
+                    Button(change.area == .conflicted ? LocalizedStringKey("Mark as Resolved") : LocalizedStringKey("Stage")) { changes.stage([change]) }
+                        .disabled(changes.busy)
+                }
             }
+            .controlSize(.small)
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(.bar)
             Divider()
             ScrollView([.vertical, .horizontal]) {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    ForEach(Array(changes.diffFiles.enumerated()), id: \.offset) { _, file in
+                    ForEach(Array(diffFiles.enumerated()), id: \.offset) { _, file in
                         if file.isBinary {
                             Text("Binary file").foregroundStyle(.secondary).padding(8)
                         }
@@ -731,18 +728,21 @@ private struct DiffPanel: View {
                             }
                         }
                     }
-                    if changes.diffFiles.isEmpty {
+                    if diffFiles.isEmpty {
                         Text("No textual changes").foregroundStyle(.secondary).font(.callout).padding(8)
                     }
                 }
                 .padding(.bottom, 6)
+                // Line backgrounds span the whole tab even when every line is short.
+                .frame(minWidth: viewportWidth, alignment: .leading)
             }
+            .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { viewportWidth = $0 }
             .background(Color(nsColor: .textBackgroundColor))
         }
     }
 
     private var gutterWidth: CGFloat {
-        let maxLine = changes.diffFiles.flatMap(\.hunks).map { max($0.oldStart + $0.oldCount, $0.newStart + $0.newCount) }.max() ?? 1
+        let maxLine = diffFiles.flatMap(\.hunks).map { max($0.oldStart + $0.oldCount, $0.newStart + $0.newCount) }.max() ?? 1
         return CGFloat(max(2, String(maxLine).count)) * 7 + 6
     }
 
@@ -786,7 +786,7 @@ private struct DiffPanel: View {
     }
 }
 
-private struct DiffLineRow: View {
+struct DiffLineRow: View {
     let line: DiffLine
     let width: CGFloat
     let onAsk: (() -> Void)?
@@ -842,28 +842,5 @@ private struct DiffLineRow: View {
         case .removed: .red.opacity(0.12)
         default: .clear
         }
-    }
-}
-
-/// Drag handle between the change list and the diff (vertical resizing).
-private struct HorizontalDivider: View {
-    let onDrag: (CGFloat) -> Void
-    @State private var last: CGFloat = 0
-
-    var body: some View {
-        Rectangle()
-            .fill(Color(nsColor: .separatorColor))
-            .frame(height: 1)
-            .frame(height: 6)
-            .contentShape(Rectangle())
-            .onHover { inside in if inside { NSCursor.resizeUpDown.push() } else { NSCursor.pop() } }
-            .gesture(
-                DragGesture(minimumDistance: 1, coordinateSpace: .global)
-                    .onChanged { value in
-                        onDrag(value.translation.height - last)
-                        last = value.translation.height
-                    }
-                    .onEnded { _ in last = 0 }
-            )
     }
 }

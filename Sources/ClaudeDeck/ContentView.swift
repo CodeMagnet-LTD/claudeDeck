@@ -12,7 +12,7 @@ struct ContentView: View {
             SidebarView()
                 .navigationSplitViewColumnWidth(min: 240, ideal: 290, max: 420)
         } detail: {
-            DetailView()
+            WorkspaceView()
                 .inspector(isPresented: $showFiles) {
                     InspectorPanel(tab: $inspectorTab)
                         .inspectorColumnWidth(min: 220, ideal: 290, max: 520)
@@ -66,6 +66,7 @@ extension ContentView {
     }
 }
 
+/// The Sessions tab (window title set by `WorkspaceView`).
 struct DetailView: View {
     @Environment(AppModel.self) private var model
 
@@ -74,12 +75,9 @@ struct DetailView: View {
         if panes.isEmpty {
             EmptyStateView()
         } else {
-            let focused = model.selectedSessionID.flatMap { model.deck.session($0) }
             // Own split layout instead of HSplitView: NSSplitView's min-size updates entered an
             // endless constraint-update loop with the terminal views (crash on click).
             PaneSplit(panes: panes)
-            .navigationTitle(focused?.name ?? "ClaudeDeck")
-            .navigationSubtitle(focused.flatMap { model.deck.project($0.projectID)?.path } ?? "")
         }
     }
 }
@@ -167,10 +165,12 @@ struct PaneView: View {
         if let session = model.deck.session(sessionID) {
             let running = model.terminals.isRunning(sessionID)
             let focused = model.selectedSessionID == sessionID
+            let onScreen = model.tabs.isSessionsSelected
             VStack(spacing: 0) {
                 if split { PaneHeader(session: session, focused: focused) }
                 if model.terminals.view(for: sessionID) != nil {
-                    TerminalHost(sessionID: sessionID, registry: model.terminals, generation: running, isFocused: focused)
+                    TerminalHost(sessionID: sessionID, registry: model.terminals, generation: running,
+                                 isFocused: focused && onScreen, isHidden: !onScreen)
                         .id(sessionID)
                         .background(Color(nsColor: DeckTerminalView.background))
                 } else {

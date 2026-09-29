@@ -10,6 +10,8 @@ struct TerminalHost: NSViewRepresentable {
     let generation: Bool
     /// Only the focused pane takes keyboard focus.
     var isFocused = true
+    /// Another main-window tab is in front: hidden, so AppKit neither hit-tests nor focuses it.
+    var isHidden = false
 
     func makeNSView(context: Context) -> NSView {
         let container = NSView()
@@ -28,7 +30,8 @@ struct TerminalHost: NSViewRepresentable {
             terminal.autoresizingMask = [.width, .height]
             container.addSubview(terminal)
         }
-        guard isFocused else { return }
+        if container.isHidden != isHidden { container.isHidden = isHidden }
+        guard isFocused, !isHidden else { return }
         DispatchQueue.main.async {
             if terminal.window != nil, terminal.window?.firstResponder !== terminal {
                 terminal.window?.makeFirstResponder(terminal)

@@ -58,6 +58,7 @@ struct SettingsView: View {
                     Text("Font size: \(Int(model.deck.settings.editorFontSize)) pt")
                 }
                 Toggle("Wrap Lines", isOn: setting(\.editorWrapLines))
+                Toggle("Open files in separate windows instead of tabs", isOn: setting(\.openFilesInSeparateWindow))
             }
             Section("Alerts") {
                 Toggle("Show notifications (permission / question / done)", isOn: setting(\.notifications))

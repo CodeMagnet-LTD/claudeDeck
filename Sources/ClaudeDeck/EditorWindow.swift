@@ -254,8 +254,11 @@ enum EditorRegistry {
     static func isEditorWindow(_ window: NSWindow?) -> Bool { window?.tabbingIdentifier == tabbingIdentifier }
 
     /// Before quitting: asks about unsaved files. False = cancel the quit.
-    static func confirmQuit() -> Bool {
-        let dirty = dirtyDocuments
+    static func confirmQuit() -> Bool { confirmSaving(dirtyDocuments) }
+
+    /// Save All / Don't Save / Cancel for these documents. False = cancel.
+    static func confirmSaving(_ documents: [EditorDocument]) -> Bool {
+        let dirty = documents.filter(\.isDirty)
         guard !dirty.isEmpty else { return true }
         let alert = NSAlert()
         alert.alertStyle = .warning
@@ -285,20 +288,36 @@ enum EditorRegistry {
 }
 
 /// Opening files: the built-in editor for text files when enabled, otherwise the old behaviour.
+/// The editor is a tab in the main window unless "open files in separate windows" is set.
 @MainActor
 enum EditorOpener {
-    static func open(_ url: URL, openWindow: OpenWindowAction) {
+    /// "Open in Editor" (Files panel menu): a permanent tab, or the file's own window.
+    static func open(_ url: URL, openWindow: OpenWindowAction, model: AppModel) {
+        if model.deck.settings.openFilesInSeparateWindow {
+            openInWindow(url, openWindow: openWindow)
+        } else {
+            model.showFileTab(url, preview: false)
+        }
+    }
+
+    /// Always a separate editor window ("Open in Separate Window").
+    static func openInWindow(_ url: URL, openWindow: OpenWindowAction) {
         openWindow(id: "editor", value: url.standardizedFileURL)
     }
 
-    /// Double-click in the Files panel.
+    /// Double-click in the Files panel: a permanent tab.
     static func openDefault(_ url: URL, model: AppModel, openWindow: OpenWindowAction) {
-        if opensInEditor(url, model: model) { open(url, openWindow: openWindow) } else { FileActions.openDefault(url) }
+        if opensInEditor(url, model: model) { open(url, openWindow: openWindow, model: model) } else { FileActions.openDefault(url) }
     }
 
-    /// For callers without `openWindow` (Quick Open, Find in Files, Changes): same rule.
+    /// For callers without `openWindow` (Quick Open, Find in Files, Changes): a preview tab.
     static func openDefault(_ url: URL, model: AppModel) {
-        if opensInEditor(url, model: model), let openEditor = model.openEditorWindow { openEditor(url) } else { FileActions.openDefault(url) }
+        guard opensInEditor(url, model: model) else { FileActions.openDefault(url); return }
+        if model.deck.settings.openFilesInSeparateWindow {
+            if let openEditor = model.openEditorWindow { openEditor(url) } else { FileActions.openDefault(url) }
+        } else {
+            model.showFileTab(url, preview: true)
+        }
     }
 
     /// .pen files belong to Pen.app even though they may look like text.
@@ -348,8 +367,27 @@ struct EditorWindowView: View {
 }
 
 private struct EditorContent: View {
-    @Environment(AppModel.self) private var model
     @State var document: EditorDocument
+
+    var body: some View {
+        EditorBody(document: document)
+            .frame(minWidth: 480, minHeight: 320)
+            .navigationTitle(document.url.lastPathComponent)
+            .navigationSubtitle((document.url.deletingLastPathComponent().path as NSString).abbreviatingWithTildeInPath)
+            .toolbar {
+                ToolbarItemGroup(placement: .primaryAction) { EditorActionButtons(document: document) }
+            }
+            .focusedSceneValue(\.editorDocument, document)
+            .background(EditorWindowConfigurator(document: document))
+    }
+}
+
+/// The window-agnostic editor: changed-on-disk bar, text, status bar (editor windows and main-window tabs).
+struct EditorBody: View {
+    @Environment(AppModel.self) private var model
+    let document: EditorDocument
+    /// False while the tab is in the background: the text view neither shows nor takes focus.
+    var isActive = true
 
     var body: some View {
         VStack(spacing: 0) {
@@ -358,74 +396,15 @@ private struct EditorContent: View {
                 ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
             case .loaded:
                 if let change = document.diskChange { diskBar(change) }
-                CodeEditorView(document: document, fontSize: model.deck.settings.editorFontSize, wrapLines: model.deck.settings.editorWrapLines)
+                CodeEditorView(document: document, fontSize: model.deck.settings.editorFontSize,
+                               wrapLines: model.deck.settings.editorWrapLines, isActive: isActive)
                 Divider()
                 statusBar
             case .failed(let error):
                 unavailable(error)
             }
         }
-        .frame(minWidth: 480, minHeight: 320)
-        .navigationTitle(document.url.lastPathComponent)
-        .navigationSubtitle((document.url.deletingLastPathComponent().path as NSString).abbreviatingWithTildeInPath)
-        .toolbar { toolbar }
-        .focusedSceneValue(\.editorDocument, document)
-        .background(EditorWindowConfigurator(document: document))
         .task { if document.state == .loading { await document.load() } }
-    }
-
-    // MARK: Toolbar
-
-    @ToolbarContentBuilder
-    private var toolbar: some ToolbarContent {
-        ToolbarItemGroup(placement: .primaryAction) {
-            Toggle(isOn: Binding(
-                get: { model.deck.settings.editorWrapLines },
-                set: { on in model.mutate { $0.settings.editorWrapLines = on } }
-            )) {
-                Label("Wrap Lines", systemImage: "text.word.spacing")
-            }
-            .help("Wrap Lines")
-            Button {
-                addToClaude()
-            } label: {
-                Label("Add to Claude", systemImage: "at")
-            }
-            .help(claudeHelp)
-            .disabled(targetSession == nil || document.state != .loaded)
-            if VSCode.isInstalled {
-                Button {
-                    VSCode.open(document.url)
-                } label: {
-                    Label("Open in VS Code", systemImage: "chevron.left.forwardslash.chevron.right")
-                }
-                .help("Open in VS Code")
-            }
-            Button {
-                NSWorkspace.shared.activateFileViewerSelecting([document.url])
-            } label: {
-                Label("Reveal in Finder", systemImage: "folder")
-            }
-            .help("Reveal in Finder")
-        }
-    }
-
-    /// The selected session, if its terminal is running.
-    private var targetSession: DeckSession? {
-        guard let id = model.selectedSessionID, model.terminals.isRunning(id) else { return nil }
-        return model.deck.session(id)
-    }
-
-    private var claudeHelp: String {
-        guard let session = targetSession else { return String(localized: "Select a running session to add this file to it") }
-        return String(localized: "Insert @\(document.url.lastPathComponent) into “\(session.name)” (with line numbers when text is selected)")
-    }
-
-    private func addToClaude() {
-        guard let session = targetSession else { return }
-        let root = session.workingDirectory ?? model.deck.project(session.projectID)?.path
-        let mention = document.mention(relativeTo: root.map { URL(fileURLWithPath: $0) })
-        model.terminals.type(mention + " ", into: session.id)
     }
 
     // MARK: Bars
@@ -484,6 +463,62 @@ private struct EditorContent: View {
         }
         .padding(30)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+}
+
+/// Wrap Lines, Add to Claude, Open in VS Code, Reveal in Finder: the editor window's toolbar and a
+/// tab's header bar.
+struct EditorActionButtons: View {
+    @Environment(AppModel.self) private var model
+    let document: EditorDocument
+
+    var body: some View {
+        Toggle(isOn: Binding(
+            get: { model.deck.settings.editorWrapLines },
+            set: { on in model.mutate { $0.settings.editorWrapLines = on } }
+        )) {
+            Label("Wrap Lines", systemImage: "text.word.spacing")
+        }
+        .help("Wrap Lines")
+        Button {
+            addToClaude()
+        } label: {
+            Label("Add to Claude", systemImage: "at")
+        }
+        .help(claudeHelp)
+        .disabled(targetSession == nil || document.state != .loaded)
+        if VSCode.isInstalled {
+            Button {
+                VSCode.open(document.url)
+            } label: {
+                Label("Open in VS Code", systemImage: "chevron.left.forwardslash.chevron.right")
+            }
+            .help("Open in VS Code")
+        }
+        Button {
+            NSWorkspace.shared.activateFileViewerSelecting([document.url])
+        } label: {
+            Label("Reveal in Finder", systemImage: "folder")
+        }
+        .help("Reveal in Finder")
+    }
+
+    /// The selected session, if its terminal is running.
+    private var targetSession: DeckSession? {
+        guard let id = model.selectedSessionID, model.terminals.isRunning(id) else { return nil }
+        return model.deck.session(id)
+    }
+
+    private var claudeHelp: String {
+        guard let session = targetSession else { return String(localized: "Select a running session to add this file to it") }
+        return String(localized: "Insert @\(document.url.lastPathComponent) into “\(session.name)” (with line numbers when text is selected)")
+    }
+
+    private func addToClaude() {
+        guard let session = targetSession else { return }
+        let root = session.workingDirectory ?? model.deck.project(session.projectID)?.path
+        let mention = document.mention(relativeTo: root.map { URL(fileURLWithPath: $0) })
+        model.terminals.type(mention + " ", into: session.id)
     }
 }
 
