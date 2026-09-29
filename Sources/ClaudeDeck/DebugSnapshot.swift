@@ -47,6 +47,16 @@ enum DebugSnapshot {
             let stamp = model.pendingPermissionStamp(id)
             _ = approve ? model.approvePermission(id, expectedAt: stamp) : model.denyPermission(id, expectedAt: stamp)
         }
+        // `<name>.tab`: "diff\t<dir>\t<path>\t<staged 0|1>" opens that diff tab (as a Changes click would).
+        for file in files where file.hasSuffix(".tab") {
+            let path = (dir as NSString).appendingPathComponent(file)
+            defer { try? FileManager.default.removeItem(atPath: path) }
+            let parts = ((try? String(contentsOfFile: path, encoding: .utf8)) ?? "")
+                .trimmingCharacters(in: .newlines).components(separatedBy: "\t")
+            if parts.count == 4, parts[0] == "diff" {
+                model.tabs.open(.diff(repo: parts[1], path: parts[2], staged: parts[3] == "1"), preview: true)
+            }
+        }
         for file in files where file.hasSuffix(".in") {
             let path = (dir as NSString).appendingPathComponent(file)
             defer { try? FileManager.default.removeItem(atPath: path) }

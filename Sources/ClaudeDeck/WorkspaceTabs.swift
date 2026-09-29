@@ -140,6 +140,7 @@ final class WorkspaceTabs {
             let mods = event.modifierFlags.intersection([.command, .option, .control, .shift])
             guard mods == .command else { return event }
             let number = Self.digitKeyCodes.firstIndex(of: event.keyCode).map { $0 + 1 }
+                ?? event.charactersIgnoringModifiers.flatMap(Int.init).flatMap { (1...9).contains($0) ? $0 : nil }
             let isClose = event.charactersIgnoringModifiers?.lowercased() == "w"
             guard number != nil || isClose else { return event }
             let handled = MainActor.assumeIsolated { () -> Bool in

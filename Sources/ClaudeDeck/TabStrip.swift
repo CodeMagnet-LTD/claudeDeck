@@ -35,6 +35,8 @@ struct WorkspaceView: View {
             .opacity(selected ? 1 : 0)
             .allowsHitTesting(selected)
             .accessibilityHidden(!selected)
+            // Keeps hidden layers' keyboard shortcuts (e.g. Resume's Return) from firing.
+            .disabled(!selected)
             .zIndex(selected ? 1 : 0)
     }
 
@@ -166,7 +168,7 @@ private struct TabItem: View {
         .padding(.leading, 10)
         .padding(.trailing, tab == .sessions ? 10 : 6)
         .frame(maxHeight: .infinity)
-        .frame(minWidth: 70, maxWidth: 220)
+        .frame(minWidth: 70, maxWidth: 280)
         .background(selected ? Color(nsColor: .controlBackgroundColor) : Color.clear)
         .overlay(alignment: .bottom) {
             if selected { Rectangle().fill(Color.accentColor).frame(height: 2) }
