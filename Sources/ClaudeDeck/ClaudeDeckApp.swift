@@ -25,6 +25,10 @@ struct ClaudeDeckApp: App {
                 Divider()
                 OpenAutomationsButton() // Automations window
             }
+            CommandGroup(after: .newItem) {
+                Divider()
+                RestartCommands(model: delegate.model)
+            }
             // No help book: frees ⌘? (on Turkish keyboards the "+" key area produces it) for zoom.
             CommandGroup(replacing: .help) {}
             CommandGroup(after: .toolbar) {

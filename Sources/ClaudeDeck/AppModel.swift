@@ -52,6 +52,8 @@ final class AppModel {
     /// Projects without a running session that the user opened in the sidebar (not persisted).
     var idleExpandedProjects: Set<UUID> = []
     var claudePath: String?
+    /// Sessions being restarted (AppModel+Restart.swift): their brief exit isn't shown as "ended".
+    var restartingSessions: Set<UUID> = []
 
     @ObservationIgnored let terminals = TerminalRegistry()
     @ObservationIgnored private let store: DeckDataStore
@@ -338,7 +340,7 @@ final class AppModel {
 
     // MARK: Terminals
 
-    func launch(_ id: UUID, resume: Bool, automatic: Bool = false, resumeID: String? = nil) {
+    func launch(_ id: UUID, resume: Bool, automatic: Bool = false, resumeID: String? = nil, continueLatest: Bool = false) {
         guard let session = deck.session(id), let project = deck.project(session.projectID) else { return }
         if terminals.isRunning(id) { return }
         if session.kind == .shell {
@@ -358,7 +360,7 @@ final class AppModel {
         }
         let sid = resumeID ?? (resume ? deck.resumableID(for: id) : nil)
         var args = ["--name", session.name]
-        if let sid { args += ["--resume", sid] }
+        if let sid { args += ["--resume", sid] } else if continueLatest { args.append("--continue") }
         // Worktree sessions run in their worktree; `--worktree` only when it doesn't exist yet.
         let worktreeDir = session.workingDirectory.flatMap { FileManager.default.fileExists(atPath: $0) ? $0 : nil }
         if sid == nil, worktreeDir == nil, let worktree = session.worktreeName { args += ["--worktree", worktree] }
