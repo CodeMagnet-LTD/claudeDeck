@@ -23,9 +23,16 @@ struct InspectorPanel: View {
             .padding(.horizontal, 10)
             .padding(.top, 8)
             .padding(.bottom, 2)
-            switch tab {
-            case .files: FileBrowserPanel()
-            case .changes: ChangesView()
+            // The file browser stays alive underneath so its expansion state survives a visit to
+            // Changes; the Changes view (which polls) exists only while shown.
+            ZStack {
+                FileBrowserPanel()
+                    .opacity(tab == .files ? 1 : 0)
+                    .allowsHitTesting(tab == .files)
+                    .accessibilityHidden(tab != .files)
+                if tab == .changes {
+                    ChangesView().background(.background)
+                }
             }
         }
     }
@@ -68,6 +75,8 @@ final class ChangesModel {
     @ObservationIgnored private var generator: OneShotProcess?
     @ObservationIgnored private var watchers: [DirectoryWatcher] = []
     @ObservationIgnored private var active = false
+    @ObservationIgnored private var refreshing = false
+    @ObservationIgnored private var pendingRefresh = false
 
     init(root: URL) {
         self.root = root
@@ -93,18 +102,25 @@ final class ChangesModel {
 
     /// Re-reads status (and the selected diff) off the main actor; calls within `delay` coalesce.
     func refresh(after delay: Duration = .milliseconds(200)) {
+        // A refresh already running git finishes; one more follows it instead of piling up.
+        if refreshing { pendingRefresh = true; return }
         refreshTask?.cancel()
         let root = self.root
         let knownRepo = repo
         refreshTask = Task { [weak self] in
             if delay > .zero { try? await Task.sleep(for: delay) }
-            guard !Task.isCancelled else { return }
+            guard !Task.isCancelled, let self else { return }
+            self.refreshing = true
             let (repo, status) = await Task.detached { () -> (URL?, GitRepoStatus?) in
                 guard let repo = knownRepo ?? Git.root(of: root) else { return (nil, nil) }
                 return (repo, Git.repoStatus(in: repo))
             }.value
-            guard !Task.isCancelled, let self else { return }
+            self.refreshing = false
             self.apply(repo: repo, status: status)
+            if self.pendingRefresh {
+                self.pendingRefresh = false
+                self.refresh(after: .zero)
+            }
         }
     }
 
