@@ -65,9 +65,17 @@ rm -rf build/xcode/Build
 
 # 3. Re-sign inside-out with Developer ID, hardened runtime and a secure timestamp.
 #    Nested code (widget/app extensions, frameworks, helpers) keeps its own entitlements.
+#    Entitlements are kept except get-task-allow: Xcode adds it to development-signed builds and
+#    notarization rejects it.
+ENT=$(mktemp -t claudedeck-entitlements)
+trap 'rm -f "$ENT"' EXIT
 sign() {
-  codesign --force --options runtime --timestamp --preserve-metadata=entitlements \
-    --sign "$IDENTITY" "$1"
+  if codesign -d --entitlements - --xml "$1" > "$ENT" 2>/dev/null && [ -s "$ENT" ]; then
+    /usr/libexec/PlistBuddy -c "Delete :com.apple.security.get-task-allow" "$ENT" >/dev/null 2>&1 || true
+    codesign --force --options runtime --timestamp --entitlements "$ENT" --sign "$IDENTITY" "$1"
+  else
+    codesign --force --options runtime --timestamp --sign "$IDENTITY" "$1"
+  fi
 }
 for nested in "$APP"/Contents/PlugIns/*.appex "$APP"/Contents/Frameworks/* "$APP"/Contents/Library/LoginItems/*.app; do
   if [ -e "$nested" ]; then sign "$nested"; fi
