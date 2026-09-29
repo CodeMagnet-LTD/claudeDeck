@@ -32,7 +32,16 @@ final class GitHubMonitor {
                 try? await Task.sleep(for: Self.pollInterval)
             }
         }
+        // Launch runs before the app is active, and the loop skips while inactive: catch up on return.
+        NotificationCenter.default.addObserver(forName: NSApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            MainActor.assumeIsolated {
+                guard let self, Date().timeIntervalSince(self.lastPoll) > 30 else { return }
+                Task { await self.pollIfNeeded() }
+            }
+        }
     }
+
+    @ObservationIgnored private var lastPoll = Date.distantPast
 
     private var linkedSessions: [DeckSession] {
         model?.deck.sessions.filter { $0.linkedWorkItem != nil } ?? []
@@ -40,6 +49,7 @@ final class GitHubMonitor {
 
     private func pollIfNeeded() async {
         guard !linkedSessions.isEmpty, NSApp.isActive || NSApp.activationPolicy() == .accessory else { return }
+        lastPoll = Date()
         if availability == nil { await checkAvailability() }
         // gh missing / logged out: the popover says so; no polling until the user re-checks.
         guard availability == .ready else { return }
@@ -78,6 +88,10 @@ final class GitHubMonitor {
                 notifiedUpdatedAt[sessionID] = new.updatedAt
                 let changes = GitHub.changes(from: old, to: new)
                 if !changes.isEmpty { announce(changes, item: current, details: new, session: session) }
+            } else if old == nil, let seen = current.lastSeenUpdatedAt, new.updatedAt > seen, notifiedUpdatedAt[sessionID] == nil {
+                // First fetch since launch: changed while the app was closed (details of what are gone).
+                notifiedUpdatedAt[sessionID] = new.updatedAt
+                announce([.updated], item: current, details: new, session: session)
             }
         }
     }
