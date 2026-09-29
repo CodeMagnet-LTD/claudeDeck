@@ -567,6 +567,12 @@ private struct ChangeList: View {
             }
         }
         .listStyle(.sidebar)
+        // The highlight follows the diff tabs: once a row's tab is gone, clicking it again reopens it.
+        .onChange(of: model.tabs.tabs) { _, tabs in
+            guard let change = changes.selectedChange else { return }
+            let tab = WorkspaceTab.diff(repo: changes.root.path, path: change.path, staged: change.isStaged)
+            if !tabs.contains(tab) { changes.selection = nil }
+        }
     }
 
     /// A click opens (or re-targets) the preview diff tab; programmatic selection changes don't.
