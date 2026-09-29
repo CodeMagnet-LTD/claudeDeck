@@ -177,6 +177,10 @@ public struct DeckData: Codable, Sendable, Equatable {
     public var panes: [UUID] = []
     /// iCloud sync bookkeeping (per-item stamps, local tombstones). See DeckSync.
     public var syncState = DeckSyncState()
+    /// Saved prompts that start sessions on a schedule (see Automations.swift).
+    public var automations: [Automation] = []
+    /// Recent automation runs, newest `maxRunsPerAutomation` per automation.
+    public var automationRuns: [AutomationRun] = []
 
     public static let maxPanes = 4
 
@@ -192,6 +196,8 @@ public struct DeckData: Codable, Sendable, Equatable {
         selectedSessionID = try c.decodeIfPresent(UUID.self, forKey: .selectedSessionID)
         panes = try c.decodeIfPresent([UUID].self, forKey: .panes) ?? []
         syncState = try c.decodeIfPresent(DeckSyncState.self, forKey: .syncState) ?? DeckSyncState()
+        automations = try c.decodeIfPresent([Automation].self, forKey: .automations) ?? []
+        automationRuns = try c.decodeIfPresent([AutomationRun].self, forKey: .automationRuns) ?? []
     }
 
     // MARK: Mutations
