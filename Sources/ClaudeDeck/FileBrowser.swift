@@ -148,10 +148,13 @@ final class FileTree {
         for event in events {
             if event.mustRescan { reloadAll(); return }
             if let rel = gitRelative(event.path) {
+                if rel == "info/exclude" { reloadAll(); return }
                 if Git.isMetadataName(rel) { git = true }
                 continue
             }
             let path = localPath(event.path)
+            // Ignore rules apply to whole subtrees: re-read every loaded directory.
+            if (path as NSString).lastPathComponent == ".gitignore" { reloadAll(); return }
             let parent = (path as NSString).deletingLastPathComponent
             if entries[parent] != nil { dirs.insert(parent) }
             if entries[path] != nil { dirs.insert(path) }
@@ -381,7 +384,7 @@ struct FileNode: View {
             .onDrag {
                 // Remembered so a drop onto a folder of this tree moves instead of copying.
                 let urls = selection.contains(entry.id) ? selection.map { URL(fileURLWithPath: $0) } : [entry.url]
-                FileClipboard.dragging = Set(urls.map(\.standardizedFileURL))
+                FileClipboard.dragging = FileClipboard.paths(urls)
                 return NSItemProvider(object: entry.url as NSURL)
             }
             .onDrop(of: [.fileURL], isTargeted: $dropTargeted) { providers in
@@ -690,7 +693,7 @@ enum FileActions {
 
     /// Drop onto a folder: rows dragged from this tree move (⌥ copies), Finder files are copied in.
     static func drop(_ urls: [URL], into dir: URL, tree: FileTree) {
-        let fromTree = !urls.isEmpty && Set(urls.map(\.standardizedFileURL)).isSubset(of: FileClipboard.dragging)
+        let fromTree = !urls.isEmpty && FileClipboard.paths(urls).isSubset(of: FileClipboard.dragging)
         FileClipboard.dragging = []
         let move = fromTree && !NSEvent.modifierFlags.contains(.option)
         transfer(urls.map { ($0, dir) }, move: move, tree: tree)
@@ -701,7 +704,7 @@ enum FileActions {
     private static func transfer(_ items: [(source: URL, dir: URL)], move: Bool, tree: FileTree) {
         let items = items.filter { item in
             // Moving to where it already is is a no-op.
-            !(move && item.source.deletingLastPathComponent().standardizedFileURL == item.dir.standardizedFileURL)
+            !(move && item.source.deletingLastPathComponent().standardizedFileURL.path == item.dir.standardizedFileURL.path)
         }
         guard !items.isEmpty else { return }
         if move, items.contains(where: { FileListing.isSameOrDescendant($0.dir, of: $0.source) }) {
@@ -730,7 +733,7 @@ enum FileActions {
             var dirs = Set(pairs.map(\.1))
             if move { dirs.formUnion(pairs.map { $0.0.deletingLastPathComponent() }) }
             for dir in dirs { tree.reload(dir) }
-            if let dir = pairs.first?.1, dir.standardizedFileURL != tree.root.standardizedFileURL { tree.expanded.insert(dir.path) }
+            if let dir = pairs.first?.1, dir.standardizedFileURL.path != tree.root.standardizedFileURL.path { tree.expanded.insert(dir.path) }
             if !errors.isEmpty { fail(errors.joined(separator: "\n")) }
         }
     }
@@ -748,25 +751,28 @@ enum FileActions {
 @MainActor
 enum FileClipboard {
     /// Files cut in the tree; pasting exactly these moves them.
-    static var cut: Set<URL> = []
+    static var cut: Set<String> = []
     /// Rows being dragged from the tree.
-    static var dragging: Set<URL> = []
+    static var dragging: Set<String> = []
 
     static func write(_ urls: [URL], cut isCut: Bool) {
         let pb = NSPasteboard.general
         pb.clearContents()
         pb.writeObjects(urls as [NSURL])
-        cut = isCut ? Set(urls.map(\.standardizedFileURL)) : []
+        cut = isCut ? paths(urls) : []
     }
 
     /// For `onCopyCommand` / `onCutCommand` (SwiftUI writes them to the pasteboard).
     static func providers(for urls: [URL], cut isCut: Bool) -> [NSItemProvider] {
-        cut = isCut ? Set(urls.map(\.standardizedFileURL)) : []
+        cut = isCut ? paths(urls) : []
         return urls.map { NSItemProvider(object: $0 as NSURL) }
     }
 
+    /// Compared as paths: a folder URL may or may not carry a trailing slash after a round-trip.
+    static func paths(_ urls: [URL]) -> Set<String> { Set(urls.map(\.standardizedFileURL.path)) }
+
     static func isPendingCut(_ urls: [URL]) -> Bool {
-        !cut.isEmpty && Set(urls.map(\.standardizedFileURL)) == cut
+        !cut.isEmpty && paths(urls) == cut
     }
 
     static var hasFiles: Bool {

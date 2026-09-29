@@ -58,6 +58,7 @@ enum ExplorerSheets {
             guard existing.identifier == identifier else { return }
             parent.endSheet(existing)
         }
+        removeKeyMonitor()
         let sheet = NSWindow(contentRect: NSRect(origin: .zero, size: size),
                              styleMask: [.titled, .resizable, .fullSizeContentView], backing: .buffered, defer: false)
         sheet.identifier = identifier
@@ -68,37 +69,48 @@ enum ExplorerSheets {
         }
         sheet.contentViewController = NSHostingController(rootView: make(close).environment(model))
         sheet.setContentSize(size)
-        parent.beginSheet(sheet)
+        installKeyMonitor(for: sheet)
+        parent.beginSheet(sheet) { _ in removeKeyMonitor() }
+    }
+
+    // MARK: Keys
+
+    /// Keys the sheets handle themselves while the text field keeps focus.
+    enum Key { case up, down, enter(option: Bool), escape }
+    /// Set by the presented view (`SheetKeys`); returns true when it consumed the key.
+    static var keyHandler: ((Key) -> Bool)?
+    private static var keyMonitor: Any?
+
+    /// One monitor at a time, owned here (not by the view) so it never outlives its sheet.
+    private static func installKeyMonitor(for sheet: NSWindow) {
+        keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak sheet] event in
+            guard let sheet, event.window === sheet else { return event }
+            let key: Key? = switch event.keyCode {
+            case 126: .up
+            case 125: .down
+            case 36, 76: .enter(option: event.modifierFlags.contains(.option))
+            case 53: .escape
+            default: nil
+            }
+            guard let key else { return event }
+            return MainActor.assumeIsolated { keyHandler?(key) ?? false } ? nil : event
+        }
+    }
+
+    private static func removeKeyMonitor() {
+        if let keyMonitor { NSEvent.removeMonitor(keyMonitor) }
+        keyMonitor = nil
+        keyHandler = nil
     }
 }
 
-/// Keys the sheets handle themselves (the text field keeps focus): arrows, Return (⌥ for the
-/// alternate action), Escape.
+/// Routes the sheet's arrow / Return (⌥ for the alternate action) / Escape keys to `handle`.
 private struct SheetKeys: ViewModifier {
-    enum Key { case up, down, enter(option: Bool), escape }
+    typealias Key = ExplorerSheets.Key
     let handle: @MainActor (Key) -> Bool
-    @State private var monitor: Any?
 
     func body(content: Content) -> some View {
-        content
-            .onAppear {
-                monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-                    guard event.window?.identifier == ExplorerSheets.identifier else { return event }
-                    let key: Key? = switch event.keyCode {
-                    case 126: .up
-                    case 125: .down
-                    case 36, 76: .enter(option: event.modifierFlags.contains(.option))
-                    case 53: .escape
-                    default: nil
-                    }
-                    guard let key else { return event }
-                    return MainActor.assumeIsolated { handle(key) } ? nil : event
-                }
-            }
-            .onDisappear {
-                if let monitor { NSEvent.removeMonitor(monitor) }
-                monitor = nil
-            }
+        content.onAppear { ExplorerSheets.keyHandler = handle }
     }
 }
 
@@ -149,7 +161,11 @@ struct QuickOpenView: View {
         .onAppear { fieldFocused = true }
         .task {
             let root = self.root
-            files = await Task.detached { Git.listFiles(in: root) ?? FileListing.walk(root) }.value
+            files = await Task.detached {
+                // ls-files -c also lists tracked files deleted from disk.
+                Git.listFiles(in: root)?.filter { FileManager.default.fileExists(atPath: root.appending(path: $0).path) }
+                    ?? FileListing.walk(root)
+            }.value
             rank()
         }
         .onChange(of: query) { _, _ in rank() }
