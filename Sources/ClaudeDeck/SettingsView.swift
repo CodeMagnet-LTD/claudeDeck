@@ -45,6 +45,12 @@ struct SettingsView: View {
                     Text("Compact threshold: context above \(model.deck.settings.compactThresholdTokens / 1000)K tokens")
                 }
                 .disabled(!model.deck.settings.compactOnResume)
+                Toggle("Send a “continue” message to resumed sessions", isOn: setting(\.continueAfterResume))
+                Group {
+                    Toggle("Only sessions that were working when the app quit", isOn: setting(\.continueOnlyIfBusy))
+                    TextField("Message", text: setting(\.continueMessage), prompt: Text("Continue where you left off."))
+                }
+                .disabled(!model.deck.settings.continueAfterResume)
             }
             Section("Alerts") {
                 Toggle("Show notifications (permission / question / done)", isOn: setting(\.notifications))

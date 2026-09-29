@@ -68,6 +68,8 @@ final class AppModel {
     /// When the user last submitted input (Enter / a choice) while the session was blocked.
     private var answeredAt: [UUID: Date] = [:]
     @ObservationIgnored private var pendingCompact: Set<UUID> = []
+    /// Automatically resumed sessions that get the "continue" message once resumed (and compacted).
+    @ObservationIgnored private var pendingContinue: Set<UUID> = []
     /// Hook files older than the terminal's launch belong to a previous process.
     @ObservationIgnored private var launchedAt: [UUID: Date] = [:]
     /// Set by the UI layer (notifications, dock, bounce).
@@ -127,7 +129,12 @@ final class AppModel {
     func prepareForQuit() {
         for session in deck.sessions {
             let open = terminals.isRunning(session.id)
-            deck.updateSession(session.id) { $0.isOpen = open }
+            let display = status(of: session.id).display
+            let busy = open && session.kind == .claude && (display.isRunning || display.isBlocked)
+            deck.updateSession(session.id) {
+                $0.isOpen = open
+                $0.busyAtQuit = busy
+            }
         }
         saveNow()
         terminals.terminateAll()
@@ -237,7 +244,7 @@ final class AppModel {
                 scheduleSave()
             }
             followTranscript(for: id, path: status.transcriptPath)
-            if status.event == "SessionStart", status.source == "resume" { compactIfNeeded(id, transcript: status.transcriptPath) }
+            if status.event == "SessionStart", status.source == "resume" { afterResume(id, transcript: status.transcriptPath) }
         }
         if initial {
             for id in next.keys { lastNotified[id] = notifyKey(id) }
@@ -349,6 +356,11 @@ final class AppModel {
         let worktreeDir = session.workingDirectory.flatMap { FileManager.default.fileExists(atPath: $0) ? $0 : nil }
         if sid == nil, worktreeDir == nil, let worktree = session.worktreeName { args += ["--worktree", worktree] }
         if automatic, sid != nil, deck.settings.compactOnResume { pendingCompact.insert(id) }
+        if automatic, sid != nil, deck.settings.continueAfterResume,
+           !deck.settings.continueOnlyIfBusy || session.busyAtQuit {
+            pendingContinue.insert(id)
+        }
+        deck.updateSession(id) { $0.busyAtQuit = false }
         transcriptSignals[id] = nil
         answeredAt[id] = nil
         hookStatuses[id] = nil
@@ -360,17 +372,40 @@ final class AppModel {
         onCountsChanged?()
     }
 
-    private func compactIfNeeded(_ id: UUID, transcript: String?) {
-        guard pendingCompact.remove(id) != nil, let transcript else { return }
+    /// After an automatic resume: `/compact` if the context is over the threshold, then the
+    /// "continue" message (after compaction has finished) — each only if enabled for this session.
+    private func afterResume(_ id: UUID, transcript: String?) {
+        let wantsCompact = pendingCompact.remove(id) != nil
+        let wantsContinue = pendingContinue.remove(id) != nil
+        guard wantsCompact || wantsContinue else { return }
         let threshold = deck.settings.compactThresholdTokens
         Task { @MainActor in
-            // The real context size (not the transcript file size, which never shrinks).
-            let url = URL(fileURLWithPath: transcript)
-            let tokens = await Task.detached { Transcript.contextTokens(of: url) }.value ?? 0
-            guard tokens > threshold else { return }
-            // Give the TUI a moment to draw its prompt, then type /compact like the user would.
+            // Give the TUI a moment to draw its prompt; then type like the user would.
             try? await Task.sleep(for: .seconds(2))
-            terminals.type("/compact\r", into: id)
+            if wantsCompact, let transcript {
+                // The real context size (not the transcript file size, which never shrinks).
+                let url = URL(fileURLWithPath: transcript)
+                let tokens = await Task.detached { Transcript.contextTokens(of: url) }.value ?? 0
+                if tokens > threshold {
+                    let sentAt = Date()
+                    terminals.type("/compact\r", into: id)
+                    await waitUntilIdle(id, after: sentAt, timeout: .seconds(600))
+                    try? await Task.sleep(for: .seconds(1))
+                }
+            }
+            guard wantsContinue, terminals.isRunning(id) else { return }
+            let custom = deck.settings.continueMessage.trimmingCharacters(in: .whitespacesAndNewlines)
+            let message = custom.isEmpty ? String(localized: "Continue where you left off.") : custom
+            terminals.type(message + "\r", into: id)
+        }
+    }
+
+    /// Waits for a hook event newer than `after` that leaves the session idle (e.g. compaction done).
+    private func waitUntilIdle(_ id: UUID, after: Date, timeout: Duration) async {
+        let deadline = ContinuousClock.now + timeout
+        while ContinuousClock.now < deadline, terminals.isRunning(id) {
+            if let hook = hookStatuses[id], hook.updatedAt > after, hook.state == .idle { return }
+            try? await Task.sleep(for: .milliseconds(500))
         }
     }
 
@@ -382,6 +417,7 @@ final class AppModel {
         tailers[id]?.stop()
         tailers[id] = nil
         pendingCompact.remove(id)
+        pendingContinue.remove(id)
         deck.updateSession(id) { $0.isOpen = false }
         scheduleSave()
         onCountsChanged?()
@@ -494,6 +530,7 @@ final class AppModel {
         launchedAt[id] = nil
         lastNotified[id] = nil
         pendingCompact.remove(id)
+        pendingContinue.remove(id)
         scheduleSave()
         onCountsChanged?()
     }

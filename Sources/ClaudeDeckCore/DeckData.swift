@@ -58,6 +58,8 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
     public var startupCommand: String?
     /// Shell sessions: start whenever the app launches, even if closed at quit.
     public var autoStart: Bool
+    /// Claude sessions: Claude was working (or waiting on a prompt) when the app quit.
+    public var busyAtQuit: Bool
     /// Claude sessions started with `claude --worktree <name>` (own git worktree and branch).
     public var worktreeName: String?
     /// Directory Claude actually runs in (hook `cwd`), i.e. the worktree for worktree sessions.
@@ -77,6 +79,7 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
         self.isOpen = isOpen
         self.startupCommand = nil
         self.autoStart = false
+        self.busyAtQuit = false
         self.worktreeName = worktreeName
         self.workingDirectory = nil
     }
@@ -94,6 +97,7 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
         isOpen = try c.decodeIfPresent(Bool.self, forKey: .isOpen) ?? false
         startupCommand = try c.decodeIfPresent(String.self, forKey: .startupCommand)
         autoStart = try c.decodeIfPresent(Bool.self, forKey: .autoStart) ?? false
+        busyAtQuit = try c.decodeIfPresent(Bool.self, forKey: .busyAtQuit) ?? false
         worktreeName = try c.decodeIfPresent(String.self, forKey: .worktreeName)
         workingDirectory = try c.decodeIfPresent(String.self, forKey: .workingDirectory)
     }
@@ -114,6 +118,12 @@ public enum AppTheme: String, Codable, Sendable, CaseIterable {
 public struct DeckSettings: Codable, Sendable, Equatable {
     public var resumeOnLaunch = true
     public var compactOnResume = true
+    /// After an automatic resume, type a "continue" message into the session.
+    public var continueAfterResume = false
+    /// …only for sessions that were busy when the app quit.
+    public var continueOnlyIfBusy = true
+    /// Message to send; empty = the app's localized default.
+    public var continueMessage = ""
     /// Transcripts bigger than this get `/compact` after an automatic resume.
     /// Legacy (transcript file size); kept so old settings files decode. Not used any more.
     public var compactThresholdKB = 800
@@ -140,6 +150,9 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         let d = DeckSettings()
         resumeOnLaunch = try c.decodeIfPresent(Bool.self, forKey: .resumeOnLaunch) ?? d.resumeOnLaunch
         compactOnResume = try c.decodeIfPresent(Bool.self, forKey: .compactOnResume) ?? d.compactOnResume
+        continueAfterResume = try c.decodeIfPresent(Bool.self, forKey: .continueAfterResume) ?? d.continueAfterResume
+        continueOnlyIfBusy = try c.decodeIfPresent(Bool.self, forKey: .continueOnlyIfBusy) ?? d.continueOnlyIfBusy
+        continueMessage = try c.decodeIfPresent(String.self, forKey: .continueMessage) ?? d.continueMessage
         compactThresholdKB = try c.decodeIfPresent(Int.self, forKey: .compactThresholdKB) ?? d.compactThresholdKB
         compactThresholdTokens = try c.decodeIfPresent(Int.self, forKey: .compactThresholdTokens) ?? d.compactThresholdTokens
         notifications = try c.decodeIfPresent(Bool.self, forKey: .notifications) ?? d.notifications

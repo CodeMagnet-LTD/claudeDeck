@@ -460,6 +460,16 @@
         }
       }
     },
+    "Continue where you left off.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaldığın yerden devam et."
+          }
+        }
+      }
+    },
     "Copy Path": {
       "localizations": {
         "tr": {
@@ -780,6 +790,16 @@
         }
       }
     },
+    "Message": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesaj"
+          }
+        }
+      }
+    },
     "Move %lld items to the Trash?": {
       "localizations": {
         "tr": {
@@ -1036,6 +1056,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tamam"
+          }
+        }
+      }
+    },
+    "Only sessions that were working when the app quit": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca uygulama kapanırken çalışmakta olan oturumlara"
           }
         }
       }
@@ -1486,6 +1516,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dosyalarını görmek için bir oturum seç"
+          }
+        }
+      }
+    },
+    "Send a “continue” message to resumed sessions": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Devam ettirilen oturumlara “devam et” mesajı gönder"
           }
         }
       }
