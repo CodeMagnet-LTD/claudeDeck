@@ -142,6 +142,12 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     public var hideDockWhenClosed = false
     /// Sync projects and groups through iCloud Drive (see DeckSync).
     public var iCloudSync = false
+    /// Double-clicking a text file in the Files panel opens it in the built-in editor window.
+    public var openFilesInBuiltInEditor = true
+    /// Built-in editor font size in points.
+    public var editorFontSize: Double = DeckSettings.defaultFontSize
+    /// Built-in editor soft wrap.
+    public var editorWrapLines = true
 
     public init() {}
 
@@ -162,6 +168,9 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         confirmQuit = try c.decodeIfPresent(Bool.self, forKey: .confirmQuit) ?? d.confirmQuit
         hideDockWhenClosed = try c.decodeIfPresent(Bool.self, forKey: .hideDockWhenClosed) ?? d.hideDockWhenClosed
         iCloudSync = try c.decodeIfPresent(Bool.self, forKey: .iCloudSync) ?? d.iCloudSync
+        openFilesInBuiltInEditor = try c.decodeIfPresent(Bool.self, forKey: .openFilesInBuiltInEditor) ?? d.openFilesInBuiltInEditor
+        editorFontSize = try c.decodeIfPresent(Double.self, forKey: .editorFontSize) ?? d.editorFontSize
+        editorWrapLines = try c.decodeIfPresent(Bool.self, forKey: .editorWrapLines) ?? d.editorWrapLines
     }
 }
 
