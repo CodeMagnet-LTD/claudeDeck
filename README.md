@@ -68,7 +68,7 @@ ClaudeDeck doesn't wrap, imitate or screen-scrape Claude. Every session runs **y
         <li>Orange <b>M</b>: modified. Green <b>A/?</b>: new. Folders with changes get a dot. Files your <code>.gitignore</code> ignores stay hidden.</li>
         <li>Select a file to see its commit history and diffs, including uncommitted changes.</li>
         <li>Drag a file into a Claude pane to add it as <code>@path</code>. Drag files onto a folder to move them, or drop them in from Finder.</li>
-        <li><b>Files | Changes</b> at the top switches the panel to source control.</li>
+        <li><b>Files | Changes</b> at the top of the panel switches it to source control (see the main screenshot).</li>
       </ul>
     </td>
   </tr>
@@ -88,7 +88,7 @@ ClaudeDeck doesn't wrap, imitate or screen-scrape Claude. Every session runs **y
       <img src="docs/screenshots/tabs-editor.png" alt="Editor tabs in the toolbar with a TypeScript file open and the Files panel">
     </td>
     <td valign="top">
-      <b>Tabs and the built-in editor.</b> Files open as tabs in the toolbar, next to <b>Sessions</b>, which is always the first tab:
+      <b>Tabs and the built-in editor.</b> Files open as tabs in the toolbar, next to <b>Sessions</b>, which is always the first tab (it shows the focused session's name):
       <ul>
         <li>A light code editor with syntax colors, line numbers, find and replace, and ⌘S.</li>
         <li><b>Add to Claude</b> (<code>@</code> in the path bar) inserts <code>@path</code> into the selected session, or <code>@path#L10-20</code> when lines are selected.</li>
@@ -338,7 +338,8 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
 
 ### Tabs
 - The toolbar shows tabs in place of the window title once anything besides Sessions is open:
-  - **Sessions** is always the first tab (⌘1): the sidebar's sessions and panes, as before.
+  - **Sessions** is always the first tab (⌘1), titled with the focused session's name: the sidebar's
+    sessions and panes, as before.
   - **Files** open in the built-in editor, **diffs** from Changes open full width, and **Automations** has its own tab.
 - **Preview tabs:** files opened from Quick Open or Find in Files, and diffs clicked in Changes, open in a
   preview tab (in italics) that the next one replaces. Editing it, or choosing Keep Open, keeps it.

@@ -70,7 +70,7 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
         <li>Turuncu <b>M</b>: değişmiş. Yeşil <b>A/?</b>: yeni. Değişiklik içeren klasörler noktalı. <code>.gitignore</code>'un dışladığı dosyalar gizli kalır.</li>
         <li>Bir dosyayı seçince commit geçmişi ve diff'leri görünür; kaydedilmemiş değişiklikler de dahil.</li>
         <li>Dosyayı bir Claude bölmesine sürükle, <code>@yol</code> olarak eklensin. Dosyaları bir klasörün üstüne sürükleyerek taşırsın, Finder'dan da bırakabilirsin.</li>
-        <li>Üstteki <b>Files | Changes</b> paneli kaynak kontrolüne çevirir.</li>
+        <li>Panelin üstündeki <b>Files | Changes</b> paneli kaynak kontrolüne çevirir (ana ekran görüntüsünde görünüyor).</li>
       </ul>
     </td>
   </tr>
@@ -90,7 +90,7 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
       <img src="docs/screenshots/tabs-editor.png" alt="Araç çubuğunda düzenleyici sekmeleri, açık bir TypeScript dosyası ve Dosyalar paneli">
     </td>
     <td valign="top">
-      <b>Sekmeler ve yerleşik düzenleyici.</b> Dosyalar araç çubuğunda sekme olarak açılır; ilk sekme her zaman <b>Oturumlar</b> (Sessions) sekmesidir:
+      <b>Sekmeler ve yerleşik düzenleyici.</b> Dosyalar araç çubuğunda sekme olarak açılır; ilk sekme her zaman <b>Oturumlar</b> (Sessions) sekmesidir ve odaktaki oturumun adını taşır:
       <ul>
         <li>Sözdizimi renklendirmesi, satır numaraları, bul ve değiştir ve ⌘S ile hafif bir kod düzenleyicisi.</li>
         <li><b>Claude'a Ekle</b> (yol çubuğundaki <code>@</code>) seçili oturuma <code>@yol</code> yazar; satır seçiliyse <code>@yol#L10-20</code>.</li>
@@ -347,7 +347,7 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
 
 ### Sekmeler
 - Oturumlar dışında bir şey açılınca araç çubuğunda pencere başlığının yerine sekmeler çıkar:
-  - **Oturumlar** her zaman ilk sekmedir (⌘1): kenar çubuğundaki oturumlar ve bölmeler, eskisi gibi.
+  - **Oturumlar** her zaman ilk sekmedir (⌘1) ve odaktaki oturumun adıyla görünür: kenar çubuğundaki oturumlar ve bölmeler, eskisi gibi.
   - **Dosyalar** yerleşik düzenleyicide, Değişiklikler'deki **diff'ler** tam genişlikte, **Otomasyonlar** kendi sekmesinde açılır.
 - **Önizleme sekmesi:** Hızlı Aç'tan ya da Dosyalarda Bul'dan açılan dosyalar ve Değişiklikler'de tıklanan
   diff'ler italik bir önizleme sekmesinde açılır; sonraki onun yerine geçer. Düzenlersen ya da "Açık tut"
