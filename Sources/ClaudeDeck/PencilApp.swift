@@ -52,6 +52,11 @@ struct PencilSettingsSection: View {
                 set: { on in model.mutate { $0.settings.pencilMCP = on } }
             ))
             .disabled(!binaryFound)
+            .onAppear {
+                installed = PencilApp.isInstalled
+                binaryFound = PencilApp.mcpBinary != nil
+                running = PencilApp.isRunning && PencilIntegration.isRegistered()
+            }
             LabeledContent("Status") {
                 if !installed {
                     Text("Pen.app not installed").foregroundStyle(.secondary)
@@ -65,11 +70,6 @@ struct PencilSettingsSection: View {
             }
             Text("New and resumed Claude sessions get Pencil's MCP server (as “pencil-desktop”, via --mcp-config), connected to the Pencil desktop app instead of the VS Code extension. Your global Claude configuration is not changed. Already running sessions need a restart.")
                 .font(.caption).foregroundStyle(.secondary)
-        }
-        .onAppear {
-            installed = PencilApp.isInstalled
-            binaryFound = PencilApp.mcpBinary != nil
-            running = PencilApp.isRunning && PencilIntegration.isRegistered()
         }
     }
 }
