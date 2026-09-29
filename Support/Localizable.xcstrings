@@ -47,6 +47,26 @@
     "%lld": {
       "shouldTranslate": false
     },
+    "%lld files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld dosya"
+          }
+        }
+      }
+    },
+    "%lld results in %lld files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld dosyada %1$lld sonuç"
+          }
+        }
+      }
+    },
     "%lldd": {
       "localizations": {
         "tr": {
@@ -107,6 +127,16 @@
         }
       }
     },
+    "A folder can’t be moved into itself.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir klasör kendi içine taşınamaz."
+          }
+        }
+      }
+    },
     "Active": {
       "localizations": {
         "tr": {
@@ -153,6 +183,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Claude'a ekle (@%@)"
+          }
+        }
+      }
+    },
+    "Add @%@:%lld to Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "@%@:%lld öğesini Claude'a ekle"
           }
         }
       }
@@ -360,6 +400,16 @@
         }
       }
     },
+    "Click to open": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açmak için tıklayın"
+          }
+        }
+      }
+    },
     "Close": {
       "localizations": {
         "tr": {
@@ -406,6 +456,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pencereyi kapatmak (X) hiçbir oturumu durdurmaz; uygulama menü çubuğunda çalışmaya devam eder."
+          }
+        }
+      }
+    },
+    "Collapse All": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümünü Daralt"
           }
         }
       }
@@ -470,6 +530,16 @@
         }
       }
     },
+    "Copy": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyala"
+          }
+        }
+      }
+    },
     "Copy Path": {
       "localizations": {
         "tr": {
@@ -516,6 +586,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "~/.claude/settings.json okunamadı: %@"
+          }
+        }
+      }
+    },
+    "Cut": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kes"
           }
         }
       }
@@ -590,6 +670,16 @@
         }
       }
     },
+    "Duplicate": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çoğalt"
+          }
+        }
+      }
+    },
     "End \"%@\" and remove it from the list?": {
       "localizations": {
         "tr": {
@@ -646,6 +736,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dosyalar"
+          }
+        }
+      }
+    },
+    "Find in Files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalarda Bul"
+          }
+        }
+      }
+    },
+    "Find in Files…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalarda Bul…"
+          }
+        }
+      }
+    },
+    "First %lld results": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk %lld sonuç"
           }
         }
       }
@@ -786,6 +906,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Açık"
+          }
+        }
+      }
+    },
+    "Match Case": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Büyük/Küçük Harf Eşleştir"
           }
         }
       }
@@ -1020,6 +1150,26 @@
         }
       }
     },
+    "No matching files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleşen dosya yok"
+          }
+        }
+      }
+    },
+    "No results": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonuç yok"
+          }
+        }
+      }
+    },
     "No running sessions": {
       "localizations": {
         "tr": {
@@ -1170,6 +1320,16 @@
         }
       }
     },
+    "Paste": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yapıştır"
+          }
+        }
+      }
+    },
     "Permission denied — your turn": {
       "localizations": {
         "tr": {
@@ -1256,6 +1416,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mor"
+          }
+        }
+      }
+    },
+    "Quick Open…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hızlı Aç…"
           }
         }
       }
@@ -1500,6 +1670,16 @@
         }
       }
     },
+    "Search files by name": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyaları ada göre ara"
+          }
+        }
+      }
+    },
     "Select All": {
       "localizations": {
         "tr": {
@@ -1576,6 +1756,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gizli Dosyaları Göster"
+          }
+        }
+      }
+    },
+    "Show Ignored Files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yok Sayılan Dosyaları Göster"
           }
         }
       }
@@ -1813,6 +2003,16 @@
         }
       }
     },
+    "Use Regular Expression": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düzenli İfade Kullan"
+          }
+        }
+      }
+    },
     "Waiting for an answer": {
       "localizations": {
         "tr": {
@@ -2005,6 +2205,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "sıra sende"
+          }
+        }
+      }
+    },
+    "↵ Open": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "↵ Aç"
+          }
+        }
+      }
+    },
+    "⌥-click to add @path:line to Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "@yol:satır eklemek için ⌥-tıklayın"
+          }
+        }
+      }
+    },
+    "⌥↵ Add to Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌥↵ Claude'a ekle"
           }
         }
       }
