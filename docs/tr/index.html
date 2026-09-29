@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClaudeDeck: tüm Claude Code oturumların tek Mac penceresinde</title>
+<meta name="description" content="Birden fazla projedeki Claude Code oturumlarını çalıştıran ve hangisinin seni beklediğini gösteren ücretsiz, açık kaynak macOS uygulaması.">
+<!-- Özel alan adı için: <meta name="repo" content="owner/ClaudeDeck"> -->
+<meta property="og:title" content="ClaudeDeck">
+<meta property="og:description" content="Tüm Claude Code oturumların tek Mac penceresinde. Ücretsiz ve açık kaynak.">
+<meta property="og:image" content="../assets/icon.png">
+<link rel="icon" href="../assets/favicon.png">
+<link rel="alternate" hreflang="en" href="../">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Schibsted+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="./"><img src="../assets/icon.png" alt="" width="32" height="32">ClaudeDeck</a>
+  <nav aria-label="Site">
+    <a href="#nasil">Nasıl çalışır</a>
+    <a data-gh="" href="https://github.com/">GitHub</a>
+    <a href="../" hreflang="en" lang="en">English</a>
+  </nav>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <div>
+      <h1>Tüm Claude Code oturumların tek Mac penceresinde.</h1>
+      <p class="lede">Hangi oturum çalışıyor, hangisi izin bekliyor, hangisinde sıra sende: tek bakışta gör. İzni bildirimden ver, oturumları yan yana aç, uygulamayı kapatıp açınca kaldığın yerden devam et.</p>
+      <div class="actions">
+        <a class="download" data-gh="/releases/latest" href="https://github.com/">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12m-5-5 5 5 5-5M5 20h14"/></svg>
+          macOS için indir
+        </a>
+        <span class="fine">Ücretsiz ve açık kaynak. macOS 15 ve üstü.</span>
+      </div>
+    </div>
+
+    <div class="deck" role="img" aria-label="Beş oturum gösteren ClaudeDeck: biri izin bekliyor, ikisi çalışıyor, birinde sıra sende, biri terminal."
+      data-states='{"running":"Çalışıyor","permission":"İzin bekliyor","question":"Soru soruyor","turn":"Sıra sende","runningTests":"Bash: pnpm vitest run","done":"Bitti: pull-to-refresh eklendi","passed":"Bitti: 18 test geçti","editing":"Edit: internal/webhooks/retry.go"}'>
+      <div class="deck-bar" aria-hidden="true"><i></i><i></i><i></i><span>ClaudeDeck</span></div>
+      <div class="deck-body" aria-hidden="true">
+        <div class="deck-list">
+          <div class="deck-group">Bekleyenler</div>
+          <div class="row" data-id="a" data-state="permission"><span class="dot"></span><span class="name">acme-storefront</span><span class="state">Bash: pnpm vitest run</span></div>
+          <div class="row" data-id="b" data-state="question"><span class="dot"></span><span class="name">payments-api</span><span class="state">Hangi yeniden deneme stratejisi?</span></div>
+          <div class="deck-group">Projeler</div>
+          <div class="row" data-id="c" data-state="running"><span class="dot"></span><span class="name">mobile-app</span><span class="state">Edit: FeedView.swift</span></div>
+          <div class="row" data-id="d" data-state="running"><span class="dot"></span><span class="name">markdown-kit · fix-tables</span><span class="state">Bash: swift test</span></div>
+          <div class="row" data-id="e" data-state="shell"><span class="dot"></span><span class="name">payments-api · ./dev.sh</span><span class="state">Terminal</span></div>
+        </div>
+        <div class="deck-term">
+          <div class="term-head"><span class="pill">İzin bekliyor</span><span class="btns"><span>İzin Ver</span><span>Reddet</span></span></div>
+          <p><span class="dim">&gt;</span> Sepete kupon desteği ekle, checkout testleri geçmeye devam etsin.</p>
+          <p>● Update(src/cart/CartSummary.tsx)</p>
+          <p class="add">  + export function CartSummary({ items, discount = 0 })</p>
+          <p>● Şimdi checkout testlerini çalıştırıyorum.</p>
+          <div class="box">
+            <p>pnpm vitest run tests/checkout.test.ts</p>
+            <p class="dim">Do you want to proceed?</p>
+            <p class="pick">❯ 1. Yes</p>
+            <p class="dim">  2. No, and tell Claude what to do</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="nasil">
+    <div class="wrap">
+      <h2>Her oturumun ne yaptığını nasıl bilir</h2>
+      <p class="intro">Ekran okumaz, terminal çıktısını ayrıştırmaz. ClaudeDeck, Claude Code'un zaten sunduğu hook'ları dinler.</p>
+      <ol class="steps">
+        <li><h3>Kendi <code>claude</code>'unu çalıştırırsın</h3><p>Her oturum, kurulu Claude Code CLI'ının gerçek bir terminalde çalışan hâlidir. Ayarların, <code>CLAUDE.md</code>, MCP sunucuların ve skill'lerin aynen geçerlidir.</p></li>
+        <li><h3>Küçük bir hook durumu bildirir</h3><p>İlk açılışta ClaudeDeck, yedek aldıktan sonra <code>~/.claude/settings.json</code> dosyasına tek bir hook ekler. Hook yalnızca ClaudeDeck'in terminallerinde çalışır.</p></li>
+        <li><h3>Sıra sana gelince haber alırsın</h3><p>İzin istemleri, sorular ve biten işler kenar çubuğunda, bildirimlerde, Dock rozetinde ve menü çubuğunda görünür.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Neler var</h2>
+      <p class="intro">Terminal pencereleri arasında gidip gelmeden birçok oturumu yürütmek için gereken her şey.</p>
+      <dl class="features">
+        <div style="--c: var(--run)"><dt>Her oturum için canlı durum</dt><dd>Çalışıyor, izin bekliyor, soru soruyor ya da sıra sende; her oturum için.</dd></div>
+        <div style="--c: var(--block)"><dt>Her yerden izin ver ya da reddet</dt><dd>İzin istemlerine bildirimden, kenar çubuğundan ya da bölme başlığından cevap ver.</dd></div>
+        <div style="--c: var(--turn)"><dt>Bekleyenler en üstte</dt><dd>Seni bekleyen oturumlar, proje adı ve ne istedikleriyle birlikte başta listelenir.</dd></div>
+        <div style="--c: var(--shell)"><dt>Yan yana bölmeler</dt><dd>Dört oturuma kadar sürükleyip yan yana koy. Bölmeyi kapatmak oturumu durdurmaz.</dd></div>
+        <div style="--c: var(--run)"><dt>Yeniden başlatınca kaldığı yerden</dt><dd>Açık oturumlar <code>claude --resume</code> ile geri gelir. Şişen context'lere otomatik <code>/compact</code> gönderilir.</dd></div>
+        <div style="--c: var(--run)"><dt>Paralel worktree oturumları</dt><dd>Aynı projede, her biri kendi git worktree'sinde çalışan ve birbirinin dosyalarına dokunmayan oturumlar.</dd></div>
+        <div style="--c: var(--shell)"><dt>Git geçmişli dosyalar paneli</dt><dd>Canlı dosya ağacı, değişiklik işaretleri ve dosya bazında diff. Dosyayı Claude'a sürükle, <code>@yol</code> olarak eklensin.</dd></div>
+        <div style="--c: var(--shell)"><dt>Düz terminaller de</dt><dd>Proje klasöründe shell; istersen <code>yarn start</code> gibi bir başlangıç komutuyla.</dd></div>
+        <div style="--c: var(--turn)"><dt>Widget ve menü çubuğu</dt><dd>Bekleyen, çalışan ve biten oturumlar için masaüstü widget'ı ve menü çubuğu sayaçları.</dd></div>
+        <div style="--c: var(--idle)"><dt>Projeler, gruplar ve iCloud</dt><dd>Projeleri sabitle, grupları renklendir; istersen listeyi Mac'lerin arasında eşitle.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>Nedir, ne değildir</h2>
+      <p class="intro">ClaudeDeck, zaten kullandığın Claude Code'un etrafında bir penceredir.</p>
+      <table class="is">
+        <thead><tr><th scope="col">ClaudeDeck şudur</th><th scope="col">ClaudeDeck şu değildir</th></tr></thead>
+        <tbody>
+          <tr><td class="yes">Kurulu <code>claude</code> CLI'ın için bir oturum yöneticisi</td><td class="no">Claude Code'un yerine geçen bir sohbet uygulaması ya da API istemcisi</td></tr>
+          <tr><td class="yes">Claude Code'un resmi hook'larıyla çalışan bir pano</td><td class="no">Ekranını okuyan ya da tuş kaydeden bir araç</td></tr>
+          <tr><td class="yes">Yerel bir Mac uygulaması; hiçbir veri bilgisayarından çıkmaz</td><td class="no">Bulut hizmeti, hesap sistemi ya da telemetri</td></tr>
+          <tr><td class="yes">Senin basacağın tuşa basan bir kısayol</td><td class="no">İzinleri kendi kendine onaylayan bir otomasyon</td></tr>
+        </tbody>
+      </table>
+      <p class="fine-print">Ücretlendirme, kullanım limitleri ve oturum açma Claude Code'a aittir.</p>
+    </div>
+  </section>
+
+  <section id="kurulum">
+    <div class="wrap">
+      <h2>Kurulum</h2>
+      <ol class="steps">
+        <li><h3>DMG'yi indir</h3><p>En son <code>ClaudeDeck-&lt;sürüm&gt;.dmg</code> dosyasını <a data-gh="/releases/latest" href="https://github.com/">GitHub Releases</a> sayfasından al.</p></li>
+        <li><h3>Applications'a sürükle</h3><p>Uygulama Apple tarafından imzalanmış ve notarize edilmiştir; Gatekeeper uyarısı olmadan açılır.</p></li>
+        <li><h3>Projelerini ekle</h3><p>Bir proje klasörü seç ve Claude oturumu başlat. ClaudeDeck hook'unu ilk açılışta kurar.</p></li>
+      </ol>
+      <ul class="req">
+        <li>macOS 15 veya üstü ve kurulu <a href="https://docs.claude.com/en/docs/claude-code">Claude Code</a> gerekir.</li>
+        <li>İngilizce ve Türkçe kullanılabilir; sistem dilini izler.</li>
+        <li>Kendin derlemek mi istiyorsun? <a data-gh="/blob/main/README.tr.md" href="https://github.com/">README</a> nasıl yapılacağını anlatıyor.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>MIT Lisansı © 2026 <a href="https://codemagnet.co">CODE MAGNET YAZILIM LTD. ŞTİ.</a> · <a data-gh="" href="https://github.com/">Kaynak kod</a></p>
+    <p>ClaudeDeck bağımsız bir açık kaynak projedir; Anthropic ile bağlantılı değildir, Anthropic tarafından onaylanmamış ya da desteklenmemektedir. "Claude" ve "Claude Code", Anthropic PBC'nin ticari markalarıdır.</p>
+  </div>
+</footer>
+<script src="../assets/deck.js"></script>
+</body>
+</html>

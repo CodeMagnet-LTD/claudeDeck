@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClaudeDeck: all your Claude Code sessions in one Mac window</title>
+<meta name="description" content="A free, open-source macOS app that runs your Claude Code sessions across many projects and shows which ones need you: permission prompts, questions and finished turns.">
+<!-- For a custom domain: <meta name="repo" content="owner/ClaudeDeck"> -->
+<meta property="og:title" content="ClaudeDeck">
+<meta property="og:description" content="All your Claude Code sessions in one Mac window. Free and open source.">
+<meta property="og:image" content="assets/icon.png">
+<link rel="icon" href="assets/favicon.png">
+<link rel="alternate" hreflang="tr" href="tr/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Schibsted+Grotesk:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header class="wrap top">
+  <a class="brand" href="./"><img src="assets/icon.png" alt="" width="32" height="32">ClaudeDeck</a>
+  <nav aria-label="Site">
+    <a href="#how">How it works</a>
+    <a data-gh="" href="https://github.com/">GitHub</a>
+    <a href="tr/" hreflang="tr" lang="tr">Türkçe</a>
+  </nav>
+</header>
+
+<main>
+  <div class="wrap hero">
+    <div>
+      <h1>All your Claude Code sessions in one Mac window.</h1>
+      <p class="lede">See at a glance which session is working, which one needs permission and which one is waiting for you. Allow a prompt from the notification, put sessions side by side, and pick up where you left off after a restart.</p>
+      <div class="actions">
+        <a class="download" data-gh="/releases/latest" href="https://github.com/">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v12m-5-5 5 5 5-5M5 20h14"/></svg>
+          Download for macOS
+        </a>
+        <span class="fine">Free and open source. macOS 15 or later.</span>
+      </div>
+    </div>
+
+    <div class="deck" role="img" aria-label="ClaudeDeck showing five sessions: one needs permission, two are running, one is your turn, one is a terminal."
+      data-states='{"running":"Running","permission":"Needs permission","question":"Asking a question","turn":"Your turn","runningTests":"Bash: pnpm vitest run","done":"Done: pull-to-refresh added","passed":"Done: 18 tests passed","editing":"Edit: internal/webhooks/retry.go"}'>
+      <div class="deck-bar" aria-hidden="true"><i></i><i></i><i></i><span>ClaudeDeck</span></div>
+      <div class="deck-body" aria-hidden="true">
+        <div class="deck-list">
+          <div class="deck-group">Needs Attention</div>
+          <div class="row" data-id="a" data-state="permission"><span class="dot"></span><span class="name">acme-storefront</span><span class="state">Bash: pnpm vitest run</span></div>
+          <div class="row" data-id="b" data-state="question"><span class="dot"></span><span class="name">payments-api</span><span class="state">Which retry strategy?</span></div>
+          <div class="deck-group">Projects</div>
+          <div class="row" data-id="c" data-state="running"><span class="dot"></span><span class="name">mobile-app</span><span class="state">Edit: FeedView.swift</span></div>
+          <div class="row" data-id="d" data-state="running"><span class="dot"></span><span class="name">markdown-kit · fix-tables</span><span class="state">Bash: swift test</span></div>
+          <div class="row" data-id="e" data-state="shell"><span class="dot"></span><span class="name">payments-api · ./dev.sh</span><span class="state">Terminal</span></div>
+        </div>
+        <div class="deck-term">
+          <div class="term-head"><span class="pill">Needs permission</span><span class="btns"><span>Allow</span><span>Deny</span></span></div>
+          <p><span class="dim">&gt;</span> Add coupon support to the cart and keep checkout green.</p>
+          <p>● Update(src/cart/CartSummary.tsx)</p>
+          <p class="add">  + export function CartSummary({ items, discount = 0 })</p>
+          <p>● Now let me run the checkout tests.</p>
+          <div class="box">
+            <p>pnpm vitest run tests/checkout.test.ts</p>
+            <p class="dim">Do you want to proceed?</p>
+            <p class="pick">❯ 1. Yes</p>
+            <p class="dim">  2. No, and tell Claude what to do</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section id="how">
+    <div class="wrap">
+      <h2>How it knows what each session is doing</h2>
+      <p class="intro">No screen reading and no terminal scraping. ClaudeDeck listens to the hooks Claude Code already provides.</p>
+      <ol class="steps">
+        <li><h3>You run your own <code>claude</code></h3><p>Each session is your installed Claude Code CLI in a real terminal, with your settings, <code>CLAUDE.md</code>, MCP servers and skills.</p></li>
+        <li><h3>A small hook reports the state</h3><p>On first launch ClaudeDeck adds one hook to <code>~/.claude/settings.json</code>, after making a backup. It only acts in ClaudeDeck's own terminals.</p></li>
+        <li><h3>You get told when it's your turn</h3><p>Permission prompts, questions and finished turns show up in the sidebar, as notifications, on the Dock badge and in the menu bar.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>What's inside</h2>
+      <p class="intro">Everything you need to keep many sessions moving without switching between terminal windows.</p>
+      <dl class="features">
+        <div style="--c: var(--run)"><dt>Live status for every session</dt><dd>Running, needs permission, asking a question or your turn, for every session.</dd></div>
+        <div style="--c: var(--block)"><dt>Allow or deny from anywhere</dt><dd>Answer permission prompts from the notification, the sidebar or the pane header.</dd></div>
+        <div style="--c: var(--turn)"><dt>Needs Attention at the top</dt><dd>Sessions waiting for you are listed first, with the project and what they're asking.</dd></div>
+        <div style="--c: var(--shell)"><dt>Side-by-side panes</dt><dd>Drag up to four sessions next to each other. Closing a pane keeps the session running.</dd></div>
+        <div style="--c: var(--run)"><dt>Picks up after a restart</dt><dd>Open sessions come back with <code>claude --resume</code>. Oversized contexts get an automatic <code>/compact</code>.</dd></div>
+        <div style="--c: var(--run)"><dt>Parallel worktree sessions</dt><dd>Run sessions in the same project, each in its own git worktree, so they never edit the same files.</dd></div>
+        <div style="--c: var(--shell)"><dt>Files panel with git history</dt><dd>Live file tree, change marks and per-file diffs. Drag a file into Claude to add it as <code>@path</code>.</dd></div>
+        <div style="--c: var(--shell)"><dt>Plain terminals too</dt><dd>A shell in the project folder, with an optional startup command like <code>yarn start</code>.</dd></div>
+        <div style="--c: var(--turn)"><dt>Widget and menu bar</dt><dd>A desktop widget and menu bar counters for what's waiting, running and done.</dd></div>
+        <div style="--c: var(--idle)"><dt>Projects, groups and iCloud</dt><dd>Pin projects, color-code groups, and optionally sync the list across your Macs.</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <h2>What it is, and what it isn't</h2>
+      <p class="intro">ClaudeDeck is a window around the Claude Code you already use.</p>
+      <table class="is">
+        <thead><tr><th scope="col">ClaudeDeck is</th><th scope="col">ClaudeDeck is not</th></tr></thead>
+        <tbody>
+          <tr><td class="yes">A session manager for your installed <code>claude</code> CLI</td><td class="no">A chat app or API client that replaces Claude Code</td></tr>
+          <tr><td class="yes">A dashboard driven by Claude Code's official hooks</td><td class="no">A tool that reads your screen or logs keystrokes</td></tr>
+          <tr><td class="yes">A local Mac app; nothing leaves your computer</td><td class="no">A cloud service, an account or telemetry</td></tr>
+          <tr><td class="yes">A shortcut that presses the key you would press</td><td class="no">An automation that approves permissions on its own</td></tr>
+        </tbody>
+      </table>
+      <p class="fine-print">Billing, usage limits and sign-in stay with Claude Code.</p>
+    </div>
+  </section>
+
+  <section id="install">
+    <div class="wrap">
+      <h2>Install</h2>
+      <ol class="steps">
+        <li><h3>Download the DMG</h3><p>Get the latest <code>ClaudeDeck-&lt;version&gt;.dmg</code> from <a data-gh="/releases/latest" href="https://github.com/">GitHub Releases</a>.</p></li>
+        <li><h3>Drag it to Applications</h3><p>The app is signed and notarized by Apple, so it opens without a Gatekeeper warning.</p></li>
+        <li><h3>Add your projects</h3><p>Pick a project folder and start a Claude session. ClaudeDeck sets up its hook on first launch.</p></li>
+      </ol>
+      <ul class="req">
+        <li>Requires macOS 15 or later and <a href="https://docs.claude.com/en/docs/claude-code">Claude Code</a> installed.</li>
+        <li>Available in English and Turkish.</li>
+        <li>Prefer to build it yourself? The <a data-gh="#building-from-source" href="https://github.com/">README</a> explains how.</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>MIT License © 2026 <a href="https://codemagnet.co">CODE MAGNET YAZILIM LTD. ŞTİ.</a> · <a data-gh="" href="https://github.com/">Source code</a></p>
+    <p>ClaudeDeck is an independent open-source project. It is not affiliated with, endorsed by or sponsored by Anthropic. "Claude" and "Claude Code" are trademarks of Anthropic PBC.</p>
+  </div>
+</footer>
+<script src="assets/deck.js"></script>
+</body>
+</html>
