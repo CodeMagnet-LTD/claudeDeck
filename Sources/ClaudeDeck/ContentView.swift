@@ -4,8 +4,8 @@ import UniformTypeIdentifiers
 
 struct ContentView: View {
     @Environment(AppModel.self) private var model
-    @AppStorage("showFiles") private var showFiles = false
-    @AppStorage("inspectorTab") private var inspectorTab = InspectorTab.files
+    @AppStorage("showFiles", store: .windowState) private var showFiles = false
+    @AppStorage("inspectorTab", store: .windowState) private var inspectorTab = InspectorTab.files
 
     var body: some View {
         NavigationSplitView {
@@ -217,7 +217,7 @@ struct PaneHeader: View {
         HStack(spacing: 8) {
             StatusDot(display: status.display, unseen: model.isUnseenIdle(session.id))
             Text(session.name).font(.callout.weight(focused ? .semibold : .regular)).lineLimit(1)
-            GitHubLinkBadge(session: session)
+            GitHubLinkBadge(session: session, answersDebugPresent: true)
             StatusPill(display: status.display, unseen: model.isUnseenIdle(session.id))
             ShellStartBadge(session: session)
             if model.pencilSessions.contains(session.id) { PencilBadge() }

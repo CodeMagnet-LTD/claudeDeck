@@ -58,6 +58,8 @@ enum GitHubStyle {
 struct GitHubLinkBadge: View {
     @Environment(AppModel.self) private var model
     let session: DeckSession
+    /// Opens on `GitHubMonitor.debugPresentRequest` (only one badge per session should).
+    var answersDebugPresent = false
     @State private var showing = false
 
     var body: some View {
@@ -89,6 +91,11 @@ struct GitHubLinkBadge: View {
             .popover(isPresented: $showing, arrowEdge: .bottom) {
                 LinkedWorkItemView(sessionID: session.id)
                     .environment(model)
+            }
+            .onChange(of: monitor.debugPresentRequest) { _, id in
+                guard answersDebugPresent, id == session.id else { return }
+                monitor.debugPresentRequest = nil
+                showing = true
             }
         }
     }

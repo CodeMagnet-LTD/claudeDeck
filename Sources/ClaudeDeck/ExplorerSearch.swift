@@ -41,9 +41,9 @@ struct ExplorerCommands: Commands {
 enum ExplorerSheets {
     static let identifier = NSUserInterfaceItemIdentifier("ClaudeDeckExplorerSheet")
 
-    static func quickOpen(model: AppModel) {
+    static func quickOpen(model: AppModel, query: String = "") {
         guard let root = model.explorerProject.map({ URL(fileURLWithPath: $0.path) }) else { return }
-        present(size: NSSize(width: 600, height: 420), model: model) { close in QuickOpenView(root: root, close: close) }
+        present(size: NSSize(width: 600, height: 420), model: model) { close in QuickOpenView(root: root, close: close, initialQuery: query) }
     }
 
     static func findInFiles(model: AppModel) {
@@ -120,6 +120,7 @@ struct QuickOpenView: View {
     @Environment(AppModel.self) private var model
     let root: URL
     let close: () -> Void
+    var initialQuery = ""
     @State private var query = ""
     @State private var files: [String]?
     @State private var results: [FuzzyMatch.Result] = []
@@ -158,7 +159,10 @@ struct QuickOpenView: View {
             Divider()
             footer
         }
-        .onAppear { fieldFocused = true }
+        .onAppear {
+            fieldFocused = true
+            if query.isEmpty { query = initialQuery }
+        }
         .task {
             let root = self.root
             files = await Task.detached {

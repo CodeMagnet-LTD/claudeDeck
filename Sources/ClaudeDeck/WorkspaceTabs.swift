@@ -207,3 +207,11 @@ extension AppModel {
         showMainWindow()
     }
 }
+
+extension UserDefaults {
+    /// Window UI state (`@AppStorage`: inspector, sidebar sections). Demo mode runs under the real
+    /// bundle id: it keeps its own copy so it never flips the user's panels.
+    /// UserDefaults is thread-safe (documented), just not marked Sendable.
+    nonisolated(unsafe) static let windowState: UserDefaults = ProcessInfo.processInfo.environment["CLAUDEDECK_DEMO"] == nil
+        ? .standard : UserDefaults(suiteName: "ClaudeDeck.demo") ?? .standard
+}

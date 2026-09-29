@@ -3,7 +3,7 @@ import SwiftUI
 
 struct SidebarView: View {
     @Environment(AppModel.self) private var model
-    @AppStorage("sidebar.inactiveExpanded") private var inactiveExpanded = true
+    @AppStorage("sidebar.inactiveExpanded", store: .windowState) private var inactiveExpanded = true
 
     var body: some View {
         @Bindable var model = model

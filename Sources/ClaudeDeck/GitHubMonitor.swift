@@ -17,6 +17,8 @@ final class GitHubMonitor {
     private(set) var details: [UUID: GitHubItemDetails] = [:]
     private(set) var errors: [UUID: String] = [:]
     private(set) var loading: Set<UUID> = []
+    /// Snapshot mode (DebugSnapshot): the session whose pane-header badge should open its popover.
+    var debugPresentRequest: UUID?
 
     @ObservationIgnored private weak var model: AppModel?
     @ObservationIgnored private var pollTask: Task<Void, Never>?

@@ -91,7 +91,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         observeWindowsAndPower()
         installZoomKeys()
         model.start()
-        if !AppModel.isDemo { GitHubMonitor.shared.start(model: model) }
+        // Demo mode polls only with tools/demo.sh's stand-in gh (fixture PRs and issues).
+        if !AppModel.isDemo || ProcessInfo.processInfo.environment["CLAUDEDECK_GH_PATH"] != nil {
+            GitHubMonitor.shared.start(model: model)
+        }
         DebugSnapshot.startIfRequested(model: model)
     }
 

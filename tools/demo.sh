@@ -49,8 +49,58 @@ EOF
 D="$ROOT/projects/acme-storefront"
 printf 'export function CartSummary({ items }) {\n  const total = items.reduce((s, i) => s + i.price * i.qty, 0)\n  return total\n}\n' > "$D/src/cart/CartSummary.tsx"
 git -C "$D" commit -qam "Show cart total"
+checkout() { # extra text ("" for none): $1 after the imports, $2 after the state, $3 + $4 in and after <CartSummary>
+  cat <<TSX
+import { useState } from "react"
+import { useCart } from "../cart/useCart"
+import { CartSummary } from "../cart/CartSummary"
+import { pay } from "./payment"$1
+
+type Status = "idle" | "paying" | "done" | "error"
+
+export function Checkout() {
+  const { items, clear } = useCart()
+  const [status, setStatus] = useState<Status>("idle")
+  const [error, setError] = useState<string | null>(null)$2
+
+  async function submit() {
+    setStatus("paying")
+    try {
+      await pay(items)
+      clear()
+      setStatus("done")
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Payment failed")
+      setStatus("error")
+    }
+  }
+
+  if (status === "done") {
+    return <p className="checkout-done">Thanks! Your order is on its way.</p>
+  }
+
+  return (
+    <section className="checkout">
+      <h1>Checkout</h1>
+      <CartSummary items={items}$3 />$4
+      {error && <p role="alert">{error}</p>}
+      <button disabled={status === "paying"} onClick={submit}>
+        Pay now
+      </button>
+    </section>
+  )
+}
+TSX
+}
+checkout '' '' '' '' > "$D/src/checkout/Checkout.tsx"
+git -C "$D" commit -qam "Checkout page"
 printf 'export function CartSummary({ items, discount = 0 }) {\n  const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0)\n  return subtotal - discount\n}\n' > "$D/src/cart/CartSummary.tsx"
 printf 'export function applyCoupon(code) { return code === "WELCOME10" ? 0.1 : 0 }\n' > "$D/src/cart/coupons.ts"
+checkout '
+import { CouponField } from "./CouponField"' '
+  const [discount, setDiscount] = useState(0)' ' discount={discount}' '
+      <CouponField onApply={setDiscount} />' > "$D/src/checkout/Checkout.tsx"
+git -C "$D" add src/cart/coupons.ts
 
 repo payments-api <<'EOF'
 go.mod|module example.com/payments
@@ -89,6 +139,58 @@ astro.config.mjs|export default {}
 src/posts/hello-world.md|# Hello
 EOF
 
+# --- GitHub: a stand-in `gh` that answers from fixtures (made-up repositories and people) ----------
+mkdir -p "$ROOT/github"
+cat > "$ROOT/bin/gh" <<'EOF'
+#!/bin/sh
+# Demo stand-in for the GitHub CLI: answers `auth status` and `pr|issue view N` from fixture files.
+D="$(dirname "$0")/../github"
+case "$1 $2" in
+  "auth status") exit 0 ;;
+  "pr view"|"issue view") [ -f "$D/$1-$3.json" ] && exec cat "$D/$1-$3.json" ;;
+esac
+echo "demo gh: no fixture for: $*" >&2
+exit 1
+EOF
+chmod +x "$ROOT/bin/gh"
+ago() { date -u -v-"$1" +%Y-%m-%dT%H:%M:%SZ; }   # ago 3H → ISO 8601, three hours ago
+
+cat > "$ROOT/github/pr-42.json" <<EOF
+{ "number": 42, "title": "Coupon codes in the cart", "state": "OPEN", "isDraft": false,
+  "url": "https://github.com/acme/storefront/pull/42", "headRefName": "coupon-codes",
+  "author": { "login": "alex" }, "updatedAt": "$(ago 25M)",
+  "labels": [ { "name": "feature", "color": "1d76db" }, { "name": "checkout", "color": "fbca04" } ],
+  "body": "Adds a **coupon field** to checkout and a \`discount\` prop to \`CartSummary\`.\n\n- \`WELCOME10\` takes 10% off\n- Invalid codes show an inline error\n\nCloses #37.",
+  "reviewDecision": "CHANGES_REQUESTED", "mergeStateStatus": "BLOCKED",
+  "comments": [
+    { "id": "c1", "author": { "login": "alex" }, "body": "Screenshots of the new field are in the description of #37.", "createdAt": "$(ago 3H)" }
+  ],
+  "latestReviews": [
+    { "author": { "login": "sam" }, "state": "CHANGES_REQUESTED", "submittedAt": "$(ago 40M)",
+      "body": "Looks good overall. Coupon codes should be **case-insensitive**, and the e2e checkout test fails with a discount applied." }
+  ],
+  "statusCheckRollup": [
+    { "__typename": "CheckRun", "name": "lint", "status": "COMPLETED", "conclusion": "SUCCESS" },
+    { "__typename": "CheckRun", "name": "unit tests", "status": "COMPLETED", "conclusion": "SUCCESS" },
+    { "__typename": "CheckRun", "name": "build", "status": "COMPLETED", "conclusion": "SUCCESS" },
+    { "__typename": "CheckRun", "name": "e2e (chromium)", "status": "COMPLETED", "conclusion": "FAILURE" }
+  ] }
+EOF
+cat > "$ROOT/github/issue-118.json" <<EOF
+{ "number": 118, "title": "Webhook deliveries are lost when the receiver times out", "state": "OPEN",
+  "url": "https://github.com/acme/payments-api/issues/118", "author": { "login": "jordan" },
+  "updatedAt": "$(ago 2H)", "labels": [ { "name": "bug", "color": "d73a4a" } ],
+  "body": "When a merchant endpoint takes longer than 10 s we drop the event. We should retry with backoff.",
+  "comments": [] }
+EOF
+cat > "$ROOT/github/pr-7.json" <<EOF
+{ "number": 7, "title": "Escaped pipes in table cells", "state": "MERGED", "isDraft": false,
+  "url": "https://github.com/acme/swift-markdown-kit/pull/7", "headRefName": "fix-tables",
+  "author": { "login": "casey" }, "updatedAt": "$(ago 1d)", "labels": [], "body": "Fixes #6.",
+  "reviewDecision": "APPROVED", "comments": [], "latestReviews": [],
+  "statusCheckRollup": [ { "__typename": "CheckRun", "name": "swift test", "status": "COMPLETED", "conclusion": "SUCCESS" } ] }
+EOF
+
 # --- deck.json ----------------------------------------------------------------------------------
 G1=A0000000-0000-0000-0000-000000000001
 G2=A0000000-0000-0000-0000-000000000002
@@ -106,6 +208,12 @@ S6=C0000000-0000-0000-0000-000000000006
 S7=C0000000-0000-0000-0000-000000000007
 NOW=$(date +%s)
 P="$ROOT/projects"
+A1=D0000000-0000-0000-0000-000000000001
+A2=D0000000-0000-0000-0000-000000000002
+A3=D0000000-0000-0000-0000-000000000003
+at() { date -v"$1" -v"$2"H -v"$3"M -v0S +%s; }   # at -1d 9 0 → yesterday 09:00
+NEXT_WEEKDAY=$(n=1; while [ "$(date -v+${n}d +%u)" -gt 5 ]; do n=$((n + 1)); done; at +${n}d 9 0)
+NEXT_MONDAY=$(date -v+1d -v+mon -v10H -v0M -v0S +%s)
 
 cat > "$ROOT/data/deck.json" <<EOF
 {
@@ -122,18 +230,49 @@ cat > "$ROOT/data/deck.json" <<EOF
     { "id": "$P5", "path": "$P/blog", "name": "blog", "pinned": false, "collapsed": false }
   ],
   "sessions": [
-    { "id": "$S1", "projectID": "$P1", "name": "acme-storefront", "kind": "claude", "createdAt": $NOW, "isOpen": true },
+    { "id": "$S1", "projectID": "$P1", "name": "acme-storefront", "kind": "claude", "createdAt": $NOW, "isOpen": true,
+      "linkedWorkItem": { "kind": "pr", "repo": "acme/storefront", "number": 42 } },
     { "id": "$S2", "projectID": "$P1", "name": "acme-storefront · 2", "kind": "claude", "createdAt": $NOW, "isOpen": true },
-    { "id": "$S3", "projectID": "$P2", "name": "payments-api", "kind": "claude", "createdAt": $NOW, "isOpen": true },
+    { "id": "$S3", "projectID": "$P2", "name": "payments-api", "kind": "claude", "createdAt": $NOW, "isOpen": true,
+      "linkedWorkItem": { "kind": "issue", "repo": "acme/payments-api", "number": 118 } },
     { "id": "$S4", "projectID": "$P2", "name": "payments-api · ./dev.sh", "kind": "shell", "createdAt": $NOW, "isOpen": true,
       "startupCommand": "./dev.sh", "autoStart": true },
     { "id": "$S5", "projectID": "$P3", "name": "mobile-app", "kind": "claude", "createdAt": $NOW, "isOpen": true },
-    { "id": "$S6", "projectID": "$P4", "name": "swift-markdown-kit · fix-tables", "kind": "claude", "createdAt": $NOW, "isOpen": true, "worktreeName": "fix-tables" },
+    { "id": "$S6", "projectID": "$P4", "name": "swift-markdown-kit · fix-tables", "kind": "claude", "createdAt": $NOW, "isOpen": true, "worktreeName": "fix-tables",
+      "linkedWorkItem": { "kind": "pr", "repo": "acme/swift-markdown-kit", "number": 7 } },
     { "id": "$S7", "projectID": "$P5", "name": "blog", "kind": "claude", "createdAt": $NOW, "lastActivityAt": $((NOW - 7200)), "isOpen": false }
   ],
   "selectedSessionID": "$S1",
   "panes": [ "$S1", "$S2" ],
-  "settings": { "resumeOnLaunch": true, "compactOnResume": false, "notifications": true, "bounceDock": false, "confirmQuit": false }
+  "automations": [
+    { "id": "$A1", "name": "Test health", "projectID": "$P1", "workspace": "current", "reuseSession": false,
+      "prompt": "Run the tests, lint and type checks. If anything is red, find the cause and fix what is safe to fix. Finish with a short summary of what you changed and what still needs a human.",
+      "triggers": [ { "kind": "time", "schedule": "weekdays", "hour": 9, "minute": 0 } ],
+      "enabled": true, "nextRunAt": $NEXT_WEEKDAY, "lastRunAt": $(at -1d 9 0), "lastRunStatus": "succeeded",
+      "lastSessionID": "$S2", "createdAt": $((NOW - 864000)), "updatedAt": $((NOW - 864000)) },
+    { "id": "$A2", "name": "Weekly changelog", "projectID": "$P2", "workspace": "newWorktree", "reuseSession": false,
+      "prompt": "Summarize this week's commits into a changelog people can read, grouped by feature. Write it to CHANGELOG.md.",
+      "triggers": [ { "kind": "time", "schedule": "weekly", "weekday": 2, "hour": 10, "minute": 0 } ],
+      "enabled": true, "nextRunAt": $NEXT_MONDAY, "lastRunStatus": "succeeded", "createdAt": $((NOW - 1728000)) },
+    { "id": "$A3", "name": "Audit dependencies", "projectID": "$P3", "workspace": "current", "reuseSession": false,
+      "prompt": "Check Package.resolved for vulnerable, unused or unexpectedly upgraded packages.",
+      "triggers": [ { "kind": "time", "schedule": "daily", "hour": 8, "minute": 30 } ],
+      "enabled": false, "createdAt": $((NOW - 259200)) }
+  ],
+  "automationRuns": [
+    { "id": "E0000000-0000-0000-0000-000000000001", "automationID": "$A1", "trigger": "scheduled", "scheduledFor": $(at -1d 9 0),
+      "startedAt": $(at -1d 9 0), "completedAt": $(at -1d 9 6), "status": "succeeded", "sessionID": "$S2" },
+    { "id": "E0000000-0000-0000-0000-000000000002", "automationID": "$A1", "trigger": "manual",
+      "startedAt": $(at -2d 14 12), "completedAt": $(at -2d 14 19), "status": "succeeded" },
+    { "id": "E0000000-0000-0000-0000-000000000003", "automationID": "$A1", "trigger": "scheduled", "scheduledFor": $(at -2d 9 0),
+      "startedAt": $(at -2d 9 0), "completedAt": $(at -2d 9 30), "status": "failed", "error": "Timed out waiting for Claude to finish." },
+    { "id": "E0000000-0000-0000-0000-000000000004", "automationID": "$A1", "trigger": "scheduled", "scheduledFor": $(at -3d 9 0),
+      "startedAt": $(at -3d 11 42), "completedAt": $(at -3d 11 42), "status": "skipped", "error": "Missed the scheduled run beyond its grace period." },
+    { "id": "E0000000-0000-0000-0000-000000000005", "automationID": "$A2", "trigger": "scheduled", "scheduledFor": $(at -2d 10 0),
+      "startedAt": $(at -2d 10 0), "completedAt": $(at -2d 10 8), "status": "succeeded" }
+  ],
+  "settings": { "resumeOnLaunch": true, "compactOnResume": false, "notifications": true, "bounceDock": false, "confirmQuit": false,
+                "pencilMCP": false, "terminalFontSize": 11 }
 }
 EOF
 
@@ -248,5 +387,6 @@ CLAUDEDECK_DEMO=1 \
 CLAUDEDECK_DATA_DIR="$ROOT/data" \
 CLAUDEDECK_STATE_DIR="$ROOT/sessions" \
 CLAUDEDECK_CLAUDE_PATH="$ROOT/bin/claude" \
+CLAUDEDECK_GH_PATH="$ROOT/bin/gh" \
   "$APP/Contents/MacOS/ClaudeDeck" "$@" >/dev/null 2>&1 &
 echo "ClaudeDeck demo started (pid $!). Quit it with ⌘Q; run this script again for a fresh copy."
