@@ -34,6 +34,7 @@
 }
 
 * { box-sizing: border-box; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 [hidden] { display: none !important; }
 html { -webkit-text-size-adjust: 100%; }
 body {
@@ -123,6 +124,17 @@ img { display: block; }
 .deck-term .add { color: #7ad69b; }
 .deck-term .box { border: 1px solid #b8912f; border-radius: 6px; padding: 8px 10px; margin-top: 6px; }
 .deck-term .pick { color: #6fc3df; }
+
+/* Tour: real screenshots */
+.tour { padding-top: 0; border-top: 0; }
+.shot { margin: 0; }
+.shot img { width: 100%; height: auto; border-radius: 12px; border: 1px solid var(--rule); box-shadow: 0 30px 60px -34px rgb(20 30 45 / 0.45); background: var(--panel); }
+.shot figcaption { margin-top: 14px; color: var(--ink-soft); max-width: 60em; }
+.shot figcaption b { color: var(--ink); }
+.shot-main { margin-bottom: 56px; }
+.shot-pair { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.75fr) minmax(0, 1.1fr); gap: 40px; align-items: start; }
+.shot-pair .shot img { width: auto; max-width: 100%; max-height: 460px; }
+@media (max-width: 900px) { .shot-pair { grid-template-columns: 1fr; } }
 
 /* Sections */
 section { padding: 72px 0; border-top: 1px solid var(--rule); }

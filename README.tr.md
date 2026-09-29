@@ -15,6 +15,86 @@ ClaudeDeck Claude'u sarmalamaz ya da taklit etmez, ekran da okumaz. Her oturum g
 (SwiftTerm, gerçek pty) senin kurulu `claude` komutunu login shell üzerinden çalıştırır.
 Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer hook'ların aynen geçerlidir.
 
+## Ekran görüntüleri
+
+![Kenar çubuğu, yan yana iki oturum ve Dosyalar paneliyle ClaudeDeck](docs/screenshots/main.png)
+
+**Bütün oturumlar için tek pencere.** Görüntüde neler var:
+- **Kenar çubuğu (solda):** tüm projeler ve oturumlar, gruplarıyla. Seni bekleyen her şey en üstteki
+  **Needs Attention** (Bekleyenler) bölümüne çıkar.
+- **İki bölme (ortada):**
+  - Solda, bir Bash komutu için izin bekleyen oturum. Bölme başlığındaki **Allow / Deny** ile ya da her
+    zamanki gibi terminalden cevap verebilirsin.
+  - Yanında, ayrı bir git worktree'sinde çalışmaya devam eden ikinci oturum.
+- **Dosyalar paneli (sağda):** seçili projenin canlı dosya ağacı.
+
+<table>
+  <tr>
+    <td width="40%" valign="top">
+      <img src="docs/screenshots/needs-attention.png" alt="Bekleyenler: İzin Ver ve Reddet düğmeli izin istemi, bir soru ve biten bir oturum">
+    </td>
+    <td valign="top">
+      <b>Bekleyenler.</b> Seni bekleyen oturumlar, en acil olan önce:
+      <ul>
+        <li>🔴 <b>İzin bekliyor</b>: tam komutla birlikte, tek tıkla İzin Ver / Reddet.</li>
+        <li>🔴 <b>Soru soruyor</b>: sorunun kendisiyle.</li>
+        <li>🟡 <b>Sıra sende</b>: Claude işini bitirdi; sen bakana kadar son mesajıyla burada kalır.</li>
+      </ul>
+      Aynı istemler İzin Ver / Reddet düğmeli macOS bildirimleri olarak, Dock rozetinde ve menü çubuğunda da görünür.
+    </td>
+  </tr>
+  <tr>
+    <td width="40%" valign="top">
+      <img src="docs/screenshots/sidebar.png" alt="Sabitlenen projeler, renkli gruplar, aktif ve pasif bölümleriyle kenar çubuğu">
+    </td>
+    <td valign="top">
+      <b>Projeler, gruplar ve tüm durumlar tek bakışta.</b>
+      <ul>
+        <li><b>Pinned</b> (sabitlenen) projeler en üstte kalır.</li>
+        <li><b>Active</b>, çalışan her şeyi başlattığın sırayla, renkli grupları (<i>Open Source</i>, <i>Client Work</i>) ve canlı sayaçlarıyla listeler.</li>
+        <li><b>Inactive</b>, çalışan oturumu olmayan projeleri katlar.</li>
+        <li>Her satırda durum, Claude'un o an ne yaptığı ve durumun ne zaman değiştiği görünür.</li>
+        <li>Dal ikonu worktree oturumunu (<code>fix-tables</code>) gösterir.</li>
+        <li><b>Terminal</b> ve <b>⚡ Auto</b> etiketli satır, başlangıç komutu (<code>./dev.sh</code>) uygulama açılınca çalışan düz bir shell'dir.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="40%" valign="top">
+      <img src="docs/screenshots/files.png" alt="Git işaretli dosyalar paneli">
+    </td>
+    <td valign="top">
+      <b>Dosyalar paneli (⌘⇧E).</b> Projenin canlı güncellenen dosya ağacı, git işaretleriyle:
+      <ul>
+        <li>Turuncu <b>M</b>: değişmiş. Yeşil <b>?</b>: yeni, git'e eklenmemiş. Değişiklik içeren klasörler noktalı.</li>
+        <li>Bir dosyayı seçince commit geçmişi ve diff'leri görünür; kaydedilmemiş değişiklikler de dahil.</li>
+        <li>Dosyayı bir Claude bölmesine sürükle, <code>@yol</code> olarak eklensin.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="40%" valign="top">
+      <img src="docs/screenshots/widget.png" alt="Bekleyen, çalışan ve sıra sende oturum sayılarını gösteren masaüstü widget'ı">
+    </td>
+    <td valign="top">
+      <b>Masaüstü widget'ı.</b> Bekleyen, çalışan ve biten oturum sayıları, ayrıca seni bekleyen ilk oturumlar ve ne istedikleri. Bir oturuma tıklayınca doğrudan ona gidersin. Eklemek için: masaüstüne sağ tık › Widget'ları Düzenle… › ClaudeDeck.
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/settings-general.png" alt="Genel ayarlar: tema, çıkış onayı, menü çubuğu modu"></td>
+    <td><img src="docs/screenshots/settings-sessions.png" alt="Oturum ayarları: otomatik /compact eşiği, devam mesajı, bildirimler"></td>
+  </tr>
+  <tr>
+    <td valign="top"><b>Ayarlar › Genel:</b> Sistem / Açık / Koyu tema, terminaller açıkken çıkmadan önce onay ve pencere kapanınca yalnızca menü çubuğunda çalışma.</td>
+    <td valign="top"><b>Ayarlar › Oturumlar ve Uyarılar:</b> otomatik <code>/compact</code> için token eşiği, otomatik devamdan sonra isteğe bağlı "devam et" mesajı ve bildirim seçenekleri.</td>
+  </tr>
+</table>
+
+<sub>Görüntüler, uydurma projelerle çalışan yerleşik demo moduyla (<code>tools/demo.sh</code>) alındı.</sub>
+
 ## Nedir, ne değildir
 
 | ClaudeDeck **şudur** | ClaudeDeck **şu değildir** |

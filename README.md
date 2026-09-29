@@ -12,7 +12,85 @@ ClaudeDeck doesn't wrap, imitate or screen-scrape Claude. Every session runs **y
 `claude` CLI** through your login shell, in an embedded terminal (SwiftTerm, a real pty). Your settings,
 `CLAUDE.md` files, remote control, MCP servers, skills and other hooks keep working exactly as before.
 
-<!-- Screenshots (later): capture with tools/demo.sh (fake demo projects only) into docs/screenshots/ and add a "Screenshots" section here. -->
+## Screenshots
+
+![ClaudeDeck with the sidebar, two sessions side by side and the Files panel](docs/screenshots/main.png)
+
+**One window for every session.** Here's what the screenshot shows:
+- **Sidebar (left):** every project and session, grouped. Anything that needs you is pulled up into
+  **Needs Attention** at the top.
+- **Two panes (middle):**
+  - On the left, a session waiting for permission to run a Bash command. You can answer with
+    **Allow / Deny** in the pane header, or in the terminal as usual.
+  - Next to it, a second session in a separate git worktree, still running.
+- **Files panel (right):** the selected project's live file tree.
+
+<table>
+  <tr>
+    <td width="40%" valign="top">
+      <img src="docs/screenshots/needs-attention.png" alt="Needs Attention: a permission prompt with Allow and Deny, a question, and a finished session">
+    </td>
+    <td valign="top">
+      <b>Needs Attention.</b> Sessions that are waiting on you, most urgent first:
+      <ul>
+        <li>🔴 <b>Needs permission</b>, with the exact command and one-click Allow / Deny.</li>
+        <li>🔴 <b>Asking a question</b>, with the question itself.</li>
+        <li>🟡 <b>Your turn</b>: Claude finished, with its last message, until you've looked at it.</li>
+      </ul>
+      The same prompts arrive as macOS notifications with Allow / Deny buttons, on the Dock badge and in the menu bar.
+    </td>
+  </tr>
+  <tr>
+    <td width="40%" valign="top">
+      <img src="docs/screenshots/sidebar.png" alt="Sidebar with pinned projects, colored groups, active and inactive sections">
+    </td>
+    <td valign="top">
+      <b>Projects, groups and every state at a glance.</b>
+      <ul>
+        <li><b>Pinned</b> projects stay on top.</li>
+        <li><b>Active</b> lists what's running, in the order you started it, with colored groups (<i>Open Source</i>, <i>Client Work</i>) and live counters.</li>
+        <li><b>Inactive</b> folds away projects with nothing running.</li>
+        <li>Each row shows the state, what Claude is doing right now and how long ago it changed.</li>
+        <li>The branch icon marks a worktree session (<code>fix-tables</code>).</li>
+        <li><b>Terminal</b> with <b>⚡ Auto</b> is a plain shell whose startup command (<code>./dev.sh</code>) runs when the app opens.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="40%" valign="top">
+      <img src="docs/screenshots/files.png" alt="Files panel with git status marks">
+    </td>
+    <td valign="top">
+      <b>Files panel (⌘⇧E).</b> The project's file tree, updated live, with git marks:
+      <ul>
+        <li>Orange <b>M</b>: modified. Green <b>?</b>: new and untracked. Folders with changes get a dot.</li>
+        <li>Select a file to see its commit history and diffs, including uncommitted changes.</li>
+        <li>Drag a file into a Claude pane to add it as <code>@path</code>.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="40%" valign="top">
+      <img src="docs/screenshots/widget.png" alt="Desktop widget with waiting, running and your-turn counts and the sessions that need attention">
+    </td>
+    <td valign="top">
+      <b>Desktop widget.</b> Counts of sessions waiting, running and done, plus the first sessions that need you with what they're asking. Click a session to jump straight to it. Add it from the desktop: right-click › Edit Widgets… › ClaudeDeck.
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <td><img src="docs/screenshots/settings-general.png" alt="General settings: theme, quit confirmation, menu bar mode"></td>
+    <td><img src="docs/screenshots/settings-sessions.png" alt="Session settings: auto /compact threshold, continue message, notifications"></td>
+  </tr>
+  <tr>
+    <td valign="top"><b>Settings › General:</b> System / Light / Dark theme, a confirmation before quitting while terminals run, and a menu-bar-only mode when the window is closed.</td>
+    <td valign="top"><b>Settings › Sessions and Alerts:</b> the token threshold for automatic <code>/compact</code>, an optional "continue" message after an automatic resume, and notification options.</td>
+  </tr>
+</table>
+
+<sub>Screenshots use the built-in demo mode (<code>tools/demo.sh</code>) with made-up projects.</sub>
 
 ## What it is, and what it isn't
 
