@@ -5,5 +5,36 @@
     <link>https://github.com/CodeMagnet-LTD/claudeDeck</link>
     <description>ClaudeDeck updates</description>
     <language>en</language>
+    <item>
+      <title>ClaudeDeck 0.2.0</title>
+      <pubDate>Tue, 29 Sep 2026 23:02:51 GMT</pubDate>
+      <sparkle:version>4</sparkle:version>
+      <sparkle:shortVersionString>0.2.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/CodeMagnet-LTD/claudeDeck/releases/tag/v0.2.0</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p>ClaudeDeck 0.2.0 turns the deck into a place where you can also read, review and ship the code your Claude sessions write — without leaving the window.</p>
+<h3>New</h3>
+<ul>
+<li><b>Tabs in the main window.</b> Files, full-width diffs and Automations open as tabs in the toolbar; <b>Sessions</b> is always the first tab. Preview tabs (italic) are replaced by the next file you open until you edit or pin them. ⌘1–⌘9 and ⌃Tab switch tabs, drag to reorder, right-click for Close Others / Open in Separate Window. Prefer windows? Settings › open files in separate windows.</li>
+<li><b>Built-in editor.</b> Light code editor with syntax highlighting, find &amp; replace, ⌘S, reload when the file changes on disk, and <b>Add to Claude</b> that inserts <code>@path#L10-20</code> for the selected lines.</li>
+<li><b>Changes (⌘⇧G).</b> Source control in the right panel: stage, unstage or discard per file or per hunk, commit / amend / push / pull, ✨ generate the commit message with your own <code>claude</code>, and <b>Ask Claude about this line…</b> from any diff line.</li>
+<li><b>Explorer upgrades.</b> Live file tree (including external commits), respects <code>.gitignore</code>, <b>Quick Open (⌘P)</b>, <b>Find in Files (⌘⇧F)</b>, cut / copy / paste / duplicate, drag to move, drop files from Finder.</li>
+<li><b>GitHub issues &amp; pull requests.</b> Link one to a session and its badge shows the state; the popover has CI checks, reviews and the latest comments, plus Add Comment and Send to Claude. You get notified on a new review, a failing check or a merge. Uses your own <code>gh</code> CLI — ClaudeDeck stores no tokens.</li>
+<li><b>Automations.</b> Saved prompts that start a Claude session hourly, daily, on weekdays or weekly (or on demand with Run Now), in the project folder or a fresh git worktree, with run history and templates. They run while ClaudeDeck is running (menu bar mode + open at login keep it alive).</li>
+<li><b>Restart Session (⌘⌥R)</b> and <b>Restart All Claude Sessions.</b> Quits <code>claude</code> and resumes the same conversation, so newly added MCP servers and settings are picked up with one click.</li>
+<li><b>Pencil (pen.dev) integration.</b> Claude sessions started by ClaudeDeck get the Pencil desktop app's MCP server automatically, and <code>.pen</code> files open in Pencil. Optional; off when Pencil isn't installed.</li>
+<li><b>⌘-click paths and links in the terminal.</b> A file path Claude prints (like <code>promo-video/out/promo.mp4</code> or <code>src/app.ts:42</code>) is resolved against the session's project folder and shown in Finder; ⌘⌥-click opens the file itself. URLs open in the browser.</li>
+<li><b>Automatic updates.</b> ClaudeDeck now checks for new versions at launch and daily and installs them for you (Sparkle, signed updates). <b>ClaudeDeck › Check for Updates…</b> checks on demand. If an update is waiting at launch, your sessions start after you decide, so installing it doesn't restart them twice.</li>
+<li><b>Interrupted sessions always pick up where they left off.</b> A session that was working when ClaudeDeck quit — or crashed — gets "Continue where you left off." when it comes back. Idle sessions simply resume; sending the message to every session is optional. The automatic <code>/compact</code> after a resume is now off by default.</li>
+<li><b>Copy Path</b> in the project context menu.</li>
+</ul>
+<h3>Notes</h3>
+<ul>
+<li><b>Coming from 0.1.0:</b> 0.1.0 has no updater, so install 0.2.0 by hand once (download the DMG below and replace the app). From 0.2.0 on, updates arrive automatically.</li>
+<li>Requires macOS 15 or later. <code>gh</code> (for GitHub linking) and Pencil are optional.</li>
+<li>Your data file gains new fields (automations, GitHub links, new settings). Going back to 0.1.0 afterwards works, but 0.1.0 drops those fields the next time it saves.</li>
+</ul>]]></description>
+      <enclosure url="https://github.com/CodeMagnet-LTD/claudeDeck/releases/download/v0.2.0/ClaudeDeck-0.2.0.dmg" sparkle:edSignature="eafBm+ppCxg6S3hmwL+PHQVNBvfJRSerLMlGz8zNHHaqK5Loc/qPC19ZpD8XEQgYy2T5PWZX+2hZm/OqkmSpBw==" length="10904398" type="application/octet-stream"/>
+    </item>
   </channel>
 </rss>
