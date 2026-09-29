@@ -29,6 +29,7 @@ struct ClaudeDeckApp: App {
                 Divider()
                 RestartCommands(model: delegate.model)
             }
+            ExplorerCommands(model: delegate.model)
             // No help book: frees ⌘? (on Turkish keyboards the "+" key area produces it) for zoom.
             CommandGroup(replacing: .help) {}
             CommandGroup(after: .toolbar) {

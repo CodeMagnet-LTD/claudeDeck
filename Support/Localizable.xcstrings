@@ -47,6 +47,16 @@
     "%lld": {
       "shouldTranslate": false
     },
+    "%lld files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld dosya"
+          }
+        }
+      }
+    },
     "%lld new comments": {
       "localizations": {
         "tr": {
@@ -83,6 +93,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%2$lld oturumdan %1$lld tanesi çalışıyor; yeniden başlatmak mevcut turlarını yarıda keser."
+          }
+        }
+      }
+    },
+    "%lld results in %lld files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%2$lld dosyada %1$lld sonuç"
           }
         }
       }
@@ -150,6 +170,16 @@
         }
       }
     },
+    "A folder can’t be moved into itself.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir klasör kendi içine taşınamaz."
+          }
+        }
+      }
+    },
     "A scheduled run found later than this (Mac asleep, ClaudeDeck not running) is skipped.": {
       "localizations": {
         "tr": {
@@ -206,6 +236,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Claude'a ekle (@%@)"
+          }
+        }
+      }
+    },
+    "Add @%@:%lld to Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "@%@:%lld öğesini Claude'a ekle"
           }
         }
       }
@@ -743,6 +783,16 @@
         }
       }
     },
+    "Click to open": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açmak için tıklayın"
+          }
+        }
+      }
+    },
     "Close": {
       "localizations": {
         "tr": {
@@ -799,6 +849,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pencereyi kapatmak (X) hiçbir oturumu durdurmaz; uygulama menü çubuğunda çalışmaya devam eder."
+          }
+        }
+      }
+    },
+    "Collapse All": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümünü Daralt"
           }
         }
       }
@@ -943,6 +1003,16 @@
         }
       }
     },
+    "Copy": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyala"
+          }
+        }
+      }
+    },
     "Copy Line": {
       "localizations": {
         "tr": {
@@ -1019,6 +1089,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "~/.claude/settings.json okunamadı: %@"
+          }
+        }
+      }
+    },
+    "Cut": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kes"
           }
         }
       }
@@ -1223,6 +1303,16 @@
         }
       }
     },
+    "Duplicate": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çoğalt"
+          }
+        }
+      }
+    },
     "Edit GitHub Link…": {
       "localizations": {
         "tr": {
@@ -1399,6 +1489,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kritik hataları bul"
+          }
+        }
+      }
+    },
+    "Find in Files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalarda Bul"
+          }
+        }
+      }
+    },
+    "Find in Files…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalarda Bul…"
+          }
+        }
+      }
+    },
+    "First %lld results": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk %lld sonuç"
           }
         }
       }
@@ -1689,6 +1809,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Çözüldü olarak işaretle"
+          }
+        }
+      }
+    },
+    "Match Case": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Büyük/Küçük Harf Eşleştir"
           }
         }
       }
@@ -2053,12 +2183,32 @@
         }
       }
     },
+    "No matching files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleşen dosya yok"
+          }
+        }
+      }
+    },
     "No pull request for branch %@": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ dalı için pull request yok"
+          }
+        }
+      }
+    },
+    "No results": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonuç yok"
           }
         }
       }
@@ -2323,6 +2473,16 @@
         }
       }
     },
+    "Paste": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yapıştır"
+          }
+        }
+      }
+    },
     "Paste a link like https://github.com/owner/repo/pull/12 or https://github.com/owner/repo/issues/34, or write owner/repo#12.": {
       "localizations": {
         "tr": {
@@ -2539,6 +2699,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Önce dalı gönderip bir pull request açın."
+          }
+        }
+      }
+    },
+    "Quick Open…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hızlı Aç…"
           }
         }
       }
@@ -2973,6 +3143,16 @@
         }
       }
     },
+    "Search files by name": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyaları ada göre ara"
+          }
+        }
+      }
+    },
     "Select All": {
       "localizations": {
         "tr": {
@@ -3069,6 +3249,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Gizli Dosyaları Göster"
+          }
+        }
+      }
+    },
+    "Show Ignored Files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yok Sayılan Dosyaları Göster"
           }
         }
       }
@@ -3696,6 +3886,16 @@
         }
       }
     },
+    "Use Regular Expression": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düzenli İfade Kullan"
+          }
+        }
+      }
+    },
     "Waiting for an answer": {
       "localizations": {
         "tr": {
@@ -4139,8 +4339,38 @@
     "↑%lld ↓%lld": {
       "shouldTranslate": false
     },
+    "↵ Open": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "↵ Aç"
+          }
+        }
+      }
+    },
     "−%lld": {
       "shouldTranslate": false
+    },
+    "⌥-click to add @path:line to Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "@yol:satır eklemek için ⌥-tıklayın"
+          }
+        }
+      }
+    },
+    "⌥↵ Add to Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "⌥↵ Claude'a ekle"
+          }
+        }
+      }
     },
     "▶%lld": {
       "shouldTranslate": false
