@@ -217,6 +217,7 @@ struct PaneHeader: View {
         HStack(spacing: 8) {
             StatusDot(display: status.display, unseen: model.isUnseenIdle(session.id))
             Text(session.name).font(.callout.weight(focused ? .semibold : .regular)).lineLimit(1)
+            GitHubLinkBadge(session: session)
             StatusPill(display: status.display, unseen: model.isUnseenIdle(session.id))
                     ShellStartBadge(session: session)
             if let detail = status.detail {

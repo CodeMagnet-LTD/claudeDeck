@@ -74,6 +74,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         observeWindowsAndPower()
         installZoomKeys()
         model.start()
+        if !AppModel.isDemo { GitHubMonitor.shared.start(model: model) }
         DebugSnapshot.startIfRequested(model: model)
     }
 

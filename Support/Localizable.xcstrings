@@ -47,6 +47,36 @@
     "%lld": {
       "shouldTranslate": false
     },
+    "%lld new comments": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld yeni yorum"
+          }
+        }
+      }
+    },
+    "%lld of %lld checks failed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld/%lld kontrol başarısız"
+          }
+        }
+      }
+    },
+    "%lld of %lld checks running": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld/%lld kontrol çalışıyor"
+          }
+        }
+      }
+    },
     "%lldd": {
       "localizations": {
         "tr": {
@@ -160,6 +190,16 @@
         }
       }
     },
+    "Add Comment…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yorum Ekle…"
+          }
+        }
+      }
+    },
     "Add Project": {
       "localizations": {
         "tr": {
@@ -240,6 +280,16 @@
         }
       }
     },
+    "All %lld checks passed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld kontrolün tümü başarılı"
+          }
+        }
+      }
+    },
     "Allow": {
       "localizations": {
         "tr": {
@@ -256,6 +306,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Düzelt (amend)"
+          }
+        }
+      }
+    },
+    "Approved": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onaylandı"
           }
         }
       }
@@ -340,6 +400,26 @@
         }
       }
     },
+    "CI failed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CI başarısız"
+          }
+        }
+      }
+    },
+    "CI passed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "CI başarılı"
+          }
+        }
+      }
+    },
     "Cancel": {
       "localizations": {
         "tr": {
@@ -360,12 +440,32 @@
         }
       }
     },
+    "Changes requested": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Değişiklik istendi"
+          }
+        }
+      }
+    },
     "Changes to tracked files are lost; new files are moved to the Trash.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "İzlenen dosyalardaki değişiklikler kaybolur; yeni dosyalar Çöp Sepeti'ne taşınır."
+          }
+        }
+      }
+    },
+    "Check Again": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden Kontrol Et"
           }
         }
       }
@@ -543,6 +643,16 @@
         }
       }
     },
+    "Comment": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yorum Yap"
+          }
+        }
+      }
+    },
     "Commit": {
       "localizations": {
         "tr": {
@@ -619,6 +729,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Göreli Yolu Kopyala"
+          }
+        }
+      }
+    },
+    "Couldn't look up the pull request": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pull request bulunamadı"
           }
         }
       }
@@ -813,6 +933,16 @@
         }
       }
     },
+    "Edit GitHub Link…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub Bağlantısını Düzenle…"
+          }
+        }
+      }
+    },
     "End \"%@\" and remove it from the list?": {
       "localizations": {
         "tr": {
@@ -903,6 +1033,36 @@
         }
       }
     },
+    "GitHub CLI (gh) is not installed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub CLI (gh) kurulu değil"
+          }
+        }
+      }
+    },
+    "GitHub CLI is not signed in": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub CLI'da oturum açılmamış"
+          }
+        }
+      }
+    },
+    "GitHub CLI not available": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub CLI kullanılamıyor"
+          }
+        }
+      }
+    },
     "Green": {
       "localizations": {
         "tr": {
@@ -959,6 +1119,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Denetçi"
+          }
+        }
+      }
+    },
+    "Install the GitHub CLI (brew install gh), then run gh auth login in a terminal.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub CLI'ı kurun (brew install gh), ardından bir terminalde gh auth login çalıştırın."
           }
         }
       }
@@ -1023,6 +1193,16 @@
         }
       }
     },
+    "Latest activity": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son etkinlik"
+          }
+        }
+      }
+    },
     "Launch ClaudeDeck at login": {
       "localizations": {
         "tr": {
@@ -1043,12 +1223,52 @@
         }
       }
     },
+    "Link GitHub Issue or PR…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub Issue veya PR Bağla…"
+          }
+        }
+      }
+    },
+    "Link GitHub Issue or Pull Request": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub Issue veya Pull Request Bağla"
+          }
+        }
+      }
+    },
+    "Link PR for Current Branch": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçerli Dalın PR'ını Bağla"
+          }
+        }
+      }
+    },
     "Mark as Resolved": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Çözüldü olarak işaretle"
+          }
+        }
+      }
+    },
+    "Merge conflicts": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birleştirme çakışması"
           }
         }
       }
@@ -1273,6 +1493,16 @@
         }
       }
     },
+    "No branch checked out": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etkin bir dal yok"
+          }
+        }
+      }
+    },
     "No changes": {
       "localizations": {
         "tr": {
@@ -1289,6 +1519,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu dosya için commit yok"
+          }
+        }
+      }
+    },
+    "No description.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açıklama yok."
+          }
+        }
+      }
+    },
+    "No pull request for branch %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dalı için pull request yok"
           }
         }
       }
@@ -1359,6 +1609,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kurulu Değil"
+          }
+        }
+      }
+    },
+    "Not a GitHub issue or pull request": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub issue veya pull request bağlantısı değil"
           }
         }
       }
@@ -1453,6 +1713,16 @@
         }
       }
     },
+    "Open on GitHub": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub'da Aç"
+          }
+        }
+      }
+    },
     "Open terminals: %lld": {
       "localizations": {
         "tr": {
@@ -1469,6 +1739,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Turuncu"
+          }
+        }
+      }
+    },
+    "Paste a link like https://github.com/owner/repo/pull/12 or https://github.com/owner/repo/issues/34, or write owner/repo#12.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "https://github.com/owner/repo/pull/12 veya https://github.com/owner/repo/issues/34 gibi bir bağlantı yapıştırın ya da owner/repo#12 yazın."
           }
         }
       }
@@ -1593,6 +1873,16 @@
         }
       }
     },
+    "Push the branch and open a pull request first.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önce dalı gönderip bir pull request açın."
+          }
+        }
+      }
+    },
     "Quit": {
       "localizations": {
         "tr": {
@@ -1659,6 +1949,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "\"%@\" listeden kaldırılsın mı?"
+          }
+        }
+      }
+    },
+    "Remove GitHub Link": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub Bağlantısını Kaldır"
           }
         }
       }
@@ -1783,12 +2083,32 @@
         }
       }
     },
+    "Review required": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İnceleme gerekli"
+          }
+        }
+      }
+    },
     "Run /compact on large resumed sessions": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Devam ettirilen büyük oturumlarda /compact çalıştır"
+          }
+        }
+      }
+    },
+    "Run gh auth login in a terminal to sign in to GitHub.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub'a giriş yapmak için bir terminalde gh auth login çalıştırın."
           }
         }
       }
@@ -1879,6 +2199,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Devam ettirilen oturumlara “devam et” mesajı gönder"
+          }
+        }
+      }
+    },
+    "Send to Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude'a Gönder"
           }
         }
       }
@@ -2216,6 +2546,16 @@
         }
       }
     },
+    "Types a short prompt with the link into the session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturuma bağlantıyı içeren kısa bir istem yazar"
+          }
+        }
+      }
+    },
     "Uncommitted Changes": {
       "localizations": {
         "tr": {
@@ -2396,8 +2736,38 @@
         }
       }
     },
+    "approved": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "onaylandı"
+          }
+        }
+      }
+    },
+    "changes requested": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "değişiklik istendi"
+          }
+        }
+      }
+    },
     "claude": {
       "shouldTranslate": false
+    },
+    "closed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kapatıldı"
+          }
+        }
+      }
     },
     "file.txt": {
       "localizations": {
@@ -2419,6 +2789,70 @@
         }
       }
     },
+    "github.state.closed": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Closed"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
+          }
+        }
+      }
+    },
+    "github.state.draft": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Draft"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Taslak"
+          }
+        }
+      }
+    },
+    "github.state.merged": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Merged"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Birleştirildi"
+          }
+        }
+      }
+    },
+    "github.state.open": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık"
+          }
+        }
+      }
+    },
     "iCloud": {
       "shouldTranslate": false
     },
@@ -2428,6 +2862,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "iCloud Drive bu Mac'te açık değil (~/Library/Mobile Documents/com~apple~CloudDocs yok). Sistem Ayarları › Apple Hesabı › iCloud › iCloud Drive'ı aç."
+          }
+        }
+      }
+    },
+    "merged": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "birleştirildi"
           }
         }
       }
@@ -2442,12 +2886,72 @@
         }
       }
     },
+    "new comment from %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ yorum yaptı"
+          }
+        }
+      }
+    },
+    "new review from %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ inceleme yaptı"
+          }
+        }
+      }
+    },
     "now": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "şimdi"
+          }
+        }
+      }
+    },
+    "reopened": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "yeniden açıldı"
+          }
+        }
+      }
+    },
+    "requested changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "değişiklik istedi"
+          }
+        }
+      }
+    },
+    "review dismissed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "inceleme geçersiz"
+          }
+        }
+      }
+    },
+    "reviewed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "inceledi"
           }
         }
       }
@@ -2468,6 +2972,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "kök değer bir JSON nesnesi değil"
+          }
+        }
+      }
+    },
+    "updated": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "güncellendi"
           }
         }
       }
@@ -2498,6 +3012,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "sıra sende"
+          }
+        }
+      }
+    },
+    "· updated %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· güncellendi: %@"
           }
         }
       }

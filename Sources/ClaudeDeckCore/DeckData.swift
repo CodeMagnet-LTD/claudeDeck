@@ -65,6 +65,8 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
     /// Directory Claude actually runs in (hook `cwd`), i.e. the worktree for worktree sessions.
     /// Transcripts are stored per cwd, so `--resume` must run here.
     public var workingDirectory: String?
+    /// GitHub issue or pull request linked to this session (see GitHubLink.swift).
+    public var linkedWorkItem: LinkedWorkItem?
 
     public init(id: UUID = UUID(), projectID: UUID, name: String, kind: SessionKind = .claude, claudeSessionID: String? = nil,
                 createdAt: Date = Date(), lastActivityAt: Date? = nil, isOpen: Bool = true, worktreeName: String? = nil) {
@@ -82,6 +84,7 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
         self.busyAtQuit = false
         self.worktreeName = worktreeName
         self.workingDirectory = nil
+        self.linkedWorkItem = nil
     }
     /// Tolerant decoding: files written by older versions lack newer keys (e.g. `kind`).
     public init(from decoder: Decoder) throws {
@@ -100,6 +103,7 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
         busyAtQuit = try c.decodeIfPresent(Bool.self, forKey: .busyAtQuit) ?? false
         worktreeName = try c.decodeIfPresent(String.self, forKey: .worktreeName)
         workingDirectory = try c.decodeIfPresent(String.self, forKey: .workingDirectory)
+        linkedWorkItem = try? c.decodeIfPresent(LinkedWorkItem.self, forKey: .linkedWorkItem)
     }
 }
 
