@@ -52,6 +52,13 @@ struct SettingsView: View {
                 }
                 .disabled(!model.deck.settings.continueAfterResume)
             }
+            Section("Editor") {
+                Toggle("Open text files in the built-in editor (double-click in the Files panel)", isOn: setting(\.openFilesInBuiltInEditor))
+                Stepper(value: setting(\.editorFontSize), in: DeckSettings.fontSizeRange, step: 1) {
+                    Text("Font size: \(Int(model.deck.settings.editorFontSize)) pt")
+                }
+                Toggle("Wrap Lines", isOn: setting(\.editorWrapLines))
+            }
             Section("Alerts") {
                 Toggle("Show notifications (permission / question / done)", isOn: setting(\.notifications))
                 Toggle("Bounce the Dock icon", isOn: setting(\.bounceDock))

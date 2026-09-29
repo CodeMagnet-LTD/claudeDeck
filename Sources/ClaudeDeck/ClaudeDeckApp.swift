@@ -58,6 +58,15 @@ struct ClaudeDeckApp: App {
         }
         .defaultSize(width: 940, height: 640)
 
+        // Built-in editor: one window per file (tabbed together); reopening a file focuses its window.
+        WindowGroup("Editor", id: "editor", for: URL.self) { $url in
+            EditorWindowView(url: url)
+                .environment(delegate.model)
+                .preferredColorScheme(delegate.model.deck.settings.theme.colorScheme)
+        }
+        .defaultSize(width: 900, height: 700)
+        .commands { EditorCommands() }
+
         MenuBarExtra {
             MenuBarContent()
                 .environment(delegate.model)
@@ -128,6 +137,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             let handled = MainActor.assumeIsolated { () -> Bool in
                 guard let self, let step else { return false }
+                if EditorRegistry.isEditorWindow(NSApp.keyWindow) { EditorRegistry.zoom(by: step, model: self.model); return true }
                 self.model.zoomTerminals(by: step)
                 return true
             }
@@ -141,6 +151,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var systemIsPoweringOff = false
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard systemIsPoweringOff || EditorRegistry.confirmQuit() else { return .terminateCancel }
         let running = model.deck.sessions.filter { model.terminals.isRunning($0.id) }
         guard model.deck.settings.confirmQuit, !systemIsPoweringOff, !running.isEmpty else { return .terminateNow }
         let working = running.filter { model.status(of: $0.id).display.isRunning || model.status(of: $0.id).display.isBlocked }.count
@@ -168,7 +179,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     /// Closes the window; terminals keep running (menu bar item stays).
     func sendToBackground() {
-        for window in NSApp.windows where window.isVisible && window.canBecomeMain { window.close() }
+        // Editor windows with unsaved changes stay open (close() would skip the save question).
+        for window in NSApp.windows where window.isVisible && window.canBecomeMain && !window.isDocumentEdited { window.close() }
         updateDockVisibility()
     }
 

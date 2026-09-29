@@ -148,6 +148,12 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     public var iCloudSync = false
     /// Give Claude sessions the Pencil (Pen.app) MCP server. Only takes effect when Pen.app is installed.
     public var pencilMCP = true
+    /// Double-clicking a text file in the Files panel opens it in the built-in editor window.
+    public var openFilesInBuiltInEditor = true
+    /// Built-in editor font size in points.
+    public var editorFontSize: Double = DeckSettings.defaultFontSize
+    /// Built-in editor soft wrap.
+    public var editorWrapLines = true
 
     public init() {}
 
@@ -169,6 +175,9 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         hideDockWhenClosed = try c.decodeIfPresent(Bool.self, forKey: .hideDockWhenClosed) ?? d.hideDockWhenClosed
         iCloudSync = try c.decodeIfPresent(Bool.self, forKey: .iCloudSync) ?? d.iCloudSync
         pencilMCP = try c.decodeIfPresent(Bool.self, forKey: .pencilMCP) ?? d.pencilMCP
+        openFilesInBuiltInEditor = try c.decodeIfPresent(Bool.self, forKey: .openFilesInBuiltInEditor) ?? d.openFilesInBuiltInEditor
+        editorFontSize = try c.decodeIfPresent(Double.self, forKey: .editorFontSize) ?? d.editorFontSize
+        editorWrapLines = try c.decodeIfPresent(Bool.self, forKey: .editorWrapLines) ?? d.editorWrapLines
     }
 }
 
