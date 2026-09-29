@@ -139,7 +139,6 @@ private struct TabStripToolbarItem: ToolbarContent {
 private struct TabStrip: View {
     @Environment(AppModel.self) private var model
     let maxWidth: CGFloat
-    @State private var dragging: WorkspaceTab?
     @State private var contentWidth: CGFloat = 0
 
     var body: some View {
@@ -148,7 +147,7 @@ private struct TabStrip: View {
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 2) {
                     ForEach(tabs.tabs, id: \.key) { tab in
-                        TabItem(tab: tab, dragging: $dragging)
+                        TabItem(tab: tab)
                             .id(tab.key)
                     }
                 }
@@ -169,7 +168,6 @@ private struct TabItem: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openWindow) private var openWindow
     let tab: WorkspaceTab
-    @Binding var dragging: WorkspaceTab?
     @State private var hovering = false
 
     var body: some View {
@@ -202,14 +200,13 @@ private struct TabItem: View {
         .onHover { hovering = $0 }
         .onTapGesture { tabs.select(tab) }
         .simultaneousGesture(TapGesture(count: 2).onEnded { tabs.pin(tab) })
-        .overlay { MiddleClick { tabs.close(tab) } }
-        .help(tab == .sessions ? sessionsHelp : tab.helpText)
-        .contextMenu { menu }
-        .onDrag {
-            dragging = tab
-            return NSItemProvider(object: tab.key as NSString)
+        // In the toolbar, SwiftUI's context menu and drag and drop never see the mouse (NSToolbar
+        // shows its own menu and swallows drags): AppKit handles right-click, middle-click and reordering.
+        .overlay {
+            TabMouseHandler(tab: tab, hasCloseButton: tab != .sessions, menu: menuEntries,
+                            onClose: { tabs.close(tab) }, onDragOver: dragOver)
         }
-        .onDrop(of: [.text], delegate: TabDropDelegate(target: tab, dragging: $dragging, tabs: tabs))
+        .help(tab == .sessions ? sessionsHelp : tab.helpText)
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
     }
@@ -257,72 +254,207 @@ private struct TabItem: View {
         }
     }
 
-    @ViewBuilder private var menu: some View {
+    /// The tab's context menu (nil = separator).
+    private func menuEntries() -> [TabMenuEntry?] {
         let tabs = model.tabs
+        var entries: [TabMenuEntry?] = []
         if tab != .sessions {
-            Button("Close Tab") { tabs.close(tab) }
+            entries.append(TabMenuEntry(String(localized: "Close Tab")) { tabs.close(tab) })
         }
-        Button("Close Other Tabs") { tabs.close(tabs.list.others(than: tab)) }
-            .disabled(tabs.list.others(than: tab).isEmpty)
-        Button("Close Tabs to the Right") { tabs.close(tabs.list.tabsToTheRight(of: tab)) }
-            .disabled(tabs.list.tabsToTheRight(of: tab).isEmpty)
+        entries.append(TabMenuEntry(String(localized: "Close Other Tabs"), enabled: !tabs.list.others(than: tab).isEmpty) {
+            tabs.close(tabs.list.others(than: tab))
+        })
+        entries.append(TabMenuEntry(String(localized: "Close Tabs to the Right"), enabled: !tabs.list.tabsToTheRight(of: tab).isEmpty) {
+            tabs.close(tabs.list.tabsToTheRight(of: tab))
+        })
         if tabs.list.preview == tab {
-            Divider()
-            Button("Keep Open") { tabs.pin(tab) }
+            entries.append(nil)
+            entries.append(TabMenuEntry(String(localized: "Keep Open")) { tabs.pin(tab) })
         }
         if let url = tab.url {
-            Divider()
-            Button("Copy Path") { FileActions.copy(url.path) }
-            Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
+            entries.append(nil)
+            entries.append(TabMenuEntry(String(localized: "Copy Path")) { FileActions.copy(url.path) })
+            entries.append(TabMenuEntry(String(localized: "Reveal in Finder")) { NSWorkspace.shared.activateFileViewerSelecting([url]) })
         }
         if let url = tab.fileURL {
-            Button("Open in Separate Window") { tabs.moveToWindow(url, openWindow: openWindow) }
+            let openWindow = self.openWindow
+            entries.append(TabMenuEntry(String(localized: "Open in Separate Window")) { tabs.moveToWindow(url, openWindow: openWindow) })
+        }
+        return entries
+    }
+
+    /// Another tab is being dragged over this one; `fraction` is the pointer's x within it (0…1).
+    /// It takes this tab's place once the pointer crosses the middle, so unequal widths don't flip-flop.
+    private func dragOver(_ dragged: WorkspaceTab, fraction: CGFloat) {
+        let tabs = model.tabs
+        guard dragged != tab, tab != .sessions, let from = tabs.tabs.firstIndex(of: dragged),
+              let to = tabs.tabs.firstIndex(of: tab) else { return }
+        if (to > from && fraction > 0.5) || (to < from && fraction < 0.5) {
+            withAnimation(.easeOut(duration: 0.12)) { tabs.move(dragged, to: tab) }
         }
     }
 }
 
-/// Live reordering while a tab is dragged over its neighbours.
-private struct TabDropDelegate: DropDelegate {
-    let target: WorkspaceTab
-    @Binding var dragging: WorkspaceTab?
-    let tabs: WorkspaceTabs
+// MARK: - Mouse handling (AppKit)
 
-    func validateDrop(info: DropInfo) -> Bool { dragging != nil }
-
-    func dropEntered(info: DropInfo) {
-        guard let dragging, dragging != target else { return }
-        withAnimation(.easeOut(duration: 0.12)) { tabs.move(dragging, to: target) }
-    }
-
-    func dropUpdated(info: DropInfo) -> DropProposal? { DropProposal(operation: .move) }
-
-    func performDrop(info: DropInfo) -> Bool {
-        dragging = nil
-        return true
-    }
-}
-
-/// Middle-click to close. Only claims other-button clicks, so taps and drags reach SwiftUI.
-private struct MiddleClick: NSViewRepresentable {
+struct TabMenuEntry {
+    let title: String
+    var enabled = true
     let action: () -> Void
 
-    func makeNSView(context: Context) -> ClickView { ClickView() }
-    func updateNSView(_ view: ClickView, context: Context) { view.action = action }
+    init(_ title: String, enabled: Bool = true, action: @escaping () -> Void) {
+        self.title = title
+        self.enabled = enabled
+        self.action = action
+    }
+}
 
-    final class ClickView: NSView {
-        var action: (() -> Void)?
+/// Transparent AppKit layer over one tab. Left clicks stay with SwiftUI (select, double-click,
+/// close button): this view claims only right / control / middle clicks. Dragging is watched with
+/// an event monitor, which sees the drag even though SwiftUI got the mouse-down.
+private struct TabMouseHandler: NSViewRepresentable {
+    let tab: WorkspaceTab
+    let hasCloseButton: Bool
+    let menu: () -> [TabMenuEntry?]
+    let onClose: () -> Void
+    let onDragOver: (WorkspaceTab, CGFloat) -> Void
 
-        override func hitTest(_ point: NSPoint) -> NSView? {
-            guard let type = NSApp.currentEvent?.type, type == .otherMouseDown || type == .otherMouseUp else { return nil }
-            return super.hitTest(point)
+    func makeNSView(context: Context) -> TabMouseView {
+        TabMouseView.installDragMonitor()
+        return TabMouseView()
+    }
+
+    func updateNSView(_ view: TabMouseView, context: Context) {
+        view.tab = tab
+        view.hasCloseButton = hasCloseButton
+        view.menuEntries = menu
+        view.onClose = onClose
+        view.onDragOver = onDragOver
+    }
+}
+
+final class TabMouseView: NSView {
+    var tab: WorkspaceTab = .sessions
+    var hasCloseButton = false
+    var menuEntries: (() -> [TabMenuEntry?])?
+    var onClose: (() -> Void)?
+    var onDragOver: ((WorkspaceTab, CGFloat) -> Void)?
+
+    override var mouseDownCanMoveWindow: Bool { false }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        Self.views.remove(self)
+        if window != nil { Self.views.add(self) }
+    }
+
+    override func hitTest(_ point: NSPoint) -> NSView? {
+        guard let event = NSApp.currentEvent else { return nil }
+        let claimed: Bool = switch event.type {
+        case .rightMouseDown, .rightMouseUp, .otherMouseDown, .otherMouseUp: true
+        case .leftMouseDown, .leftMouseUp: event.modifierFlags.contains(.control)
+        default: false
         }
+        return claimed ? super.hitTest(point) : nil
+    }
 
-        override func otherMouseDown(with event: NSEvent) {}
+    // MARK: Context menu
 
-        override func otherMouseUp(with event: NSEvent) {
-            if event.buttonNumber == 2 { action?() }
+    override func menu(for event: NSEvent) -> NSMenu? {
+        guard let entries = menuEntries?() else { return nil }
+        let menu = NSMenu()
+        menu.autoenablesItems = false
+        for entry in entries {
+            guard let entry else { menu.addItem(.separator()); continue }
+            let item = ClosureMenuItem(title: entry.title, action: entry.action)
+            item.isEnabled = entry.enabled
+            menu.addItem(item)
+        }
+        return menu
+    }
+
+    override func rightMouseDown(with event: NSEvent) {
+        showMenu(event)
+    }
+
+    /// Control-click (hit-tested only with ⌃ held).
+    override func mouseDown(with event: NSEvent) {
+        showMenu(event)
+    }
+
+    private func showMenu(_ event: NSEvent) {
+        guard let menu = menu(for: event) else { return }
+        NSMenu.popUpContextMenu(menu, with: event, for: self)
+    }
+
+    // MARK: Middle-click
+
+    override func otherMouseDown(with event: NSEvent) {}
+
+    override func otherMouseUp(with event: NSEvent) {
+        if event.buttonNumber == 2 { onClose?() }
+    }
+
+    // MARK: Drag to reorder
+
+    @MainActor private static let views = NSHashTable<TabMouseView>.weakObjects()
+    @MainActor private static var monitor: Any?
+    @MainActor private static var pressed: (view: TabMouseView, start: NSPoint)?
+    @MainActor private static var dragging = false
+
+    @MainActor static func installDragMonitor() {
+        guard monitor == nil else { return }
+        monitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .leftMouseDragged, .leftMouseUp]) { event in
+            MainActor.assumeIsolated { handle(event) }
+            return event
         }
     }
+
+    /// The tab view under a window location, if any.
+    @MainActor private static func view(at location: NSPoint, in window: NSWindow?) -> TabMouseView? {
+        views.allObjects.first { $0.window === window && $0.bounds.contains($0.convert(location, from: nil)) }
+    }
+
+    @MainActor private static func handle(_ event: NSEvent) {
+        switch event.type {
+        case .leftMouseDown:
+            dragging = false
+            pressed = nil
+            guard !event.modifierFlags.contains(.control), let view = view(at: event.locationInWindow, in: event.window) else { return }
+            // Not from the close button (the trailing 18 pt of a closable tab).
+            let local = view.convert(event.locationInWindow, from: nil)
+            if view.hasCloseButton && local.x > view.bounds.width - 18 { return }
+            if view.tab == .sessions { return }
+            pressed = (view, event.locationInWindow)
+        case .leftMouseDragged:
+            guard let pressed, pressed.view.window === event.window else { return }
+            if !dragging {
+                guard hypot(event.locationInWindow.x - pressed.start.x, event.locationInWindow.y - pressed.start.y) > 4 else { return }
+                dragging = true
+            }
+            guard let target = view(at: event.locationInWindow, in: event.window), target !== pressed.view else { return }
+            let local = target.convert(event.locationInWindow, from: nil)
+            target.onDragOver?(pressed.view.tab, target.bounds.width > 0 ? local.x / target.bounds.width : 0.5)
+        default:
+            pressed = nil
+            dragging = false
+        }
+    }
+}
+
+/// An NSMenuItem that runs a closure.
+private final class ClosureMenuItem: NSMenuItem {
+    private let handler: () -> Void
+
+    init(title: String, action handler: @escaping () -> Void) {
+        self.handler = handler
+        super.init(title: title, action: #selector(run), keyEquivalent: "")
+        target = self
+    }
+
+    required init(coder: NSCoder) { fatalError("not used") }
+
+    @objc private func run() { handler() }
 }
 
 // MARK: - Tab presentation
@@ -387,7 +519,15 @@ private struct MainWindowGlue: NSViewRepresentable {
     func updateNSView(_ view: NSView, context: Context) {
         guard let window = view.window else { return }
         if window.isDocumentEdited != anyDirty { window.isDocumentEdited = anyDirty }
+        Self.lockToolbar(of: window)
         if window.delegate !== context.coordinator { context.coordinator.install(on: window) }
+    }
+
+    /// The tab strip lives in the toolbar: no "Icon and Text / Icon Only" menu on right-click.
+    @MainActor static func lockToolbar(of window: NSWindow) {
+        guard let toolbar = window.toolbar else { return }
+        if toolbar.allowsUserCustomization { toolbar.allowsUserCustomization = false }
+        if toolbar.allowsDisplayModeCustomization { toolbar.allowsDisplayModeCustomization = false }
     }
 
     final class WindowView: NSView {
@@ -414,6 +554,7 @@ private struct MainWindowGlue: NSViewRepresentable {
 
         func install(on window: NSWindow) {
             tabs.mainWindow = window
+            MainWindowGlue.lockToolbar(of: window)
             if window.delegate !== self {
                 original = window.delegate
                 window.delegate = self
