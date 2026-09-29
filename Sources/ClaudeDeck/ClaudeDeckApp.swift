@@ -30,6 +30,7 @@ struct ClaudeDeckApp: App {
                 RestartCommands(model: delegate.model)
             }
             ExplorerCommands(model: delegate.model)
+            UpdateCommands(updater: AppUpdater.shared)
             TabCommands(model: delegate.model)
             // No help book: frees ⌘? (on Turkish keyboards the "+" key area produces it) for zoom.
             CommandGroup(replacing: .help) {}

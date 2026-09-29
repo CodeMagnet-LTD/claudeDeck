@@ -262,7 +262,10 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
 - **Resume a previous conversation:** project menu › Resume Previous Conversation…, which lists
   transcripts from `~/.claude/projects`.
 - **Persistence:** sessions that were open when you quit come back on launch with
-  `claude --resume <id>`.
+  `claude --resume <id>` and carry on as they were.
+  - A session that was **working** when ClaudeDeck quit (or crashed) always picks up where it left off:
+    it gets "Continue where you left off." (or your own message from Settings). Idle sessions get nothing
+    unless you turn on "Also send it to every resumed session".
   - Selecting a stopped session resumes it.
   - Sessions you closed with `/exit` or End Session come back when you choose Resume.
 - **Auto /compact (off by default):** when turned on, `/compact` is sent to a resumed session whose context is above the threshold.
@@ -435,6 +438,13 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
   `promo-video/out/promo.mp4` or `src/app.ts:42`) is resolved against the session's project folder and
   shown in Finder. ⌘⌥-click opens the file itself (text files in the built-in editor).
 
+### Updates
+- ClaudeDeck checks for a new version at launch and once a day, and offers to install it: the new version
+  is downloaded, verified and installed, then the app relaunches. **ClaudeDeck › Check for Updates…**, the
+  ⬇︎ button in the menu bar window and Settings › General check on demand; automatic checks can be turned off there.
+- Updates come from the [project site](https://codemagnet-ltd.github.io/claudeDeck/appcast.xml) and GitHub Releases
+  via [Sparkle](https://sparkle-project.org). Each update is signed; one that isn't signed with ClaudeDeck's key is refused.
+
 ### Settings (⚙︎ or ⌘,)
 - Launch at login (the app must be in `/Applications`).
 - Resume sessions on launch, auto /compact and its token threshold.
@@ -580,7 +590,7 @@ Recording permission:
 ## License and legal
 
 [MIT](LICENSE) © 2026 [CODE MAGNET YAZILIM LTD. ŞTİ.](https://codemagnet.co)
-Third-party licenses: [Support/THIRD_PARTY_LICENSES.txt](Support/THIRD_PARTY_LICENSES.txt) (SwiftTerm, MIT).
+Third-party licenses: [Support/THIRD_PARTY_LICENSES.txt](Support/THIRD_PARTY_LICENSES.txt) (SwiftTerm, MIT; Sparkle, MIT).
 
 ClaudeDeck is an independent open-source project. It is not affiliated with, endorsed by or sponsored
 by Anthropic. "Claude" and "Claude Code" are trademarks of Anthropic PBC.

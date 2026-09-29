@@ -22,6 +22,9 @@ packages:
   SwiftTerm:
     url: https://github.com/migueldeicaza/SwiftTerm
     from: 1.20.0
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: 2.6.0
 targets:
   ClaudeDeckCore:
     type: library.static
@@ -39,6 +42,7 @@ targets:
     dependencies:
       - target: ClaudeDeckCore
       - package: SwiftTerm
+      - package: Sparkle
       - target: ClaudeDeckWidget   # embedded in Contents/PlugIns
     entitlements:
       path: Support/ClaudeDeck.entitlements

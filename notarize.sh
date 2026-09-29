@@ -77,6 +77,12 @@ sign() {
     codesign --force --options runtime --timestamp --sign "$IDENTITY" "$1"
   fi
 }
+# Helpers inside frameworks first (Sparkle: XPC services, Updater.app, Autoupdate).
+for fw in "$APP"/Contents/Frameworks/*.framework; do
+  for inner in "$fw"/Versions/Current/XPCServices/*.xpc "$fw"/Versions/Current/*.app "$fw"/Versions/Current/Autoupdate; do
+    if [ -e "$inner" ]; then sign "$inner"; fi
+  done
+done
 for nested in "$APP"/Contents/PlugIns/*.appex "$APP"/Contents/Frameworks/* "$APP"/Contents/Library/LoginItems/*.app; do
   if [ -e "$nested" ]; then sign "$nested"; fi
 done

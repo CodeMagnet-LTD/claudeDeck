@@ -67,6 +67,16 @@ struct MenuBarContent: View {
                     dismiss()
                 }
                 Spacer()
+                if AppUpdater.shared.isAvailable {
+                    Button {
+                        AppUpdater.shared.checkForUpdates()
+                        dismiss()
+                    } label: {
+                        Image(systemName: "arrow.down.circle")
+                    }
+                    .help("Check for Updates…")
+                    .accessibilityLabel("Check for Updates…")
+                }
                 Button("Quit") { NSApp.terminate(nil) }
             }
             .buttonStyle(.borderless)

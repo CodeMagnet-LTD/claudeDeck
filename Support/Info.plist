@@ -16,6 +16,10 @@
 	<key>LSApplicationCategoryType</key><string>public.app-category.developer-tools</string>
 	<key>NSHighResolutionCapable</key><true/>
 	<key>NSPrincipalClass</key><string>NSApplication</string>
+	<key>SUFeedURL</key><string>https://codemagnet-ltd.github.io/claudeDeck/appcast.xml</string>
+	<key>SUPublicEDKey</key><string>cB9f2QQFQRcYzIDuznmoQDO4UQAsmtlEksxBvVR7aeU=</string>
+	<key>SUEnableAutomaticChecks</key><true/>
+	<key>SUScheduledCheckInterval</key><integer>86400</integer>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

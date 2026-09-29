@@ -37,6 +37,7 @@ struct SettingsView: View {
                 if let loginError {
                     Text(loginError).font(.caption).foregroundStyle(.red)
                 }
+                UpdateSettingsRows()
             }
             Section("Sessions") {
                 Toggle("Resume open sessions at launch", isOn: setting(\.resumeOnLaunch))
@@ -45,12 +46,10 @@ struct SettingsView: View {
                     Text("Compact threshold: context above \(model.deck.settings.compactThresholdTokens / 1000)K tokens")
                 }
                 .disabled(!model.deck.settings.compactOnResume)
-                Toggle("Send a “continue” message to resumed sessions", isOn: setting(\.continueAfterResume))
-                Group {
-                    Toggle("Only sessions that were working when the app quit", isOn: setting(\.continueOnlyIfBusy))
-                    TextField("Message", text: setting(\.continueMessage), prompt: Text("Continue where you left off."))
-                }
-                .disabled(!model.deck.settings.continueAfterResume)
+                Text("Sessions that were working when ClaudeDeck quit (or crashed) always pick up where they left off with this message.")
+                    .font(.caption).foregroundStyle(.secondary)
+                TextField("Message", text: setting(\.continueMessage), prompt: Text("Continue where you left off."))
+                Toggle("Also send it to every resumed session", isOn: setting(\.continueAllOnResume))
             }
             Section("Editor") {
                 Toggle("Open text files in the built-in editor (double-click in the Files panel)", isOn: setting(\.openFilesInBuiltInEditor))

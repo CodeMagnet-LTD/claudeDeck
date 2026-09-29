@@ -126,8 +126,15 @@ final class AppModel {
         // Resolving `claude` runs the login shell; keep it off the main thread.
         Task { @MainActor in
             claudePath = await Task.detached { ShellEnvironment.resolveClaude() }.value
-            launchInitialSessions()
-            if !Self.isDemo { automations?.start() } // 30 s schedule check + on wake
+            // If an update is waiting, ask about it first: installing relaunches the app, and the
+            // sessions would otherwise start twice.
+            launchDeferred = true
+            AppUpdater.shared.startHoldingForUpdate { [weak self] in
+                guard let self else { return }
+                self.launchDeferred = false
+                self.launchInitialSessions()
+                if !Self.isDemo { self.automations?.start() } // 30 s schedule check + on wake
+            }
         }
     }
 
@@ -143,10 +150,18 @@ final class AppModel {
         scheduleSave()
     }
 
+    /// Set by `prepareForQuit`: the exits and hook events that follow must not overwrite what it saved.
+    @ObservationIgnored private var isQuitting = false
+    /// True while the launch update check holds the sessions back; quitting then (to install the
+    /// update) must keep them marked open.
+    @ObservationIgnored private var launchDeferred = false
+
     /// Called on quit: remember which sessions were open so they come back next launch.
     func prepareForQuit() {
+        isQuitting = true
         for session in deck.sessions {
             let open = terminals.isRunning(session.id)
+            if launchDeferred, !open { continue } // not started yet: keep what the last quit saved
             let display = status(of: session.id).display
             let busy = open && session.kind == .claude && (display.isRunning || display.isBlocked)
             deck.updateSession(session.id) {
@@ -264,12 +279,30 @@ final class AppModel {
             followTranscript(for: id, path: status.transcriptPath)
             if status.event == "SessionStart", status.source == "resume" { afterResume(id, transcript: status.transcriptPath) }
         }
+        trackInterruptibleWork()
         if initial {
             for id in next.keys { lastNotified[id] = notifyKey(id) }
         } else {
             emitAttentionChanges()
         }
         onCountsChanged?()
+    }
+
+    /// Keeps `busyAtQuit` current for running Claude sessions, so a session that was working when
+    /// the app crashed or was force-quit also continues on the next launch (a normal quit sets it
+    /// in `prepareForQuit`).
+    private func trackInterruptibleWork() {
+        guard !isQuitting else { return }
+        var changed = false
+        for session in deck.sessions where session.kind == .claude && terminals.isRunning(session.id) {
+            let display = status(of: session.id).display
+            let busy = display.isRunning || display.isBlocked
+            if session.busyAtQuit != busy {
+                deck.updateSession(session.id) { $0.busyAtQuit = busy }
+                changed = true
+            }
+        }
+        if changed { scheduleSave() }
     }
 
     private func followTranscript(for id: UUID, path: String?) {
@@ -374,8 +407,8 @@ final class AppModel {
         let worktreeDir = session.workingDirectory.flatMap { FileManager.default.fileExists(atPath: $0) ? $0 : nil }
         if sid == nil, worktreeDir == nil, let worktree = session.worktreeName { args += ["--worktree", worktree] }
         if automatic, sid != nil, deck.settings.compactOnResume { pendingCompact.insert(id) }
-        if automatic, sid != nil, deck.settings.continueAfterResume,
-           !deck.settings.continueOnlyIfBusy || session.busyAtQuit {
+        // A session cut off mid-turn always picks up where it left off; others only if asked to.
+        if sid != nil, session.busyAtQuit || (automatic && deck.settings.continueAllOnResume) {
             pendingContinue.insert(id)
         }
         deck.updateSession(id) { $0.busyAtQuit = false }
@@ -439,7 +472,9 @@ final class AppModel {
         tailers[id] = nil
         pendingCompact.remove(id)
         pendingContinue.remove(id)
-        deck.updateSession(id) { $0.isOpen = false }
+        // On quit, prepareForQuit already recorded which sessions were open and working.
+        guard !isQuitting else { return }
+        deck.updateSession(id) { $0.isOpen = false; $0.busyAtQuit = false }
         scheduleSave()
         onCountsChanged?()
     }

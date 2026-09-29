@@ -400,6 +400,16 @@
         }
       }
     },
+    "Also send it to every resumed session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geri gelen tüm oturumlara da gönder"
+          }
+        }
+      }
+    },
     "Amend": {
       "localizations": {
         "tr": {
@@ -676,6 +686,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yeniden Kontrol Et"
+          }
+        }
+      }
+    },
+    "Check for Updates…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güncellemeleri Denetle…"
+          }
+        }
+      }
+    },
+    "Check for updates automatically": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güncellemeleri otomatik olarak denetle"
           }
         }
       }
@@ -3523,6 +3553,16 @@
         }
       }
     },
+    "Sessions that were working when ClaudeDeck quit (or crashed) always pick up where they left off with this message.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClaudeDeck kapanırken (ya da çökerken) çalışmakta olan oturumlar bu mesajla her zaman kaldıkları yerden devam eder."
+          }
+        }
+      }
+    },
     "Settings — auto-resume, /compact, notifications (⌘,)": {
       "localizations": {
         "tr": {
@@ -4332,6 +4372,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Düzenli İfade Kullan"
+          }
+        }
+      }
+    },
+    "Version %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sürüm %@"
           }
         }
       }

@@ -47,4 +47,9 @@ case "$ANSWER" in y|Y|yes|YES) ;; *) fail "Cancelled; no tag or release was crea
 git tag -a "$TAG" -m "ClaudeDeck $VERSION"
 git push origin "$TAG"
 gh release create "$TAG" "$DMG" "$DMG.sha256" --title "ClaudeDeck $VERSION" --generate-notes --verify-tag $DRAFT
-echo "✅ Published $TAG."
+if [ -n "$DRAFT" ]; then
+  echo "✅ Draft $TAG created. Review it on GitHub, then run ./publish.sh (publishes it and updates the appcast)."
+else
+  # Offer it to existing installs through the Sparkle feed.
+  ./publish.sh
+fi

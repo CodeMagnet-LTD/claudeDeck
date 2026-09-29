@@ -58,7 +58,8 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
     public var startupCommand: String?
     /// Shell sessions: start whenever the app launches, even if closed at quit.
     public var autoStart: Bool
-    /// Claude sessions: Claude was working (or waiting on a prompt) when the app quit.
+    /// Claude sessions: Claude was working (or waiting on a prompt) when the app quit. Kept current
+    /// while the app runs, so it also holds after a crash or a force quit.
     public var busyAtQuit: Bool
     /// Claude sessions started with `claude --worktree <name>` (own git worktree and branch).
     public var worktreeName: String?
@@ -124,9 +125,12 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     /// After an automatic resume, send `/compact` when the context is over the threshold. Off by
     /// default: resumed sessions should simply carry on.
     public var compactOnResume = false
-    /// After an automatic resume, type a "continue" message into the session.
+    /// Sessions that were working when the app quit always get the "continue" message when they
+    /// resume. This also sends it to every other resumed session.
+    public var continueAllOnResume = false
+    /// Legacy (before interrupted sessions always continued); only read to migrate to `continueAllOnResume`.
     public var continueAfterResume = false
-    /// …only for sessions that were busy when the app quit.
+    /// Legacy, see `continueAfterResume`.
     public var continueOnlyIfBusy = true
     /// Message to send; empty = the app's localized default.
     public var continueMessage = ""
@@ -169,6 +173,9 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         continueAfterResume = try c.decodeIfPresent(Bool.self, forKey: .continueAfterResume) ?? d.continueAfterResume
         continueOnlyIfBusy = try c.decodeIfPresent(Bool.self, forKey: .continueOnlyIfBusy) ?? d.continueOnlyIfBusy
         continueMessage = try c.decodeIfPresent(String.self, forKey: .continueMessage) ?? d.continueMessage
+        // "Continue every resumed session" used to be continueAfterResume without continueOnlyIfBusy.
+        continueAllOnResume = try c.decodeIfPresent(Bool.self, forKey: .continueAllOnResume)
+            ?? (continueAfterResume && !continueOnlyIfBusy)
         compactThresholdKB = try c.decodeIfPresent(Int.self, forKey: .compactThresholdKB) ?? d.compactThresholdKB
         compactThresholdTokens = try c.decodeIfPresent(Int.self, forKey: .compactThresholdTokens) ?? d.compactThresholdTokens
         notifications = try c.decodeIfPresent(Bool.self, forKey: .notifications) ?? d.notifications

@@ -287,7 +287,9 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
 - **Eski konuşmayı devam ettir:** projenin menüsü › "Eski oturumu devam ettir…" (`~/.claude/projects`
   transcript'lerinden liste).
 - **Kalıcılık:** uygulama kapanırken açık olan oturumlar açılışta `claude --resume <id>` ile kendiliğinden geri
-  gelir. Durmuş bir oturumu seçmek de onu devam ettirir; `/exit` ile kapattığın ya da "Oturumu bitir" dediğin
+  gelir ve olduğu gibi devam eder. ClaudeDeck kapanırken (ya da çökerken) **çalışmakta olan** oturum her zaman
+  kaldığı yerden sürer: ona "Continue where you left off." (ya da Ayarlar'daki kendi mesajın) gönderilir. Boşta
+  olan oturumlara, "Geri gelen tüm oturumlara da gönder" açık değilse hiçbir şey yazılmaz. Durmuş bir oturumu seçmek de onu devam ettirir; `/exit` ile kapattığın ya da "Oturumu bitir" dediğin
   oturum ise "Devam et" deyince döner.
 - **Otomatik /compact (varsayılan kapalı):** açılırsa, geri gelen oturumun context'i eşiği aşıyorsa `/compact` gönderilir. Eşik gerçek
   context token'ıdır (transcript'teki son asistan mesajının `input + cache_read + cache_creation` toplamı;
@@ -443,6 +445,13 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
   `promo-video/out/promo.mp4` ya da `src/app.ts:42`) oturumun proje klasörüne göre bulunur ve Finder'da
   gösterilir. ⌘⌥-tık dosyanın kendisini açar (metin dosyaları yerleşik düzenleyicide).
 
+### Güncellemeler
+- ClaudeDeck açılışta ve günde bir kez yeni sürüm olup olmadığına bakar ve kurmayı önerir: yeni sürüm indirilir,
+  doğrulanır, kurulur ve uygulama yeniden açılır. **ClaudeDeck › Güncellemeleri Denetle…**, menü çubuğu penceresindeki
+  ⬇︎ düğmesi ve Ayarlar › Genel elle denetler; otomatik denetim oradan kapatılabilir.
+- Güncellemeler [proje sitesinden](https://codemagnet-ltd.github.io/claudeDeck/appcast.xml) ve GitHub Releases'tan
+  [Sparkle](https://sparkle-project.org) ile gelir. Her güncelleme imzalıdır; ClaudeDeck'in anahtarıyla imzalanmamış olanı kurulmaz.
+
 ### Ayarlar (⚙︎ ya da ⌘,)
 - Bilgisayar açılınca ClaudeDeck'i başlat (giriş öğesi; uygulama `/Applications`'da olmalı: `./build.sh install`).
 - Açılışta oturumları otomatik devam ettir, /compact ve token eşiği.
@@ -527,7 +536,7 @@ fixture dosyalarından cevap veren sahte bir `gh` kullanılır). Demo modu `~/.c
 ## Lisans ve yasal not
 
 [MIT](LICENSE) © 2026 [CODE MAGNET YAZILIM LTD. ŞTİ.](https://codemagnet.co)
-Üçüncü taraf lisansları: [Support/THIRD_PARTY_LICENSES.txt](Support/THIRD_PARTY_LICENSES.txt) (SwiftTerm, MIT).
+Üçüncü taraf lisansları: [Support/THIRD_PARTY_LICENSES.txt](Support/THIRD_PARTY_LICENSES.txt) (SwiftTerm, MIT; Sparkle, MIT).
 
 ClaudeDeck bağımsız bir açık kaynak projedir; Anthropic ile bağlantılı değildir, Anthropic tarafından
 onaylanmamış ya da desteklenmemektedir. "Claude" ve "Claude Code", Anthropic PBC'nin ticari markalarıdır.
