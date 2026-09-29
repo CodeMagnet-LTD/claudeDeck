@@ -96,6 +96,8 @@ final class AutomationScheduler {
     private func perform(runID: UUID, automationID: UUID, reveal: Bool) async {
         guard let automation = model.deck.automation(automationID),
               let projectID = automation.projectID, model.deck.project(projectID) != nil else {
+            // Unschedule it (the picker then shows "Choose…") instead of failing every occurrence.
+            model.mutate { $0.updateAutomation(automationID) { $0.projectID = nil; $0.reschedule() } }
             return finish(runID, .failed, error: String(localized: "The project no longer exists."))
         }
         // Session: the last run's (if asked and it's free), else a new one.
@@ -119,22 +121,21 @@ final class AutomationScheduler {
                 $0.status = .running
             }
         }
-        if reveal {
-            model.openMainWindow?()
-            model.reveal(sessionID)
-        }
-
         if needsLaunch {
             let launchedAt = Date()
             model.launch(sessionID, resume: automation.reuseSession)
             guard model.terminals.isRunning(sessionID) else {
                 return finish(runID, .failed, error: String(localized: "Claude could not be started."))
             }
+            // After launching: selecting a session without a terminal would start it itself.
+            if reveal { show(sessionID) }
             guard await waitForIdle(sessionID, after: launchedAt, timeout: Self.startupTimeout, acceptAny: true) == .idle else {
                 return finish(runID, .failed, error: String(localized: "Claude did not become ready."))
             }
             // Let the TUI finish drawing its input box.
             try? await Task.sleep(for: .seconds(1))
+        } else if reveal {
+            show(sessionID)
         }
         guard !Task.isCancelled else { return }
 
@@ -147,6 +148,11 @@ final class AutomationScheduler {
         case .timedOut: finish(runID, .failed, error: String(localized: "Timed out waiting for Claude to finish."))
         case .cancelled: return
         }
+    }
+
+    private func show(_ id: UUID) {
+        model.openMainWindow?()
+        model.reveal(id)
     }
 
     /// A new `.claude` session named after the automation (in a fresh worktree if configured).
@@ -208,9 +214,14 @@ final class AutomationScheduler {
     /// simply keep waiting — they surface in Needs Attention like any other session.
     private func waitForIdle(_ id: UUID, after: Date, timeout: Duration, acceptAny: Bool) async -> WaitResult {
         let deadline = ContinuousClock.now + timeout
+        var sawWork = false
         while ContinuousClock.now < deadline {
             if Task.isCancelled { return .cancelled }
             guard model.terminals.isRunning(id) else { return .exited }
+            // Also done once the session is back to "your turn" after working (e.g. the user
+            // interrupted it with Esc, which leaves no Stop hook).
+            let display = model.status(of: id).display
+            if !acceptAny, display.isRunning || display.isBlocked, model.hookStatuses[id].map({ $0.updatedAt > after }) ?? false { sawWork = true }
             if let hook = model.hookStatuses[id], hook.updatedAt > after {
                 if hook.state == .ended { return .exited }
                 if hook.state == .idle {
@@ -219,6 +230,7 @@ final class AutomationScheduler {
                     if hook.event == "StopFailure" { return .failed(hook.detail ?? String(localized: "Claude stopped with an error.")) }
                 }
             }
+            if !acceptAny, sawWork, display.isIdle { return .idle }
             try? await Task.sleep(for: .milliseconds(500))
         }
         return .timedOut
