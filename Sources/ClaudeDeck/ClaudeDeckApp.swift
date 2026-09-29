@@ -22,6 +22,8 @@ struct ClaudeDeckApp: App {
                     .keyboardShortcut("t")
                 Button("New Terminal") { delegate.model.newShellInSelectedProject() }
                     .keyboardShortcut("t", modifiers: [.command, .option])
+                Divider()
+                OpenAutomationsButton() // Automations window
             }
             // No help book: frees ⌘? (on Turkish keyboards the "+" key area produces it) for zoom.
             CommandGroup(replacing: .help) {}
@@ -42,6 +44,14 @@ struct ClaudeDeckApp: App {
                 Divider()
             }
         }
+
+        Window("Automations", id: "automations") {
+            AutomationsView()
+                .environment(delegate.model)
+                .preferredColorScheme(delegate.model.deck.settings.theme.colorScheme)
+                .frame(minWidth: 720, minHeight: 460)
+        }
+        .defaultSize(width: 940, height: 640)
 
         MenuBarExtra {
             MenuBarContent()
