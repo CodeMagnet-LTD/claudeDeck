@@ -22,7 +22,9 @@ final class EditorDocument {
     let url: URL
     let language: SyntaxLanguage
     private(set) var state: State = .loading
-    private(set) var isDirty = false
+    private(set) var isDirty = false {
+        didSet { textView?.window?.isDocumentEdited = isDirty }
+    }
     private(set) var isSaving = false
     private(set) var saveError: String?
     /// Set while the file changed on disk under unsaved edits (the "Reload / Keep Mine" bar).
@@ -519,6 +521,8 @@ private struct EditorWindowConfigurator: NSViewRepresentable {
     func updateNSView(_ view: NSView, context: Context) {
         guard let window = view.window else { return }
         if window.isDocumentEdited != document.isDirty { window.isDocumentEdited = document.isDirty }
+        // SwiftUI may replace the window delegate after the first show; put the close guard back.
+        if window.delegate !== context.coordinator { context.coordinator.install(on: window) }
     }
 
     final class WindowObservingView: NSView {
@@ -544,7 +548,10 @@ private struct EditorWindowConfigurator: NSViewRepresentable {
         }
 
         func install(on window: NSWindow) {
-            guard self.window !== window else { return }
+            if self.window === window {
+                if window.delegate !== self { original = window.delegate; window.delegate = self }
+                return
+            }
             self.window = window
             window.tabbingIdentifier = EditorRegistry.tabbingIdentifier
             window.tabbingMode = .preferred

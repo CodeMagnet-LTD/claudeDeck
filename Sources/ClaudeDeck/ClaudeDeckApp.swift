@@ -135,7 +135,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var systemIsPoweringOff = false
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        guard EditorRegistry.confirmQuit() else { return .terminateCancel }
+        guard systemIsPoweringOff || EditorRegistry.confirmQuit() else { return .terminateCancel }
         let running = model.deck.sessions.filter { model.terminals.isRunning($0.id) }
         guard model.deck.settings.confirmQuit, !systemIsPoweringOff, !running.isEmpty else { return .terminateNow }
         let working = running.filter { model.status(of: $0.id).display.isRunning || model.status(of: $0.id).display.isBlocked }.count
