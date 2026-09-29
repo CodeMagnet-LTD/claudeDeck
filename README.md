@@ -12,9 +12,7 @@ ClaudeDeck doesn't wrap, imitate or screen-scrape Claude. Every session runs **y
 `claude` CLI** through your login shell, in an embedded terminal (SwiftTerm, a real pty). Your settings,
 `CLAUDE.md` files, remote control, MCP servers, skills and other hooks keep working exactly as before.
 
-## Screenshots
-
-<!-- Screenshots go in docs/screenshots/ (captured with tools/demo.sh, fake demo projects only). -->
+<!-- Screenshots (later): capture with tools/demo.sh (fake demo projects only) into docs/screenshots/ and add a "Screenshots" section here. -->
 
 ## What it is, and what it isn't
 
