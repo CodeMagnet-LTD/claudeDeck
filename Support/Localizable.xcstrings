@@ -227,6 +227,16 @@
         }
       }
     },
+    "Add to Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude'a Ekle"
+          }
+        }
+      }
+    },
     "Alerts": {
       "localizations": {
         "tr": {
@@ -303,6 +313,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Vazgeç"
+          }
+        }
+      }
+    },
+    "Can’t open this file in the editor": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu dosya düzenleyicide açılamıyor"
           }
         }
       }
@@ -510,6 +530,16 @@
         }
       }
     },
+    "Couldn’t create a temporary file in %@.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ içinde geçici dosya oluşturulamadı."
+          }
+        }
+      }
+    },
     "Couldn’t read ~/.claude/settings.json: %@": {
       "localizations": {
         "tr": {
@@ -590,6 +620,26 @@
         }
       }
     },
+    "Don’t Save": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydetme"
+          }
+        }
+      }
+    },
+    "Editor": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düzenleyici"
+          }
+        }
+      }
+    },
     "End \"%@\" and remove it from the list?": {
       "localizations": {
         "tr": {
@@ -646,6 +696,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dosyalar"
+          }
+        }
+      }
+    },
+    "Font size: %lld pt": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yazı boyutu: %lld pt"
           }
         }
       }
@@ -710,6 +770,16 @@
         }
       }
     },
+    "Insert @%@ into “%@” (with line numbers when text is selected)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "@%@ ifadesini “%@” oturumuna ekle (metin seçiliyse satır numaralarıyla)"
+          }
+        }
+      }
+    },
     "Installed": {
       "localizations": {
         "tr": {
@@ -750,6 +820,16 @@
         }
       }
     },
+    "Keep Mine": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Benimkini Koru"
+          }
+        }
+      }
+    },
     "Keep Running in Background": {
       "localizations": {
         "tr": {
@@ -786,6 +866,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Açık"
+          }
+        }
+      }
+    },
+    "Line %lld, Column %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Satır %lld, Sütun %lld"
+          }
+        }
+      }
+    },
+    "Line %lld, Column %lld (%lld lines selected)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Satır %lld, Sütun %lld (%lld satır seçili)"
           }
         }
       }
@@ -1020,6 +1120,16 @@
         }
       }
     },
+    "No file": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya yok"
+          }
+        }
+      }
+    },
     "No running sessions": {
       "localizations": {
         "tr": {
@@ -1140,6 +1250,16 @@
         }
       }
     },
+    "Open in Editor": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düzenleyicide Aç"
+          }
+        }
+      }
+    },
     "Open in VS Code": {
       "localizations": {
         "tr": {
@@ -1156,6 +1276,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Açık terminal: %lld"
+          }
+        }
+      }
+    },
+    "Open text files in the built-in editor (double-click in the Files panel)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metin dosyalarını yerleşik düzenleyicide aç (Dosyalar panelinde çift tıklama)"
+          }
+        }
+      }
+    },
+    "Open with Default App": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varsayılan Uygulamayla Aç"
           }
         }
       }
@@ -1206,6 +1346,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sabitlenenler"
+          }
+        }
+      }
+    },
+    "Plain Text": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düz Metin"
           }
         }
       }
@@ -1306,6 +1456,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yeniden Kur"
+          }
+        }
+      }
+    },
+    "Reload": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeniden Yükle"
           }
         }
       }
@@ -1490,6 +1650,26 @@
         }
       }
     },
+    "Save All": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümünü Kaydet"
+          }
+        }
+      }
+    },
+    "Save changes to “%@”?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” dosyasındaki değişiklikler kaydedilsin mi?"
+          }
+        }
+      }
+    },
     "Search": {
       "localizations": {
         "tr": {
@@ -1506,6 +1686,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tümünü Seç"
+          }
+        }
+      }
+    },
+    "Select a running session to add this file to it": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu dosyayı eklemek için çalışan bir oturum seçin"
           }
         }
       }
@@ -1586,6 +1776,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bildirim göster (izin / soru / bitti)"
+          }
+        }
+      }
+    },
+    "Spaces: %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boşluk: %lld"
           }
         }
       }
@@ -1690,6 +1890,16 @@
         }
       }
     },
+    "Tabs": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sekmeler"
+          }
+        }
+      }
+    },
     "Teal": {
       "localizations": {
         "tr": {
@@ -1719,6 +1929,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "Uygulama /Applications dışında çalışıyor (%@). Kalıcı giriş öğesi için /Applications'a taşı."
+          }
+        }
+      }
+    },
+    "The file changed on disk.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya diskte değişti."
+          }
+        }
+      }
+    },
+    "The file is not UTF-8 text.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya UTF-8 metin değil."
+          }
+        }
+      }
+    },
+    "The file is too large to edit here (maximum 8 MB).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya burada düzenlenemeyecek kadar büyük (en fazla 8 MB)."
+          }
+        }
+      }
+    },
+    "The file was deleted on disk. Saving will recreate it.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya diskten silindi. Kaydetmek dosyayı yeniden oluşturur."
           }
         }
       }
@@ -1769,6 +2019,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tema"
+          }
+        }
+      }
+    },
+    "This is not a regular file.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu normal bir dosya değil."
+          }
+        }
+      }
+    },
+    "This looks like a binary file.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu bir ikili (binary) dosya gibi görünüyor."
           }
         }
       }
@@ -1833,6 +2103,16 @@
         }
       }
     },
+    "Wrap Lines": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Satırları Kaydır"
+          }
+        }
+      }
+    },
     "Yellow": {
       "localizations": {
         "tr": {
@@ -1849,6 +2129,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Öğeleri çöpten geri alabilirsin."
+          }
+        }
+      }
+    },
+    "You have unsaved changes in %lld files.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld dosyada kaydedilmemiş değişiklik var."
+          }
+        }
+      }
+    },
+    "Your changes will be lost if you don’t save them.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydetmezseniz değişiklikleriniz kaybolacak."
           }
         }
       }

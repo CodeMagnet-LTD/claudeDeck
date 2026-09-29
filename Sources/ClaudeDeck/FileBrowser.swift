@@ -193,6 +193,8 @@ struct FileBrowserPanel: View {
 /// One row of the tree. Click handling is explicit: a drag source on a List row swallows the
 /// list's own click-to-select on macOS.
 struct FileNode: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.openWindow) private var openWindow
     let entry: FileEntry
     let tree: FileTree
     @Binding var selection: Set<String>
@@ -220,7 +222,7 @@ struct FileNode: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
             .onTapGesture(count: 2) {
-                if entry.isDirectory { tree.isExpanded(entry).wrappedValue.toggle() } else { FileActions.openDefault(entry.url) }
+                if entry.isDirectory { tree.isExpanded(entry).wrappedValue.toggle() } else { EditorOpener.openDefault(entry.url, model: model, openWindow: openWindow) }
             }
             .onTapGesture {
                 if NSEvent.modifierFlags.contains(.command) {
@@ -408,6 +410,7 @@ struct DiffSheet: View {
 
 struct FileMenu: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.openWindow) private var openWindow
     let urls: [URL]
     let tree: FileTree
     let project: Project
@@ -415,6 +418,9 @@ struct FileMenu: View {
     var body: some View {
         if let url = urls.first {
             let isDir = (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) ?? false
+            if !isDir {
+                Button("Open in Editor") { urls.forEach { EditorOpener.open($0, openWindow: openWindow) } }
+            }
             if VSCode.isInstalled {
                 Button("Open in VS Code") { urls.forEach(VSCode.open) }
             }
