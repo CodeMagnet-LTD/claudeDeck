@@ -325,7 +325,7 @@ struct FindInFilesView: View {
             Divider()
             HStack(spacing: 14) {
                 Text("Click to open")
-                if model.insertTargetSession != nil { Text("⌥-click to add @path:line to Claude") }
+                if model.insertTargetSession != nil { Text("⌥-click to add @path#Lline to Claude") }
                 Spacer()
                 let count = groups.reduce(0) { $0 + $1.matches.count }
                 if count > 0 {

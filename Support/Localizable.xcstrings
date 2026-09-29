@@ -4652,12 +4652,12 @@
     "−%lld": {
       "shouldTranslate": false
     },
-    "⌥-click to add @path:line to Claude": {
+    "⌥-click to add @path#Lline to Claude": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "@yol:satır eklemek için ⌥-tıklayın"
+            "value": "@yol#Lsatır eklemek için ⌥-tıklayın"
           }
         }
       }
