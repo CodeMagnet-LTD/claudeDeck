@@ -21,12 +21,13 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
 
 **Bütün oturumlar için tek pencere.** Görüntüde neler var:
 - **Kenar çubuğu (solda):** tüm projeler ve oturumlar, gruplarıyla. Seni bekleyen her şey en üstteki
-  **Needs Attention** (Bekleyenler) bölümüne çıkar.
+  **Needs Attention** (Bekleyenler) bölümüne çıkar. `PR #42` ve `#118`, oturumlara bağlanmış GitHub pull
+  request'i ve issue'sudur; renkleri durumlarını gösterir.
 - **İki bölme (ortada):**
   - Solda, bir Bash komutu için izin bekleyen oturum. Bölme başlığındaki **Allow / Deny** ile ya da her
     zamanki gibi terminalden cevap verebilirsin.
-  - Yanında, ayrı bir git worktree'sinde çalışmaya devam eden ikinci oturum.
-- **Dosyalar paneli (sağda):** seçili projenin canlı dosya ağacı.
+  - Yanında, aynı projede çalışmaya devam eden ikinci oturum.
+- **Sağ panel:** **Files** (seçili projenin canlı dosya ağacı) ile **Changes** (kaynak kontrolü) arasında geçiş yapar.
 
 <table>
   <tr>
@@ -66,9 +67,10 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
     <td valign="top">
       <b>Dosyalar paneli (⌘⇧E).</b> Projenin canlı güncellenen dosya ağacı, git işaretleriyle:
       <ul>
-        <li>Turuncu <b>M</b>: değişmiş. Yeşil <b>?</b>: yeni, git'e eklenmemiş. Değişiklik içeren klasörler noktalı.</li>
+        <li>Turuncu <b>M</b>: değişmiş. Yeşil <b>A/?</b>: yeni. Değişiklik içeren klasörler noktalı. <code>.gitignore</code>'un dışladığı dosyalar gizli kalır.</li>
         <li>Bir dosyayı seçince commit geçmişi ve diff'leri görünür; kaydedilmemiş değişiklikler de dahil.</li>
-        <li>Dosyayı bir Claude bölmesine sürükle, <code>@yol</code> olarak eklensin.</li>
+        <li>Dosyayı bir Claude bölmesine sürükle, <code>@yol</code> olarak eklensin. Dosyaları bir klasörün üstüne sürükleyerek taşırsın, Finder'dan da bırakabilirsin.</li>
+        <li>Üstteki <b>Files | Changes</b> paneli kaynak kontrolüne çevirir.</li>
       </ul>
     </td>
   </tr>
@@ -84,6 +86,71 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
 
 <table>
   <tr>
+    <td width="50%" valign="top">
+      <img src="docs/screenshots/tabs-editor.png" alt="Araç çubuğunda düzenleyici sekmeleri, açık bir TypeScript dosyası ve Dosyalar paneli">
+    </td>
+    <td valign="top">
+      <b>Sekmeler ve yerleşik düzenleyici.</b> Dosyalar araç çubuğunda sekme olarak açılır; ilk sekme her zaman <b>Oturumlar</b> (Sessions) sekmesidir:
+      <ul>
+        <li>Sözdizimi renklendirmesi, satır numaraları, bul ve değiştir ve ⌘S ile hafif bir kod düzenleyicisi.</li>
+        <li><b>Claude'a Ekle</b> (yol çubuğundaki <code>@</code>) seçili oturuma <code>@yol</code> yazar; satır seçiliyse <code>@yol#L10-20</code>.</li>
+        <li>Hızlı Aç'tan ya da Değişiklikler'den açılan dosyalar italik bir önizleme sekmesinde açılır, sonraki onun yerine geçer. Sekmeler arasında ⌘1–⌘9 ve ⌃Tab ile geçilir.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/screenshots/changes.png" alt="Hazırlanan ve hazırlanmayan dosyalarıyla Changes paneli ve Stage Hunk düğmeli tam genişlikte diff sekmesi">
+    </td>
+    <td valign="top">
+      <b>Değişiklikler (Changes, ⌘⇧G).</b> Seçili projenin kaynak kontrolü:
+      <ul>
+        <li>Dosya ya da hunk bazında stage, unstage ve discard. Her diff tam genişlikte bir sekmede açılır.</li>
+        <li>Commit, amend, push ve pull. ✨ düğmesi commit mesajını senin <code>claude</code>'una yazdırır.</li>
+        <li>Diff'te bir satıra sağ tık › <b>Claude'a bu satırı sor…</b>, sorunla birlikte <code>@yol#L12</code>'yi oturuma gönderir.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/screenshots/automations.png" alt="Hafta içi zamanlaması ve çalışma geçmişiyle Otomasyonlar sekmesi">
+    </td>
+    <td valign="top">
+      <b>Otomasyonlar.</b> Belirli zamanlarda Claude oturumu başlatan kayıtlı prompt'lar:
+      <ul>
+        <li>Saatte bir, her gün, hafta içi her gün ya da haftada bir; istersen yalnızca <b>Şimdi Çalıştır</b> (Run Now) ile.</li>
+        <li>Proje klasöründe ya da her seferinde yeni bir git worktree'sinde çalışır. Hazır şablonlardan başlayabilirsin.</li>
+        <li>Her çalışmanın geçmişi, oturumuna bağlantısıyla. İzin istemleri her oturumda olduğu gibi Bekleyenler'e düşer.</li>
+      </ul>
+      Otomasyonlar yalnızca ClaudeDeck açıkken çalışır.
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/screenshots/github.png" alt="Bağlı pull request'in durumu, başarısız kontrolü, istenen değişiklikler ve son etkinlikleriyle açılır penceresi">
+    </td>
+    <td valign="top">
+      <b>GitHub issue'ları ve pull request'leri.</b> Bir oturuma bağla, rozeti durumunu göstersin:
+      <ul>
+        <li>Açılır pencerede açıklama, etiketler, CI kontrolleri, review'lar ve son yorumlar var.</li>
+        <li><b>Claude'a Gönder</b> bağlantıyı oturuma yazar. <b>Yorum Ekle…</b> GitHub'a yorum gönderir.</li>
+        <li>Review gelince, CI kırılınca ya da pull request merge edilince bildirim alırsın.</li>
+      </ul>
+      Kendi <code>gh</code> CLI'ını ve onun oturumunu kullanır; ClaudeDeck token saklamaz.
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/screenshots/quick-open.png" alt="cart ile eşleşen dosyaları listeleyen Hızlı Aç penceresi">
+    </td>
+    <td valign="top">
+      <b>Hızlı Aç (⌘P) ve Dosyalarda Bul (⌘⇧F).</b> Adının bir kısmını yazarak projedeki herhangi bir dosyaya atla. ↩ açar, ⌥↩ Claude'a <code>@yol</code> olarak ekler. Dosyalarda Bul içerikte arar; git'e eklenmemiş dosyalar da dahil.
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr>
     <td><img src="docs/screenshots/settings-general.png" alt="Genel ayarlar: tema, çıkış onayı, menü çubuğu modu"></td>
     <td><img src="docs/screenshots/settings-sessions.png" alt="Oturum ayarları: otomatik /compact eşiği, devam mesajı, bildirimler"></td>
   </tr>
@@ -93,7 +160,7 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
   </tr>
 </table>
 
-<sub>Görüntüler, uydurma projelerle çalışan yerleşik demo moduyla (<code>tools/demo.sh</code>) alındı.</sub>
+<sub>Görüntüler, uydurma projeler, depolar ve kişilerle çalışan yerleşik demo moduyla (<code>tools/demo.sh</code>) alındı.</sub>
 
 ## Nedir, ne değildir
 
@@ -118,8 +185,19 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
 - ♻️ **Kalıcılık:** uygulama kapanıp açılınca oturumlar `claude --resume` ile geri gelir; context şişmişse
   otomatik `/compact` gönderilir.
 - 🌿 **Worktree oturumları:** aynı projede `claude --worktree` ile birbirine karışmayan paralel oturumlar.
-- 📁 **Dosyalar paneli:** canlı dosya ağacı, git işaretleri, dosya geçmişi ve diff. Dosyayı terminale
-  sürükleyerek `@yol` olarak eklersin. VS Code ile açma desteği var.
+- 📁 **Dosyalar paneli:** canlı dosya ağacı, git işaretleri, dosya geçmişi ve diff, Hızlı Aç (⌘P) ve
+  Dosyalarda Bul (⌘⇧F). Dosyayı terminale sürükleyerek `@yol` olarak eklersin.
+- 📑 **Sekmeler ve yerleşik düzenleyici:** dosyalar, diff'ler ve Otomasyonlar oturumlarının yanında sekme olarak
+  açılır. Sözdizimi renkli, bul-değiştirli hafif bir düzenleyici; "Claude'a Ekle" ile `@yol#L10-20`.
+- 🔀 **Değişiklikler (⌘⇧G):** dosya ya da hunk bazında stage / unstage / discard, commit, push ve pull; commit
+  mesajını Claude yazar.
+- 🐙 **GitHub bağlantıları:** bir oturuma issue ya da pull request bağla; durumunu, review'ları ve CI'ı gör,
+  değişince bildirim al. Senin `gh` CLI'ını kullanır.
+- ⏰ **Otomasyonlar:** zamanlanmış prompt'lar (saatlik, günlük, hafta içi, haftalık), Run Now ve çalışma geçmişi.
+- 🔄 **Oturumu Yeniden Başlat (⌥⌘R):** `claude`'dan çıkıp aynı konuşmaya geri döner; yeni MCP sunucuları ve
+  ayarlar devreye girer.
+- ✏️ **Pencil (pen.dev):** ClaudeDeck'in başlattığı oturumlar Pencil'ın tasarım araçlarını kullanabilir;
+  `.pen` dosyaları Pencil'da açılır.
 - 💻 **Düz terminaller:** proje klasöründe shell ya da `yarn start` gibi bir başlangıç komutu; uygulama
   açılınca otomatik başlar.
 - ☁️ **iCloud eşitleme (isteğe bağlı):** proje listesi ve gruplar Mac'lerin arasında eşitlenir.
@@ -140,8 +218,10 @@ Uygulama Developer ID ile imzalı ve Apple tarafından notarize edilmiştir; Gat
 - [Claude Code](https://docs.claude.com/en/docs/claude-code) CLI kurulu ve login shell'de `claude` komutu çalışıyor olmalı
 - `jq`: macOS 15 ile birlikte `/usr/bin/jq` olarak gelir
 - İsteğe bağlı: git işaretleri ve dosya geçmişi için Command Line Tools (`xcode-select --install`) ya da
-  Homebrew git; ikisi de yoksa bu özellikler sessizce kapanır. VS Code ile açma için VS Code, Insiders
-  ya da VSCodium.
+  Homebrew git; ikisi de yoksa bu özellikler sessizce kapanır. Dış editörde açmak için VS Code, Insiders
+  ya da VSCodium (yerleşik düzenleyici için hiçbir şey gerekmez). GitHub bağlantıları için
+  `gh auth login` ile oturum açılmış [GitHub CLI](https://cli.github.com) (`gh`). Pencil entegrasyonu için
+  [pen.dev](https://pen.dev)'deki Pencil masaüstü uygulaması.
 
 ## Kaynaktan derleme
 
@@ -216,8 +296,13 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
   `claude --worktree <ad>` ile kendi git worktree'sinde çalışır; aynı projedeki paralel oturumlar aynı
   dosyaları düzenlemez. Gerçek klasör hook'ların bildirdiği `cwd`'den öğrenilir; devam ettirme o klasörde
   çalışır. Sidebar'da dal simgesi + worktree adı görünür.
+- **Oturumu Yeniden Başlat (⌥⌘R):** oturumun `claude`'unu kapatıp aynı bölmede, aynı konuşmaya devam
+  ederek yeniden başlatır. MCP sunucusu ekledikten, ayarları ya da `CLAUDE.md`'yi değiştirdikten sonra kullan.
+  Dosya › "Tüm Claude Oturumlarını Yeniden Başlat" çalışan bütün Claude oturumlarını yeniden başlatır; çalışmakta olan
+  oturumlar için önce sorar, istersen onları atlar. Düz terminalde shell'i ve başlangıç komutunu yeniden çalıştırır.
 - **Sağ tık menüsü:** Yanına aç / Bölmeyi kapat, İzin ver / Reddet (izin bekliyorsa), Oturumu bitir,
-  Devam et, Yeni başlat, Yeniden adlandır, Bitir ve listeden kaldır (onay sorar; Claude geçmişi silinmez).
+  Devam et, Oturumu Yeniden Başlat, Yeni başlat, Yeniden adlandır, GitHub Issue veya PR Bağla…, Bitir ve
+  listeden kaldır (onay sorar; Claude geçmişi silinmez).
 
 ### Düz terminal
 - Projenin başlığındaki terminal ikonu, sağ tık › "Yeni terminal" ya da ⌥⌘T: proje klasöründe login shell.
@@ -260,19 +345,92 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
 - Her bölmenin başlığında ad, durum, İzin ver/Reddet ve ✕ (yalnızca bölmeyi kapatır; süreç çalışır).
   Tıkladığın bölme odak olur. Düzen kalıcıdır.
 
+### Sekmeler
+- Oturumlar dışında bir şey açılınca araç çubuğunda pencere başlığının yerine sekmeler çıkar:
+  - **Oturumlar** her zaman ilk sekmedir (⌘1): kenar çubuğundaki oturumlar ve bölmeler, eskisi gibi.
+  - **Dosyalar** yerleşik düzenleyicide, Değişiklikler'deki **diff'ler** tam genişlikte, **Otomasyonlar** kendi sekmesinde açılır.
+- **Önizleme sekmesi:** Hızlı Aç'tan ya da Dosyalarda Bul'dan açılan dosyalar ve Değişiklikler'de tıklanan
+  diff'ler italik bir önizleme sekmesinde açılır; sonraki onun yerine geçer. Düzenlersen ya da "Açık tut"
+  dersen kalıcı olur. Dosyalar panelinde çift tık kalıcı bir sekme açar.
+- ⌘1–⌘9 sekme seçer, ⌃Tab / ⌃⇧Tab sekmeler arasında gezer, ⌘W açık sekmeyi kapatır. Sekmeleri sürükleyerek sıralarsın.
+- Sekme menüsü: Sekmeyi kapat, Diğer sekmeleri kapat, Sağdaki sekmeleri kapat, Ayrı pencerede aç,
+  Yolu Kopyala, Finder'da Göster.
+- Açık sekmeler uygulama yeniden açılınca geri gelir. Ayarlar › Düzenleyici › "Dosyaları sekmeler yerine
+  ayrı pencerelerde aç" ile her dosya kendi penceresinde açılır.
+
+### Yerleşik düzenleyici
+- Dosyalar panelinde bir metin dosyasına çift tıkla (ya da "Düzenleyicide Aç") ve düzenle. Hızlı Aç, Dosyalarda Bul
+  ve Değişiklikler de dosyaları aynı şekilde açar.
+- Swift, JavaScript/TypeScript, JSON, Python, Go, Rust, shell, YAML, Markdown, HTML/XML, CSS ve C ailesi
+  için sözdizimi renkleri. Satır numaraları, otomatik girinti, satır kaydırma ve değiştirmeli standart bul
+  çubuğu (⌘F).
+- ⌘S kaydeder; kaydedilmemiş değişiklikle sekmeyi kapatırken ya da çıkarken önce sorar.
+- Dosya diskte değişirse (örneğin Claude düzenlediyse) düzenleyici yeniden yükler. Senin de kaydedilmemiş
+  değişikliğin varsa bir çubuk **Yeniden Yükle** ya da **Benimkini Koru** seçeneği sunar.
+- **Claude'a Ekle** seçili oturuma `@yol` yazar; satır seçiliyse `@yol#L10-20`.
+- Ayarlar › Düzenleyici: yazı boyutu, satır kaydırma ve çift tıkın yerleşik düzenleyiciyi kullanıp kullanmayacağı.
+  8 MB'tan büyük ve ikili dosyalar varsayılan uygulamalarında açılır.
+
+### Değişiklikler (⌘⇧G)
+- Sağ paneldeki **Değişiklikler** tarafı (ya da ⌘⇧G) seçili projenin dalını, stage edilmiş ve edilmemiş dosyalarını
+  ve çakışmaları gösterir; dosyalar değiştikçe güncellenir.
+- Bir dosyaya tıklayınca diff'i tam genişlikte bir sekmede açılır. Tek dosyayı, bütün dosyaları ya da tek bir
+  hunk'ı stage, unstage ya da discard edebilirsin. Discard önce sorar; yeni dosyalar Çöp'e gider.
+- İsteğe bağlı **Düzelt (amend)** ile **Commit et** ya da Commit et ve gönder. Push, pull (yalnızca fast-forward) ve dalı yayınlama.
+- ✨ **Commit mesajını Claude ile oluştur:** senin `claude`'un (`claude -p`) stage edilmiş diff'i okuyup mesajı yazar.
+- Diff'te bir satıra sağ tık › **Claude'a bu satırı sor…**, sorunla birlikte `@yol#L<satır>`'ı seçili
+  oturuma gönderir. Aynı menüde "Satırı kopyala" ve "Dosyayı aç" da var.
+
 ### Dosyalar paneli (⌘⇧E)
 - Sidebar'da son tıkladığın projenin (ya da seçili oturumun; worktree oturumunda worktree klasörünün) canlı
-  güncellenen ağacı. `.git`, `node_modules`, `.build` vb. gizli; göz ikonuyla gizli dosyalar.
+  güncellenen ağacı. Diskteki değişiklikleri (git işlemleri dahil) anında izler (FSEvents).
+  `.gitignore`'un dışladığı dosyalar ve `.git`, `node_modules`, `.build` vb. gizli; göz ikonu gizli
+  dosyaları, ⋯ menüsündeki "Yok Sayılan Dosyaları Göster" dışlananları gösterir.
 - **Git:** değişen dosyalar turuncu **M**, yeniler yeşil **A/?**, silinen/çakışan kırmızı; değişiklik içeren
   klasörler noktalı. Dosya seçince altta **geçmiş** (commit'ler); commit'e tıklayınca o dosyanın diff'i,
   en üstte kaydedilmemiş değişiklikler.
 - Tek tık seçer (⌘-tık çoklu), çift tık VS Code'da (kurulu değilse varsayılan uygulamada) açar.
-- Sağ tık: VS Code'da aç, Aç, Finder'da göster, Claude'a ekle (`@yol`), yolu/göreli yolu kopyala, yeni
-  dosya/klasör, yeniden adlandır, çöpe taşı.
+- Sağ tık: Düzenleyicide Aç, VS Code'da aç, Aç, Finder'da göster, Claude'a ekle (`@yol`), yolu/göreli yolu
+  kopyala, yeni dosya/klasör, yeniden adlandır, çoğalt, kes / kopyala / yapıştır, çöpe taşı.
+- Dosyaları bir klasörün üstüne sürükleyerek taşırsın; Finder'dan bırakılan dosyalar projeye kopyalanır.
+- **Hızlı Aç (⌘P):** dosya adının bir kısmını yaz; ↩ açar, ⌥↩ Claude'a ekler.
+- **Dosyalarda Bul (⌘⇧F):** dosya içeriklerinde `git grep` ile arar, git'e eklenmemiş dosyalar dahil. Bir
+  sonuca tıklamak dosyayı açar; ⌥-tık Claude'a `@yol#L<satır>` ekler.
 - Dosyayı bir terminal bölmesine sürükle: Claude'da `@göreli/yol` (resimler tam yol, Claude resim olarak
   ekler), düz terminalde kaçışlı yol yazılır.
 - Araç çubuğundaki `</>` ve projenin menüsü › "VS Code'da aç" projeyi VS Code'da açar (VS Code / Insiders /
   VSCodium kurulu değilse düğmeler görünmez).
+
+### GitHub issue'ları ve pull request'leri
+- Oturum menüsü › **GitHub Issue veya PR Bağla…** bir URL ya da `sahip/depo#123` alır. **Geçerli Dalın
+  PR'ını Bağla**, oturumun bulunduğu dalın pull request'ini bulur.
+- Oturum adının yanındaki rozet `PR #42` ya da `#118`'i öğenin rengiyle gösterir: açık yeşil, merge edilmiş
+  mor, kapalı kırmızı, taslak gri. Nokta, son baktığından beri değiştiğini gösterir.
+- Rozete tıklayınca başlık, etiketler, açıklama, CI kontrolleri, review kararı, son review'lar ve yorumlar
+  görünür. **Claude'a Gönder** bağlantıyı oturuma yazar, **Yorum Ekle…** yorum gönderir.
+- ClaudeDeck öndeyken bağlı öğeleri dakikada bir kontrol eder; pull request merge edilince ya da kapanınca,
+  CI kırılınca ya da düzelince, review ya da yeni yorum gelince bildirim gönderir.
+- Her şey senin `gh` CLI'ın ve onun oturumu üzerinden gider. `gh` yoksa açılır pencere nasıl kurulacağını anlatır.
+
+### Otomasyonlar
+- Kenar çubuğunun altındaki saat düğmesinden, Dosya › "Otomasyonlar…" menüsünden ya da menü çubuğundan
+  açılır; sekme olarak gelir.
+- Bir otomasyon; bir prompt, bir proje ve bir ya da daha fazla zamanlamadır: her saat belirli bir dakikada,
+  her gün, hafta içi her gün ya da haftada bir belirli saatte. Zamanlama yoksa yalnızca **Şimdi Çalıştır** ile çalışır.
+- Her çalışma proje klasöründe ya da yeni bir git worktree'sinde bir Claude oturumu başlatır; ya sıfırdan
+  başlar ya da önceki çalışmanın oturumuna devam eder.
+- Şablonlar: Kritik hataları bul, Bağımlılıkları denetle, Test sağlığı, TODO'ları ayıkla, Haftalık değişiklik günlüğü.
+- **Geçmiş**, her çalışmayı durumuyla (Başarılı, Başarısız, Atlandı…) listeler ve oturumunu açar.
+- Otomasyonlar yalnızca ClaudeDeck açıkken çalışır. Mac uykudayken kaçırılan çalışma, "Kaçırılırsa"
+  sınırından eskiyse atlanır. Hiç kaçırmamak için uygulamayı menü çubuğunda tut ve girişte açılsın.
+
+### Pencil (pen.dev)
+- Pencil masaüstü uygulaması kuruluysa ClaudeDeck'in başlattığı yeni ve devam ettirilen Claude oturumları
+  onun MCP sunucusunu (`--mcp-config` ile) alır; böylece Claude tasarımlarınla çalışabilir. Genel Claude
+  yapılandırman değişmez.
+- Bu oturumlar bölme başlığında **Pencil** etiketiyle görünür. Zaten çalışan oturumlar için oturumu yeniden
+  başlatman gerekir.
+- `.pen` dosyaları Dosyalar panelinden Pencil'da açılır. Entegrasyon Ayarlar'dan kapatılabilir.
 
 ### Terminal
 - Klavye, renk, kısayollar, yeniden boyutlandırma, kopyala/yapıştır; bölme ya da oturum değiştirmek
@@ -286,6 +444,8 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
 - Bilgisayar açılınca ClaudeDeck'i başlat (giriş öğesi; uygulama `/Applications`'da olmalı: `./build.sh install`).
 - Açılışta oturumları otomatik devam ettir, /compact ve token eşiği.
 - Bildirim ve Dock zıplatma.
+- Düzenleyici: yerleşik düzenleyici açık/kapalı, sekmeler yerine ayrı pencereler, yazı boyutu, satır kaydırma.
+- Pencil: Claude oturumlarını Pencil'a bağlama ve durumu.
 - iCloud eşitleme (aşağıda).
 - Claude Code hook'ları: durum, yeniden kur, kaldır.
 
@@ -318,7 +478,8 @@ profili gerekir. İkisi de yalnızca yerel anahtar zincirinde durur, repoda hiç
 
 | Ne | Nerede |
 |---|---|
-| Projeler, gruplar, oturumlar, bölmeler, ayarlar | `~/Library/Application Support/ClaudeDeck/deck.json` |
+| Projeler, gruplar, oturumlar, bölmeler, ayarlar, GitHub bağlantıları, otomasyonlar ve çalışma geçmişleri | `~/Library/Application Support/ClaudeDeck/deck.json` |
+| Açık sekmeler, panel düzeni | Uygulamanın tercihleri (`defaults read <bundle-id>`) |
 | Anlık oturum durumları (hook'un yazdığı) | `~/.claude/deck/sessions/<session_id>.json` |
 | Hook betiği | `~/.claude/deck/bin/deck-hook.sh` |
 | settings.json yedekleri | `~/.claude/settings.json.claudedeck-backup-<tarih>` |
@@ -330,10 +491,14 @@ profili gerekir. İkisi de yalnızca yerel anahtar zincirinde durur, repoda hiç
 
 - `Sources/ClaudeDeckCore/` — UI'sız, test edilen katman: hook betiği ve settings.json birleştirme
   (`HookScript`, `HookInstaller`), durum modeli (`SessionState`, `StatusDirectory`), transcript okuma
-  (`Transcript`), kalıcı veri (`DeckData`), dosya listeleme ve git (`FileListing`, `Git`), iCloud
-  (`DeckSync`), widget özeti (`WidgetSnapshot`).
+  (`Transcript`), kalıcı veri (`DeckData`), dosya listeleme ve git (`FileListing`, `Git`, `GitChanges`,
+  `GitExplorer`, `UnifiedDiff`), sekmeler (`WorkspaceTabList`), editör metni ve sözdizimi (`TextFileIO`,
+  `SyntaxTokenizer`), `gh` ile GitHub (`GitHub`, `GitHubLink`), otomasyonlar (`Automations`), yeniden
+  başlatma ve Pencil (`SessionRestart`, `PencilIntegration`), iCloud (`DeckSync`), widget özeti (`WidgetSnapshot`).
 - `Sources/ClaudeDeck/` — SwiftUI uygulaması: `AppModel`, `TerminalRegistry` (SwiftTerm, süreçler),
-  `SidebarView`, `ContentView` (bölmeler), `FileBrowser`, `AttentionCenter` (bildirim/Dock),
+  `SidebarView`, `ContentView` (bölmeler), `WorkspaceTabs` / `TabStrip`, `EditorWindow` / `CodeTextView`,
+  `FileBrowser` / `ExplorerSearch`, `ChangesView` / `DiffTab`, `AutomationsView` / `AutomationScheduler`,
+  `GitHubLinkViews` / `GitHubMonitor`, `AppModel+Restart`, `PencilApp`, `AttentionCenter` (bildirim/Dock),
   `PermissionActions`, `MenuBarViews`, `SettingsView`, `WidgetBridge`, `DeckSyncController`.
 - `Widget/` — WidgetKit uzantısı. `tools/make-icon.swift` — ikon üretici.
 - `Tests/ClaudeDeckCoreTests/` — birim testleri (gerçek hook betiği ve gerçek git deposu dahil).
@@ -343,8 +508,18 @@ profili gerekir. İkisi de yalnızca yerel anahtar zincirinde durur, repoda hiç
 `CLAUDEDECK_SNAPSHOT_DIR=<dir> open build/ClaudeDeck.app` ekran kaydı izni olmadan uçtan uca test içindir:
 pencereleri periyodik olarak PNG'ye, liste satır sayılarını `rows.txt`'ye yazar ve `<dir>` içindeki komut
 dosyalarını işler: `<oturum>.in` (terminale yaz; `<CR>`, `<ESC>`), `<oturum>.select`, `<oturum>.beside`,
-`<oturum>.paste`, `<oturum>.approve` / `.deny`, `<proje>.shell`. Not: yeni cam (Liquid Glass) kenar çubuğu
-snapshot'ta boş görünür; satır sayısı `rows.txt`'dedir.
+`<oturum>.paste`, `<oturum>.approve` / `.deny`, `<proje>.shell`; `<ad>.tab` (`file<TAB><yol><TAB><önizleme 0|1>`,
+`diff<TAB><depo><TAB><yol><TAB><staged 0|1>`, `automations`, `sessions`, `close-all`), `<ad>.inspector`
+(`files`, `changes`, `hide`), `<ad>.quickopen` (arama metni), `<oturum>.github` (bağlantıyı getir),
+`<oturum>.popover` (açılır pencereyi aç), `<ad>.frame` (`x y w h`, ana pencere), `<ad>.scroll` (pencerede
+`x y`, oradaki görünümü sona kaydırır) ve `app.quit`. `screencapture -l <pencere no>` ile birlikte ekran
+görüntüleri hiç tık ya da tuş olmadan alınır. Not: yeni cam (Liquid Glass) kenar çubuğu snapshot'ta boş
+görünür; satır sayısı `rows.txt`'dedir.
+
+`./build.sh && tools/demo.sh` uygulamayı uydurma projeler, oturumlar, otomasyonlar ve GitHub bağlantılarıyla
+demo modunda açar (veriler `/tmp/ClaudeDeckDemo`'da, her çalıştırmada yeniden oluşturulur; GitHub'a
+fixture dosyalarından cevap veren sahte bir `gh` kullanılır). Demo modu `~/.claude/settings.json`'a,
+`deck.json`'ına ya da iCloud'a dokunmaz.
 
 ## Lisans ve yasal not
 

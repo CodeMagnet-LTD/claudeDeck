@@ -18,12 +18,14 @@ ClaudeDeck doesn't wrap, imitate or screen-scrape Claude. Every session runs **y
 
 **One window for every session.** Here's what the screenshot shows:
 - **Sidebar (left):** every project and session, grouped. Anything that needs you is pulled up into
-  **Needs Attention** at the top.
+  **Needs Attention** at the top. `PR #42` and `#118` are linked GitHub pull requests and issues,
+  colored by their state.
 - **Two panes (middle):**
   - On the left, a session waiting for permission to run a Bash command. You can answer with
     **Allow / Deny** in the pane header, or in the terminal as usual.
-  - Next to it, a second session in a separate git worktree, still running.
-- **Files panel (right):** the selected project's live file tree.
+  - Next to it, a second session in the same project, still running.
+- **Right panel:** switches between **Files** (the selected project's live file tree) and **Changes**
+  (source control).
 
 <table>
   <tr>
@@ -63,9 +65,10 @@ ClaudeDeck doesn't wrap, imitate or screen-scrape Claude. Every session runs **y
     <td valign="top">
       <b>Files panel (⌘⇧E).</b> The project's file tree, updated live, with git marks:
       <ul>
-        <li>Orange <b>M</b>: modified. Green <b>?</b>: new and untracked. Folders with changes get a dot.</li>
+        <li>Orange <b>M</b>: modified. Green <b>A/?</b>: new. Folders with changes get a dot. Files your <code>.gitignore</code> ignores stay hidden.</li>
         <li>Select a file to see its commit history and diffs, including uncommitted changes.</li>
-        <li>Drag a file into a Claude pane to add it as <code>@path</code>.</li>
+        <li>Drag a file into a Claude pane to add it as <code>@path</code>. Drag files onto a folder to move them, or drop them in from Finder.</li>
+        <li><b>Files | Changes</b> at the top switches the panel to source control.</li>
       </ul>
     </td>
   </tr>
@@ -81,6 +84,71 @@ ClaudeDeck doesn't wrap, imitate or screen-scrape Claude. Every session runs **y
 
 <table>
   <tr>
+    <td width="50%" valign="top">
+      <img src="docs/screenshots/tabs-editor.png" alt="Editor tabs in the toolbar with a TypeScript file open and the Files panel">
+    </td>
+    <td valign="top">
+      <b>Tabs and the built-in editor.</b> Files open as tabs in the toolbar, next to <b>Sessions</b>, which is always the first tab:
+      <ul>
+        <li>A light code editor with syntax colors, line numbers, find and replace, and ⌘S.</li>
+        <li><b>Add to Claude</b> (<code>@</code> in the path bar) inserts <code>@path</code> into the selected session, or <code>@path#L10-20</code> when lines are selected.</li>
+        <li>Files opened from Quick Open or Changes use a preview tab (in italics) that the next one replaces. ⌘1 to ⌘9 and ⌃Tab switch tabs.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/screenshots/changes.png" alt="Changes panel with staged and unstaged files, and a full-width diff tab with Stage Hunk buttons">
+    </td>
+    <td valign="top">
+      <b>Changes (⌘⇧G).</b> Source control for the selected project:
+      <ul>
+        <li>Stage, unstage and discard per file or per hunk. Each diff opens as a full-width tab.</li>
+        <li>Commit, amend, push and pull. The ✨ button asks your <code>claude</code> to write the commit message.</li>
+        <li>Right-click a diff line › <b>Ask Claude about This Line…</b> sends <code>@path#L12</code> and your question to the session.</li>
+      </ul>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/screenshots/automations.png" alt="Automations tab with a weekday schedule and run history">
+    </td>
+    <td valign="top">
+      <b>Automations.</b> Saved prompts that start a Claude session on a schedule:
+      <ul>
+        <li>Every hour, every day, every weekday or every week, or only with <b>Run Now</b>.</li>
+        <li>Run in the project folder or in a fresh git worktree each time. Templates to start from.</li>
+        <li>A history of every run, with a link to its session. Permission prompts show up in Needs Attention like any other session.</li>
+      </ul>
+      Automations run only while ClaudeDeck is running.
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/screenshots/github.png" alt="Popover of a linked pull request with its state, failing check, requested changes and latest activity">
+    </td>
+    <td valign="top">
+      <b>GitHub issues and pull requests.</b> Link one to a session and its badge shows the state:
+      <ul>
+        <li>The popover has the description, labels, CI checks, reviews and the latest comments.</li>
+        <li><b>Send to Claude</b> types the link into the session. <b>Add Comment…</b> posts to GitHub.</li>
+        <li>You get a notification when a review arrives, CI fails or the pull request is merged.</li>
+      </ul>
+      Uses your own <code>gh</code> CLI and its login; ClaudeDeck stores no tokens.
+    </td>
+  </tr>
+  <tr>
+    <td width="50%" valign="top">
+      <img src="docs/screenshots/quick-open.png" alt="Quick Open sheet listing files that match cart">
+    </td>
+    <td valign="top">
+      <b>Quick Open (⌘P) and Find in Files (⌘⇧F).</b> Jump to any file in the project by typing part of its name. ↩ opens it, ⌥↩ adds it to Claude as <code>@path</code>. Find in Files searches the contents, untracked files included.
+    </td>
+  </tr>
+</table>
+
+<table>
+  <tr>
     <td><img src="docs/screenshots/settings-general.png" alt="General settings: theme, quit confirmation, menu bar mode"></td>
     <td><img src="docs/screenshots/settings-sessions.png" alt="Session settings: auto /compact threshold, continue message, notifications"></td>
   </tr>
@@ -90,7 +158,7 @@ ClaudeDeck doesn't wrap, imitate or screen-scrape Claude. Every session runs **y
   </tr>
 </table>
 
-<sub>Screenshots use the built-in demo mode (<code>tools/demo.sh</code>) with made-up projects.</sub>
+<sub>Screenshots use the built-in demo mode (<code>tools/demo.sh</code>) with made-up projects, repositories and people.</sub>
 
 ## What it is, and what it isn't
 
@@ -117,8 +185,18 @@ Billing, usage limits and sign-in stay entirely with Claude Code. ClaudeDeck doe
   has grown too large, `/compact` is sent automatically.
 - 🌿 **Worktree sessions:** run parallel sessions in the same project, each in its own
   `claude --worktree`, so they never edit the same files.
-- 📁 **Files panel:** a live file tree with git status marks, per-file history and diffs. Drag a file
-  into a terminal to add it as `@path`. Opens files in VS Code.
+- 📁 **Files panel:** a live file tree with git status marks, per-file history and diffs, Quick Open (⌘P)
+  and Find in Files (⌘⇧F). Drag a file into a terminal to add it as `@path`.
+- 📑 **Tabs and a built-in editor:** files, diffs and Automations open as tabs next to your sessions. A light
+  code editor with syntax colors, find and replace, and "Add to Claude" for `@path#L10-20`.
+- 🔀 **Changes (⌘⇧G):** stage, unstage and discard by file or hunk, commit, push and pull, with a commit
+  message written by Claude.
+- 🐙 **GitHub links:** attach an issue or pull request to a session and see its state, reviews and CI;
+  get notified when they change. Uses your `gh` CLI.
+- ⏰ **Automations:** scheduled prompts (hourly, daily, weekdays, weekly) with Run Now and a run history.
+- 🔄 **Restart Session (⌥⌘R):** quits `claude` and resumes the same conversation, so new MCP servers and
+  settings take effect.
+- ✏️ **Pencil (pen.dev):** sessions ClaudeDeck starts can use Pencil's design tools, and `.pen` files open in Pencil.
 - 💻 **Plain terminals:** a shell in the project folder, optionally with a startup command such as
   `yarn start` that runs when the app launches.
 - ☁️ **iCloud sync (optional):** your project list and groups stay in sync across your Macs.
@@ -143,7 +221,10 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
 - Optional:
   - Git status marks and file history need the Command Line Tools (`xcode-select --install`) or Homebrew git.
     Without either, these features stay off quietly.
-  - Opening files in an editor needs VS Code, VS Code Insiders or VSCodium.
+  - Opening files in an external editor needs VS Code, VS Code Insiders or VSCodium. The built-in editor
+    needs nothing.
+  - GitHub links need the [GitHub CLI](https://cli.github.com) (`gh`), signed in with `gh auth login`.
+  - The Pencil integration needs the Pencil desktop app from [pen.dev](https://pen.dev).
 
 ## How status works (no screen reading)
 
@@ -191,8 +272,14 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
 - **Separate worktree:** project menu › New Claude Session (Separate Worktree)…, available in git repos only.
   - Runs `claude --worktree <name>` in its own git worktree.
   - The real folder is learned from the hooks' `cwd`, and resuming runs there.
+- **Restart Session (⌥⌘R):** quits the session's `claude` and starts it again in the same pane, resumed
+  into the same conversation. Use it after adding an MCP server or changing settings or `CLAUDE.md`.
+  - File › Restart All Claude Sessions does it for every running Claude session. It asks before
+    interrupting sessions that are working, and can skip them.
+  - On a plain terminal, Restart Terminal runs the shell and its startup command again.
 - **Context menu:** Open Beside / Close Pane, Allow / Deny (when waiting), End Session, Resume,
-  Start Fresh, Rename, and End and Remove. End and Remove asks first and never deletes Claude's history.
+  Restart Session, Start Fresh, Rename, Link GitHub Issue or PR…, and End and Remove. End and Remove asks
+  first and never deletes Claude's history.
 
 ### Plain terminals
 - Open one with the terminal icon on a project header, context menu › New Terminal, or ⌥⌘T. It starts
@@ -249,9 +336,46 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
 - Each pane header shows the name, state, Allow/Deny, and ✕. ✕ only closes the pane; the process keeps running.
 - The layout persists.
 
+### Tabs
+- The toolbar shows tabs in place of the window title once anything besides Sessions is open:
+  - **Sessions** is always the first tab (⌘1): the sidebar's sessions and panes, as before.
+  - **Files** open in the built-in editor, **diffs** from Changes open full width, and **Automations** has its own tab.
+- **Preview tabs:** files opened from Quick Open or Find in Files, and diffs clicked in Changes, open in a
+  preview tab (in italics) that the next one replaces. Editing it, or choosing Keep Open, keeps it.
+  Double-click in the Files panel opens a permanent tab.
+- ⌘1 to ⌘9 select tabs, ⌃Tab / ⌃⇧Tab move between them, ⌘W closes the current tab. Drag tabs to reorder them.
+- Tab menu: Close Tab, Close Other Tabs, Close Tabs to the Right, Open in Separate Window, Copy Path,
+  Reveal in Finder.
+- Open tabs come back after a restart. Settings › Editor › "Open files in separate windows instead of tabs"
+  gives every file its own window instead.
+
+### Built-in editor
+- Double-click a text file in the Files panel (or pick Open in Editor) to edit it. Quick Open, Find in Files
+  and Changes open files the same way.
+- Syntax colors for Swift, JavaScript/TypeScript, JSON, Python, Go, Rust, shell, YAML, Markdown, HTML/XML,
+  CSS and C-family files. Line numbers, auto-indent, wrap lines, and the standard find bar with replace (⌘F).
+- ⌘S saves; closing a tab or quitting with unsaved changes asks first.
+- If the file changes on disk (for example, Claude edits it), the editor reloads it. With unsaved edits of your
+  own, a bar offers **Reload** or **Keep Mine**.
+- **Add to Claude** inserts `@path` into the selected session, or `@path#L10-20` with the selected lines.
+- Settings › Editor: font size, wrap lines, and whether double-click uses the built-in editor at all. Files
+  over 8 MB and binary files open in their default app.
+
+### Changes (⌘⇧G)
+- The right panel's **Changes** side (or ⌘⇧G) shows the selected project's branch, staged and unstaged files,
+  and conflicts. It updates as files change.
+- Click a file to open its diff as a full-width tab. Stage, unstage or discard a whole file, every file, or a
+  single hunk. Discarding asks first; new files go to the Trash.
+- **Commit** with an optional **Amend**, or Commit & Push. Push, pull (fast-forward only) and Publish Branch.
+- ✨ **Generate Commit Message:** your `claude` (`claude -p`) reads the staged diff and writes the message.
+- Right-click a line in a diff › **Ask Claude about This Line…** sends `@path#L<line>` with your question
+  to the selected session. Copy Line and Open File are in the same menu.
+
 ### Files panel (⌘⇧E)
 - A live tree of the last clicked project, or the selected session's worktree.
-  - `.git`, `node_modules`, `.build` and the like are hidden; use the eye icon to show hidden files.
+  - It follows changes on disk as they happen (FSEvents), including git operations.
+  - Files your `.gitignore` ignores, plus `.git`, `node_modules`, `.build` and the like, are hidden. The eye
+    icon shows hidden files; the ⋯ menu shows ignored ones.
 - **Git:**
   - Modified files are shown as orange **M**, new ones as green **A/?**, deleted or conflicted ones in red.
     Folders containing changes are dotted.
@@ -259,11 +383,45 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
     are at the top.
 - Click to select (⌘-click for several). Double-click opens the file in VS Code, or in the default app if
   VS Code isn't installed.
-- **Context menu:** Open in VS Code, Open, Reveal in Finder, Add to Claude (`@path`), Copy Path,
-  Copy Relative Path, New File / New Folder, Rename, Move to Trash.
+- **Context menu:** Open in Editor, Open in VS Code, Open, Reveal in Finder, Add to Claude (`@path`), Copy Path,
+  Copy Relative Path, New File / New Folder, Rename, Duplicate, Cut / Copy / Paste, Move to Trash.
+- Drag files onto a folder to move them, or drop files from Finder to copy them into the project.
+- **Quick Open (⌘P):** type part of a file name; ↩ opens it, ⌥↩ adds it to Claude.
+- **Find in Files (⌘⇧F):** searches file contents with `git grep`, untracked files included. Click a match to
+  open the file; ⌥-click adds `@path#L<line>` to Claude.
 - **Drag a file onto a terminal pane:**
   - In Claude it's added as `@relative/path`. Images use the full path, so Claude attaches them as images.
   - In a plain terminal the escaped path is typed.
+
+### GitHub issues and pull requests
+- Session menu › **Link GitHub Issue or PR…** takes a URL or `owner/repo#123`. **Link PR for Current Branch**
+  finds the pull request of the branch the session is on.
+- The badge next to the session name shows `PR #42` or `#118` in the item's color: green open, purple
+  merged, red closed, grey draft. A dot means it changed since you last looked.
+- Click the badge for the title, labels, description, CI checks, review decision and the latest reviews and
+  comments. **Send to Claude** types the link into the session; **Add Comment…** posts a comment.
+- ClaudeDeck checks linked items every minute while it is in front, and notifies you when a pull request is
+  merged or closed, CI fails or passes, a review arrives, or new comments come in.
+- Everything goes through your own `gh` CLI and its login. Without `gh`, the popover explains how to set it up.
+
+### Automations
+- Open them from the clock button at the bottom of the sidebar, File › Automations… or the menu bar. They open as a tab.
+- An automation is a prompt, a project and one or more schedules: every hour at a minute, every day, every
+  weekday, or every week at a time. Without a schedule, it runs only with **Run Now**.
+- Each run starts a Claude session in the project folder or in a new git worktree, and either starts fresh or
+  continues the last run's session.
+- Templates: Find critical bugs, Audit dependencies, Test health, Triage TODOs, Weekly changelog.
+- **History** lists every run with its status (Succeeded, Failed, Skipped…) and opens its session.
+- Automations run only while ClaudeDeck is running. A run the Mac slept through is skipped once it is older
+  than the "If missed" limit. Keep the app in the menu bar and open it at login to never miss one.
+
+### Pencil (pen.dev)
+- If the Pencil desktop app is installed, new and resumed Claude sessions started by ClaudeDeck get its MCP
+  server (via `--mcp-config`), so Claude can work with your designs. Your global Claude configuration is not
+  changed.
+- A **Pencil** tag in the pane header marks those sessions. Sessions that were already running need a
+  Restart Session to pick it up.
+- `.pen` files open in Pencil from the Files panel. Turn the integration off in Settings.
 
 ### Terminal
 - Full keyboard support, colors, shortcuts, resizing and copy/paste. Switching panes or sessions never
@@ -277,6 +435,8 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
 - Launch at login (the app must be in `/Applications`).
 - Resume sessions on launch, auto /compact and its token threshold.
 - Notifications and Dock bounce, theme, and keeping the app in the menu bar when the window is closed.
+- Editor: built-in editor on or off, separate windows instead of tabs, font size, wrap lines.
+- Pencil: connect Claude sessions to Pencil, with its status.
 - iCloud sync (below).
 - Claude Code hooks: status, reinstall, uninstall.
 
@@ -297,7 +457,8 @@ Turn it on in Settings › iCloud (off by default). No entitlement is needed; it
 
 | What | Where |
 |---|---|
-| Projects, groups, sessions, panes, settings | `~/Library/Application Support/ClaudeDeck/deck.json` |
+| Projects, groups, sessions, panes, settings, GitHub links, automations and their run history | `~/Library/Application Support/ClaudeDeck/deck.json` |
+| Open tabs, panel layout | The app's preferences (`defaults read <bundle-id>`) |
 | Live session states (written by the hook) | `~/.claude/deck/sessions/<session_id>.json` |
 | Hook script | `~/.claude/deck/bin/deck-hook.sh` |
 | settings.json backups | `~/.claude/settings.json.claudedeck-backup-<date>` |
@@ -364,11 +525,17 @@ notification permissions again after every build.
   - Hook script and `settings.json` merging (`HookScript`, `HookInstaller`)
   - State model (`SessionState`, `StatusDirectory`) and transcript reading (`Transcript`)
   - Persistence (`DeckData`)
-  - File listing and git (`FileListing`, `Git`)
+  - File listing and git (`FileListing`, `Git`, `GitChanges`, `GitExplorer`, `UnifiedDiff`)
+  - Tabs (`WorkspaceTabList`), editor text and syntax (`TextFileIO`, `SyntaxTokenizer`)
+  - GitHub via `gh` (`GitHub`, `GitHubLink`), automations (`Automations`), restart and Pencil
+    (`SessionRestart`, `PencilIntegration`)
   - iCloud (`DeckSync`) and the widget snapshot (`WidgetSnapshot`)
 - `Sources/ClaudeDeck/`: the SwiftUI app.
   - `AppModel` and `TerminalRegistry` (SwiftTerm, processes)
-  - Views: `SidebarView`, `ContentView` (panes), `FileBrowser`, `MenuBarViews`, `SettingsView`
+  - Views: `SidebarView`, `ContentView` (panes), `WorkspaceTabs` / `TabStrip`, `EditorWindow` /
+    `CodeTextView`, `FileBrowser` / `ExplorerSearch`, `ChangesView` / `DiffTab`, `AutomationsView`,
+    `GitHubLinkViews`, `MenuBarViews`, `SettingsView`
+  - `GitHubMonitor`, `AutomationScheduler`, `AppModel+Restart`, `PencilApp`
   - `AttentionCenter` (notifications, Dock) and `PermissionActions`
   - `WidgetBridge` and `DeckSyncController`
 - `Widget/`: the WidgetKit extension. `tools/make-icon.swift`: the icon generator.
@@ -383,6 +550,8 @@ Use it for screenshots.
 - The data lives in `/tmp/ClaudeDeckDemo` and is recreated on every run.
 - Sessions run `tools/demo-claude.sh`, a stand-in that prints a canned conversation and reports a fixed
   state, instead of the real `claude`.
+- GitHub links are answered by a stand-in `gh` that reads fixture files (made-up `acme/*` repositories).
+  The demo also has automations with a run history, and staged and unstaged changes in `acme-storefront`.
 - Demo mode never touches `~/.claude/settings.json`, your `deck.json` or iCloud.
 
 ### Snapshot mode
@@ -395,6 +564,13 @@ Recording permission:
   - `<session>.in` types text into that terminal (`<CR>`, `<ESC>` are supported).
   - `<session>.select`, `<session>.beside`, `<session>.paste`, `<session>.approve` / `.deny`,
     and `<project>.shell` trigger the matching actions.
+  - `<name>.tab` opens a tab: `file<TAB><path><TAB><preview 0|1>`, `diff<TAB><repo><TAB><path><TAB><staged 0|1>`,
+    `automations`, `sessions`, or `close-all`.
+  - `<name>.inspector` (`files`, `changes`, `hide`), `<name>.quickopen` (the query), `<session>.github`
+    (fetch its link) and `<session>.popover` (open the link popover).
+  - `<name>.frame` (`x y w h`, screen points) sizes the main window, `<name>.scroll` (`x y` in the window)
+    scrolls the view there to its end, and `app.quit` quits.
+  - Together with `screencapture -l <window id>` this takes screenshots without any clicks or keystrokes.
 - The Liquid Glass sidebar renders blank in these snapshots; use `rows.txt` for it.
 
 ## License and legal

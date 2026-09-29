@@ -74,17 +74,35 @@
     <div class="wrap">
       <h2 id="tour-title" class="visually-hidden">İçeriden bir bakış</h2>
       <figure class="shot shot-main">
-        <img src="../screenshots/main.png" width="2291" height="1251" loading="lazy" alt="Kenar çubuğu, yan yana iki oturum ve Dosyalar paneliyle ClaudeDeck">
-        <figcaption><b>Bütün oturumlar tek pencerede.</b> Kenar çubuğu seni bekleyen her şeyi en üste çıkarır. Solda bir oturum komut çalıştırmak için izin bekliyor; İzin Ver ve Reddet düğmeleri başlığında. Yanında bir worktree oturumu çalışmaya devam ediyor, Dosyalar paneli de projenin canlı ağacını gösteriyor.</figcaption>
+        <img src="../screenshots/main.png" width="1600" height="900" loading="lazy" alt="Kenar çubuğu, yan yana iki oturum ve Dosyalar paneliyle ClaudeDeck">
+        <figcaption><b>Bütün oturumlar tek pencerede.</b> Kenar çubuğu seni bekleyen her şeyi en üste çıkarır. Solda bir oturum komut çalıştırmak için izin bekliyor; İzin Ver ve Reddet düğmeleri başlığında. Yanında ikinci bir oturum çalışmaya devam ediyor; sağ panel de projenin canlı dosyalarıyla değişiklikleri arasında geçiş yapıyor.</figcaption>
       </figure>
+      <div class="shot-duo">
+        <figure class="shot">
+          <img src="../screenshots/tabs-editor.png" width="1600" height="900" loading="lazy" alt="Araç çubuğunda düzenleyici sekmeleri ve açık bir TypeScript dosyası">
+          <figcaption><b>Sekmeler ve yerleşik düzenleyici.</b> Dosyalar, diff'ler ve Otomasyonlar oturumlarının yanında sekme olarak açılır. Sözdizimi renkleri, bul ve değiştir, ⌘S ve <code>@yol#L10-20</code> için <b>Claude'a Ekle</b>.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="../screenshots/changes.png" width="1600" height="900" loading="lazy" alt="Hazırlanan ve hazırlanmayan dosyalarıyla Değişiklikler paneli ve Stage Hunk düğmeli diff sekmesi">
+          <figcaption><b>Değişiklikler.</b> Dosya ya da hunk bazında stage, unstage ve discard; sonra commit, push ve pull. Commit mesajını Claude yazabilir, diff'teki herhangi bir satırla ilgili sorularını da cevaplar.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="../screenshots/automations.png" width="1600" height="900" loading="lazy" alt="Hafta içi zamanlaması ve çalışma geçmişiyle Otomasyonlar sekmesi">
+          <figcaption><b>Otomasyonlar.</b> Saatte, günde, hafta içi her gün ya da haftada bir, ya da Şimdi Çalıştır'a bastığında Claude oturumu başlatan prompt'lar. Her çalışma, oturumuyla birlikte geçmişte durur.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="../screenshots/github.png" width="1600" height="900" loading="lazy" alt="Başarısız bir kontrol, istenen değişiklikler ve son yorumlarla bağlı bir pull request'in açılır penceresi">
+          <figcaption><b>GitHub issue'ları ve pull request'leri.</b> Bir oturuma bağla; durumunu, review'ları ve CI'ı gör, Claude'a gönder, değişince bildirim al. Kendi <code>gh</code>'ını kullanır.</figcaption>
+        </figure>
+      </div>
       <div class="shot-pair">
         <figure class="shot">
           <img src="../screenshots/needs-attention.png" width="680" height="526" loading="lazy" alt="İzin istemi, soru ve biten bir oturumla Bekleyenler bölümü">
           <figcaption><b>Bekleyenler.</b> Tam komutuyla bir izin istemi, Claude'un sorduğu bir soru ve son mesajıyla biten bir iş. Aynı istemler bildirim olarak da gelir.</figcaption>
         </figure>
         <figure class="shot">
-          <img src="../screenshots/files.png" width="284" height="515" loading="lazy" alt="Git işaretli Dosyalar paneli">
-          <figcaption><b>Dosyalar paneli.</b> Git işaretli canlı dosya ağacı: değişenler <b>M</b>, yeniler <b>?</b>. Dosyayı seçince geçmişi ve diff'i görünür; Claude'a sürükleyince <code>@yol</code> olarak eklenir.</figcaption>
+          <img src="../screenshots/files.png" width="290" height="520" loading="lazy" alt="Git işaretli Dosyalar paneli">
+          <figcaption><b>Dosyalar paneli.</b> Git işaretli canlı dosya ağacı: değişenler <b>M</b>, yeniler <b>?</b>. Dosyayı seçince geçmişi ve diff'i görünür; Claude'a sürükleyince <code>@yol</code> olarak eklenir. ⌘P ile herhangi bir dosyayı adıyla açarsın.</figcaption>
         </figure>
         <figure class="shot">
           <img src="../screenshots/widget.png" width="370" height="187" loading="lazy" alt="Oturum sayılarını ve bekleyen oturumları gösteren masaüstü widget'ı">
@@ -117,7 +135,13 @@
         <div style="--c: var(--shell)"><dt>Yan yana bölmeler</dt><dd>Dört oturuma kadar sürükleyip yan yana koy. Bölmeyi kapatmak oturumu durdurmaz.</dd></div>
         <div style="--c: var(--run)"><dt>Yeniden başlatınca kaldığı yerden</dt><dd>Açık oturumlar <code>claude --resume</code> ile geri gelir. Şişen context'lere otomatik <code>/compact</code> gönderilir.</dd></div>
         <div style="--c: var(--run)"><dt>Paralel worktree oturumları</dt><dd>Aynı projede, her biri kendi git worktree'sinde çalışan ve birbirinin dosyalarına dokunmayan oturumlar.</dd></div>
-        <div style="--c: var(--shell)"><dt>Git geçmişli dosyalar paneli</dt><dd>Canlı dosya ağacı, değişiklik işaretleri ve dosya bazında diff. Dosyayı Claude'a sürükle, <code>@yol</code> olarak eklensin.</dd></div>
+        <div style="--c: var(--shell)"><dt>Git geçmişli dosyalar paneli</dt><dd>Canlı dosya ağacı, değişiklik işaretleri, dosya bazında diff, Hızlı Aç ve Dosyalarda Bul. Dosyayı Claude'a sürükle, <code>@yol</code> olarak eklensin.</dd></div>
+        <div style="--c: var(--shell)"><dt>Sekmeler ve yerleşik düzenleyici</dt><dd>Dosyaları, diff'leri ve Otomasyonlar'ı sekmede aç. Sözdizimi renkli, Claude'a <code>@yol#L10-20</code> ekleyen hafif bir düzenleyici.</dd></div>
+        <div style="--c: var(--run)"><dt>Hunk bazında Değişiklikler</dt><dd>Pencereden çıkmadan stage, discard, commit, push ve pull. Commit mesajını Claude yazar.</dd></div>
+        <div style="--c: var(--turn)"><dt>GitHub issue'ları ve pull request'leri</dt><dd>Bir oturuma bağla; durumunu, review'ları ve CI'ı gör, yeni review, kırılan kontrol ve merge'lerden haberin olsun.</dd></div>
+        <div style="--c: var(--run)"><dt>Otomasyonlar</dt><dd>Saatlikten haftalığa zamanlanmış prompt'lar, Şimdi Çalıştır ve her çalışmanın geçmişi. Uygulama açıkken çalışırlar.</dd></div>
+        <div style="--c: var(--idle)"><dt>Oturumu yerinde yeniden başlat</dt><dd>⌥⌘R <code>claude</code>'dan çıkıp aynı konuşmaya döner; yeni MCP sunucuları ve ayarlar devreye girer.</dd></div>
+        <div style="--c: var(--idle)"><dt>Pencil (pen.dev)</dt><dd>ClaudeDeck'in başlattığı oturumlar Pencil'ın tasarım araçlarını kullanabilir; <code>.pen</code> dosyaları Pencil'da açılır.</dd></div>
         <div style="--c: var(--shell)"><dt>Düz terminaller de</dt><dd>Proje klasöründe shell; istersen <code>yarn start</code> gibi bir başlangıç komutuyla.</dd></div>
         <div style="--c: var(--turn)"><dt>Widget ve menü çubuğu</dt><dd>Bekleyen, çalışan ve biten oturumlar için masaüstü widget'ı ve menü çubuğu sayaçları.</dd></div>
         <div style="--c: var(--idle)"><dt>Projeler, gruplar ve iCloud</dt><dd>Projeleri sabitle, grupları renklendir; istersen listeyi Mac'lerin arasında eşitle.</dd></div>
@@ -152,6 +176,7 @@
       </ol>
       <ul class="req">
         <li>macOS 15 veya üstü ve kurulu <a href="https://docs.claude.com/en/docs/claude-code">Claude Code</a> gerekir.</li>
+        <li>İsteğe bağlı: GitHub bağlantıları için <a href="https://cli.github.com">GitHub CLI</a>, tasarım araçları için <a href="https://pen.dev">Pencil</a>.</li>
         <li>İngilizce ve Türkçe kullanılabilir; sistem dilini izler.</li>
         <li>Kendin derlemek mi istiyorsun? <a data-gh="/blob/main/README.tr.md" href="https://github.com/">README</a> nasıl yapılacağını anlatıyor.</li>
       </ul>

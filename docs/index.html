@@ -74,17 +74,35 @@
     <div class="wrap">
       <h2 id="tour-title" class="visually-hidden">A look inside</h2>
       <figure class="shot shot-main">
-        <img src="screenshots/main.png" width="2291" height="1251" loading="lazy" alt="ClaudeDeck with the sidebar, two sessions side by side and the Files panel">
-        <figcaption><b>Every session in one window.</b> The sidebar pulls whatever needs you to the top. On the left, a session waits for permission to run a command, with Allow and Deny right in its header. Next to it, a worktree session keeps running, and the Files panel shows the project's live tree.</figcaption>
+        <img src="screenshots/main.png" width="1600" height="900" loading="lazy" alt="ClaudeDeck with the sidebar, two sessions side by side and the Files panel">
+        <figcaption><b>Every session in one window.</b> The sidebar pulls whatever needs you to the top. On the left, a session waits for permission to run a command, with Allow and Deny right in its header. Next to it, a second session keeps running, and the right panel switches between the project's live files and its changes.</figcaption>
       </figure>
+      <div class="shot-duo">
+        <figure class="shot">
+          <img src="screenshots/tabs-editor.png" width="1600" height="900" loading="lazy" alt="Editor tabs in the toolbar with a TypeScript file open">
+          <figcaption><b>Tabs and a built-in editor.</b> Files, diffs and Automations open as tabs next to your sessions. Syntax colors, find and replace, ⌘S, and <b>Add to Claude</b> for <code>@path#L10-20</code>.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="screenshots/changes.png" width="1600" height="900" loading="lazy" alt="Changes panel with staged and unstaged files next to a diff tab with Stage Hunk buttons">
+          <figcaption><b>Changes.</b> Stage, unstage and discard by file or hunk, then commit, push and pull. Claude can write the commit message, and answer questions about any line of a diff.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="screenshots/automations.png" width="1600" height="900" loading="lazy" alt="Automations tab with a weekday schedule and run history">
+          <figcaption><b>Automations.</b> Prompts that start a Claude session every hour, day, weekday or week, or when you click Run Now. Each run is in the history, with its session.</figcaption>
+        </figure>
+        <figure class="shot">
+          <img src="screenshots/github.png" width="1600" height="900" loading="lazy" alt="A linked pull request's popover with a failing check, requested changes and the latest comments">
+          <figcaption><b>GitHub issues and pull requests.</b> Link one to a session to see its state, reviews and CI, send it to Claude, and get notified when it changes. Uses your own <code>gh</code>.</figcaption>
+        </figure>
+      </div>
       <div class="shot-pair">
         <figure class="shot">
           <img src="screenshots/needs-attention.png" width="680" height="526" loading="lazy" alt="Needs Attention with a permission prompt, a question and a finished session">
           <figcaption><b>Needs Attention.</b> A permission prompt with the exact command, a question Claude is asking, and a finished turn with its last message. The same prompts arrive as notifications.</figcaption>
         </figure>
         <figure class="shot">
-          <img src="screenshots/files.png" width="284" height="515" loading="lazy" alt="Files panel with git status marks">
-          <figcaption><b>Files panel.</b> Live file tree with git marks: <b>M</b> for modified, <b>?</b> for new. Select a file for its history and diffs, or drag it into Claude as <code>@path</code>.</figcaption>
+          <img src="screenshots/files.png" width="290" height="520" loading="lazy" alt="Files panel with git status marks">
+          <figcaption><b>Files panel.</b> Live file tree with git marks: <b>M</b> for modified, <b>?</b> for new. Select a file for its history and diffs, or drag it into Claude as <code>@path</code>. ⌘P opens any file by name.</figcaption>
         </figure>
         <figure class="shot">
           <img src="screenshots/widget.png" width="370" height="187" loading="lazy" alt="Desktop widget with session counts and the sessions that need attention">
@@ -117,7 +135,13 @@
         <div style="--c: var(--shell)"><dt>Side-by-side panes</dt><dd>Drag up to four sessions next to each other. Closing a pane keeps the session running.</dd></div>
         <div style="--c: var(--run)"><dt>Picks up after a restart</dt><dd>Open sessions come back with <code>claude --resume</code>. Oversized contexts get an automatic <code>/compact</code>.</dd></div>
         <div style="--c: var(--run)"><dt>Parallel worktree sessions</dt><dd>Run sessions in the same project, each in its own git worktree, so they never edit the same files.</dd></div>
-        <div style="--c: var(--shell)"><dt>Files panel with git history</dt><dd>Live file tree, change marks and per-file diffs. Drag a file into Claude to add it as <code>@path</code>.</dd></div>
+        <div style="--c: var(--shell)"><dt>Files panel with git history</dt><dd>Live file tree, change marks and per-file diffs, Quick Open and Find in Files. Drag a file into Claude to add it as <code>@path</code>.</dd></div>
+        <div style="--c: var(--shell)"><dt>Tabs and a built-in editor</dt><dd>Open files, diffs and Automations as tabs. A light editor with syntax colors that adds <code>@path#L10-20</code> to Claude.</dd></div>
+        <div style="--c: var(--run)"><dt>Changes, staged by hunk</dt><dd>Stage, discard, commit, push and pull without leaving the window. Claude writes the commit message.</dd></div>
+        <div style="--c: var(--turn)"><dt>GitHub issues and pull requests</dt><dd>Link one to a session to see its state, reviews and CI, and hear about new reviews, failed checks and merges.</dd></div>
+        <div style="--c: var(--run)"><dt>Automations</dt><dd>Scheduled prompts, hourly to weekly, with Run Now and a history of every run. They run while the app is open.</dd></div>
+        <div style="--c: var(--idle)"><dt>Restart a session in place</dt><dd>⌥⌘R quits <code>claude</code> and resumes the same conversation, so new MCP servers and settings take effect.</dd></div>
+        <div style="--c: var(--idle)"><dt>Pencil (pen.dev)</dt><dd>Sessions ClaudeDeck starts can use Pencil's design tools, and <code>.pen</code> files open in Pencil.</dd></div>
         <div style="--c: var(--shell)"><dt>Plain terminals too</dt><dd>A shell in the project folder, with an optional startup command like <code>yarn start</code>.</dd></div>
         <div style="--c: var(--turn)"><dt>Widget and menu bar</dt><dd>A desktop widget and menu bar counters for what's waiting, running and done.</dd></div>
         <div style="--c: var(--idle)"><dt>Projects, groups and iCloud</dt><dd>Pin projects, color-code groups, and optionally sync the list across your Macs.</dd></div>
@@ -152,6 +176,7 @@
       </ol>
       <ul class="req">
         <li>Requires macOS 15 or later and <a href="https://docs.claude.com/en/docs/claude-code">Claude Code</a> installed.</li>
+        <li>Optional: the <a href="https://cli.github.com">GitHub CLI</a> for GitHub links, and <a href="https://pen.dev">Pencil</a> for its design tools.</li>
         <li>Available in English and Turkish.</li>
         <li>Prefer to build it yourself? The <a data-gh="#building-from-source" href="https://github.com/">README</a> explains how.</li>
       </ul>
