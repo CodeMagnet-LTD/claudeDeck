@@ -439,6 +439,9 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
 - **Tema:** sistem / açık / koyu (Ayarlar); terminal renkleri de temaya uyar.
 - **⌘V ile resim:** panoda yalnızca görüntü varsa Claude oturumunda resim olarak eklenir (Terminal.app gibi);
   Finder'dan kopyalanmış dosyalar yol olarak yapıştırılır.
+- **Bağlantılara ve yollara ⌘-tık:** URL'ler tarayıcıda açılır; bir dosya yolu (ör.
+  `promo-video/out/promo.mp4` ya da `src/app.ts:42`) oturumun proje klasörüne göre bulunur ve Finder'da
+  gösterilir. ⌘⌥-tık dosyanın kendisini açar (metin dosyaları yerleşik düzenleyicide).
 
 ### Ayarlar (⚙︎ ya da ⌘,)
 - Bilgisayar açılınca ClaudeDeck'i başlat (giriş öğesi; uygulama `/Applications`'da olmalı: `./build.sh install`).

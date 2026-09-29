@@ -99,6 +99,11 @@ final class AppModel {
         terminals.onUserInput = { [weak self] id, data in self?.userTyped(id, data) }
         terminals.fontSize = deck.settings.terminalFontSize
         terminals.onZoom = { [weak self] step in self?.zoomTerminals(by: Double(step)) }
+        terminals.onOpenFile = { [weak self] url in
+            guard let self else { return }
+            self.openMainWindow?()
+            EditorOpener.openDefault(url, model: self)
+        }
         // Clicking into a pane's terminal focuses that session.
         terminals.onFocus = { [weak self] id in
             guard let self, self.deck.selectedSessionID != id else { return }

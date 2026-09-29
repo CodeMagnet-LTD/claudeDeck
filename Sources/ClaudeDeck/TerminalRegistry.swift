@@ -1,4 +1,5 @@
 import AppKit
+import ClaudeDeckCore
 import Foundation
 import Observation
 import SwiftTerm
@@ -113,6 +114,31 @@ final class DeckTerminalView: LocalProcessTerminalView {
         }
     }
 
+    /// Folder the session started in (project or worktree); relative paths in the output resolve here.
+    var workingDirectory: String?
+    /// ⌘⌥-click on a file path: open the file itself (built-in editor or default app).
+    var onOpenFile: ((URL) -> Void)?
+
+    /// ⌘-click on a detected link. URLs open in their app; file paths are resolved against the
+    /// shell's reported directory, then the session folder, and shown in Finder (⌘⌥: opened).
+    override func requestOpenLink(source: TerminalView, link: String, params: [String: String]) {
+        let dirs = [TerminalLink.directory(fromHostURI: getTerminal().hostCurrentDirectory), workingDirectory].compactMap { $0 }
+        switch TerminalLink.resolve(link, in: dirs) {
+        case .url(let url):
+            NSWorkspace.shared.open(url)
+        case .file(let url, _):
+            if NSApp.currentEvent?.modifierFlags.contains(.option) == true, let onOpenFile {
+                onOpenFile(url)
+            } else if url.hasDirectoryPath || (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true {
+                NSWorkspace.shared.open(url)
+            } else {
+                NSWorkspace.shared.activateFileViewerSelecting([url])
+            }
+        case nil:
+            NSSound.beep()
+        }
+    }
+
     /// Trackpad pinch zooms all terminals.
     var onMagnify: ((CGFloat) -> Void)?
     private var pinch: CGFloat = 0
@@ -209,6 +235,8 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         view.onInput = { [weak self] data in self?.onUserInput?(id, data) }
         view.onFocus = { [weak self] in self?.onFocus?(id) }
         view.onMagnify = { [weak self] step in self?.onZoom?(step) }
+        view.onOpenFile = { [weak self] url in self?.onOpenFile?(url) }
+        view.workingDirectory = cwd
         views[id] = view
         if running.contains(id) { return }
 
@@ -238,6 +266,8 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         view.onInput = { [weak self] data in self?.onUserInput?(id, data) }
         view.onFocus = { [weak self] in self?.onFocus?(id) }
         view.onMagnify = { [weak self] step in self?.onZoom?(step) }
+        view.onOpenFile = { [weak self] url in self?.onOpenFile?(url) }
+        view.workingDirectory = cwd
         view.isClaude = false
         views[id] = view
         if running.contains(id) { return }
@@ -304,6 +334,8 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
     @ObservationIgnored var onUserInput: ((UUID, ArraySlice<UInt8>) -> Void)?
     @ObservationIgnored var onFocus: ((UUID) -> Void)?
     @ObservationIgnored var onZoom: ((CGFloat) -> Void)?
+    /// ⌘⌥-click on a file path in a terminal.
+    @ObservationIgnored var onOpenFile: ((URL) -> Void)?
 
     func discard(_ id: UUID) {
         views[id]?.removeFromSuperview()

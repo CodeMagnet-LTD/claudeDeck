@@ -431,6 +431,9 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
 - **Theme:** System / Light / Dark in Settings; terminal colors follow.
 - **⌘V with an image** on the clipboard attaches it to Claude as an image, as Terminal.app does.
   Files copied in Finder are pasted as paths.
+- **⌘-click links and paths** in the output: URLs open in the browser; a file path (like
+  `promo-video/out/promo.mp4` or `src/app.ts:42`) is resolved against the session's project folder and
+  shown in Finder. ⌘⌥-click opens the file itself (text files in the built-in editor).
 
 ### Settings (⚙︎ or ⌘,)
 - Launch at login (the app must be in `/Applications`).
