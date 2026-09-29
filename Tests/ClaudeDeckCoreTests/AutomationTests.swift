@@ -211,7 +211,8 @@ import Testing
         var deck = DeckData()
         var a = Automation(name: "Bugs", prompt: "find bugs", projectID: UUID(), workspace: .newWorktree, reuseSession: true,
                            triggers: [.hourly(minute: 5), .daily(ClockTime(hour: 7, minute: 30)),
-                                      .weekdays(ClockTime(hour: 9, minute: 0)), .weekly(weekday: 6, ClockTime(hour: 16, minute: 0))])
+                                      .weekdays(ClockTime(hour: 9, minute: 0)), .weekly(weekday: 6, ClockTime(hour: 16, minute: 0))],
+                           createdAt: Date(timeIntervalSince1970: 1_700_000_000)) // whole seconds survive JSON exactly
         a.nextRunAt = Date(timeIntervalSince1970: 1_800_000_000)
         deck.automations = [a]
         deck.appendRun(AutomationRun(automationID: a.id, trigger: .manual, startedAt: Date(timeIntervalSince1970: 1_700_000_000)))

@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SidebarView: View {
     @Environment(AppModel.self) private var model
+    @Environment(\.openWindow) private var openWindow
     @AppStorage("sidebar.inactiveExpanded") private var inactiveExpanded = true
 
     var body: some View {
@@ -92,6 +93,9 @@ struct SidebarView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .buttonStyle(.borderless)
+                Button { openWindow(id: "automations") } label: { Image(systemName: "clock.arrow.circlepath") }
+                    .buttonStyle(.borderless)
+                    .help("Automations — scheduled prompts")
                 SettingsLink {
                     Image(systemName: "gearshape")
                 }

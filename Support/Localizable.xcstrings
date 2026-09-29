@@ -107,6 +107,16 @@
         }
       }
     },
+    "A scheduled run found later than this (Mac asleep, ClaudeDeck not running) is skipped.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu süreden daha geç fark edilen zamanlanmış çalıştırma (Mac uykudaysa, ClaudeDeck açık değilse) atlanır."
+          }
+        }
+      }
+    },
     "Active": {
       "localizations": {
         "tr": {
@@ -197,6 +207,16 @@
         }
       }
     },
+    "Add Schedule": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamanlama Ekle"
+          }
+        }
+      }
+    },
     "Add a project to get started": {
       "localizations": {
         "tr": {
@@ -267,12 +287,92 @@
         }
       }
     },
+    "Audit dependencies": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağımlılıkları denetle"
+          }
+        }
+      }
+    },
     "Auto": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Otomatik"
+          }
+        }
+      }
+    },
+    "Automation": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomasyon"
+          }
+        }
+      }
+    },
+    "Automations": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomasyonlar"
+          }
+        }
+      }
+    },
+    "Automations run only while ClaudeDeck is running (menu bar mode and opening at login keep it alive).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomasyonlar yalnızca ClaudeDeck çalışırken çalışır (menü çubuğu modu ve girişte açılma onu açık tutar)."
+          }
+        }
+      }
+    },
+    "Automations run only while ClaudeDeck is running. Keep it in the menu bar and open it at login to never miss one.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomasyonlar yalnızca ClaudeDeck çalışırken çalışır. Hiçbirini kaçırmamak için menü çubuğunda tutun ve girişte açılmasını sağlayın."
+          }
+        }
+      }
+    },
+    "Automations — scheduled prompts": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomasyonlar — zamanlanmış istemler"
+          }
+        }
+      }
+    },
+    "Automations…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomasyonlar…"
+          }
+        }
+      }
+    },
+    "Blank Automation": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boş Otomasyon"
           }
         }
       }
@@ -307,6 +407,26 @@
         }
       }
     },
+    "Cancelled": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İptal edildi"
+          }
+        }
+      }
+    },
+    "Check manifests and lockfiles for vulnerable, unused or unexpectedly upgraded packages.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Manifest ve kilit dosyalarında güvenlik açığı olan, kullanılmayan ya da beklenmedik şekilde yükseltilmiş paketleri arar."
+          }
+        }
+      }
+    },
     "Choose Projects…": {
       "localizations": {
         "tr": {
@@ -327,6 +447,16 @@
         }
       }
     },
+    "Choose…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seçin…"
+          }
+        }
+      }
+    },
     "Claude Code Hooks": {
       "localizations": {
         "tr": {
@@ -337,12 +467,42 @@
         }
       }
     },
+    "Claude could not be started.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude başlatılamadı."
+          }
+        }
+      }
+    },
+    "Claude did not become ready.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude hazır hale gelmedi."
+          }
+        }
+      }
+    },
     "Claude session ended": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Claude oturumu bitti"
+          }
+        }
+      }
+    },
+    "Claude stopped with an error.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude bir hatayla durdu."
           }
         }
       }
@@ -410,6 +570,16 @@
         }
       }
     },
+    "Collect TODO / FIXME comments, resolve the trivial ones and rank the rest.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TODO / FIXME yorumlarını toplar, basit olanları çözer, kalanları önceliklendirir."
+          }
+        }
+      }
+    },
     "Color": {
       "localizations": {
         "tr": {
@@ -460,12 +630,32 @@
         }
       }
     },
+    "Continue the last run's session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son çalıştırmanın oturumunda devam et"
+          }
+        }
+      }
+    },
     "Continue where you left off.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Kaldığın yerden devam et."
+          }
+        }
+      }
+    },
+    "Conversation": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konuşma"
           }
         }
       }
@@ -486,6 +676,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Göreli Yolu Kopyala"
+          }
+        }
+      }
+    },
+    "Could not create a session.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum oluşturulamadı."
           }
         }
       }
@@ -530,6 +730,26 @@
         }
       }
     },
+    "Day": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gün"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sil"
+          }
+        }
+      }
+    },
     "Delete Group": {
       "localizations": {
         "tr": {
@@ -560,6 +780,26 @@
         }
       }
     },
+    "Delete “%@”?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” silinsin mi?"
+          }
+        }
+      }
+    },
+    "Delete…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sil…"
+          }
+        }
+      }
+    },
     "Deny": {
       "localizations": {
         "tr": {
@@ -586,6 +826,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bitti — sıra sende"
+          }
+        }
+      }
+    },
+    "Enabled": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etkin"
           }
         }
       }
@@ -640,12 +890,112 @@
         }
       }
     },
+    "Every %@ at %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her %1$@ saat %2$@"
+          }
+        }
+      }
+    },
+    "Every day": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her gün"
+          }
+        }
+      }
+    },
+    "Every day at %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her gün saat %@"
+          }
+        }
+      }
+    },
+    "Every hour": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her saat"
+          }
+        }
+      }
+    },
+    "Every hour at :%@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her saat :%@"
+          }
+        }
+      }
+    },
+    "Every week": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her hafta"
+          }
+        }
+      }
+    },
+    "Every weekday": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hafta içi her gün"
+          }
+        }
+      }
+    },
+    "Every weekday at %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hafta içi her gün saat %@"
+          }
+        }
+      }
+    },
+    "Failed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başarısız"
+          }
+        }
+      }
+    },
     "Files": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Dosyalar"
+          }
+        }
+      }
+    },
+    "Find critical bugs": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kritik hataları bul"
           }
         }
       }
@@ -700,6 +1050,16 @@
         }
       }
     },
+    "If missed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaçırılırsa"
+          }
+        }
+      }
+    },
     "Inactive": {
       "localizations": {
         "tr": {
@@ -716,6 +1076,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kurulu"
+          }
+        }
+      }
+    },
+    "Interrupted when ClaudeDeck quit.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClaudeDeck kapanınca yarıda kaldı."
           }
         }
       }
@@ -746,6 +1116,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Projeleri silinmez, yalnızca gruptan çıkar."
+          }
+        }
+      }
+    },
+    "Its run history is deleted too. Sessions it started stay in the sidebar.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalıştırma geçmişi de silinir. Başlattığı oturumlar kenar çubuğunda kalır."
           }
         }
       }
@@ -796,6 +1176,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mesaj"
+          }
+        }
+      }
+    },
+    "Minute": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dakika"
+          }
+        }
+      }
+    },
+    "Missed the scheduled run beyond its grace period.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamanlanmış çalıştırma tolerans süresinden sonra fark edildi."
           }
         }
       }
@@ -866,6 +1266,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "İzin bekliyor"
+          }
+        }
+      }
+    },
+    "New Automation": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Otomasyon"
           }
         }
       }
@@ -990,12 +1400,62 @@
         }
       }
     },
+    "New automation": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni otomasyon"
+          }
+        }
+      }
+    },
     "New file, not yet added to Git": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Yeni dosya, henüz Git'e eklenmedi"
+          }
+        }
+      }
+    },
+    "New git worktree for each run": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her çalıştırma için yeni git worktree"
+          }
+        }
+      }
+    },
+    "Next run: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonraki çalıştırma: %@"
+          }
+        }
+      }
+    },
+    "Next: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonraki: %@"
+          }
+        }
+      }
+    },
+    "No Automations": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otomasyon Yok"
           }
         }
       }
@@ -1030,12 +1490,32 @@
         }
       }
     },
+    "No runs yet": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz çalıştırma yok"
+          }
+        }
+      }
+    },
     "No saved Claude conversations for this project.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Bu proje için kayıtlı Claude konuşması yok."
+          }
+        }
+      }
+    },
+    "No schedule: runs only with Run Now.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamanlama yok: yalnızca Şimdi Çalıştır ile çalışır."
           }
         }
       }
@@ -1060,12 +1540,32 @@
         }
       }
     },
+    "Not scheduled": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamanlanmadı"
+          }
+        }
+      }
+    },
     "OK": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Tamam"
+          }
+        }
+      }
+    },
+    "Off": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı"
           }
         }
       }
@@ -1106,6 +1606,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Projeyi VS Code'da aç"
+          }
+        }
+      }
+    },
+    "Open Session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturumu Aç"
           }
         }
       }
@@ -1230,6 +1740,16 @@
         }
       }
     },
+    "Project": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proje"
+          }
+        }
+      }
+    },
     "Project Files (⌘⇧E)": {
       "localizations": {
         "tr": {
@@ -1240,12 +1760,32 @@
         }
       }
     },
+    "Project folder": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proje klasörü"
+          }
+        }
+      }
+    },
     "Projects": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Projeler"
+          }
+        }
+      }
+    },
+    "Prompt": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İstem"
           }
         }
       }
@@ -1350,6 +1890,16 @@
         }
       }
     },
+    "Remove schedule": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamanlamayı kaldır"
+          }
+        }
+      }
+    },
     "Rename": {
       "localizations": {
         "tr": {
@@ -1410,6 +1960,16 @@
         }
       }
     },
+    "Repeat": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tekrar"
+          }
+        }
+      }
+    },
     "Resume": {
       "localizations": {
         "tr": {
@@ -1450,12 +2010,52 @@
         }
       }
     },
+    "Review recent commits for high-severity correctness bugs and fix the safe ones.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son commit'lerde ciddi doğruluk hatalarını arar ve güvenli olanları düzeltir."
+          }
+        }
+      }
+    },
+    "Run": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalıştırma"
+          }
+        }
+      }
+    },
     "Run /compact on large resumed sessions": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Devam ettirilen büyük oturumlarda /compact çalıştır"
+          }
+        }
+      }
+    },
+    "Run Now": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi Çalıştır"
+          }
+        }
+      }
+    },
+    "Run the tests, lint and type checks and diagnose anything that is red.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Testleri, lint ve tür denetimlerini çalıştırır, kırmızı olan her şeyi teşhis eder."
           }
         }
       }
@@ -1486,6 +2086,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kaydet"
+          }
+        }
+      }
+    },
+    "Saved prompts that start a Claude session on a schedule or when you click Run Now. Permission prompts show up in Needs Attention like any other session.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir zamanlamaya göre ya da Şimdi Çalıştır'a tıkladığınızda Claude oturumu başlatan kayıtlı istemler. İzin istekleri diğer oturumlardaki gibi İlgi Bekleyenler'de görünür."
+          }
+        }
+      }
+    },
+    "Schedule": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamanlama"
           }
         }
       }
@@ -1590,6 +2210,66 @@
         }
       }
     },
+    "Skip unless within %lld minutes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld dakika içinde değilse atla"
+          }
+        }
+      }
+    },
+    "Skip unless within 1 day": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 gün içinde değilse atla"
+          }
+        }
+      }
+    },
+    "Skip unless within 1 hour": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 saat içinde değilse atla"
+          }
+        }
+      }
+    },
+    "Skip unless within 12 hours": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "12 saat içinde değilse atla"
+          }
+        }
+      }
+    },
+    "Skip unless within 15 minutes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "15 dakika içinde değilse atla"
+          }
+        }
+      }
+    },
+    "Skipped": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Atlandı"
+          }
+        }
+      }
+    },
     "Start Automatically When the App Opens": {
       "localizations": {
         "tr": {
@@ -1606,6 +2286,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yeni Başlat"
+          }
+        }
+      }
+    },
+    "Start fresh each run": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Her çalıştırmada sıfırdan başla"
+          }
+        }
+      }
+    },
+    "Start from a template": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir şablonla başlayın"
           }
         }
       }
@@ -1660,12 +2360,52 @@
         }
       }
     },
+    "Stop Following": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Takibi Bırak"
+          }
+        }
+      }
+    },
+    "Stop tracking this run; the session keeps going.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu çalıştırmayı izlemeyi bırak; oturum devam eder."
+          }
+        }
+      }
+    },
     "Stopped": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Durdu"
+          }
+        }
+      }
+    },
+    "Succeeded": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başarılı"
+          }
+        }
+      }
+    },
+    "Summarize the week's commits into a changelog people can read.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haftanın commit'lerini okunabilir bir değişiklik günlüğünde özetler."
           }
         }
       }
@@ -1700,6 +2440,16 @@
         }
       }
     },
+    "Templates": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şablonlar"
+          }
+        }
+      }
+    },
     "Terminal": {
       "shouldTranslate": false
     },
@@ -1709,6 +2459,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Terminal kapandı"
+          }
+        }
+      }
+    },
+    "Test health": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test sağlığı"
           }
         }
       }
@@ -1743,12 +2503,32 @@
         }
       }
     },
+    "The previous run was still in progress.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önceki çalıştırma hâlâ sürüyordu."
+          }
+        }
+      }
+    },
     "The project list and groups (name, color, pinning, group membership) are merged with your other Macs through iCloud Drive › ClaudeDeck › projects.json. Sessions, panes, selection and settings are not synced. Deletions don't propagate to other Macs.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Proje listesi ve gruplar (ad, renk, sabitleme, grup ataması) iCloud Drive › ClaudeDeck › projects.json üzerinden diğer Mac'lerinle birleştirilir. Oturumlar, bölmeler, seçim ve ayarlar eşitlenmez. Silme işlemleri diğer Mac'lere yansımaz."
+          }
+        }
+      }
+    },
+    "The project no longer exists.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proje artık yok."
           }
         }
       }
@@ -1763,12 +2543,62 @@
         }
       }
     },
+    "The session ended before Claude finished.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum, Claude bitirmeden sona erdi."
+          }
+        }
+      }
+    },
+    "The session is busy.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum meşgul."
+          }
+        }
+      }
+    },
     "Theme": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Tema"
+          }
+        }
+      }
+    },
+    "Time": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saat"
+          }
+        }
+      }
+    },
+    "Timed out waiting for Claude to finish.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude'un bitirmesi beklenirken zaman aşımı oldu."
+          }
+        }
+      }
+    },
+    "Triage TODOs": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "TODO'ları ayıkla"
           }
         }
       }
@@ -1803,6 +2633,16 @@
         }
       }
     },
+    "Untitled Automation": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adsız Otomasyon"
+          }
+        }
+      }
+    },
     "Untitled session": {
       "localizations": {
         "tr": {
@@ -1829,6 +2669,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sistem Ayarları › Genel › Giriş Öğeleri'nden onay bekliyor."
+          }
+        }
+      }
+    },
+    "Weekly changelog": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haftalık değişiklik günlüğü"
+          }
+        }
+      }
+    },
+    "Workspace": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalışma alanı"
           }
         }
       }
@@ -2005,6 +2865,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "sıra sende"
+          }
+        }
+      }
+    },
+    "· manual": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· elle"
+          }
+        }
+      }
+    },
+    "· scheduled": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· zamanlanmış"
           }
         }
       }

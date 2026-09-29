@@ -80,6 +80,9 @@ final class AppModel {
     // MARK: iCloud sync (DeckSyncController) — begin
     @ObservationIgnored let sync = DeckSyncController()
     // MARK: iCloud sync — end
+    // MARK: Automations (AutomationScheduler) — begin
+    @ObservationIgnored private(set) var automations: AutomationScheduler?
+    // MARK: Automations — end
 
     init(store: DeckDataStore = .default()) {
         self.store = store
@@ -99,6 +102,7 @@ final class AppModel {
 
     func start() {
         if !Self.isDemo { installHooks() }
+        automations = AutomationScheduler(model: self) // marks runs interrupted by the last quit
         watcher = DirectoryWatcher(url: statusDir) { [weak self] in
             Task { @MainActor in self?.reloadStatuses() }
         }
@@ -110,6 +114,7 @@ final class AppModel {
         Task { @MainActor in
             claudePath = await Task.detached { ShellEnvironment.resolveClaude() }.value
             launchInitialSessions()
+            if !Self.isDemo { automations?.start() } // 30 s schedule check + on wake
         }
     }
 

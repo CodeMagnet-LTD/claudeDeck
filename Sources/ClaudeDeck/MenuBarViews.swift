@@ -61,6 +61,11 @@ struct MenuBarContent: View {
                     NSApp.activate()
                     dismiss()
                 }
+                Button("Automations…") {
+                    openWindow(id: "automations")
+                    NSApp.activate()
+                    dismiss()
+                }
                 Spacer()
                 Button("Quit") { NSApp.terminate(nil) }
             }
