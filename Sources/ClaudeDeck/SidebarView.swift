@@ -275,6 +275,7 @@ struct SessionRow: View {
                             .lineLimit(1)
                             .help("Separate git worktree: \(session.workingDirectory ?? worktree)")
                     }
+                    GitHubLinkBadge(session: session)
                     Spacer(minLength: 4)
                     if let at = status.updatedAt {
                         TimelineView(.periodic(from: .now, by: 15)) { _ in
@@ -363,6 +364,8 @@ struct SessionMenu: View {
                 ))
             }
         }
+        Divider()
+        GitHubLinkMenuItems(session: session)
         Divider()
         Button("Rename…") {
             if let name = TextPrompt.ask(title: String(localized: "Rename Session"), placeholder: String(localized: "Name"), initial: session.name) {
