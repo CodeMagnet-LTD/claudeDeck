@@ -205,19 +205,24 @@ public enum SidebarAttention {
 /// (their click, a menu command, the filter — including slow consequences such as a session
 /// exiting after "End Session", hence `userGrace`); otherwise only once the pointer has been
 /// outside the sidebar for `quietPeriod` since the last click there or the moment it left.
+/// A change is never held longer than `maxHold`, in case the pointer leaving is never reported.
 public struct LayoutGate<Value: Equatable & Sendable>: Sendable {
     public private(set) var shown: Value
     public private(set) var pending: Value?
     public var quietPeriod: TimeInterval
     public var userGrace: TimeInterval
+    public var maxHold: TimeInterval
     public private(set) var pointerInside = false
+    /// When the oldest change still held back was first offered.
+    private var pendingSince: Date?
     private var lastInteraction: Date = .distantPast
     private var lastUserAction: Date = .distantPast
 
-    public init(_ value: Value, quietPeriod: TimeInterval = 1.5, userGrace: TimeInterval = 1.5) {
+    public init(_ value: Value, quietPeriod: TimeInterval = 1.5, userGrace: TimeInterval = 1.5, maxHold: TimeInterval = 10) {
         self.shown = value
         self.quietPeriod = quietPeriod
         self.userGrace = userGrace
+        self.maxHold = maxHold
     }
 
     public mutating func pointer(inside: Bool, at now: Date) {
@@ -231,6 +236,7 @@ public struct LayoutGate<Value: Equatable & Sendable>: Sendable {
 
     public func canApply(at now: Date) -> Bool {
         if now.timeIntervalSince(lastUserAction) <= userGrace { return true }
+        if let pendingSince, now.timeIntervalSince(pendingSince) >= maxHold { return true }
         return !pointerInside && now.timeIntervalSince(lastInteraction) >= quietPeriod
     }
 
@@ -239,8 +245,10 @@ public struct LayoutGate<Value: Equatable & Sendable>: Sendable {
     public mutating func offer(_ value: Value, at now: Date) -> Bool {
         if value == shown {
             pending = nil
+            pendingSince = nil
             return false
         }
+        if pending == nil { pendingSince = now }
         pending = value
         return tick(at: now)
     }
@@ -251,6 +259,7 @@ public struct LayoutGate<Value: Equatable & Sendable>: Sendable {
         guard let pending, canApply(at: now) else { return false }
         shown = pending
         self.pending = nil
+        pendingSince = nil
         return true
     }
 }

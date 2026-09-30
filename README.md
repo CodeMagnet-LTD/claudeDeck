@@ -316,7 +316,7 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
   - **Pinned**, then **Active** (projects and groups with a running terminal, in the order they became
     active), then **Inactive** (everything else, in its saved order, collapsible). Headers show counts.
   - A project entering or leaving Active, or a session appearing on its own (automations, iCloud sync),
-    waits while the pointer is over the sidebar and for 1.5 s after it leaves or after your last click,
+    waits while the pointer is over the sidebar and for 1.5 s after it leaves or after your last click (never longer than 10 s),
     so a row never jumps away just as you click it. What you do yourself (clicking, menus, dragging,
     the filter, opening and closing) applies right away.
   - Groups and projects only open and close when you do it. Closed ones show badges: 🔴 waiting on you,

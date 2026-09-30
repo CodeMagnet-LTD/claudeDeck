@@ -334,7 +334,7 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
     en altta **Pasif** (geri kalan her şey, kayıtlı sırasıyla, katlanabilir). Başlıklarda sayılar yazar.
   - Bir projenin Aktif'e girmesi ya da çıkması, ya da kendiliğinden eklenen bir oturum (otomasyonlar,
     iCloud eşitlemesi) imleç kenar çubuğunun üstündeyken bekletilir; imleç çıktıktan ya da son
-    tıklamandan 1,5 sn sonra uygulanır. Böylece tam tıklarken satır kaymaz. Senin yaptıkların (tıklama,
+    tıklamandan 1,5 sn sonra (en geç 10 sn içinde) uygulanır. Böylece tam tıklarken satır kaymaz. Senin yaptıkların (tıklama,
     menüler, sürükleme, filtre, açıp kapatma) hemen uygulanır.
   - Gruplar ve projeler yalnızca sen açıp kapatınca açılır/kapanır. Kapalıyken rozet gösterirler:
     🔴 seni bekliyor, 🟢 çalışıyor, 🟡 bitti ama henüz bakmadın.

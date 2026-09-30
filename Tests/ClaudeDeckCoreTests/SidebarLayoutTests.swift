@@ -142,12 +142,12 @@ import Testing
         let r3 = gate.offer(2, at: t(1))
         #expect(!r3)
         #expect(gate.shown == 1 && gate.pending == 2)
-        let r4 = gate.tick(at: t(10))
+        let r4 = gate.tick(at: t(5))
         #expect(!r4)
-        gate.pointer(inside: false, at: t(11))
-        let r5 = gate.tick(at: t(12))
+        gate.pointer(inside: false, at: t(6))
+        let r5 = gate.tick(at: t(7))
         #expect(!r5)          // within the quiet period
-        let r6 = gate.tick(at: t(12.6))
+        let r6 = gate.tick(at: t(7.6))
         #expect(r6)
         #expect(gate.shown == 2 && gate.pending == nil)
     }
@@ -174,6 +174,27 @@ import Testing
         let r11 = gate.offer(4, at: t(5))
         #expect(!r11)
         #expect(gate.shown == 3)
+    }
+
+    @Test func heldChangeIsAppliedAfterMaxHoldEvenIfThePointerNeverLeaves() {
+        var gate = LayoutGate(1)
+        gate.pointer(inside: true, at: t(0))
+        let held = gate.offer(2, at: t(1))
+        #expect(!held)
+        let newer = gate.offer(3, at: t(6)) // a newer layout doesn't restart the clock
+        #expect(!newer)
+        let early = gate.tick(at: t(10.9))
+        #expect(!early)
+        let late = gate.tick(at: t(11))
+        #expect(late)
+        #expect(gate.shown == 3 && gate.pending == nil)
+        // The next held change gets its own 10 s.
+        let next = gate.offer(4, at: t(12))
+        #expect(!next)
+        let stillHeld = gate.tick(at: t(21))
+        #expect(!stillHeld)
+        let applied = gate.tick(at: t(22))
+        #expect(applied)
     }
 
     @Test func revertingAHeldChangeDropsIt() {
