@@ -6,6 +6,31 @@
     <description>ClaudeDeck updates</description>
     <language>en</language>
     <item>
+      <title>ClaudeDeck 0.2.1</title>
+      <pubDate>Wed, 30 Sep 2026 20:11:05 GMT</pubDate>
+      <sparkle:version>5</sparkle:version>
+      <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/CodeMagnet-LTD/claudeDeck/releases/tag/v0.2.1</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p>A calmer sidebar that doesn't move under your cursor, and ⌘-click for bare file names.</p>
+<h3>Sidebar</h3>
+<ul>
+<li><b>Rows stay where they are.</b> Status changes no longer reorder the list; a project's state shows in place. Changes the app makes on its own (a project becoming active, automations, iCloud sync) wait while the pointer is over the sidebar and briefly after a click, so you don't click the wrong project.</li>
+<li><b>"Waiting for you" tray.</b> Sessions that need you — permission prompts, questions, freshly finished turns — slide up in a tray at the bottom of the sidebar, with Allow / Deny right there. The list above doesn't shift.</li>
+<li><b>Compact rows.</b> A project with a single session takes one row instead of two.</li>
+<li><b>Quieter idle.</b> Sessions you've already looked at show a grey dot instead of a yellow "Your turn" pill; the pill is only for turns you haven't seen.</li>
+<li><b>Group badges.</b> Group headers show how many sessions are waiting (red) and working (green), even when collapsed.</li>
+<li><b>Filter:</b> All / Waiting / Working at the top of the sidebar.</li>
+<li><b>⌘J</b> jumps to the next session waiting for you.</li>
+</ul>
+<h3>Terminal</h3>
+<ul>
+<li><b>⌘-click a bare file name</b> like <code>[file] promo.mp4</code> or <code>README.md</code>: ClaudeDeck finds it in the session's folder, in the files Claude recently wrote or sent in that session, or elsewhere in the project, and shows it in Finder (⌘⌥-click opens it).</li>
+</ul>
+<p>Installed 0.2.0? This update arrives through <b>ClaudeDeck › Check for Updates…</b> (or on its own within a day).</p>]]></description>
+      <enclosure url="https://github.com/CodeMagnet-LTD/claudeDeck/releases/download/v0.2.1/ClaudeDeck-0.2.1.dmg" sparkle:edSignature="SJQrr97No5wyv7uOs8V1rw0ru6gZMjTbn/cxeNahO9UAQvtzlq06rHtd9KFu8nN+8FoWq+ubGa1CRG6bw1NSBA==" length="11335371" type="application/octet-stream"/>
+    </item>
+    <item>
       <title>ClaudeDeck 0.2.0</title>
       <pubDate>Tue, 29 Sep 2026 23:02:51 GMT</pubDate>
       <sparkle:version>4</sparkle:version>
