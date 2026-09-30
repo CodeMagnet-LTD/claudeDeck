@@ -68,7 +68,7 @@ final class DeckSyncController {
         }
         if next != model.deck {
             // The save that follows (AppModel.saveNow → prepareSave) writes the union back.
-            model.mutate { $0 = next }
+            model.mutate(userInitiated: false) { $0 = next }
             return
         }
         write(deck: next, file: file, current: result)

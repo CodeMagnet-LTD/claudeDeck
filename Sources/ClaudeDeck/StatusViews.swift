@@ -51,14 +51,16 @@ struct StatusDot: View {
                     .opacity(pulse ? 0 : 1)
                     .animation(.easeOut(duration: display.isBlocked ? 1.0 : 1.6).repeatForever(autoreverses: false), value: pulse)
             }
-            Circle()
-                .fill(color)
-                .frame(width: 8, height: 8)
-                .overlay {
-                    if display.isIdle && !unseen {
-                        Circle().fill(Color(nsColor: .windowBackgroundColor)).frame(width: 3, height: 3)
-                    }
-                }
+            if display.isIdle && !unseen {
+                // Seen "your turn": a quiet grey ring; only unseen ones are yellow.
+                Circle()
+                    .strokeBorder(Color.secondary.opacity(0.8), lineWidth: 1.5)
+                    .frame(width: 8, height: 8)
+            } else {
+                Circle()
+                    .fill(color)
+                    .frame(width: 8, height: 8)
+            }
         }
         .frame(width: 14, height: 14)
         .onAppear { pulse = true }

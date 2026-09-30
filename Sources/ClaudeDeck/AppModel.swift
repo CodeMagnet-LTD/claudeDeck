@@ -43,8 +43,12 @@ final class AppModel {
     /// Session being dragged from the sidebar (set when the drag starts; the drop uses it directly
     /// instead of decoding the item provider).
     @ObservationIgnored var draggedSessionID: UUID?
-    /// Project ids in the order they became active (sidebar "Active" section).
-    @ObservationIgnored var activationOrder: [UUID] = []
+    /// Projects and groups in the order they became active (sidebar "Active" section).
+    @ObservationIgnored var activationOrder = ActivationOrder()
+    /// Last time the user did something that may change the sidebar's rows (AppModel+Sidebar.swift).
+    @ObservationIgnored var lastUserLayoutAction: Date = .distantPast
+    /// Scrolls the sidebar to a session (⌘J, the waiting tray); the nonce repeats a reveal.
+    var sidebarReveal: SidebarReveal?
     /// Last sidebar drag (not cleared by the drop) — tells a click from the start of a drag.
     @ObservationIgnored var lastDraggedSessionID: UUID?
     /// Highlighted sidebar row: a project or session id — whatever was clicked last.
@@ -464,6 +468,7 @@ final class AppModel {
     }
 
     func stop(_ id: UUID) {
+        noteUserLayoutAction()
         terminals.terminate(id)
     }
 
@@ -484,6 +489,7 @@ final class AppModel {
     var selectedSessionID: UUID? {
         get { deck.selectedSessionID }
         set {
+            noteUserLayoutAction()
             sidebarSelection = newValue
             if newValue != nil { tabs.selectSessions() } // a session was picked: show it
             guard deck.selectedSessionID != newValue || (newValue.map { !deck.panes.contains($0) } ?? false) else { return }
@@ -529,7 +535,10 @@ final class AppModel {
 
     // MARK: Deck mutations
 
-    func mutate(_ change: (inout DeckData) -> Void) {
+    /// Edits the deck. Pass `userInitiated: false` for changes the user didn't just make
+    /// (automations, iCloud sync), so the sidebar holds back row moves while the pointer is there.
+    func mutate(userInitiated: Bool = true, _ change: (inout DeckData) -> Void) {
+        if userInitiated { noteUserLayoutAction() }
         change(&deck)
         scheduleSave()
     }
@@ -575,6 +584,7 @@ final class AppModel {
     }
 
     func removeSession(_ id: UUID) {
+        noteUserLayoutAction()
         terminals.terminate(id)
         terminals.discard(id)
         tailers[id]?.stop()

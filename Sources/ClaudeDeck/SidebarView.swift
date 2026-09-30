@@ -4,11 +4,43 @@ import SwiftUI
 struct SidebarView: View {
     @Environment(AppModel.self) private var model
     @AppStorage("sidebar.inactiveExpanded", store: .windowState) private var inactiveExpanded = true
+    @AppStorage("sidebar.filter", store: .windowState) private var filter: SidebarFilter = .all
+    @State private var layoutController = SidebarLayoutController()
+    @State private var sidebarHeight: CGFloat = 600
 
     var body: some View {
-        @Bindable var model = model
-        let sections = model.deck.sections
-        let waiting = model.attentionSessions
+        let latest = model.sidebarLayout(filter: filter)
+        // Rows only move when the user caused it or isn't pointing at the sidebar (LayoutGate).
+        let layout = layoutController.shown ?? latest
+        let waiting = model.waitingSessions
+        ScrollViewReader { proxy in
+            list(layout)
+                .onChange(of: latest, initial: true) { _, value in
+                    layoutController.offer(value, userActionAt: model.lastUserLayoutAction)
+                }
+                .onHover { layoutController.pointer(inside: $0) }
+                .onChange(of: model.sidebarReveal) { _, request in
+                    guard let request else { return }
+                    reveal(request.id, proxy: proxy, latest: latest)
+                }
+        }
+        .safeAreaInset(edge: .top, spacing: 0) { filterBar }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            // Waiting tray above the footer, outside the list: it only shortens the list, never
+            // pushes its rows around.
+            VStack(spacing: 0) {
+                if !waiting.isEmpty {
+                    WaitingTray(sessions: waiting, maxHeight: sidebarHeight * 0.4)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+                footer
+            }
+            .animation(.snappy(duration: 0.3), value: waiting.isEmpty)
+        }
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { sidebarHeight = $0 }
+    }
+
+    private func list(_ layout: SidebarLayout) -> some View {
         // Project header rows carry the project id as their tag: the list's own click handling
         // is the only reliable way to catch a click on a DisclosureGroup header.
         // The highlight is the last row the user clicked (project or session), not the terminal
@@ -17,38 +49,28 @@ struct SidebarView: View {
             get: { model.sidebarSelection },
             set: { id in
                 guard let id else { return }
+                layoutController.click()
                 if model.deck.project(id) != nil { model.openProject(id) } else { model.selectFromSidebar(id) }
             }
         )) {
-            if !waiting.isEmpty {
-                Section("Needs Attention") {
-                    ForEach(waiting) { session in
-                        // No selection tag: the same session is also listed under its project.
-                        AttentionRow(session: session)
-                    }
-                }
-            }
-            if !sections.pinned.isEmpty {
+            let pinned = layout.pinned.compactMap { model.deck.project($0) }
+            if !pinned.isEmpty {
                 Section("Pinned") {
-                    ForEach(sections.pinned) { ProjectRow(project: $0) }
+                    ForEach(pinned) { ProjectEntry(project: $0, layout: layout) }
                 }
             }
-            // Active: projects with a running terminal, in the order they became active (stable),
-            // then groups that contain an active project.
-            let activeProjects = model.activeInOrder(sections.ungrouped)
-            let activeGroups = model.activeGroupsInOrder(sections.groups)
-            let _ = model.pruneActivationOrder()
+            // Active: projects and groups with a running terminal, in the order they became active.
+            // Status changes never reorder them; the status shows in place.
             Section {
-                ForEach(activeProjects) { ProjectRow(project: $0) }
-                ForEach(activeGroups, id: \.group.id) { entry in
-                    GroupRow(group: entry.group, projects: entry.projects)
-                }
-                if activeProjects.isEmpty && activeGroups.isEmpty {
-                    Text("No running sessions").font(.callout).foregroundStyle(.tertiary)
+                ForEach(layout.active, id: \.self) { SidebarItemView(item: $0, layout: layout) }
+                if layout.active.isEmpty {
+                    Text(filter == .waiting ? "Nothing is waiting for you" : "No running sessions")
+                        .font(.callout).foregroundStyle(.tertiary)
                 }
             } header: {
-                HStack {
+                HStack(spacing: 4) {
                     Text("Active")
+                    Text("\(layout.active.count)").foregroundStyle(.tertiary)
                     Spacer()
                     Menu {
                         Button("Add Project…") { model.presentAddProject() }
@@ -67,43 +89,160 @@ struct SidebarView: View {
                 }
             }
             // Inactive: everything else in its saved order, collapsible like an accordion.
-            let activeGroupIDs = Set(activeGroups.map(\.group.id))
-            let idleGroups = sections.groups.filter { !activeGroupIDs.contains($0.group.id) }
-            let idleProjects = sections.ungrouped.filter { !model.isActive($0) }
-            Section(isExpanded: $inactiveExpanded) {
-                ForEach(idleGroups, id: \.group.id) { entry in
-                    GroupRow(group: entry.group, projects: entry.projects)
-                }
-                ForEach(idleProjects) { ProjectRow(project: $0) }
-            } header: {
-                HStack(spacing: 4) {
-                    Text("Inactive")
-                    Text("\(idleGroups.count + idleProjects.count)").foregroundStyle(.tertiary)
+            // Hidden while a filter is on (nothing there is waiting or working).
+            if filter == .all {
+                Section(isExpanded: $inactiveExpanded) {
+                    ForEach(layout.inactive, id: \.self) { SidebarItemView(item: $0, layout: layout) }
+                } header: {
+                    HStack(spacing: 4) {
+                        Text("Inactive")
+                        Text("\(layout.inactive.count)").foregroundStyle(.tertiary)
+                    }
                 }
             }
         }
         .listStyle(.sidebar)
-        .safeAreaInset(edge: .bottom) {
-            HStack {
-                Button {
-                    model.presentAddProject()
-                } label: {
-                    Label("Add Project", systemImage: "folder.badge.plus")
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .buttonStyle(.borderless)
-                Button { model.showAutomations() } label: { Image(systemName: "clock.arrow.circlepath") }
-                    .buttonStyle(.borderless)
-                    .help("Automations — scheduled prompts")
-                SettingsLink {
-                    Image(systemName: "gearshape")
-                }
-                .buttonStyle(.borderless)
-                .help("Settings — auto-resume, /compact, notifications (⌘,)")
+    }
+
+    private var filterBar: some View {
+        let counts = model.sidebarCounts
+        return Picker("Show", selection: Binding(
+            get: { filter },
+            set: { value in
+                model.noteUserLayoutAction()
+                filter = value
             }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
-            .background(.bar)
+        )) {
+            Text("All").tag(SidebarFilter.all)
+            Text("Waiting \(counts.waiting)").tag(SidebarFilter.waiting)
+            Text("Working \(counts.working)").tag(SidebarFilter.working)
+        }
+        .pickerStyle(.segmented)
+        .labelsHidden()
+        .controlSize(.small)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .help("Show all projects, only sessions waiting for you, or only working sessions")
+    }
+
+    private var footer: some View {
+        HStack {
+            Button {
+                model.presentAddProject()
+            } label: {
+                Label("Add Project", systemImage: "folder.badge.plus")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.borderless)
+            Button { model.showAutomations() } label: { Image(systemName: "clock.arrow.circlepath") }
+                .buttonStyle(.borderless)
+                .help("Automations — scheduled prompts")
+            SettingsLink {
+                Image(systemName: "gearshape")
+            }
+            .buttonStyle(.borderless)
+            .help("Settings — auto-resume, /compact, notifications (⌘,)")
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(.bar)
+    }
+
+    /// ⌘J / tray click: make sure the row is listed (a filter may hide it), then scroll to it.
+    private func reveal(_ id: UUID, proxy: ScrollViewProxy, latest: SidebarLayout) {
+        if filter != .all, !latest.sessionsInProject.values.contains(where: { $0.contains(id) }) {
+            filter = .all
+        }
+        layoutController.offer(model.sidebarLayout(filter: filter), userActionAt: model.lastUserLayoutAction)
+        Task { @MainActor in
+            // Let the expanded project / group and the applied layout render first.
+            try? await Task.sleep(for: .milliseconds(120))
+            withAnimation(.snappy) { proxy.scrollTo(id, anchor: .center) }
+        }
+    }
+}
+
+/// Holds the sidebar's rows steady: new layouts go through a `LayoutGate`, which applies them
+/// at once after a user action and otherwise waits until the pointer has left the sidebar.
+@MainActor
+@Observable
+final class SidebarLayoutController {
+    private(set) var shown: SidebarLayout?
+    @ObservationIgnored private var gate: LayoutGate<SidebarLayout>?
+    @ObservationIgnored private var retry: Task<Void, Never>?
+
+    func offer(_ latest: SidebarLayout, userActionAt: Date) {
+        guard var next = gate else {
+            gate = LayoutGate(latest)
+            publish()
+            return
+        }
+        next.userAction(at: userActionAt)
+        next.offer(latest, at: Date())
+        gate = next
+        publish()
+        scheduleRetry()
+    }
+
+    func pointer(inside: Bool) {
+        gate?.pointer(inside: inside, at: Date())
+        if !inside { scheduleRetry() }
+    }
+
+    func click() { gate?.click(at: Date()) }
+
+    private func publish() {
+        if shown != gate?.shown { shown = gate?.shown }
+    }
+
+    /// While a layout is held back, check every so often whether it may be applied.
+    private func scheduleRetry() {
+        guard gate?.pending != nil, retry == nil else { return }
+        retry = Task { @MainActor [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .milliseconds(400))
+                guard let self else { return }
+                self.gate?.tick(at: Date())
+                self.publish()
+                if self.gate?.pending == nil {
+                    self.retry = nil
+                    return
+                }
+            }
+        }
+    }
+}
+
+/// A top-level entry of the Active / Inactive sections.
+struct SidebarItemView: View {
+    @Environment(AppModel.self) private var model
+    let item: SidebarItem
+    let layout: SidebarLayout
+
+    var body: some View {
+        switch item {
+        case .project(let id):
+            if let project = model.deck.project(id) { ProjectEntry(project: project, layout: layout) }
+        case .group(let id):
+            if let group = model.deck.groups.first(where: { $0.id == id }) {
+                GroupRow(group: group, projects: (layout.projectsInGroup[id] ?? []).compactMap { model.deck.project($0) }, layout: layout)
+            }
+        }
+    }
+}
+
+/// A project as one row (its only session) or as a header with its sessions.
+struct ProjectEntry: View {
+    @Environment(AppModel.self) private var model
+    let project: Project
+    let layout: SidebarLayout
+
+    var body: some View {
+        let sessions = (layout.sessionsInProject[project.id] ?? []).compactMap { model.deck.session($0) }
+        if layout.compact.contains(project.id), let session = sessions.first {
+            CompactProjectRow(project: project, session: session)
+        } else {
+            ProjectRow(project: project, sessions: sessions)
         }
     }
 }
@@ -112,22 +251,24 @@ struct GroupRow: View {
     @Environment(AppModel.self) private var model
     let group: ProjectGroup
     let projects: [Project]
+    let layout: SidebarLayout
     @State private var pickingProjects = false
 
     var body: some View {
-        // A session waiting for the user forces its group open.
-        let attention = projects.contains { p in model.deck.sessions(in: p.id).contains { model.needsAttention($0.id) } }
+        // Only the user opens or closes a group (opening it by itself would move rows under the
+        // pointer); the badges show what's going on inside while it's closed.
         DisclosureGroup(isExpanded: Binding(
-            get: { !group.collapsed || attention },
+            get: { !group.collapsed },
             set: { expanded in model.mutate { $0.updateGroup(group.id) { $0.collapsed = !expanded } } }
         )) {
-            ForEach(projects) { ProjectRow(project: $0) }
+            ForEach(projects) { ProjectEntry(project: $0, layout: layout) }
         } label: {
             HStack(spacing: 6) {
                 Circle().fill(GroupPalette.color(group.colorIndex)).frame(width: 8, height: 8)
                 Text(group.name).fontWeight(.medium)
                 Spacer()
-                AggregateBadge(sessionIDs: projects.flatMap { model.deck.sessions(in: $0.id).map(\.id) })
+                AggregateBadge(sessionIDs: model.deck.projects.filter { $0.groupID == group.id && !$0.pinned }
+                    .flatMap { model.deck.sessions(in: $0.id).map(\.id) })
                 Text("\(projects.count)").font(.caption).foregroundStyle(.tertiary)
                 Menu {
                     Button("Add Project to This Group…") { model.presentAddProject(toGroup: group.id) }
@@ -155,17 +296,19 @@ struct GroupRow: View {
 struct ProjectRow: View {
     @Environment(AppModel.self) private var model
     let project: Project
+    /// The sessions to list (the sidebar filter may hide some).
+    let sessions: [DeckSession]
     @State private var showResume = false
 
     var body: some View {
-        let sessions = model.deck.sessions(in: project.id)
-        let active = sessions.contains { model.terminals.isRunning($0.id) }
-        let attention = sessions.contains { model.needsAttention($0.id) }
+        let all = model.deck.sessions(in: project.id)
+        let active = all.contains { model.terminals.isRunning($0.id) }
         // Projects without a running session start collapsed; with one, the saved state applies.
-        // A session waiting for the user (permission, question, unseen finish) forces it open.
+        // Only the user opens or closes it (the waiting tray lists sessions that need them).
         DisclosureGroup(isExpanded: Binding(
-            get: { attention || (active ? !project.collapsed : model.idleExpandedProjects.contains(project.id)) },
+            get: { active ? !project.collapsed : model.idleExpandedProjects.contains(project.id) },
             set: { expanded in
+                model.noteUserLayoutAction()
                 if active {
                     model.mutate { $0.updateProject(project.id) { $0.collapsed = !expanded } }
                 } else {
@@ -183,7 +326,7 @@ struct ProjectRow: View {
                     .frame(width: 16)
                 Text(project.name).fontWeight(.medium).lineLimit(1)
                 Spacer(minLength: 4)
-                if project.collapsed || !active { AggregateBadge(sessionIDs: sessions.map(\.id)) }
+                if project.collapsed || !active { AggregateBadge(sessionIDs: all.map(\.id)) }
                 // One "+" with every way to start something in this project.
                 Menu {
                     NewSessionItems(project: project, showResume: $showResume)
@@ -204,8 +347,134 @@ struct ProjectRow: View {
     }
 }
 
+/// A project with a single session, as one row: the session's status with the project's name.
+/// Its context menu has the session's items and the project's under "Project".
+struct CompactProjectRow: View {
+    @Environment(AppModel.self) private var model
+    let project: Project
+    let session: DeckSession
+    @State private var showResume = false
+    @State private var hovering = false
+
+    var body: some View {
+        let status = model.status(of: session.id)
+        let unseen = model.isUnseenIdle(session.id)
+        HStack(spacing: 8) {
+            StatusDot(display: status.display, unseen: unseen)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    if session.kind == .shell {
+                        Image(systemName: "apple.terminal").font(.caption).foregroundStyle(.secondary)
+                    }
+                    Text(project.name).fontWeight(.medium).lineLimit(1)
+                    if let extra = Self.extraName(session: session.name, project: project.name) {
+                        Text(extra).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    }
+                    if project.pinned {
+                        Image(systemName: "pin.fill").font(.caption2).foregroundStyle(.tertiary)
+                    }
+                    GitHubLinkBadge(session: session)
+                    Spacer(minLength: 4)
+                    if hovering {
+                        Menu {
+                            NewSessionItems(project: project, showResume: $showResume)
+                        } label: {
+                            Image(systemName: "plus")
+                        }
+                        .menuStyle(.borderlessButton)
+                        .menuIndicator(.hidden)
+                        .fixedSize()
+                        .help("New Claude session or terminal")
+                    }
+                    RowTime(date: status.updatedAt)
+                }
+                SessionStatusLine(session: session, status: status, unseen: unseen)
+            }
+        }
+        .padding(.vertical, 2)
+        .flashOnStateChange(status.display)
+        .contentShape(Rectangle())
+        .onTapGesture { model.selectedSessionID = session.id }
+        .onHover { hovering = $0 }
+        .help(project.path)
+        .contextMenu {
+            SessionMenu(session: session)
+            Divider()
+            Menu("Project") { ProjectMenu(project: project, showResume: $showResume) }
+        }
+        .onDrag {
+            model.draggedSessionID = session.id
+            model.lastDraggedSessionID = session.id
+            return NSItemProvider(object: session.id.uuidString as NSString)
+        }
+        .sheet(isPresented: $showResume) { ResumeSheet(project: project) }
+        .tag(session.id)
+        .id(session.id)
+    }
+
+    /// The session's name when it says more than the project's ("app · fix login" → "fix login");
+    /// nil for the default names ("app", "app · 2").
+    static func extraName(session: String, project: String) -> String? {
+        guard session != project else { return nil }
+        guard session.hasPrefix(project) else { return session }
+        let rest = session.dropFirst(project.count).trimmingCharacters(in: CharacterSet(charactersIn: " ·-–—:").union(.whitespaces))
+        if rest.isEmpty || rest.allSatisfy(\.isNumber) { return nil }
+        return rest
+    }
+}
+
+/// The waiting tray docked at the bottom of the sidebar: sessions that need the user, with
+/// the permission buttons. Collapsible; scrolls on its own beyond `maxHeight`.
+struct WaitingTray: View {
+    @AppStorage("sidebar.trayCollapsed", store: .windowState) private var collapsed = false
+    let sessions: [DeckSession]
+    let maxHeight: CGFloat
+    @State private var contentHeight: CGFloat = 0
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let blocked = sessions.contains { model.status(of: $0.id).display.isBlocked }
+        VStack(spacing: 0) {
+            Divider()
+            Button {
+                withAnimation(.snappy(duration: 0.25)) { collapsed.toggle() }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "bell.badge.fill")
+                        .foregroundStyle(blocked ? StatusStyle.blocked : StatusStyle.idle)
+                    Text("Waiting for you · \(sessions.count)").font(.callout.weight(.semibold))
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                        .rotationEffect(.degrees(collapsed ? 180 : 0))
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 7)
+            .help("Next session waiting for you: ⌘J")
+            if !collapsed {
+                ScrollView {
+                    VStack(spacing: 2) {
+                        ForEach(sessions) { WaitingRow(session: $0) }
+                    }
+                    .padding(.horizontal, 6)
+                    .padding(.bottom, 6)
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
+                }
+                .scrollBounceBehavior(.basedOnSize)
+                .frame(height: min(max(contentHeight, 1), max(maxHeight, 80)))
+            }
+        }
+        .background(.bar)
+        .animation(.snappy(duration: 0.25), value: sessions.map(\.id))
+    }
+}
+
 /// A session that needs the user, with its project and what it is waiting for.
-struct AttentionRow: View {
+struct WaitingRow: View {
     @Environment(AppModel.self) private var model
     let session: DeckSession
 
@@ -232,27 +501,23 @@ struct AttentionRow: View {
                 PermissionButtons(sessionID: session.id).padding(.top, 2)
             }
             Spacer(minLength: 4)
-            if let at = status.updatedAt {
-                TimelineView(.periodic(from: .now, by: 15)) { _ in
-                    Text(RelativeTime.short(at)).font(.caption2.monospacedDigit()).foregroundStyle(.tertiary)
-                }
-            }
+            RowTime(date: status.updatedAt)
         }
-        .padding(.vertical, 3)
+        .padding(.vertical, 5)
+        .padding(.horizontal, 8)
+        .background(
+            RoundedRectangle(cornerRadius: 6)
+                .fill(status.display.isBlocked ? StatusStyle.blocked.opacity(0.12) : Color.secondary.opacity(0.06))
+        )
         .flashOnStateChange(status.display)
         .contentShape(Rectangle())
-        .onTapGesture { model.selectedSessionID = session.id }
+        .onTapGesture { model.revealInSidebar(session.id) }
         .contextMenu { SessionMenu(session: session) }
         .onDrag {
             model.draggedSessionID = session.id
             model.lastDraggedSessionID = session.id
             return NSItemProvider(object: session.id.uuidString as NSString)
         }
-        .listRowBackground(
-            status.display.isBlocked
-                ? RoundedRectangle(cornerRadius: 6).fill(StatusStyle.blocked.opacity(0.12)).padding(.horizontal, 4)
-                : nil
-        )
     }
 }
 
@@ -262,8 +527,9 @@ struct SessionRow: View {
 
     var body: some View {
         let status = model.status(of: session.id)
+        let unseen = model.isUnseenIdle(session.id)
         HStack(spacing: 8) {
-            StatusDot(display: status.display, unseen: model.isUnseenIdle(session.id))
+            StatusDot(display: status.display, unseen: unseen)
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
                     if session.kind == .shell {
@@ -280,29 +546,9 @@ struct SessionRow: View {
                     }
                     GitHubLinkBadge(session: session)
                     Spacer(minLength: 4)
-                    if let at = status.updatedAt {
-                        TimelineView(.periodic(from: .now, by: 15)) { _ in
-                            Text(RelativeTime.short(at))
-                                .font(.caption2.monospacedDigit())
-                                .foregroundStyle(.tertiary)
-                        }
-                    }
+                    RowTime(date: status.updatedAt)
                 }
-                HStack(spacing: 6) {
-                    StatusPill(display: status.display, unseen: model.isUnseenIdle(session.id))
-                    ShellStartBadge(session: session)
-                    if let detail = status.detail ?? session.startupCommand.map({ "▶︎ " + $0 }) {
-                        Text(detail)
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                            .truncationMode(.tail)
-                            .id(detail)
-                            .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity), removal: .opacity))
-                    }
-                }
-                .animation(.snappy(duration: 0.25), value: status.detail)
-                .clipped()
+                SessionStatusLine(session: session, status: status, unseen: unseen)
             }
         }
         .padding(.vertical, 3)
@@ -314,6 +560,53 @@ struct SessionRow: View {
             model.draggedSessionID = session.id
             model.lastDraggedSessionID = session.id
             return NSItemProvider(object: session.id.uuidString as NSString)
+        }
+        .id(session.id)
+    }
+}
+
+/// Status pill, shell badge and detail under a session's name. A seen "your turn" gets no pill
+/// (its hollow dot says enough), so only what needs the user stands out.
+struct SessionStatusLine: View {
+    let session: DeckSession
+    let status: SessionStatus
+    let unseen: Bool
+
+    var body: some View {
+        let quiet = status.display.isIdle && !unseen
+        let detail = status.detail ?? session.startupCommand.map { "▶︎ " + $0 }
+        let hasBadge = session.kind == .shell && session.startupCommand != nil
+        if !quiet || hasBadge || detail != nil {
+            HStack(spacing: 6) {
+                if !quiet { StatusPill(display: status.display, unseen: unseen) }
+                ShellStartBadge(session: session)
+                if let detail {
+                    Text(detail)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .id(detail)
+                        .transition(.asymmetric(insertion: .move(edge: .bottom).combined(with: .opacity), removal: .opacity))
+                }
+            }
+            .animation(.snappy(duration: 0.25), value: status.detail)
+            .clipped()
+        }
+    }
+}
+
+/// "3m" next to a row, refreshed every 15 seconds.
+struct RowTime: View {
+    let date: Date?
+
+    var body: some View {
+        if let date {
+            TimelineView(.periodic(from: .now, by: 15)) { _ in
+                Text(RelativeTime.short(date))
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.tertiary)
+            }
         }
     }
 }

@@ -46,6 +46,7 @@ extension AppModel {
     /// recently active); otherwise leave the terminal view alone, start nothing, just open/close it.
     func openProject(_ id: UUID) {
         guard let project = deck.project(id) else { return }
+        noteUserLayoutAction()
         browsedProjectID = id
         let running = deck.sessions(in: id).filter { terminals.isRunning($0.id) }
         if let recent = running.max(by: { ($0.lastActivityAt ?? $0.createdAt) < ($1.lastActivityAt ?? $1.createdAt) }) {
@@ -64,30 +65,6 @@ extension AppModel {
     /// A project is active while one of its terminals runs.
     func isActive(_ project: Project) -> Bool {
         deck.sessions(in: project.id).contains { terminals.isRunning($0.id) }
-    }
-
-    /// Active projects in the order they became active — stable: status changes (permission,
-    /// finished) never reorder them; a project that becomes active is appended at the bottom.
-    func activeInOrder(_ projects: [Project]) -> [Project] {
-        let active = projects.filter(isActive)
-        let ids = Set(active.map(\.id))
-        for p in active where !activationOrder.contains(p.id) { activationOrder.append(p.id) }
-        let rank = Dictionary(uniqueKeysWithValues: activationOrder.enumerated().filter { ids.contains($0.element) }.map { ($0.element, $0.offset) })
-        return active.sorted { (rank[$0.id] ?? .max) < (rank[$1.id] ?? .max) }
-    }
-
-    /// Groups with an active project, ordered by their earliest-activated project.
-    func activeGroupsInOrder(_ groups: [(group: ProjectGroup, projects: [Project])]) -> [(group: ProjectGroup, projects: [Project])] {
-        let active = groups.filter { $0.projects.contains(where: isActive) }
-        func first(_ entry: (group: ProjectGroup, projects: [Project])) -> Int {
-            activeInOrder(entry.projects).first.flatMap { activationOrder.firstIndex(of: $0.id) } ?? .max
-        }
-        return active.sorted { first($0) < first($1) }
-    }
-
-    /// Forget projects that are no longer active (so re-activation appends them again).
-    func pruneActivationOrder() {
-        activationOrder.removeAll { id in deck.project(id).map { !isActive($0) } ?? true }
     }
 
     /// Adds (or picks existing) folders and puts them in the group.

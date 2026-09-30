@@ -608,6 +608,9 @@ struct TabCommands: Commands {
             Button("Show Previous Tab") { model.tabs.selectNeighbour(forward: false); model.showMainWindow() }
                 .keyboardShortcut(.tab, modifiers: [.control, .shift])
             Divider()
+            Button("Next Session Waiting for You") { model.selectNextWaiting() }
+                .keyboardShortcut("j")
+            Divider()
         }
     }
 }

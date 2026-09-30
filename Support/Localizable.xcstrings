@@ -380,6 +380,16 @@
         }
       }
     },
+    "All": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tümü"
+          }
+        }
+      }
+    },
     "All %lld checks passed": {
       "localizations": {
         "tr": {
@@ -2303,12 +2313,32 @@
         }
       }
     },
+    "Next Session Waiting for You": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seni Bekleyen Sonraki Oturum"
+          }
+        }
+      }
+    },
     "Next run: %@": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Sonraki çalıştırma: %@"
+          }
+        }
+      }
+    },
+    "Next session waiting for you: ⌘J": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seni bekleyen sonraki oturum: ⌘J"
           }
         }
       }
@@ -2529,6 +2559,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zamanlanmadı"
+          }
+        }
+      }
+    },
+    "Nothing is waiting for you": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seni bekleyen bir şey yok"
           }
         }
       }
@@ -3573,6 +3613,16 @@
         }
       }
     },
+    "Show": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Göster"
+          }
+        }
+      }
+    },
     "Show Hidden Files": {
       "localizations": {
         "tr": {
@@ -3639,6 +3689,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Çalışma ağacı değişikliklerini göster"
+          }
+        }
+      }
+    },
+    "Show all projects, only sessions waiting for you, or only working sessions": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm projeleri, yalnızca seni bekleyen oturumları ya da yalnızca çalışan oturumları göster"
           }
         }
       }
@@ -4386,6 +4446,16 @@
         }
       }
     },
+    "Waiting %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bekleyen %lld"
+          }
+        }
+      }
+    },
     "Waiting for an answer": {
       "localizations": {
         "tr": {
@@ -4406,12 +4476,32 @@
         }
       }
     },
+    "Waiting for you · %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seni bekleyen · %lld"
+          }
+        }
+      }
+    },
     "Weekly changelog": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Haftalık değişiklik günlüğü"
+          }
+        }
+      }
+    },
+    "Working %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalışan %lld"
           }
         }
       }

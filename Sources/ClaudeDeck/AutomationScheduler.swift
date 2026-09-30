@@ -23,13 +23,13 @@ final class AutomationScheduler {
         self.model = model
         // Runs a previous app process left open can't be followed any more.
         if model.deck.automationRuns.contains(where: { !$0.status.isFinished }) {
-            model.mutate { $0.recoverInterruptedRuns() }
+            model.mutate(userInitiated: false) { $0.recoverInterruptedRuns() }
         }
         // Old/stale schedules (e.g. created before a long quit) are evaluated on the first tick;
         // automations that never got a nextRunAt get one now.
         let unscheduled = model.deck.automations.filter { $0.isSchedulable && $0.nextRunAt == nil }
         if !unscheduled.isEmpty {
-            model.mutate { deck in for a in unscheduled { deck.updateAutomation(a.id) { $0.reschedule() } } }
+            model.mutate(userInitiated: false) { deck in for a in unscheduled { deck.updateAutomation(a.id) { $0.reschedule() } } }
         }
     }
 
@@ -55,7 +55,7 @@ final class AutomationScheduler {
             guard let expected = automation.nextRunAt,
                   let decision = AutomationSchedule.evaluate(automation, now: now) else { continue }
             var claimed: AutomationRun?
-            model.mutate { claimed = $0.claimDue(automation.id, expected: expected, decision: decision, now: now) }
+            model.mutate(userInitiated: false) { claimed = $0.claimDue(automation.id, expected: expected, decision: decision, now: now) }
             guard let run = claimed, run.status == .pending else { continue }
             execute(run: run, automationID: automation.id, reveal: false)
         }
@@ -67,7 +67,7 @@ final class AutomationScheduler {
               !automation.prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { NSSound.beep(); return }
         if model.deck.runs(of: automationID).contains(where: { !$0.status.isFinished }) { NSSound.beep(); return }
         let run = AutomationRun(automationID: automationID, trigger: .manual)
-        model.mutate {
+        model.mutate(userInitiated: false) {
             $0.appendRun(run)
             $0.updateAutomation(automationID) { $0.lastRunAt = run.startedAt; $0.lastRunStatus = .pending }
         }
@@ -97,7 +97,7 @@ final class AutomationScheduler {
         guard let automation = model.deck.automation(automationID),
               let projectID = automation.projectID, model.deck.project(projectID) != nil else {
             // Unschedule it (the picker then shows "Choose…") instead of failing every occurrence.
-            model.mutate { $0.updateAutomation(automationID) { $0.projectID = nil; $0.reschedule() } }
+            model.mutate(userInitiated: false) { $0.updateAutomation(automationID) { $0.projectID = nil; $0.reschedule() } }
             return finish(runID, .failed, error: String(localized: "The project no longer exists."))
         }
         // Session: the last run's (if asked and it's free), else a new one.
@@ -118,7 +118,7 @@ final class AutomationScheduler {
         if sessionID == nil { sessionID = createSession(for: automation, projectID: projectID) }
         guard let sessionID else { return finish(runID, .failed, error: String(localized: "Could not create a session.")) }
 
-        model.mutate { deck in
+        model.mutate(userInitiated: false) { deck in
             deck.updateRun(runID) {
                 $0.sessionID = sessionID
                 $0.status = .running
@@ -182,12 +182,12 @@ final class AutomationScheduler {
         var created: DeckSession?
         if automation.workspace == .newWorktree, model.isGitRepository(project) {
             let worktree = worktreeName(for: automation, project: project)
-            model.mutate { deck in
+            model.mutate(userInitiated: false) { deck in
                 created = deck.addWorktreeSession(to: projectID, worktreeName: worktree)
                 if let id = created?.id { deck.updateSession(id) { $0.name = name } }
             }
         } else {
-            model.mutate { created = $0.addSession(to: projectID, name: name) }
+            model.mutate(userInitiated: false) { created = $0.addSession(to: projectID, name: name) }
         }
         return created?.id
     }
@@ -243,7 +243,7 @@ final class AutomationScheduler {
 
     private func finish(_ runID: UUID, _ status: AutomationRunStatus, error: String? = nil) {
         guard let run = model.deck.automationRuns.first(where: { $0.id == runID }), !run.status.isFinished else { return }
-        model.mutate { deck in
+        model.mutate(userInitiated: false) { deck in
             deck.updateRun(runID) {
                 $0.status = status
                 $0.completedAt = Date()
