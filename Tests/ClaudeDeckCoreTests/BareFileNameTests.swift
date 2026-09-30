@@ -28,6 +28,9 @@ import Testing
         #expect(BareFileName.fileName(from: "src/app") == "src/app")
         #expect(BareFileName.fileName(from: "main.swift:42") == "main.swift:42")
         #expect(BareFileName.fileName(from: ".env") == nil)
+        #expect(BareFileName.fileName(from: "v1.2") == nil)
+        #expect(BareFileName.fileName(from: "(10.7MB)") == nil)
+        #expect(BareFileName.fileName(from: "a.mp4") == "a.mp4")
     }
 
     @Test func wideCharactersAndWrappedCells() {

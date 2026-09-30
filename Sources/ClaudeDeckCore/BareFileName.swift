@@ -31,8 +31,10 @@ public enum BareFileName {
         let name = String(text)
         guard !name.isEmpty, !name.contains("://") else { return nil }
         if name.contains("/") { return name.allSatisfy({ $0 == "/" || $0 == "." || $0 == "~" }) ? nil : name }
-        // A dotted extension after at least one character, optionally followed by :line[:col].
-        let hasExtension = name.range(of: #"^[^.].*\.[A-Za-z0-9]+(:[0-9]+){0,2}$"#, options: .regularExpression) != nil
+        // A dotted extension starting with a letter (not "10.7MB" or "v1.2") after at least one
+        // character, optionally followed by :line[:col].
+        let hasExtension = name.range(of: #"^[^.].*\.[A-Za-z][A-Za-z0-9]*(:[0-9]+){0,2}$"#,
+                                      options: .regularExpression) != nil
         return hasExtension ? name : nil
     }
 
