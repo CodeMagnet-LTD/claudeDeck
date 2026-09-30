@@ -493,6 +493,11 @@ final class AppModel {
             noteUserLayoutAction()
             sidebarSelection = newValue
             if newValue != nil { tabs.selectSessions() } // a session was picked: show it
+            // Picked with the mouse (sidebar row, waiting tray): type into it right away. Arrow keys
+            // in the sidebar keep the focus there.
+            if let newValue, NSApp.currentEvent.map({ Self.mouseEvents.contains($0.type) }) == true {
+                focusTerminal(of: newValue)
+            }
             guard deck.selectedSessionID != newValue || (newValue.map { !deck.panes.contains($0) } ?? false) else { return }
             deck.select(newValue)
             if let newValue {

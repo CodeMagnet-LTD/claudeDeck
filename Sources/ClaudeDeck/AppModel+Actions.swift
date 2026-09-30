@@ -156,6 +156,23 @@ extension AppModel {
     }
 
     /// Brings the main window forward and selects a session (notification / menu bar click).
+    static let mouseEvents: Set<NSEvent.EventType> = [.leftMouseDown, .leftMouseUp, .rightMouseDown, .rightMouseUp, .otherMouseDown, .otherMouseUp]
+
+    /// Gives the session's terminal the keyboard focus once the click that selected it is over
+    /// (the sidebar list would otherwise keep the focus when it finishes handling the click).
+    func focusTerminal(of id: UUID) {
+        Task { @MainActor [weak self] in
+            for _ in 0..<40 where NSEvent.pressedMouseButtons != 0 {
+                try? await Task.sleep(for: .milliseconds(25))
+            }
+            try? await Task.sleep(for: .milliseconds(30)) // let the list finish its mouse-up
+            guard let self, self.selectedSessionID == id,
+                  let view = self.terminals.view(for: id), let window = view.window, !view.isHiddenOrHasHiddenAncestor
+            else { return }
+            if window.firstResponder !== view { window.makeFirstResponder(view) }
+        }
+    }
+
     func reveal(_ id: UUID) {
         selectedSessionID = id
         markSeen(id)

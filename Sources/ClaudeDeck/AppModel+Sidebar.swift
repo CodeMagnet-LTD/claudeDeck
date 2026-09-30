@@ -60,6 +60,7 @@ extension AppModel {
             return
         }
         revealInSidebar(next)
+        focusTerminal(of: next) // ⌘J: ready to type the answer
     }
 
     /// Selects a session, shows the Sessions tab and scrolls the sidebar to its row, opening its
