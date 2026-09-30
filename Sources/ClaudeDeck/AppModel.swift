@@ -108,6 +108,7 @@ final class AppModel {
             self.openMainWindow?()
             EditorOpener.openDefault(url, model: self)
         }
+        terminals.transcriptPath = { [weak self] id in self?.deck.transcriptPath(for: id) }
         // Clicking into a pane's terminal focuses that session.
         terminals.onFocus = { [weak self] id in
             guard let self, self.deck.selectedSessionID != id else { return }

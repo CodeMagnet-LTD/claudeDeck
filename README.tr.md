@@ -465,7 +465,9 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
   Finder'dan kopyalanmış dosyalar yol olarak yapıştırılır.
 - **Bağlantılara ve yollara ⌘-tık:** URL'ler tarayıcıda açılır; bir dosya yolu (ör.
   `promo-video/out/promo.mp4` ya da `src/app.ts:42`) oturumun proje klasörüne göre bulunur ve Finder'da
-  gösterilir. ⌘⌥-tık dosyanın kendisini açar (metin dosyaları yerleşik düzenleyicide).
+  gösterilir. Claude'un `[file] promo.mp4` satırındaki `promo.mp4` gibi yalın bir dosya adı, önce oturumun
+  kaydındaki yollardan, sonra projede aranarak bulunur. ⌘⌥-tık dosyanın kendisini açar (metin dosyaları
+  yerleşik düzenleyicide).
 
 ### Güncellemeler
 - ClaudeDeck açılışta ve günde bir kez yeni sürüm olup olmadığına bakar ve kurmayı önerir: yeni sürüm indirilir,

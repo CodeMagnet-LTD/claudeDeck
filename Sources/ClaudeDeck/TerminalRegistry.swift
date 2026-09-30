@@ -122,12 +122,17 @@ final class DeckTerminalView: LocalProcessTerminalView {
     /// ⌘-click on a detected link. URLs open in their app; file paths are resolved against the
     /// shell's reported directory, then the session folder, and shown in Finder (⌘⌥: opened).
     override func requestOpenLink(source: TerminalView, link: String, params: [String: String]) {
+        openedLink = true
         let dirs = [TerminalLink.directory(fromHostURI: getTerminal().hostCurrentDirectory), workingDirectory].compactMap { $0 }
-        switch TerminalLink.resolve(link, in: dirs) {
+        open(TerminalLink.resolve(link, in: dirs), openFile: NSApp.currentEvent?.modifierFlags.contains(.option) == true)
+    }
+
+    private func open(_ link: TerminalLink?, openFile: Bool) {
+        switch link {
         case .url(let url):
             NSWorkspace.shared.open(url)
         case .file(let url, _):
-            if NSApp.currentEvent?.modifierFlags.contains(.option) == true, let onOpenFile {
+            if openFile, let onOpenFile {
                 onOpenFile(url)
             } else if url.hasDirectoryPath || (try? url.resourceValues(forKeys: [.isDirectoryKey]).isDirectory) == true {
                 NSWorkspace.shared.open(url)
@@ -137,6 +142,75 @@ final class DeckTerminalView: LocalProcessTerminalView {
         case nil:
             NSSound.beep()
         }
+    }
+
+    /// The session's Claude transcript, searched for the full path of a ⌘-clicked bare file name.
+    var transcriptPath: (() -> String?)?
+    private var openedLink = false
+    private var dragged = false
+
+    override func mouseDown(with event: NSEvent) {
+        dragged = false
+        super.mouseDown(with: event)
+    }
+
+    override func mouseDragged(with event: NSEvent) {
+        dragged = true
+        super.mouseDragged(with: event)
+    }
+
+    /// ⌘-click on a file name SwiftTerm didn't detect as a link (Claude's `[file] promo.mp4`):
+    /// look the name up in the session folder, the transcript and the project's files.
+    override func mouseUp(with event: NSEvent) {
+        openedLink = false
+        super.mouseUp(with: event)
+        let flags = event.modifierFlags
+        guard flags.contains(.command), !openedLink, !dragged, event.clickCount == 1,
+              let name = fileName(at: convert(event.locationInWindow, from: nil)) else { return }
+        let dirs = [TerminalLink.directory(fromHostURI: getTerminal().hostCurrentDirectory), workingDirectory].compactMap { $0 }
+        let folder = workingDirectory
+        let transcript = transcriptPath?()
+        let openFile = flags.contains(.option)
+        Task { [weak self] in
+            let url = await Task.detached(priority: .userInitiated) {
+                BareFileName.locate(name, directories: dirs, sessionFolder: folder, transcriptPath: transcript)
+            }.value
+            self?.open(url.map { .file($0, line: nil) }, openFile: openFile)
+        }
+    }
+
+    /// The file-name-like token under `point` in the visible screen, joined across wrapped rows.
+    private func fileName(at point: NSPoint) -> String? {
+        let terminal = getTerminal()
+        guard terminal.cols > 0, terminal.rows > 0 else { return nil }
+        // SwiftTerm's cell size isn't public; its optimal frame is cols × rows cells plus the scroller.
+        let optimal = getOptimalFrameSize()
+        let scroller = subviews.first { $0 is NSScroller } as? NSScroller
+        let scrollerWidth = scroller == nil || scroller!.isHidden
+            ? 0 : NSScroller.scrollerWidth(for: .regular, scrollerStyle: scroller!.scrollerStyle)
+        let cellWidth = (optimal.width - scrollerWidth) / CGFloat(terminal.cols)
+        let cellHeight = optimal.height / CGFloat(terminal.rows)
+        guard cellWidth > 0, cellHeight > 0 else { return nil }
+        let row = Int((frame.height - point.y) / cellHeight)
+        let col = min(max(Int(point.x / cellWidth), 0), terminal.cols - 1)
+        guard let line = terminal.getLine(row: row) else { return nil }
+
+        func cells(_ line: BufferLine) -> [String] {
+            (0..<terminal.cols).map { i in
+                let data = line[i]
+                if data.width == 0 { return "" }
+                let ch = terminal.getCharacter(for: data)
+                return ch == "\0" ? " " : String(ch)
+            }
+        }
+        var first = row, last = row
+        while first > 0, terminal.getLine(row: first)?.isWrapped == true { first -= 1 }
+        while let next = terminal.getLine(row: last + 1), next.isWrapped { last += 1 }
+        var all: [String] = []
+        for r in first...last {
+            all += cells(r == row ? line : terminal.getLine(row: r)!)
+        }
+        return BareFileName.token(inCells: all, column: (row - first) * terminal.cols + col)
     }
 
     /// Trackpad pinch zooms all terminals.
@@ -236,6 +310,7 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         view.onFocus = { [weak self] in self?.onFocus?(id) }
         view.onMagnify = { [weak self] step in self?.onZoom?(step) }
         view.onOpenFile = { [weak self] url in self?.onOpenFile?(url) }
+        view.transcriptPath = { [weak self] in self?.transcriptPath?(id) }
         view.workingDirectory = cwd
         views[id] = view
         if running.contains(id) { return }
@@ -267,6 +342,7 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         view.onFocus = { [weak self] in self?.onFocus?(id) }
         view.onMagnify = { [weak self] step in self?.onZoom?(step) }
         view.onOpenFile = { [weak self] url in self?.onOpenFile?(url) }
+        view.transcriptPath = { [weak self] in self?.transcriptPath?(id) }
         view.workingDirectory = cwd
         view.isClaude = false
         views[id] = view
@@ -336,6 +412,8 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
     @ObservationIgnored var onZoom: ((CGFloat) -> Void)?
     /// ⌘⌥-click on a file path in a terminal.
     @ObservationIgnored var onOpenFile: ((URL) -> Void)?
+    /// A session's Claude transcript file, if known.
+    @ObservationIgnored var transcriptPath: ((UUID) -> String?)?
 
     func discard(_ id: UUID) {
         views[id]?.removeFromSuperview()

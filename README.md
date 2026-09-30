@@ -456,7 +456,9 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
   Files copied in Finder are pasted as paths.
 - **⌘-click links and paths** in the output: URLs open in the browser; a file path (like
   `promo-video/out/promo.mp4` or `src/app.ts:42`) is resolved against the session's project folder and
-  shown in Finder. ⌘⌥-click opens the file itself (text files in the built-in editor).
+  shown in Finder. A bare file name, like `promo.mp4` in Claude's `[file] promo.mp4`, is found through the
+  paths in the session's transcript, then by searching the project. ⌘⌥-click opens the file itself (text
+  files in the built-in editor).
 
 ### Updates
 - ClaudeDeck checks for a new version at launch and once a day, and offers to install it: the new version

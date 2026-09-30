@@ -272,12 +272,17 @@ public struct DeckData: Codable, Sendable, Equatable {
         guard let session = session(id), let sid = session.claudeSessionID else { return nil }
         // Deleted worktree: claude can't find the transcript from any other directory.
         if let wd = session.workingDirectory, !fileExists(wd) { return nil }
-        let cwd = session.workingDirectory ?? project(session.projectID)?.path
-        let path = session.transcriptPath ?? cwd.map {
-            TranscriptIndex.defaultRoot().appending(path: Transcript.projectDirectoryName(for: $0)).appending(path: "\(sid).jsonl").path
-        }
-        guard let path, fileExists(path) else { return nil }
+        guard let path = transcriptPath(for: id), fileExists(path) else { return nil }
         return sid
+    }
+
+    /// Where the session's Claude transcript is (or would be), from the hook or its folder and id.
+    public func transcriptPath(for id: UUID) -> String? {
+        guard let session = session(id) else { return nil }
+        if let path = session.transcriptPath { return path }
+        guard let sid = session.claudeSessionID,
+              let cwd = session.workingDirectory ?? project(session.projectID)?.path else { return nil }
+        return TranscriptIndex.defaultRoot().appending(path: Transcript.projectDirectoryName(for: cwd)).appending(path: "\(sid).jsonl").path
     }
 
     // MARK: Worktree sessions
