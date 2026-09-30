@@ -18,7 +18,6 @@ struct SidebarView: View {
                 .onChange(of: latest, initial: true) { _, value in
                     layoutController.offer(value, userActionAt: model.lastUserLayoutAction)
                 }
-                .onHover { layoutController.pointer(inside: $0) }
                 .onChange(of: model.sidebarReveal) { _, request in
                     guard let request else { return }
                     reveal(request.id, proxy: proxy, latest: latest)
@@ -38,6 +37,8 @@ struct SidebarView: View {
             .animation(.snappy(duration: 0.3), value: waiting.isEmpty)
         }
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { sidebarHeight = $0 }
+        // The whole column (list, filter bar, tray) counts as "pointing at the sidebar".
+        .onHover { layoutController.pointer(inside: $0) }
     }
 
     private func list(_ layout: SidebarLayout) -> some View {

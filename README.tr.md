@@ -32,10 +32,10 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
 <table>
   <tr>
     <td width="40%" valign="top">
-      <img src="docs/screenshots/needs-attention.png" alt="Bekleyenler: İzin Ver ve Reddet düğmeli izin istemi, bir soru ve biten bir oturum">
+      <img src="docs/screenshots/needs-attention.png" alt="Seni bekleyen: İzin Ver ve Reddet düğmeli izin istemi, bir soru ve biten bir oturum">
     </td>
     <td valign="top">
-      <b>Bekleyenler.</b> Seni bekleyen oturumlar, en acil olan önce:
+      <b>Seni bekleyen.</b> Seni bekleyen oturumlar, en acil olan önce, kenar çubuğunun altındaki tepside:
       <ul>
         <li>🔴 <b>İzin bekliyor</b>: tam komutla birlikte, tek tıkla İzin Ver / Reddet.</li>
         <li>🔴 <b>Soru soruyor</b>: sorunun kendisiyle.</li>
@@ -120,7 +120,7 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
       <ul>
         <li>Saatte bir, her gün, hafta içi her gün ya da haftada bir; istersen yalnızca <b>Şimdi Çalıştır</b> (Run Now) ile.</li>
         <li>Proje klasöründe ya da her seferinde yeni bir git worktree'sinde çalışır. Hazır şablonlardan başlayabilirsin.</li>
-        <li>Her çalışmanın geçmişi, oturumuna bağlantısıyla. İzin istemleri her oturumda olduğu gibi Bekleyenler'e düşer.</li>
+        <li>Her çalışmanın geçmişi, oturumuna bağlantısıyla. İzin istemleri her oturumda olduğu gibi "Seni bekleyen" tepsisine düşer.</li>
       </ul>
       Otomasyonlar yalnızca ClaudeDeck açıkken çalışır.
     </td>
@@ -318,7 +318,7 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
 - **Bildirim:** izin / soru / bitti durumlarında, mesajla (hangi araç, hangi komut/dosya). Terminal zaten
   ekrandaysa (görünen bir bölmede) gösterilmez. Esc ya da ret gibi senin yaptığın şeyler için bildirim yok.
   Tıklayınca uygulama öne gelir ve o oturum seçilir.
-- **İzin ver / Reddet:** bildirimde, "Bekleyenler" satırında, bölme başlığında ve sağ tık menüsünde. Hook'lara
+- **İzin ver / Reddet:** bildirimde, "Seni bekleyen" tepsisinde, bölme başlığında ve sağ tık menüsünde. Hook'lara
   ve terminalde cevaplamaya dokunulmaz: uygulama senin basacağın tuşu terminale yazar (onay = `1`, ret = Esc).
   Yalnızca oturum hâlâ aynı izin isteminde bekliyorsa gönderilir; sorular ve plan onayı (ExitPlanMode) hariç.
 - **Dock:** rozet = bekleyen oturum sayısı; izin/soruda sen dönene kadar, bitince bir kez zıplar.

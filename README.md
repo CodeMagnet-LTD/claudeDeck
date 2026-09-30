@@ -30,10 +30,10 @@ ClaudeDeck doesn't wrap, imitate or screen-scrape Claude. Every session runs **y
 <table>
   <tr>
     <td width="40%" valign="top">
-      <img src="docs/screenshots/needs-attention.png" alt="Needs Attention: a permission prompt with Allow and Deny, a question, and a finished session">
+      <img src="docs/screenshots/needs-attention.png" alt="Waiting for you: a permission prompt with Allow and Deny, a question, and a finished session">
     </td>
     <td valign="top">
-      <b>Needs Attention.</b> Sessions that are waiting on you, most urgent first:
+      <b>Waiting for you.</b> Sessions that are waiting on you, most urgent first, in a tray at the bottom of the sidebar:
       <ul>
         <li>🔴 <b>Needs permission</b>, with the exact command and one-click Allow / Deny.</li>
         <li>🔴 <b>Asking a question</b>, with the question itself.</li>
@@ -118,7 +118,7 @@ ClaudeDeck doesn't wrap, imitate or screen-scrape Claude. Every session runs **y
       <ul>
         <li>Every hour, every day, every weekday or every week, or only with <b>Run Now</b>.</li>
         <li>Run in the project folder or in a fresh git worktree each time. Templates to start from.</li>
-        <li>A history of every run, with a link to its session. Permission prompts show up in Needs Attention like any other session.</li>
+        <li>A history of every run, with a link to its session. Permission prompts show up in the Waiting for you tray like any other session.</li>
       </ul>
       Automations run only while ClaudeDeck is running.
     </td>
@@ -298,7 +298,7 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
   command or file.
   - Skipped when that terminal is already visible, and for things you did yourself, like Esc or Deny.
   - Clicking one brings the app forward and selects that session.
-- **Allow / Deny** appears in the notification, the Needs Attention row, the pane header and the context menu.
+- **Allow / Deny** appears in the notification, the Waiting for you tray, the pane header and the context menu.
   - The app types the key you would press (Allow = `1`, Deny = Esc).
   - It only sends it if the session is still waiting on the same prompt.
   - Questions and plan approval (ExitPlanMode) are excluded.
