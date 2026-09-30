@@ -20,8 +20,8 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
 ![Kenar çubuğu, yan yana iki oturum ve Dosyalar paneliyle ClaudeDeck](docs/screenshots/main.png)
 
 **Bütün oturumlar için tek pencere.** Görüntüde neler var:
-- **Kenar çubuğu (solda):** tüm projeler ve oturumlar, gruplarıyla. Seni bekleyen her şey en üstteki
-  **Needs Attention** (Bekleyenler) bölümüne çıkar. `PR #42` ve `#118`, oturumlara bağlanmış GitHub pull
+- **Kenar çubuğu (solda):** tüm projeler ve oturumlar, gruplarıyla. Seni bekleyen her şey alttaki
+  **Seni bekleyen** tepsisinde görünür (⌘J ile sıradakine atlarsın). `PR #42` ve `#118`, oturumlara bağlanmış GitHub pull
   request'i ve issue'sudur; renkleri durumlarını gösterir.
 - **İki bölme (ortada):**
   - Solda, bir Bash komutu için izin bekleyen oturum. Bölme başlığındaki **Allow / Deny** ile ya da her
@@ -328,15 +328,37 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
   (`claudedeck://session/<uuid>`). Veri App Group kapsayıcısından okunur.
 
 ### Sidebar
-- **Bekleyenler:** izin isteyen, soru soran ya da bitip henüz bakmadığın oturumlar en üstte, proje adı ve
-  mesajla; izin bekleyenler kırmızı zeminli.
-- **Durum etiketleri:** 🟢 Çalışıyor (akan noktalar), 🔴 İzin bekliyor / Soru soruyor (nabız), 🟡 Sıra sende,
-  ⚪️ Durdu, 🔵 Terminal; durum değişince satır kısa bir an parlar.
-- **Projeler:** "Sabitlenenler" ve "Projeler". Gruplar "Projeler" içinde klasör gibi durur (yalnızca başlığı
-  grubun rengiyle tonlu). Bekleyen ya da aktif oturumu olan projeler/gruplar üste çıkar. Aktif oturumu
-  olmayan projeler kapalı başlar; bekleyen oturumu olan proje/grup kendiliğinden açılır. Projeye tıklamak
-  son oturumunu açar ve Dosyalar panelini o projeye çevirir.
-- **Gruplar:** "Projeler" başlığındaki **+** › "Yeni grup…" (proje seçmeden). Grubun **+**'sı ya da sağ tık
+- **Satırlar yerinde kalır.** Bir durum değişti diye kenar çubuğu kendini yeniden sıralamaz; durum
+  satırın kendisinde görünür (nokta, etiket, rozetler).
+  - Önce **Sabitlenenler**, sonra **Aktif** (terminali açık projeler ve gruplar, aktif oldukları sırayla),
+    en altta **Pasif** (geri kalan her şey, kayıtlı sırasıyla, katlanabilir). Başlıklarda sayılar yazar.
+  - Bir projenin Aktif'e girmesi ya da çıkması, ya da kendiliğinden eklenen bir oturum (otomasyonlar,
+    iCloud eşitlemesi) imleç kenar çubuğunun üstündeyken bekletilir; imleç çıktıktan ya da son
+    tıklamandan 1,5 sn sonra uygulanır. Böylece tam tıklarken satır kaymaz. Senin yaptıkların (tıklama,
+    menüler, sürükleme, filtre, açıp kapatma) hemen uygulanır.
+  - Gruplar ve projeler yalnızca sen açıp kapatınca açılır/kapanır. Kapalıyken rozet gösterirler:
+    🔴 seni bekliyor, 🟢 çalışıyor, 🟡 bitti ama henüz bakmadın.
+- **Seni bekleyen:** kenar çubuğunun altına yerleşik bir tepsi; bekleyen bir şey yoksa görünmez. İzin
+  isteyen ya da soru soran oturumlar (kırmızı, en önde) ve sen bakmazken biten oturumlar gelince kısa bir
+  animasyonla yukarı kayar; mesajı ve **İzin Ver** / **Reddet** düğmeleri de oradadır. Üstteki listeyi
+  kaydırmaz, kendi kaydırması vardır (kenar çubuğunun en fazla ~%40'ı) ve oku ile katlanır. Bir satıra
+  tıklamak o oturumu seçer ve listede ona kaydırır.
+- **⌘J** (Pencere › Seni Bekleyen Sonraki Oturum) tepsideki sırayla bir sonraki bekleyen oturumu seçer,
+  Oturumlar sekmesine geçer ve gerekirse projesini ya da grubunu açıp ona kaydırır. Bekleyen yoksa bip
+  sesi çıkar.
+- **Filtre** en üstte: **Tümü | Bekleyen N | Çalışan N**. Bekleyen = seni bekleyen oturumlar; Çalışan =
+  çalışan ya da izin/cevap bekleyen oturumlar. Filtre geri kalan her şeyi (Pasif dahil) gizler ve
+  hatırlanır.
+- **Tek oturumlu proje tek satır:** durum noktası, proje adı (oturumun adı bir şey anlatıyorsa o da),
+  durum etiketi, ayrıntı ve süre. Sağ tık menüsünde oturumun öğeleri, **Proje** altında da projenin
+  öğeleri var; üzerine gelince **+** menüsü çıkar. Birden fazla oturumu ya da worktree oturumu olan
+  projeler başlık + altında oturumlar olarak kalır.
+- **Durum etiketleri:** 🟢 Çalışıyor (akan noktalar), 🔴 İzin bekliyor / Soru soruyor (nabız), 🟡 Sıra sende
+  (yalnızca sen bakana kadar; sonra sessizleşir: içi boş gri nokta ve süre, etiket yok), ⚪️ Durdu,
+  🔵 Terminal; durum değişince satır kısa bir an parlar.
+- Proje başlığına tıklamak son oturumunu açar ve Dosyalar panelini o projeye çevirir; tek oturumlu satıra
+  tıklamak o oturumu seçer (gerekirse devam ettirir).
+- **Gruplar:** "Aktif" başlığındaki **+** › "Yeni grup…" (proje seçmeden). Grubun **+**'sı ya da sağ tık
   menüsü › "Projeleri seç…" ile çoklu atama, "Bu gruba proje ekle…" ile klasör seçerek ekleme. Renk ve ad
   sağ tıkla değişir.
 - Onay/isim soruları pencerenin içinde (sheet) açılır; silme işlemleri "Emin misin?" diye sorar.

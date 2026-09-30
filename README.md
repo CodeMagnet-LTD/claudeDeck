@@ -17,8 +17,8 @@ ClaudeDeck doesn't wrap, imitate or screen-scrape Claude. Every session runs **y
 ![ClaudeDeck with the sidebar, two sessions side by side and the Files panel](docs/screenshots/main.png)
 
 **One window for every session.** Here's what the screenshot shows:
-- **Sidebar (left):** every project and session, grouped. Anything that needs you is pulled up into
-  **Needs Attention** at the top. `PR #42` and `#118` are linked GitHub pull requests and issues,
+- **Sidebar (left):** every project and session, grouped. Anything that needs you shows up in the
+  **Waiting for you** tray at the bottom (⌘J jumps to it). `PR #42` and `#118` are linked GitHub pull requests and issues,
   colored by their state.
 - **Two panes (middle):**
   - On the left, a session waiting for permission to run a Bash command. You can answer with
@@ -311,22 +311,42 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
   - Clicking one opens that session (`claudedeck://session/<uuid>`).
 
 ### Sidebar
-- **Needs Attention:** sessions asking for permission, asking a question, or finished but not yet seen
-  sit at the top with project name and message. Permission prompts are highlighted in red.
+- **Rows stay put.** The sidebar never reorders itself because a status changed; the status shows in
+  place (dot, tag, badges).
+  - **Pinned**, then **Active** (projects and groups with a running terminal, in the order they became
+    active), then **Inactive** (everything else, in its saved order, collapsible). Headers show counts.
+  - A project entering or leaving Active, or a session appearing on its own (automations, iCloud sync),
+    waits while the pointer is over the sidebar and for 1.5 s after it leaves or after your last click,
+    so a row never jumps away just as you click it. What you do yourself (clicking, menus, dragging,
+    the filter, opening and closing) applies right away.
+  - Groups and projects only open and close when you do it. Closed ones show badges: 🔴 waiting on you,
+    🟢 working, 🟡 finished and not seen yet.
+- **Waiting for you:** a tray docked at the bottom of the sidebar, hidden when nothing needs you. It
+  slides up with the sessions asking for permission or a question (red, first) and the ones that finished
+  while you weren't looking, with the message and **Allow** / **Deny** buttons. It never moves the list
+  above, has its own scroll (up to ~40% of the sidebar) and folds away with its chevron. Clicking a row
+  selects the session and scrolls the list to it.
+- **⌘J** (Window › Next Session Waiting for You) selects the next waiting session in tray order, shows
+  the Sessions tab and scrolls to it, opening its project or group if needed. It beeps when nothing is
+  waiting.
+- **Filter** at the top: **All | Waiting N | Working N**. Waiting = sessions that need you; Working =
+  running or blocked sessions. A filter hides everything else, including Inactive. It is remembered.
+- **One row per single-session project:** status dot, project name (plus the session's name when it says
+  more), status tag, detail and time. Right-click has the session's menu and the project's under
+  **Project**; hover for the **+** menu. Projects with several sessions or a worktree session keep a
+  header with their sessions below.
 - **Status tags:**
   - 🟢 Running (flowing dots)
   - 🔴 Needs permission / Asking a question (pulsing)
-  - 🟡 Your turn
+  - 🟡 Your turn — only until you've looked at it. After that it's quiet: a hollow grey dot and the time,
+    no tag.
   - ⚪️ Stopped
   - 🔵 Terminal
 
   A row briefly glows when its state changes.
-- **Projects:** "Pinned" and "Projects" sections.
-  - Groups sit inside "Projects" like folders.
-  - Projects and groups with waiting or active sessions move up, and ones with a waiting session expand
-    automatically.
-  - Clicking a project opens its latest session and points the Files panel at it.
-- **Groups:** "Projects" header **+** › New Group….
+- Clicking a project header opens its latest session and points the Files panel at it; clicking a
+  single-session row selects (and if needed resumes) that session.
+- **Groups:** "Active" header **+** › New Group….
   - Assign several projects at once with Choose Projects….
   - Change a group's color and name from its context menu.
 
