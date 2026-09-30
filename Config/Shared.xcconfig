@@ -9,8 +9,8 @@ DEVELOPMENT_TEAM = V6G4B5T63L
 DECK_BUNDLE_PREFIX = co.codemagnet
 
 // Single source of truth for the version (release.sh tags v$(MARKETING_VERSION)).
-MARKETING_VERSION = 0.2.0
-CURRENT_PROJECT_VERSION = 4
+MARKETING_VERSION = 0.2.1
+CURRENT_PROJECT_VERSION = 5
 
 #include? "Local.xcconfig"
 
