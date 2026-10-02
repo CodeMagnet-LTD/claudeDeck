@@ -192,8 +192,11 @@ Billing, usage limits and sign-in stay entirely with Claude Code. ClaudeDeck doe
 - 🔀 **Changes (⌘⇧G):** stage, unstage and discard by file or hunk, commit, push and pull, with a commit
   message written by Claude.
 - 🐙 **GitHub links:** attach an issue or pull request to a session and see its state, reviews and CI;
-  get notified when they change. Uses your `gh` CLI.
-- ⏰ **Automations:** scheduled prompts (hourly, daily, weekdays, weekly) with Run Now and a run history.
+  get notified when they change. **Fix with Claude** sends a failed CI job's log to the session. Uses your `gh` CLI.
+- 📥 **GitHub Inbox:** the open issues and pull requests of a project's repository (all, assigned to you,
+  review requested); **Start Work** opens a linked Claude session that works on the item.
+- ⏰ **Automations:** scheduled prompts (hourly, daily, weekdays, weekly) or GitHub triggers (new issue, new
+  pull request) with Run Now and a run history.
 - 🔄 **Restart Session (⌥⌘R):** quits `claude` and resumes the same conversation, so new MCP servers and
   settings take effect.
 - ✏️ **Pencil (pen.dev):** sessions ClaudeDeck starts can use Pencil's design tools, and `.pen` files open in Pencil.
@@ -426,12 +429,29 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
   comments. **Send to Claude** types the link into the session; **Add Comment…** posts a comment.
 - ClaudeDeck checks linked items every minute while it is in front, and notifies you when a pull request is
   merged or closed, CI fails or passes, a review arrives, or new comments come in.
+- When checks fail, the popover lists them. **Fix with Claude** on a GitHub Actions job fetches its failing log
+  (`gh run view --log-failed`, the last part of it) and sends it to the session with an instruction to fix the
+  failure. A job gets the button once; a re-run that fails again can be fixed again.
 - Everything goes through your own `gh` CLI and its login. Without `gh`, the popover explains how to set it up.
+
+### GitHub Inbox
+- Open it from the tray button at the bottom of the sidebar or File › GitHub Inbox…. It opens as a tab.
+- Pick a project: the Inbox lists the open issues or pull requests of its GitHub repository: all of them,
+  the ones assigned to you, or pull requests waiting for your review. It refreshes every 90 seconds while
+  the tab is showing.
+- Select an item for its description, labels, CI checks and latest activity. **Start Work** creates a Claude
+  session in the project (or in a new git worktree), links the item to it and asks Claude to work on it.
+  Failed checks of a pull request have **Fix with Claude** here too (sent to the linked session, or a new one).
 
 ### Automations
 - Open them from the clock button at the bottom of the sidebar, File › Automations… or the menu bar. They open as a tab.
-- An automation is a prompt, a project and one or more schedules: every hour at a minute, every day, every
-  weekday, or every week at a time. Without a schedule, it runs only with **Run Now**.
+- An automation is a prompt, a project and one or more triggers: every hour at a minute, every day, every
+  weekday, or every week at a time. Without a trigger, it runs only with **Run Now**.
+- GitHub triggers start a run when a **new issue** or **new pull request** is opened in the project's
+  repository, optionally only with a label or from an author. ClaudeDeck checks every 2 minutes with your `gh`;
+  items that were already open when the trigger started watching never run it, and each item runs once. The
+  run's prompt is the automation's prompt followed by the item's number, title and link, and the item is
+  linked to the run's session.
 - Each run starts a Claude session in the project folder or in a new git worktree, and either starts fresh or
   continues the last run's session.
 - Templates: Find critical bugs, Audit dependencies, Test health, Triage TODOs, Weekly changelog.
@@ -563,14 +583,14 @@ notification permissions again after every build.
   - Persistence (`DeckData`)
   - File listing and git (`FileListing`, `Git`, `GitChanges`, `GitExplorer`, `UnifiedDiff`)
   - Tabs (`WorkspaceTabList`), editor text and syntax (`TextFileIO`, `SyntaxTokenizer`)
-  - GitHub via `gh` (`GitHub`, `GitHubLink`), automations (`Automations`), restart and Pencil
+  - GitHub via `gh` (`GitHub`, `GitHubLink`, `GitHubInbox`), automations (`Automations`, `AutomationEvents`), restart and Pencil
     (`SessionRestart`, `PencilIntegration`)
   - iCloud (`DeckSync`) and the widget snapshot (`WidgetSnapshot`)
 - `Sources/ClaudeDeck/`: the SwiftUI app.
   - `AppModel` and `TerminalRegistry` (SwiftTerm, processes)
   - Views: `SidebarView`, `ContentView` (panes), `WorkspaceTabs` / `TabStrip`, `EditorWindow` /
     `CodeTextView`, `FileBrowser` / `ExplorerSearch`, `ChangesView` / `DiffTab`, `AutomationsView`,
-    `GitHubLinkViews`, `MenuBarViews`, `SettingsView`
+    `GitHubLinkViews`, `InboxView`, `MenuBarViews`, `SettingsView`
   - `GitHubMonitor`, `AutomationScheduler`, `AppModel+Restart`, `PencilApp`
   - `AttentionCenter` (notifications, Dock) and `PermissionActions`
   - `WidgetBridge` and `DeckSyncController`

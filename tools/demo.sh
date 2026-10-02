@@ -143,11 +143,25 @@ EOF
 mkdir -p "$ROOT/github"
 cat > "$ROOT/bin/gh" <<'EOF'
 #!/bin/sh
-# Demo stand-in for the GitHub CLI: answers `auth status` and `pr|issue view N` from fixture files.
+# Demo stand-in for the GitHub CLI: answers `auth status`, `pr|issue view N`, `pr|issue list`,
+# `repo view` and `run view --log-failed` from fixture files.
 D="$(dirname "$0")/../github"
 case "$1 $2" in
   "auth status") exit 0 ;;
   "pr view"|"issue view") [ -f "$D/$1-$3.json" ] && exec cat "$D/$1-$3.json" ;;
+  "repo view")
+    case "$(basename "$PWD")" in
+      acme-storefront) echo acme/storefront; exit 0 ;;
+      payments-api) echo acme/payments-api; exit 0 ;;
+    esac ;;
+  "pr list"|"issue list")
+    case " $* " in *" --head "*) ;; *)
+      f="$D/$1-list.json"
+      case " $* " in *"@me"*) f="$D/$1-list-me.json" ;; esac
+      [ -f "$f" ] && exec cat "$f"
+      echo "[]"; exit 0 ;;
+    esac ;;
+  "run view") [ -f "$D/run-log.txt" ] && exec cat "$D/run-log.txt" ;;
 esac
 echo "demo gh: no fixture for: $*" >&2
 exit 1
@@ -173,7 +187,8 @@ cat > "$ROOT/github/pr-42.json" <<EOF
     { "__typename": "CheckRun", "name": "lint", "status": "COMPLETED", "conclusion": "SUCCESS" },
     { "__typename": "CheckRun", "name": "unit tests", "status": "COMPLETED", "conclusion": "SUCCESS" },
     { "__typename": "CheckRun", "name": "build", "status": "COMPLETED", "conclusion": "SUCCESS" },
-    { "__typename": "CheckRun", "name": "e2e (chromium)", "status": "COMPLETED", "conclusion": "FAILURE" }
+    { "__typename": "CheckRun", "name": "e2e (chromium)", "workflowName": "CI", "status": "COMPLETED", "conclusion": "FAILURE",
+      "detailsUrl": "https://github.com/acme/storefront/actions/runs/9001/job/9002" }
   ] }
 EOF
 cat > "$ROOT/github/issue-118.json" <<EOF
@@ -190,6 +205,32 @@ cat > "$ROOT/github/pr-7.json" <<EOF
   "reviewDecision": "APPROVED", "comments": [], "latestReviews": [],
   "statusCheckRollup": [ { "__typename": "CheckRun", "name": "swift test", "status": "COMPLETED", "conclusion": "SUCCESS" } ] }
 EOF
+cat > "$ROOT/github/issue-list.json" <<EOF
+[ { "number": 51, "title": "Cart total ignores shipping for EU addresses", "author": { "login": "jordan" },
+    "labels": [ { "name": "bug", "color": "d73a4a" } ], "createdAt": "$(ago 2H)", "updatedAt": "$(ago 1H)",
+    "url": "https://github.com/acme/storefront/issues/51" },
+  { "number": 37, "title": "Coupon codes at checkout", "author": { "login": "sam" },
+    "labels": [ { "name": "feature", "color": "1d76db" } ], "createdAt": "$(ago 3d)", "updatedAt": "$(ago 3H)",
+    "url": "https://github.com/acme/storefront/issues/37" } ]
+EOF
+cat > "$ROOT/github/issue-list-me.json" <<EOF
+[ { "number": 51, "title": "Cart total ignores shipping for EU addresses", "author": { "login": "jordan" },
+    "labels": [ { "name": "bug", "color": "d73a4a" } ], "createdAt": "$(ago 2H)", "updatedAt": "$(ago 1H)",
+    "url": "https://github.com/acme/storefront/issues/51" } ]
+EOF
+cat > "$ROOT/github/issue-51.json" <<EOF
+{ "number": 51, "title": "Cart total ignores shipping for EU addresses", "state": "OPEN",
+  "url": "https://github.com/acme/storefront/issues/51", "author": { "login": "jordan" },
+  "updatedAt": "$(ago 1H)", "labels": [ { "name": "bug", "color": "d73a4a" } ],
+  "body": "With a German address the cart shows the **subtotal** as the total. \`shippingFor(country:)\` returns 0 for EU codes.",
+  "comments": [ { "id": "c51", "author": { "login": "alex" }, "body": "Reproduced with DE and FR.", "createdAt": "$(ago 1H)" } ] }
+EOF
+cat > "$ROOT/github/pr-list.json" <<EOF
+[ { "number": 42, "title": "Coupon codes in the cart", "author": { "login": "alex" }, "isDraft": false,
+    "labels": [ { "name": "feature", "color": "1d76db" } ], "createdAt": "$(ago 1d)", "updatedAt": "$(ago 25M)",
+    "url": "https://github.com/acme/storefront/pull/42" } ]
+EOF
+printf 'e2e (chromium)\tRun tests\t2026-01-01T10:00:00.0000000Z FAIL checkout.spec.ts > applies WELCOME10\ne2e (chromium)\tRun tests\t2026-01-01T10:00:00.0000000Z Expected: 90.00  Received: 100.00\n' > "$ROOT/github/run-log.txt"
 
 # --- deck.json ----------------------------------------------------------------------------------
 G1=A0000000-0000-0000-0000-000000000001

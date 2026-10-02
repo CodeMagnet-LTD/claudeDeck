@@ -192,8 +192,11 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
 - 🔀 **Değişiklikler (⌘⇧G):** dosya ya da hunk bazında stage / unstage / discard, commit, push ve pull; commit
   mesajını Claude yazar.
 - 🐙 **GitHub bağlantıları:** bir oturuma issue ya da pull request bağla; durumunu, review'ları ve CI'ı gör,
-  değişince bildirim al. Senin `gh` CLI'ını kullanır.
-- ⏰ **Otomasyonlar:** zamanlanmış prompt'lar (saatlik, günlük, hafta içi, haftalık), Run Now ve çalışma geçmişi.
+  değişince bildirim al. **Claude ile Düzelt**, başarısız bir CI işinin log'unu oturuma gönderir. Senin `gh` CLI'ını kullanır.
+- 📥 **GitHub Gelen Kutusu:** bir projenin deposundaki açık issue'lar ve pull request'ler (hepsi, sana atananlar,
+  incelemen istenenler); **Çalışmaya Başla** öğeye bağlı, onun üzerinde çalışan bir Claude oturumu açar.
+- ⏰ **Otomasyonlar:** zamanlanmış (saatlik, günlük, hafta içi, haftalık) ya da GitHub olaylarıyla (yeni issue,
+  yeni pull request) tetiklenen prompt'lar; Run Now ve çalışma geçmişi.
 - 🔄 **Oturumu Yeniden Başlat (⌥⌘R):** `claude`'dan çıkıp aynı konuşmaya geri döner; yeni MCP sunucuları ve
   ayarlar devreye girer.
 - ✏️ **Pencil (pen.dev):** ClaudeDeck'in başlattığı oturumlar Pencil'ın tasarım araçlarını kullanabilir;
@@ -434,13 +437,30 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
   görünür. **Claude'a Gönder** bağlantıyı oturuma yazar, **Yorum Ekle…** yorum gönderir.
 - ClaudeDeck öndeyken bağlı öğeleri dakikada bir kontrol eder; pull request merge edilince ya da kapanınca,
   CI kırılınca ya da düzelince, review ya da yeni yorum gelince bildirim gönderir.
+- Kontroller başarısız olunca açılır pencere onları listeler. Bir GitHub Actions işinde **Claude ile Düzelt**,
+  işin başarısız log'unu (`gh run view --log-failed`, son kısmı) alır ve hatayı düzeltme talimatıyla oturuma
+  gönderir. Her iş için düğme bir kez çıkar; yeniden çalıştırılıp yine başarısız olan iş tekrar düzeltilebilir.
 - Her şey senin `gh` CLI'ın ve onun oturumu üzerinden gider. `gh` yoksa açılır pencere nasıl kurulacağını anlatır.
+
+### GitHub Gelen Kutusu
+- Kenar çubuğunun altındaki tepsi düğmesinden ya da Dosya › "GitHub Gelen Kutusu…" menüsünden açılır; sekme olarak gelir.
+- Bir proje seç: Gelen Kutusu, projenin GitHub deposundaki açık issue'ları ya da pull request'leri listeler:
+  hepsini, sana atananları ya da incelemeni bekleyen pull request'leri. Sekme görünürken 90 saniyede bir yenilenir.
+- Bir öğe seçince açıklaması, etiketleri, CI kontrolleri ve son etkinliği görünür. **Çalışmaya Başla**, projede
+  (ya da yeni bir git worktree'sinde) bir Claude oturumu açar, öğeyi ona bağlar ve Claude'dan üzerinde
+  çalışmasını ister. Pull request'lerin başarısız kontrollerinde burada da **Claude ile Düzelt** var (bağlı
+  oturuma ya da yeni bir oturuma gider).
 
 ### Otomasyonlar
 - Kenar çubuğunun altındaki saat düğmesinden, Dosya › "Otomasyonlar…" menüsünden ya da menü çubuğundan
   açılır; sekme olarak gelir.
-- Bir otomasyon; bir prompt, bir proje ve bir ya da daha fazla zamanlamadır: her saat belirli bir dakikada,
-  her gün, hafta içi her gün ya da haftada bir belirli saatte. Zamanlama yoksa yalnızca **Şimdi Çalıştır** ile çalışır.
+- Bir otomasyon; bir prompt, bir proje ve bir ya da daha fazla tetikleyicidir: her saat belirli bir dakikada,
+  her gün, hafta içi her gün ya da haftada bir belirli saatte. Tetikleyici yoksa yalnızca **Şimdi Çalıştır** ile çalışır.
+- GitHub tetikleyicileri, projenin deposunda **yeni bir issue** ya da **yeni bir pull request** açıldığında
+  (istersen yalnızca belirli bir etiketle ya da belirli bir yazardan) çalışma başlatır. ClaudeDeck senin `gh`'inle
+  2 dakikada bir bakar; tetikleyici izlemeye başladığında zaten açık olan öğeler onu hiç çalıştırmaz, her öğe
+  bir kez çalışır. Çalışmanın prompt'u, otomasyonun prompt'u ve ardından öğenin numarası, başlığı ve
+  bağlantısıdır; öğe, çalışmanın oturumuna bağlanır.
 - Her çalışma proje klasöründe ya da yeni bir git worktree'sinde bir Claude oturumu başlatır; ya sıfırdan
   başlar ya da önceki çalışmanın oturumuna devam eder.
 - Şablonlar: Kritik hataları bul, Bağımlılıkları denetle, Test sağlığı, TODO'ları ayıkla, Haftalık değişiklik günlüğü.
@@ -529,12 +549,12 @@ profili gerekir. İkisi de yalnızca yerel anahtar zincirinde durur, repoda hiç
   (`HookScript`, `HookInstaller`), durum modeli (`SessionState`, `StatusDirectory`), transcript okuma
   (`Transcript`), kalıcı veri (`DeckData`), dosya listeleme ve git (`FileListing`, `Git`, `GitChanges`,
   `GitExplorer`, `UnifiedDiff`), sekmeler (`WorkspaceTabList`), editör metni ve sözdizimi (`TextFileIO`,
-  `SyntaxTokenizer`), `gh` ile GitHub (`GitHub`, `GitHubLink`), otomasyonlar (`Automations`), yeniden
+  `SyntaxTokenizer`), `gh` ile GitHub (`GitHub`, `GitHubLink`, `GitHubInbox`), otomasyonlar (`Automations`, `AutomationEvents`), yeniden
   başlatma ve Pencil (`SessionRestart`, `PencilIntegration`), iCloud (`DeckSync`), widget özeti (`WidgetSnapshot`).
 - `Sources/ClaudeDeck/` — SwiftUI uygulaması: `AppModel`, `TerminalRegistry` (SwiftTerm, süreçler),
   `SidebarView`, `ContentView` (bölmeler), `WorkspaceTabs` / `TabStrip`, `EditorWindow` / `CodeTextView`,
   `FileBrowser` / `ExplorerSearch`, `ChangesView` / `DiffTab`, `AutomationsView` / `AutomationScheduler`,
-  `GitHubLinkViews` / `GitHubMonitor`, `AppModel+Restart`, `PencilApp`, `AttentionCenter` (bildirim/Dock),
+  `GitHubLinkViews` / `GitHubMonitor` / `InboxView` / `GitHubEventPoller`, `AppModel+Restart`, `PencilApp`, `AttentionCenter` (bildirim/Dock),
   `PermissionActions`, `MenuBarViews`, `SettingsView`, `WidgetBridge`, `DeckSyncController`.
 - `Widget/` — WidgetKit uzantısı. `tools/make-icon.swift` — ikon üretici.
 - `Tests/ClaudeDeckCoreTests/` — birim testleri (gerçek hook betiği ve gerçek git deposu dahil).
