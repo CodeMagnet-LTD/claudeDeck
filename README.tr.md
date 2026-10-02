@@ -190,7 +190,7 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
 - 📑 **Sekmeler ve yerleşik düzenleyici:** dosyalar, diff'ler ve Otomasyonlar oturumlarının yanında sekme olarak
   açılır. Sözdizimi renkli, bul-değiştirli hafif bir düzenleyici; "Claude'a Ekle" ile `@yol#L10-20`.
 - 🔀 **Değişiklikler (⌘⇧G):** dosya ya da hunk bazında stage / unstage / discard, commit, push ve pull; commit
-  mesajını Claude yazar.
+  mesajını Claude yazar. Dal değiştirme ve oluşturma, commit grafiği ve worktree yönetimi.
 - 🐙 **GitHub bağlantıları:** bir oturuma issue ya da pull request bağla; durumunu, review'ları ve CI'ı gör,
   değişince bildirim al. Senin `gh` CLI'ını kullanır.
 - ⏰ **Otomasyonlar:** zamanlanmış prompt'lar (saatlik, günlük, hafta içi, haftalık), Run Now ve çalışma geçmişi.
@@ -404,6 +404,17 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
 - ✨ **Commit mesajını Claude ile oluştur:** senin `claude`'un (`claude -p`) stage edilmiş diff'i okuyup mesajı yazar.
 - Diff'te bir satıra sağ tık › **Claude'a bu satırı sor…**, sorunla birlikte `@yol#L<satır>`'ı seçili
   oturuma gönderir. Aynı menüde "Satırı kopyala" ve "Dosyayı aç" da var.
+- Dal adına tıklayınca dal değiştirebilirsin: yerel ve uzak dallar aranabilir bir listede, yanında
+  **Geçerli HEAD'den dal oluştur…** (ad git'in kurallarına göre denetlenir). Uzak bir dal, onu izleyen yerel bir
+  dal olarak açılır. Commit edilmemiş değişiklik varsa **Stash'e al ve geç** önerilir; stash, sonra uygulaman
+  için saklanır.
+- Dal satırındaki saat menüsü iki sekme açar:
+  - **Geçmiş:** HEAD, upstream dalı ve varsayılan dal için şeritli bir commit grafiği (son 500 commit, dal ve
+    etiket adlarıyla). Bir commit'e tıklayınca mesajı, değişen dosyaları ve her dosyanın diff'i görünür.
+  - **Worktree'ler:** deponun bütün worktree'leri (`git worktree list`); dalı, commit edilmemiş değişiklikleri
+    ve onu kullanan ClaudeDeck oturumlarıyla. İçinde oturum başlatabilir ya da oturumu gösterebilir, Finder'da
+    açabilir, kaldırabilir (önce sorar; commit edilmemiş değişikliği varsa **Yine de kaldır** ile uyarır; ana
+    çalışma ağacı kaldırılamaz) ya da eskimiş kayıtları temizleyebilirsin.
 
 ### Dosyalar paneli (⌘⇧E)
 - Sidebar'da son tıkladığın projenin (ya da seçili oturumun; worktree oturumunda worktree klasörünün) canlı

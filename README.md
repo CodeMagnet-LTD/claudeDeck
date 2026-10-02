@@ -190,7 +190,7 @@ Billing, usage limits and sign-in stay entirely with Claude Code. ClaudeDeck doe
 - 📑 **Tabs and a built-in editor:** files, diffs and Automations open as tabs next to your sessions. A light
   code editor with syntax colors, find and replace, and "Add to Claude" for `@path#L10-20`.
 - 🔀 **Changes (⌘⇧G):** stage, unstage and discard by file or hunk, commit, push and pull, with a commit
-  message written by Claude.
+  message written by Claude. Switch and create branches, browse a commit graph and manage worktrees.
 - 🐙 **GitHub links:** attach an issue or pull request to a session and see its state, reviews and CI;
   get notified when they change. Uses your `gh` CLI.
 - ⏰ **Automations:** scheduled prompts (hourly, daily, weekdays, weekly) with Run Now and a run history.
@@ -394,6 +394,16 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
 - ✨ **Generate Commit Message:** your `claude` (`claude -p`) reads the staged diff and writes the message.
 - Right-click a line in a diff › **Ask Claude about This Line…** sends `@path#L<line>` with your question
   to the selected session. Copy Line and Open File are in the same menu.
+- Click the branch name to switch branches: local and remote branches with search, and **Create Branch from
+  Current HEAD…** (names checked against git's rules). A remote branch is checked out as a local tracking
+  branch. With uncommitted changes you're offered **Stash & Switch**; the stash is kept for you to apply later.
+- The clock menu in the branch header opens two tabs:
+  - **History:** a commit graph with lanes for HEAD, its upstream and the default branch (latest 500 commits,
+    with branch and tag labels). Click a commit for its message, changed files and each file's diff.
+  - **Worktrees:** every worktree of the repository (`git worktree list`) with its branch, uncommitted
+    changes and the ClaudeDeck sessions using it. Start or show a session in it, reveal it in Finder,
+    remove it (asks first, and warns with **Remove Anyway** when it has uncommitted changes; the main working tree
+    can't be removed) or prune stale entries.
 
 ### Files panel (⌘⇧E)
 - A live tree of the last clicked project, or the selected session's worktree.
