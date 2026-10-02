@@ -24,8 +24,8 @@ ClaudeDeck doesn't wrap, imitate or screen-scrape Claude. Every session runs **y
   - On the left, a session waiting for permission to run a Bash command. You can answer with
     **Allow / Deny** in the pane header, or in the terminal as usual.
   - Next to it, a second session in the same project, still running.
-- **Right panel:** switches between **Files** (the selected project's live file tree) and **Changes**
-  (source control).
+- **Right panel:** switches between **Files** (the selected project's live file tree), **Changes**
+  (source control) and **Agents** (the selected session's subagents: tree, timeline and live log).
 
 <table>
   <tr>
@@ -394,6 +394,15 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
 - ✨ **Generate Commit Message:** your `claude` (`claude -p`) reads the staged diff and writes the message.
 - Right-click a line in a diff › **Ask Claude about This Line…** sends `@path#L<line>` with your question
   to the selected session. Copy Line and Open File are in the same menu.
+
+### Agents (⌘⇧A)
+- The **Agents** side of the right panel (or ⌘⇧A) shows what the selected Claude session's subagents are
+  doing, read live from its transcript: a tree of the agents it launched (type, description, running / done /
+  failed / stopped, duration, tool calls and the token total Claude reports when an agent finishes), nested
+  when a subagent launches agents of its own. Click an agent to see the start of its prompt.
+- **Timeline:** one lane per agent over the last 30 minutes, with bars where it was active.
+- **Activity:** the latest tool calls and agent starts and stops; it follows new events while you're at the bottom.
+- It follows the selected session (sidebar, pane click, ⌘J); plain terminals show an empty panel.
 
 ### Files panel (⌘⇧E)
 - A live tree of the last clicked project, or the selected session's worktree.
