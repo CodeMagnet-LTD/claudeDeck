@@ -112,18 +112,20 @@ public enum TranscriptIndex {
             }
     }
 
-    /// Custom title if set, else the first real user prompt. Reads only the head of the file.
+    /// Custom title if set, else Claude's generated title, else the first real user prompt. Reads only the head of the file.
     static func title(of url: URL) -> String? {
         guard let handle = try? FileHandle(forReadingFrom: url) else { return nil }
         defer { try? handle.close() }
         let data = (try? handle.read(upToCount: 256 * 1024)) ?? Data()
         let text = String(decoding: data, as: UTF8.self)
         var firstPrompt: String?
+        var aiTitle: String?
         for line in text.split(separator: "\n") {
             guard let obj = try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any] else { continue }
             let type = obj["type"] as? String
             if type == "custom-title", let t = obj["customTitle"] as? String, !t.isEmpty { return t }
             if type == "summary", let s = obj["summary"] as? String, !s.isEmpty { return s }
+            if type == "ai-title", let t = obj["aiTitle"] as? String, !t.isEmpty { aiTitle = t }
             if firstPrompt == nil, type == "user", obj["isMeta"] as? Bool != true,
                let message = obj["message"] as? [String: Any] {
                 let candidate: String? = (message["content"] as? String)
@@ -134,6 +136,6 @@ public enum TranscriptIndex {
                 }
             }
         }
-        return firstPrompt
+        return aiTitle ?? firstPrompt
     }
 }
