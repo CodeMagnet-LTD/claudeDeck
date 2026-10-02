@@ -6,6 +6,33 @@
     <description>ClaudeDeck updates</description>
     <language>en</language>
     <item>
+      <title>ClaudeDeck 0.3.0</title>
+      <pubDate>Fri, 02 Oct 2026 21:45:54 GMT</pubDate>
+      <sparkle:version>6</sparkle:version>
+      <sparkle:shortVersionString>0.3.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/CodeMagnet-LTD/claudeDeck/releases/tag/v0.3.0</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p>ClaudeDeck 0.3.0 adds usage limits, git history and branches, a GitHub inbox, history search, Skills and a live view of each session's agents.</p>
+<h3>New</h3>
+<ul>
+<li><b>Claude usage meter.</b> Your plan's 5-hour and weekly usage with reset countdowns, under the sidebar and in the menu bar. When a session stops on the usage limit, ClaudeDeck sends it "continue" once the limit resets (Settings › Sessions to turn off).</li>
+<li><b>Agents panel (⇧⌘A).</b> A third tab next to Files and Changes that follows the session you're on: the subagents it started (type, task, status, duration, tool calls, tokens), a 30-minute timeline and a live activity log.</li>
+<li><b>Branches, History and Worktrees.</b> A branch picker on the Changes header (switch with Stash &amp; Switch, create, check out remote branches), a commit graph in a History tab, and a Worktrees page to see which session uses which worktree, open, remove or prune them.</li>
+<li><b>GitHub Inbox.</b> Open issues and pull requests of the project's repo; <b>Start Work</b> opens a Claude session linked to the item.</li>
+<li><b>Fix CI with Claude.</b> Failed checks of a linked pull request can be sent — with the failing log — to Claude in one click.</li>
+<li><b>Automations on GitHub events.</b> Trigger an automation when a new issue or pull request appears (optional label/author filter).</li>
+<li><b>History search (⇧⌘H).</b> Search every Claude conversation; double-click a result to continue it.</li>
+<li><b>Skills.</b> Browse, preview, edit and create your user, project and plugin skills.</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+<li>Clicking a session in the sidebar (or ⌘J, or the waiting tray) puts the keyboard focus in its terminal right away.</li>
+<li>"Continue where you left off." no longer stays unsent in the input while Claude is still starting up.</li>
+</ul>
+<p>Installed 0.2.x? This update arrives through <b>ClaudeDeck › Check for Updates…</b> (or on its own within a day).</p>]]></description>
+      <enclosure url="https://github.com/CodeMagnet-LTD/claudeDeck/releases/download/v0.3.0/ClaudeDeck-0.3.0.dmg" sparkle:edSignature="RfKaWBhSFxkuvZt1cFJILgbHMDfR9QTSTsC2vxSPs1cZh0ujibjW0ItekU6iXreKwI/5ecCGBVn8wecABPYRCw==" length="13789060" type="application/octet-stream"/>
+    </item>
+    <item>
       <title>ClaudeDeck 0.2.1</title>
       <pubDate>Wed, 30 Sep 2026 20:11:05 GMT</pubDate>
       <sparkle:version>5</sparkle:version>
