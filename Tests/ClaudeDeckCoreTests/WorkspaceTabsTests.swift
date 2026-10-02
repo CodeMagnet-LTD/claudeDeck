@@ -106,6 +106,19 @@ import Testing
         #expect(list.tabs == [.sessions, c, b, a])
     }
 
+    @Test func repositoryPagesAreDistinctTransientTabs() throws {
+        var list = WorkspaceTabList()
+        list.open(.repository(repo: "/r", page: .history))
+        list.open(.repository(repo: "/r", page: .worktrees))
+        list.open(.repository(repo: "/r", page: .history))
+        #expect(list.tabs.count == 3)
+        #expect(list.selected == .repository(repo: "/r", page: .history))
+        #expect(list.persistable.tabs == [.sessions])
+        #expect(list.persistable.selected == .sessions)
+        let round = try JSONDecoder().decode(WorkspaceTab.self, from: JSONEncoder().encode(WorkspaceTab.repository(repo: "/r", page: .worktrees)))
+        #expect(round == .repository(repo: "/r", page: .worktrees))
+    }
+
     @Test func commandNumbers() {
         var list = WorkspaceTabList()
         #expect(list.tab(forCommandNumber: 1) == .sessions)

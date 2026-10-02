@@ -1,4 +1,5 @@
 import AppKit
+import ClaudeDeckCore
 
 /// Development aid: when `CLAUDEDECK_SNAPSHOT_DIR` is set, periodically renders the app's own
 /// windows to PNG files there (no screen-recording permission needed).
@@ -48,7 +49,8 @@ enum DebugSnapshot {
             _ = approve ? model.approvePermission(id, expectedAt: stamp) : model.denyPermission(id, expectedAt: stamp)
         }
         // `<name>.tab`: "diff\t<dir>\t<path>\t<staged 0|1>" opens that diff tab (as a Changes click would),
-        // "file\t<path>\t<preview 0|1>" an editor tab, "automations" / "sessions" those tabs; "close-all"
+        // "file\t<path>\t<preview 0|1>" an editor tab, "repo\t<dir>\t<history|worktrees>" a repository page,
+        // "automations" / "sessions" those tabs; "close-all"
         // closes every tab but Sessions.
         for file in files where file.hasSuffix(".tab") {
             let path = (dir as NSString).appendingPathComponent(file)
@@ -58,6 +60,8 @@ enum DebugSnapshot {
                 model.tabs.open(.diff(repo: parts[1], path: parts[2], staged: parts[3] == "1"), preview: true)
             } else if parts.count == 3, parts[0] == "file" {
                 model.tabs.openFile(URL(fileURLWithPath: parts[1]), preview: parts[2] == "1")
+            } else if parts.count == 3, parts[0] == "repo", let page = RepositoryPage(rawValue: parts[2]) {
+                model.tabs.open(.repository(repo: parts[1], page: page))
             } else if parts == ["automations"] {
                 model.tabs.open(.automations)
             } else if parts == ["sessions"] {

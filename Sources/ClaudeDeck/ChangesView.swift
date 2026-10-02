@@ -158,7 +158,7 @@ final class ChangesModel {
 
     // MARK: Operations
 
-    private func perform(_ operation: @escaping @Sendable (URL) -> Git.Result,
+    func perform(_ operation: @escaping @Sendable (URL) -> Git.Result,
                          then: ((Git.Result) -> Void)? = nil) {
         guard let repo, !busy else { return }
         busy = true
@@ -405,17 +405,14 @@ private struct ChangesContent: View {
 }
 
 private struct BranchHeader: View {
+    @Environment(AppModel.self) private var model
     let changes: ChangesModel
 
     var body: some View {
         let status = changes.status
         HStack(spacing: 6) {
             Image(systemName: "arrow.triangle.branch").foregroundStyle(.secondary)
-            Text(status.branch ?? String(localized: "Detached HEAD"))
-                .font(.headline)
-                .lineLimit(1)
-                .truncationMode(.middle)
-                .help(status.upstream.map { String(localized: "Tracking \($0)") } ?? String(localized: "No upstream branch"))
+            BranchPickerButton(changes: changes)
             if status.ahead > 0 || status.behind > 0 {
                 Text("↑\(status.ahead) ↓\(status.behind)")
                     .font(.caption.monospacedDigit())
@@ -431,6 +428,15 @@ private struct BranchHeader: View {
                 .buttonStyle(.borderless)
                 .help(status.upstream == nil ? String(localized: "Publish Branch to origin") : String(localized: "Push"))
                 .disabled(changes.busy || status.branch == nil || status.isUnborn)
+            Menu {
+                Button("Show History") { model.showRepositoryPage(.history, of: changes.root.path) }
+                Button("Show Worktrees") { model.showRepositoryPage(.worktrees, of: changes.root.path) }
+            } label: { Image(systemName: "clock.arrow.trianglehead.counterclockwise.rotate.90") }
+                .menuStyle(.borderlessButton)
+                .menuIndicator(.hidden)
+                .fixedSize()
+                .help("History and Worktrees")
+                .disabled(changes.repo == nil)
             Button { changes.refresh(after: .zero) } label: { Image(systemName: "arrow.clockwise") }
                 .buttonStyle(.borderless)
                 .help("Refresh")
