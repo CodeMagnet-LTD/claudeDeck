@@ -9,10 +9,16 @@ public enum WorkspaceTab: Hashable, Codable, Sendable {
     /// A full-width Changes diff. `repo` is the Changes view's directory, `path` relative to the repo.
     case diff(repo: String, path: String, staged: Bool)
     case automations
+    /// A repository page (commit history graph, worktrees) of the repo at `repo`.
+    case repository(repo: String, page: RepositoryPage)
 
     public var fileURL: URL? {
         if case .file(let url) = self { url } else { nil }
     }
+}
+
+public enum RepositoryPage: String, Codable, Sendable, CaseIterable {
+    case history, worktrees
 }
 
 /// The open tabs, the selection and the preview tab (VS Code style: a preview is replaced by the
@@ -107,7 +113,7 @@ public struct WorkspaceTabList: Equatable, Codable, Sendable {
         copy.tabs = tabs.filter {
             switch $0 {
             case .sessions, .file, .automations: true
-            case .diff: false
+            case .diff, .repository: false
             }
         }
         if !copy.tabs.contains(selected) { copy.selected = .sessions }

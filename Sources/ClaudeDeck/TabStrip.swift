@@ -57,6 +57,7 @@ struct WorkspaceView: View {
         case .file(let url): (url.deletingLastPathComponent().path as NSString).abbreviatingWithTildeInPath
         case .diff(let repo, _, _): (repo as NSString).abbreviatingWithTildeInPath
         case .automations: ""
+        case .repository(let repo, _): (repo as NSString).abbreviatingWithTildeInPath
         }
     }
 }
@@ -81,6 +82,8 @@ private struct TabContent: View {
             if isSelected { DiffTabView(repo: repo, path: path, staged: staged) }
         case .automations:
             AutomationsView()
+        case .repository(let repo, let page):
+            if isSelected { RepositoryPageView(repo: repo, page: page) }
         }
     }
 }
@@ -231,6 +234,7 @@ private struct TabItem: View {
         case .file(let url): Image(nsImage: NSWorkspace.shared.icon(forFile: url.path)).resizable().scaledToFit()
         case .diff: Image(systemName: "plus.forwardslash.minus").foregroundStyle(.orange)
         case .automations: Image(systemName: "clock.arrow.circlepath")
+        case .repository(_, let page): Image(systemName: page.symbol)
         }
     }
 
@@ -477,6 +481,7 @@ extension WorkspaceTab {
         case .file(let url): "file:" + url.path
         case .diff(let repo, let path, let staged): "diff:\(staged ? "staged" : "worktree"):\(repo):\(path)"
         case .automations: "automations"
+        case .repository(let repo, let page): "repo:\(page.rawValue):\(repo)"
         }
     }
 
@@ -488,6 +493,7 @@ extension WorkspaceTab {
             staged ? String(localized: "\((path as NSString).lastPathComponent) (Staged)")
                 : String(localized: "\((path as NSString).lastPathComponent) (Working Tree)")
         case .automations: String(localized: "Automations")
+        case .repository(_, let page): page.title
         }
     }
 
@@ -504,6 +510,7 @@ extension WorkspaceTab {
         switch self {
         case .sessions: String(localized: "Terminal sessions (⌘1)")
         case .automations: String(localized: "Automations")
+        case .repository(let repo, let page): page.title + " — " + (repo as NSString).abbreviatingWithTildeInPath
         default: url.map { ($0.path as NSString).abbreviatingWithTildeInPath } ?? ""
         }
     }

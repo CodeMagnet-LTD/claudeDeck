@@ -137,6 +137,16 @@
         }
       }
     },
+    "%lld worktrees": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld worktree"
+          }
+        }
+      }
+    },
     "%lldd": {
       "localizations": {
         "tr": {
@@ -236,6 +246,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "5 sa"
+          }
+        }
+      }
+    },
+    "A branch named “%@” already exists.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” adlı bir dal zaten var."
           }
         }
       }
@@ -460,6 +480,16 @@
         }
       }
     },
+    "All working trees of this repository (git worktree list)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu deponun tüm çalışma ağaçları (git worktree list)"
+          }
+        }
+      }
+    },
     "Allow": {
       "localizations": {
         "tr": {
@@ -660,6 +690,16 @@
         }
       }
     },
+    "Branches": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dallar"
+          }
+        }
+      }
+    },
     "CI failed": {
       "localizations": {
         "tr": {
@@ -786,6 +826,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Manifest ve kilit dosyalarında güvenlik açığı olan, kullanılmayan ya da beklenmedik şekilde yükseltilmiş paketleri arar."
+          }
+        }
+      }
+    },
+    "Check out as a local branch tracking %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ dalını izleyen yerel bir dal olarak geç"
           }
         }
       }
@@ -959,6 +1009,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Açmak için tıklayın"
+          }
+        }
+      }
+    },
+    "Click to switch or create a branch": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dal değiştirmek veya oluşturmak için tıklayın"
           }
         }
       }
@@ -1233,6 +1293,16 @@
         }
       }
     },
+    "Copy Commit Hash": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commit hash’ini kopyala"
+          }
+        }
+      }
+    },
     "Copy Line": {
       "localizations": {
         "tr": {
@@ -1259,6 +1329,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Göreli Yolu Kopyala"
+          }
+        }
+      }
+    },
+    "Copy Subject": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlığı kopyala"
           }
         }
       }
@@ -1329,6 +1409,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "~/.claude/settings.json okunamadı: %@"
+          }
+        }
+      }
+    },
+    "Create Branch from Current HEAD…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçerli HEAD’den dal oluştur…"
           }
         }
       }
@@ -1449,6 +1539,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ayrık HEAD"
+          }
+        }
+      }
+    },
+    "Detached at %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ üzerinde (dala bağlı değil)"
           }
         }
       }
@@ -1649,6 +1749,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bitir ve Listeden Kaldır…"
+          }
+        }
+      }
+    },
+    "Enter a branch name.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir dal adı girin."
           }
         }
       }
@@ -1883,6 +1993,16 @@
         }
       }
     },
+    "HEAD, its upstream and the default branch": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HEAD, upstream dalı ve varsayılan dal"
+          }
+        }
+      }
+    },
     "Hide from the Dock when the window is closed (menu bar only)": {
       "localizations": {
         "tr": {
@@ -1899,6 +2019,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geçmiş"
+          }
+        }
+      }
+    },
+    "History and Worktrees": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmiş ve worktree’ler"
           }
         }
       }
@@ -1983,6 +2113,16 @@
         }
       }
     },
+    "It has uncommitted changes, which will be lost.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commit edilmemiş değişiklikleri var; bunlar kaybolur."
+          }
+        }
+      }
+    },
     "Its %lld sessions are ended and removed. ": {
       "localizations": {
         "tr": {
@@ -2049,6 +2189,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Son eşitleme: %@"
+          }
+        }
+      }
+    },
+    "Latest %lld commits of HEAD, its upstream and the default branch": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "HEAD, upstream dalı ve varsayılan dalın son %lld commit’i"
           }
         }
       }
@@ -2129,6 +2279,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geçerli Dalın PR'ını Bağla"
+          }
+        }
+      }
+    },
+    "Locked": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kilitli"
+          }
+        }
+      }
+    },
+    "Main": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ana"
           }
         }
       }
@@ -2273,6 +2443,16 @@
         }
       }
     },
+    "New Branch from Current HEAD": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçerli HEAD’den yeni dal"
+          }
+        }
+      }
+    },
     "New Claude Session": {
       "localizations": {
         "tr": {
@@ -2359,6 +2539,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yeni Grup…"
+          }
+        }
+      }
+    },
+    "New Session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni oturum"
           }
         }
       }
@@ -2523,6 +2713,16 @@
         }
       }
     },
+    "No commits yet": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz commit yok"
+          }
+        }
+      }
+    },
     "No description.": {
       "localizations": {
         "tr": {
@@ -2539,6 +2739,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dosya yok"
+          }
+        }
+      }
+    },
+    "No matching branches": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleşen dal yok"
           }
         }
       }
@@ -3093,6 +3303,16 @@
         }
       }
     },
+    "Prune Stale Worktrees": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eskimiş worktree kayıtlarını temizle"
+          }
+        }
+      }
+    },
     "Publish Branch to origin": {
       "localizations": {
         "tr": {
@@ -3213,6 +3433,16 @@
         }
       }
     },
+    "Remote Branches": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uzak dallar"
+          }
+        }
+      }
+    },
     "Remove": {
       "localizations": {
         "tr": {
@@ -3229,6 +3459,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "\"%@\" listeden kaldırılsın mı?"
+          }
+        }
+      }
+    },
+    "Remove Anyway": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yine de kaldır"
           }
         }
       }
@@ -3253,6 +3493,16 @@
         }
       }
     },
+    "Remove Worktree…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Worktree’yi kaldır…"
+          }
+        }
+      }
+    },
     "Remove from Group": {
       "localizations": {
         "tr": {
@@ -3269,6 +3519,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zamanlamayı kaldır"
+          }
+        }
+      }
+    },
+    "Remove the records of worktrees whose folders no longer exist (git worktree prune)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klasörü artık olmayan worktree’lerin kayıtlarını siler (git worktree prune)"
+          }
+        }
+      }
+    },
+    "Remove worktree “%@” with uncommitted changes?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commit edilmemiş değişiklikleri olan “%@” worktree’si kaldırılsın mı?"
+          }
+        }
+      }
+    },
+    "Remove worktree “%@”?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” worktree’si kaldırılsın mı?"
           }
         }
       }
@@ -3623,6 +3903,16 @@
         }
       }
     },
+    "Search branches": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dallarda ara"
+          }
+        }
+      }
+    },
     "Search files by name": {
       "localizations": {
         "tr": {
@@ -3639,6 +3929,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tümünü Seç"
+          }
+        }
+      }
+    },
+    "Select a commit to see its changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Değişikliklerini görmek için bir commit seçin"
           }
         }
       }
@@ -3763,6 +4063,16 @@
         }
       }
     },
+    "Show History": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmişi göster"
+          }
+        }
+      }
+    },
     "Show Ignored Files": {
       "localizations": {
         "tr": {
@@ -3793,6 +4103,16 @@
         }
       }
     },
+    "Show Session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturumu göster"
+          }
+        }
+      }
+    },
     "Show Sessions": {
       "localizations": {
         "tr": {
@@ -3819,6 +4139,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Çalışma ağacı değişikliklerini göster"
+          }
+        }
+      }
+    },
+    "Show Worktrees": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Worktree’leri göster"
           }
         }
       }
@@ -3973,6 +4303,16 @@
         }
       }
     },
+    "Stale": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eskimiş"
+          }
+        }
+      }
+    },
     "Start Automatically When the App Opens": {
       "localizations": {
         "tr": {
@@ -4049,6 +4389,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Başlangıç Komutu…"
+          }
+        }
+      }
+    },
+    "Stash & Switch": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stash’e al ve geç"
+          }
+        }
+      }
+    },
+    "Stash them (untracked files included) and switch to “%@”? The stash stays in the stash list until you apply it.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Değişiklikler (izlenmeyen dosyalar dahil) stash’e alınıp “%@” dalına geçilsin mi? Stash, siz uygulayana kadar stash listesinde kalır."
           }
         }
       }
@@ -4276,12 +4636,32 @@
         }
       }
     },
+    "The folder %@ is deleted. Its branch is kept.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ klasörü silinir. Dalı korunur."
+          }
+        }
+      }
+    },
     "The folder and its files are not touched.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Klasöre ve dosyalarına dokunulmaz."
+          }
+        }
+      }
+    },
+    "The main working tree can’t be removed.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ana çalışma ağacı kaldırılamaz."
           }
         }
       }
@@ -4506,6 +4886,16 @@
         }
       }
     },
+    "Uncommitted changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commit edilmemiş değişiklikler"
+          }
+        }
+      }
+    },
     "Uninstall": {
       "localizations": {
         "tr": {
@@ -4612,6 +5002,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Düzenli İfade Kullan"
+          }
+        }
+      }
+    },
+    "Used by: %@. Those sessions can’t restart without it.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kullanan oturumlar: %@. Bu oturumlar onsuz yeniden başlatılamaz."
           }
         }
       }
@@ -4726,6 +5126,16 @@
         }
       }
     },
+    "Worktrees": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Worktree’ler"
+          }
+        }
+      }
+    },
     "Wrap Lines": {
       "localizations": {
         "tr": {
@@ -4752,6 +5162,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Öğeleri çöpten geri alabilirsin."
+          }
+        }
+      }
+    },
+    "You have uncommitted changes": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Commit edilmemiş değişiklikleriniz var"
           }
         }
       }
@@ -4865,6 +5285,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "kapatıldı"
+          }
+        }
+      }
+    },
+    "feature/name": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ozellik/ad"
           }
         }
       }
@@ -5142,6 +5572,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "· güncellendi: %@"
+          }
+        }
+      }
+    },
+    "“%@” isn’t a valid branch name.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” geçerli bir dal adı değil."
           }
         }
       }
