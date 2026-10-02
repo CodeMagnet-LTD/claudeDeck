@@ -11,9 +11,11 @@ ESC=$(printf '\033')
 if [ -f "$SCENE.state" ]; then
   IFS='|' read -r STATE EVENT TOOL DETAIL < "$SCENE.state"
   sleep 1   # after the app has recorded the launch
-  jq -n --arg sid "demo-$ID" --arg tid "$ID" --argjson pid $$ --arg cwd "$PWD" \
+  TRANSCRIPT=""; [ -f "$SCENE.jsonl" ] && TRANSCRIPT="$SCENE.jsonl"
+  jq -n --arg sid "demo-$ID" --arg tid "$ID" --argjson pid $$ --arg cwd "$PWD" --arg tp "$TRANSCRIPT" \
         --arg state "$STATE" --arg event "$EVENT" --arg tool "$TOOL" --arg detail "$DETAIL" \
-        '{session_id: $sid, terminal_id: $tid, pid: $pid, cwd: $cwd, transcript_path: null,
+        '{session_id: $sid, terminal_id: $tid, pid: $pid, cwd: $cwd,
+          transcript_path: (if $tp == "" then null else $tp end),
           state: $state, event: $event, detail: $detail,
           tool_name: (if $tool == "" then null else $tool end), updated_at: now}' \
     > "$DEMO/sessions/.$ID.tmp" && mv "$DEMO/sessions/.$ID.tmp" "$DEMO/sessions/demo-$ID.json"
