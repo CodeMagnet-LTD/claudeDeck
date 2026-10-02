@@ -280,6 +280,16 @@
         }
       }
     },
+    "Add GitHub Trigger": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub Tetikleyicisi Ekle"
+          }
+        }
+      }
+    },
     "Add Project": {
       "localizations": {
         "tr": {
@@ -340,6 +350,16 @@
         }
       }
     },
+    "Add a project to see its GitHub issues and pull requests.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub issue'larını ve pull request'lerini görmek için bir proje ekleyin."
+          }
+        }
+      }
+    },
     "Add project / new group": {
       "localizations": {
         "tr": {
@@ -396,6 +416,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld kontrolün tümü başarılı"
+          }
+        }
+      }
+    },
+    "All open": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm açıklar"
           }
         }
       }
@@ -480,12 +510,32 @@
         }
       }
     },
+    "Assigned to me": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bana atananlar"
+          }
+        }
+      }
+    },
     "Audit dependencies": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Bağımlılıkları denetle"
+          }
+        }
+      }
+    },
+    "Author (anyone)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yazar (herkes)"
           }
         }
       }
@@ -1533,6 +1583,16 @@
         }
       }
     },
+    "Event": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Olay"
+          }
+        }
+      }
+    },
     "Every %@ at %@": {
       "localizations": {
         "tr": {
@@ -1623,6 +1683,16 @@
         }
       }
     },
+    "Fetching log…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Log alınıyor…"
+          }
+        }
+      }
+    },
     "Files": {
       "localizations": {
         "tr": {
@@ -1669,6 +1739,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "İlk %lld sonuç"
+          }
+        }
+      }
+    },
+    "Fix requested": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düzeltme istendi"
+          }
+        }
+      }
+    },
+    "Fix with Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude ile Düzelt"
           }
         }
       }
@@ -1743,6 +1833,46 @@
         }
       }
     },
+    "GitHub Inbox — open issues and pull requests": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub Gelen Kutusu — açık issue'lar ve pull request'ler"
+          }
+        }
+      }
+    },
+    "GitHub Inbox…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub Gelen Kutusu…"
+          }
+        }
+      }
+    },
+    "GitHub issues and pull requests": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub issue'ları ve pull request'leri"
+          }
+        }
+      }
+    },
+    "GitHub triggers check the project's repository every 2 minutes with your gh login. Items that already exist when the trigger starts watching don't run it.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub tetikleyicileri projenin deposunu gh oturumunuzla 2 dakikada bir kontrol eder. Tetikleyici izlemeye başladığında zaten var olan öğeler onu çalıştırmaz."
+          }
+        }
+      }
+    },
     "Green": {
       "localizations": {
         "tr": {
@@ -1799,6 +1929,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Pasif"
+          }
+        }
+      }
+    },
+    "Inbox": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gelen Kutusu"
           }
         }
       }
@@ -1863,6 +2003,16 @@
         }
       }
     },
+    "Issues": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Issue'lar"
+          }
+        }
+      }
+    },
     "Its %lld sessions are ended and removed. ": {
       "localizations": {
         "tr": {
@@ -1919,6 +2069,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Arka Planda Çalışmaya Devam Et"
+          }
+        }
+      }
+    },
+    "Kind": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tür"
+          }
+        }
+      }
+    },
+    "Label (any)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etiket (herhangi)"
           }
         }
       }
@@ -2009,6 +2179,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geçerli Dalın PR'ını Bağla"
+          }
+        }
+      }
+    },
+    "Linked to a session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir oturuma bağlı"
           }
         }
       }
@@ -2173,6 +2353,16 @@
         }
       }
     },
+    "New Claude session in this project, linked to the item, told to work on it": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu projede, öğeye bağlı ve onun üzerinde çalışması istenen yeni bir Claude oturumu"
+          }
+        }
+      }
+    },
     "New Claude session or terminal": {
       "localizations": {
         "tr": {
@@ -2219,6 +2409,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yeni Klasör…"
+          }
+        }
+      }
+    },
+    "New GitHub issue": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni GitHub issue'su"
           }
         }
       }
@@ -2309,6 +2509,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Her çalıştırma için yeni git worktree"
+          }
+        }
+      }
+    },
+    "New pull request": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni pull request"
+          }
+        }
+      }
+    },
+    "New worktree": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni worktree"
           }
         }
       }
@@ -2429,6 +2649,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eşleşen dosya yok"
+          }
+        }
+      }
+    },
+    "No open issues": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık issue yok"
+          }
+        }
+      }
+    },
+    "No open pull requests": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık pull request yok"
           }
         }
       }
@@ -2763,6 +3003,16 @@
         }
       }
     },
+    "Open the run on GitHub": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalıştırmayı GitHub'da aç"
+          }
+        }
+      }
+    },
     "Open with Default App": {
       "localizations": {
         "tr": {
@@ -2993,6 +3243,16 @@
         }
       }
     },
+    "Pull Requests": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pull Request'ler"
+          }
+        }
+      }
+    },
     "Purple": {
       "localizations": {
         "tr": {
@@ -3149,6 +3409,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zamanlamayı kaldır"
+          }
+        }
+      }
+    },
+    "Remove trigger": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tetikleyiciyi kaldır"
           }
         }
       }
@@ -3353,6 +3623,16 @@
         }
       }
     },
+    "Review requested": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İnceleme istenenler"
+          }
+        }
+      }
+    },
     "Review required": {
       "localizations": {
         "tr": {
@@ -3553,6 +3833,16 @@
         }
       }
     },
+    "Select an issue or pull request": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir issue ya da pull request seçin"
+          }
+        }
+      }
+    },
     "Send a “continue” message to resumed sessions": {
       "localizations": {
         "tr": {
@@ -3563,12 +3853,32 @@
         }
       }
     },
+    "Send the failing log to the linked session with an instruction to fix it": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başarısız logu, düzeltme talimatıyla birlikte bağlı oturuma gönder"
+          }
+        }
+      }
+    },
     "Send to Claude": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Claude'a Gönder"
+          }
+        }
+      }
+    },
+    "Sent to Claude %@. A re-run that fails again can be fixed again.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude'a %@ gönderildi. Yeniden çalıştırma tekrar başarısız olursa yine düzeltilebilir."
           }
         }
       }
@@ -3859,6 +4169,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yeni Başlat"
+          }
+        }
+      }
+    },
+    "Start Work": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalışmaya Başla"
+          }
+        }
+      }
+    },
+    "Start a Claude session with the failing log and an instruction to fix it": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başarısız log ve düzeltme talimatıyla bir Claude oturumu başlat"
           }
         }
       }
@@ -4276,6 +4606,16 @@
         }
       }
     },
+    "This project's folder isn't a GitHub repository.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu projenin klasörü bir GitHub deposu değil."
+          }
+        }
+      }
+    },
     "This session can use the Pencil (Pen.app) MCP tools": {
       "localizations": {
         "tr": {
@@ -4322,6 +4662,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "TODO'ları ayıkla"
+          }
+        }
+      }
+    },
+    "Triggers": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tetikleyiciler"
           }
         }
       }
@@ -4486,12 +4836,42 @@
         }
       }
     },
+    "Waits for GitHub events": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "GitHub olaylarını bekliyor"
+          }
+        }
+      }
+    },
     "Weekly changelog": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Haftalık değişiklik günlüğü"
+          }
+        }
+      }
+    },
+    "When a new issue is opened": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni bir issue açıldığında"
+          }
+        }
+      }
+    },
+    "When a new pull request is opened": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni bir pull request açıldığında"
           }
         }
       }
@@ -4646,6 +5026,16 @@
         }
       }
     },
+    "by @%@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "@%@ tarafından"
+          }
+        }
+      }
+    },
     "changes requested": {
       "localizations": {
         "tr": {
@@ -4762,6 +5152,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "iCloud Drive bu Mac'te açık değil (~/Library/Mobile Documents/com~apple~CloudDocs yok). Sistem Ayarları › Apple Hesabı › iCloud › iCloud Drive'ı aç."
+          }
+        }
+      }
+    },
+    "labeled “%@”": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” etiketli"
           }
         }
       }
@@ -4916,12 +5316,32 @@
         }
       }
     },
+    "· GitHub event": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· GitHub olayı"
+          }
+        }
+      }
+    },
     "· manual": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "· elle"
+          }
+        }
+      }
+    },
+    "· opened %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "· %@ açıldı"
           }
         }
       }

@@ -138,6 +138,9 @@ struct SidebarView: View {
             Button { model.showAutomations() } label: { Image(systemName: "clock.arrow.circlepath") }
                 .buttonStyle(.borderless)
                 .help("Automations — scheduled prompts")
+            Button { model.showInbox() } label: { Image(systemName: "tray") }
+                .buttonStyle(.borderless)
+                .help("GitHub Inbox — open issues and pull requests")
             SettingsLink {
                 Image(systemName: "gearshape")
             }

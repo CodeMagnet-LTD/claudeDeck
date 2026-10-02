@@ -60,6 +60,8 @@ enum DebugSnapshot {
                 model.tabs.openFile(URL(fileURLWithPath: parts[1]), preview: parts[2] == "1")
             } else if parts == ["automations"] {
                 model.tabs.open(.automations)
+            } else if parts == ["inbox"] {
+                model.tabs.open(.inbox)
             } else if parts == ["sessions"] {
                 model.tabs.selectSessions()
             } else if parts == ["close-all"] {

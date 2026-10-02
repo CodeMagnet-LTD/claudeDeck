@@ -74,6 +74,22 @@ final class AutomationScheduler {
         execute(run: run, automationID: automationID, reveal: true)
     }
 
+    /// A GitHub event (see GitHubEventPoller): claims it in the deck and runs the automation's prompt
+    /// plus the item, linking the item to the run's session. False when it can't start now (the
+    /// automation continues one session that is still running): the event stays unclaimed for the
+    /// next poll.
+    @discardableResult
+    func dispatchEvent(_ automationID: UUID, item: GitHubListItem) -> Bool {
+        guard let automation = model.deck.automation(automationID), automation.isWatchingEvents else { return false }
+        if automation.reuseSession, isActive(automationID) { return false }
+        var claimed: AutomationRun?
+        model.mutate(userInitiated: false) { claimed = $0.claimEvent(automationID, item: item) }
+        guard let run = claimed else { return false }
+        execute(run: run, automationID: automationID, reveal: false,
+                prompt: AutomationEvents.prompt(automation.prompt, item: item), link: item.workItem)
+        return true
+    }
+
     func isActive(_ automationID: UUID) -> Bool {
         model.deck.runs(of: automationID).contains { !$0.status.isFinished }
     }
@@ -86,14 +102,14 @@ final class AutomationScheduler {
 
     // MARK: Execution
 
-    private func execute(run: AutomationRun, automationID: UUID, reveal: Bool) {
+    private func execute(run: AutomationRun, automationID: UUID, reveal: Bool, prompt: String? = nil, link: LinkedWorkItem? = nil) {
         active[run.id] = Task { @MainActor [weak self] in
-            await self?.perform(runID: run.id, automationID: automationID, reveal: reveal)
+            await self?.perform(runID: run.id, automationID: automationID, reveal: reveal, prompt: prompt, link: link)
             self?.active[run.id] = nil
         }
     }
 
-    private func perform(runID: UUID, automationID: UUID, reveal: Bool) async {
+    private func perform(runID: UUID, automationID: UUID, reveal: Bool, prompt: String?, link: LinkedWorkItem?) async {
         guard let automation = model.deck.automation(automationID),
               let projectID = automation.projectID, model.deck.project(projectID) != nil else {
             // Unschedule it (the picker then shows "Choose…") instead of failing every occurrence.
@@ -112,11 +128,15 @@ final class AutomationScheduler {
             }
             sessionID = last
         }
-        if sessionID == nil, !automation.reuseSession, let previous = automation.lastSessionID {
+        // Event runs each work on their own item: their sessions stay.
+        if sessionID == nil, !automation.reuseSession, link == nil, let previous = automation.lastSessionID {
             retirePreviousRun(previous)
         }
         if sessionID == nil { sessionID = createSession(for: automation, projectID: projectID) }
         guard let sessionID else { return finish(runID, .failed, error: String(localized: "Could not create a session.")) }
+        if let link, !(model.deck.session(sessionID)?.linkedWorkItem?.isSameItem(as: link) ?? false) {
+            model.setLinkedWorkItem(link, for: sessionID)
+        }
 
         model.mutate(userInitiated: false) { deck in
             deck.updateRun(runID) {
@@ -143,7 +163,7 @@ final class AutomationScheduler {
         guard !Task.isCancelled else { return }
 
         let sentAt = Date()
-        send(automation.prompt, to: sessionID)
+        send(prompt ?? automation.prompt, to: sessionID)
         switch await waitForIdle(sessionID, after: sentAt, timeout: Self.runTimeout, acceptAny: false) {
         case .idle: finish(runID, .succeeded)
         case .failed(let detail): finish(runID, .failed, error: detail)

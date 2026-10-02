@@ -24,6 +24,7 @@ struct ClaudeDeckApp: App {
                     .keyboardShortcut("t", modifiers: [.command, .option])
                 Divider()
                 OpenAutomationsButton(model: delegate.model) // Automations tab
+                Button("GitHub Inbox…") { delegate.model.showInbox() }
             }
             CommandGroup(after: .newItem) {
                 Divider()

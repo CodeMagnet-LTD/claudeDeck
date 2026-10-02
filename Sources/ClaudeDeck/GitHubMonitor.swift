@@ -17,6 +17,8 @@ final class GitHubMonitor {
     private(set) var details: [UUID: GitHubItemDetails] = [:]
     private(set) var errors: [UUID: String] = [:]
     private(set) var loading: Set<UUID> = []
+    /// CI repair keys (`CIRepair.key`) whose failing log is being fetched.
+    var repairing: Set<String> = []
     /// Snapshot mode (DebugSnapshot): the session whose pane-header badge should open its popover.
     var debugPresentRequest: UUID?
 
