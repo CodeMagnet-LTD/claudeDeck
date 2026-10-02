@@ -9,6 +9,8 @@ public enum WorkspaceTab: Hashable, Codable, Sendable {
     /// A full-width Changes diff. `repo` is the Changes view's directory, `path` relative to the repo.
     case diff(repo: String, path: String, staged: Bool)
     case automations
+    /// GitHub issues and pull requests of a project's repository.
+    case inbox
 
     public var fileURL: URL? {
         if case .file(let url) = self { url } else { nil }
@@ -106,7 +108,7 @@ public struct WorkspaceTabList: Equatable, Codable, Sendable {
         var copy = self
         copy.tabs = tabs.filter {
             switch $0 {
-            case .sessions, .file, .automations: true
+            case .sessions, .file, .automations, .inbox: true
             case .diff: false
             }
         }
