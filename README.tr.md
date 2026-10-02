@@ -197,6 +197,9 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
   incelemen istenenler); **Çalışmaya Başla** öğeye bağlı, onun üzerinde çalışan bir Claude oturumu açar.
 - ⏰ **Otomasyonlar:** zamanlanmış (saatlik, günlük, hafta içi, haftalık) ya da GitHub olaylarıyla (yeni issue,
   yeni pull request) tetiklenen prompt'lar; Run Now ve çalışma geçmişi.
+- 🔎 **Geçmişte arama (⇧⌘H):** eski Claude konuşmalarının tam metninde arama; bir sonucu açınca oturumuna
+  gider ya da konuşmayı sürdürür.
+- 🪄 **Yetenekler (Skills):** kullanıcı, proje ve eklenti yeteneklerini gör, önizle, yenisini oluştur, çöpe at.
 - 🔄 **Oturumu Yeniden Başlat (⌥⌘R):** `claude`'dan çıkıp aynı konuşmaya geri döner; yeni MCP sunucuları ve
   ayarlar devreye girer.
 - ✏️ **Pencil (pen.dev):** ClaudeDeck'in başlattığı oturumlar Pencil'ın tasarım araçlarını kullanabilir;
@@ -489,6 +492,22 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
 - **Geçmiş**, her çalışmayı durumuyla (Başarılı, Başarısız, Atlandı…) listeler ve oturumunu açar.
 - Otomasyonlar yalnızca ClaudeDeck açıkken çalışır. Mac uykudayken kaçırılan çalışma, "Kaçırılırsa"
   sınırından eskiyse atlanır. Hiç kaçırmamak için uygulamayı menü çubuğunda tut ve girişte açılsın.
+
+### Konuşma geçmişinde arama
+- Dosya › Konuşma Geçmişinde Ara… (⇧⌘H) Arama sekmesini açar. `~/.claude/projects` içinde senin ve Claude'un
+  yazdıklarında arar (araç çıktıları, düşünme blokları ve ekler atlanır); seçili oturumun projesinde (ve
+  worktree'lerinde) ya da tüm projelerde. Sonuçlar en yeniden başlayarak gelir, eşleşmeler vurgulanır.
+- Bir sonuca çift tıkla: konuşma zaten bir oturumdaysa o oturum seçilir (durmuşsa sürdürülür); değilse yeni bir
+  oturum onu `--resume` ile, çalıştığı worktree'de ya da alt klasörde sürdürür. Henüz proje olmayan bir
+  klasördeki konuşma için klasörü proje olarak eklemeyi önerir.
+- Büyük geçmişler satır satır okunur; eşleşen ilk 200 konuşma gösterilir.
+
+### Yetenekler (Skills)
+- Dosya › Yetenekler… Yetenekler sekmesini açar: senin yeteneklerin (`~/.claude/skills`), seçili projeninkiler
+  (`.claude/skills`) ve kurulu eklentilerinkiler (salt okunur); her biri rozeti, açıklaması ve `SKILL.md`
+  önizlemesiyle.
+- Düzenleyicide Aç, Finder'da Göster, **Yeni Yetenek…** (`SKILL.md` şablonlu bir klasör) ve Çöp Sepetine Taşı.
+  Liste diskteki değişiklikleri izler.
 
 ### Pencil (pen.dev)
 - Pencil masaüstü uygulaması kuruluysa ClaudeDeck'in başlattığı yeni ve devam ettirilen Claude oturumları

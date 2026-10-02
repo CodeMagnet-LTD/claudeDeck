@@ -25,6 +25,7 @@ struct ClaudeDeckApp: App {
                 Divider()
                 OpenAutomationsButton(model: delegate.model) // Automations tab
                 Button("GitHub Inbox…") { delegate.model.showInbox() }
+                OpenHistorySearchButton(model: delegate.model) // Search and Skills tabs
             }
             CommandGroup(after: .newItem) {
                 Divider()

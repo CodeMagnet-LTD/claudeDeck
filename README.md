@@ -197,6 +197,9 @@ Billing, usage limits and sign-in stay entirely with Claude Code. ClaudeDeck doe
   review requested); **Start Work** opens a linked Claude session that works on the item.
 - ⏰ **Automations:** scheduled prompts (hourly, daily, weekdays, weekly) or GitHub triggers (new issue, new
   pull request) with Run Now and a run history.
+- 🔎 **History search (⇧⌘H):** full-text search over your past Claude conversations; open a hit to jump to
+  its session or resume it.
+- 🪄 **Skills:** browse, preview, create and trash your user, project and plugin skills.
 - 🔄 **Restart Session (⌥⌘R):** quits `claude` and resumes the same conversation, so new MCP servers and
   settings take effect.
 - ✏️ **Pencil (pen.dev):** sessions ClaudeDeck starts can use Pencil's design tools, and `.pen` files open in Pencil.
@@ -479,6 +482,22 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
 - **History** lists every run with its status (Succeeded, Failed, Skipped…) and opens its session.
 - Automations run only while ClaudeDeck is running. A run the Mac slept through is skipped once it is older
   than the "If missed" limit. Keep the app in the menu bar and open it at login to never miss one.
+
+### Search conversation history
+- File › Search Conversation History… (⇧⌘H) opens the Search tab. It searches what you and Claude wrote in
+  `~/.claude/projects` (tool output, thinking and attachments are skipped), in the selected session's project
+  (and its worktrees) or in all projects. Results stream in newest first, with the matches highlighted.
+- Double-click a result: if a session already has that conversation it is selected (and resumed if stopped);
+  otherwise a new session resumes it with `--resume`, in its worktree or subfolder when it ran in one. A
+  conversation from a folder that isn't a project yet offers to add it.
+- Large histories are read line by line; the first 200 matching conversations are shown.
+
+### Skills
+- File › Skills… opens the Skills tab: your skills (`~/.claude/skills`), the selected project's
+  (`.claude/skills`) and those of installed plugins (read-only), each with a badge, its description and a
+  rendered preview of `SKILL.md`.
+- Open in Editor, Reveal in Finder, **New Skill…** (a folder with a `SKILL.md` template) and Move to Trash.
+  The list follows changes on disk.
 
 ### Pencil (pen.dev)
 - If the Pencil desktop app is installed, new and resumed Claude sessions started by ClaudeDeck get its MCP

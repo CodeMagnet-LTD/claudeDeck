@@ -212,6 +212,18 @@ extension AppModel {
         tabs.open(.inbox)
         showMainWindow()
     }
+
+    /// The Search tab (conversation history).
+    func showHistorySearch() {
+        tabs.open(.search)
+        showMainWindow()
+    }
+
+    /// The Skills tab.
+    func showSkills() {
+        tabs.open(.skills)
+        showMainWindow()
+    }
 }
 
 extension UserDefaults {

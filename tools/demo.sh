@@ -423,11 +423,34 @@ scene $S6 'running|PreToolUse|Bash|Bash: swift test --filter TableTests' <<'EOF'
 [38;5;208m✻ Testing… [2m(12s · esc to interrupt)[0m
 EOF
 
+# --- A made-up ~/.claude for the Search and Skills tabs (never the real one) ------------------------
+H="$ROOT/home/.claude"
+transcript() { # project path, session id, prompt, reply
+  d="$H/projects/$(printf '%s' "$1" | sed 's/[^A-Za-z0-9]/-/g')"
+  mkdir -p "$d"
+  printf '{"type":"user","cwd":"%s","isSidechain":false,"timestamp":"2026-03-01T10:00:00.000Z","message":{"role":"user","content":"%s"}}\n{"type":"assistant","cwd":"%s","isSidechain":false,"timestamp":"2026-03-01T10:00:05.000Z","message":{"role":"assistant","content":[{"type":"text","text":"%s"}]}}\n' \
+    "$1" "$3" "$1" "$4" > "$d/$2.jsonl"
+}
+transcript "$ROOT/projects/acme-storefront" 0e1d8a52-1111-4c2e-9a6b-5d0c2f7e9a01 \
+  "Add a coupon field to the checkout and apply WELCOME10" "Added applyCoupon() in src/cart/coupons.ts and wired the coupon field into Checkout."
+transcript "$ROOT/projects/acme-storefront" 0e1d8a52-2222-4c2e-9a6b-5d0c2f7e9a02 \
+  "Why does the cart total ignore the discount?" "CartSummary summed the prices but never subtracted the coupon discount; fixed."
+transcript "$ROOT/projects/payments-api" 0e1d8a52-3333-4c2e-9a6b-5d0c2f7e9a03 \
+  "Validate coupon codes on the server too" "Added a coupon check to the refund and charge endpoints."
+skill() { # dir, name, description
+  mkdir -p "$1/$2"
+  printf -- '---\nname: %s\ndescription: %s\n---\n\n# %s\n\n## Steps\n\n1. Read the relevant files.\n2. Make the change.\n\n```sh\nswift test\n```\n' "$2" "$3" "$2" > "$1/$2/SKILL.md"
+}
+skill "$H/skills" release-notes "Drafts release notes from the commits since the last tag."
+skill "$H/skills" pr-review "Reviews the current branch like a careful teammate."
+skill "$ROOT/projects/acme-storefront/.claude/skills" checkout-qa "Walks through the checkout flow and lists regressions."
+
 echo "Demo data: $ROOT"
 CLAUDEDECK_DEMO=1 \
 CLAUDEDECK_DATA_DIR="$ROOT/data" \
 CLAUDEDECK_STATE_DIR="$ROOT/sessions" \
 CLAUDEDECK_CLAUDE_PATH="$ROOT/bin/claude" \
 CLAUDEDECK_GH_PATH="$ROOT/bin/gh" \
+CLAUDEDECK_CLAUDE_HOME="$ROOT/home" \
   "$APP/Contents/MacOS/ClaudeDeck" "$@" >/dev/null 2>&1 &
 echo "ClaudeDeck demo started (pid $!). Quit it with ⌘Q; run this script again for a fresh copy."

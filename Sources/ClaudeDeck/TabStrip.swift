@@ -59,6 +59,7 @@ struct WorkspaceView: View {
         case .automations: ""
         case .repository(let repo, _): (repo as NSString).abbreviatingWithTildeInPath
         case .inbox: ""
+        case .search, .skills: ""
         }
     }
 }
@@ -87,6 +88,10 @@ private struct TabContent: View {
             if isSelected { RepositoryPageView(repo: repo, page: page) }
         case .inbox:
             if isSelected { InboxView() }   // polls gh only while visible
+        case .search:
+            HistorySearchView()
+        case .skills:
+            SkillsView()
         }
     }
 }
@@ -239,6 +244,8 @@ private struct TabItem: View {
         case .automations: Image(systemName: "clock.arrow.circlepath")
         case .repository(_, let page): Image(systemName: page.symbol)
         case .inbox: Image(systemName: "tray")
+        case .search: Image(systemName: "text.magnifyingglass")
+        case .skills: Image(systemName: "wand.and.stars")
         }
     }
 
@@ -487,6 +494,8 @@ extension WorkspaceTab {
         case .automations: "automations"
         case .repository(let repo, let page): "repo:\(page.rawValue):\(repo)"
         case .inbox: "inbox"
+        case .search: "search"
+        case .skills: "skills"
         }
     }
 
@@ -500,6 +509,8 @@ extension WorkspaceTab {
         case .automations: String(localized: "Automations")
         case .repository(_, let page): page.title
         case .inbox: String(localized: "Inbox")
+        case .search: String(localized: "Search")
+        case .skills: String(localized: "Skills")
         }
     }
 
@@ -518,6 +529,8 @@ extension WorkspaceTab {
         case .automations: String(localized: "Automations")
         case .repository(let repo, let page): page.title + " — " + (repo as NSString).abbreviatingWithTildeInPath
         case .inbox: String(localized: "GitHub issues and pull requests")
+        case .search: String(localized: "Search conversation history (⇧⌘H)")
+        case .skills: String(localized: "Skills")
         default: url.map { ($0.path as NSString).abbreviatingWithTildeInPath } ?? ""
         }
     }
