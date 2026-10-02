@@ -27,7 +27,7 @@ final class AutomationScheduler {
         }
         // Old/stale schedules (e.g. created before a long quit) are evaluated on the first tick;
         // automations that never got a nextRunAt get one now.
-        let unscheduled = model.deck.automations.filter { $0.isSchedulable && $0.nextRunAt == nil }
+        let unscheduled = model.deck.automations.filter { $0.isSchedulable && $0.nextRunAt == nil && $0.triggers.contains { $0.kind == .time } }
         if !unscheduled.isEmpty {
             model.mutate(userInitiated: false) { deck in for a in unscheduled { deck.updateAutomation(a.id) { $0.reschedule() } } }
         }
