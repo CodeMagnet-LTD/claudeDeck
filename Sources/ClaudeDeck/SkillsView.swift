@@ -70,7 +70,8 @@ final class SkillsController {
             missing.insert(base.lastPathComponent, at: 0)
             base = base.deletingLastPathComponent()
         }
-        var real = base.resolvingSymlinksInPath()
+        // realpath, not resolvingSymlinksInPath: that one strips "/private" again (/tmp, /var).
+        var real = realpath(base.path, nil).map { p in defer { free(p) }; return URL(fileURLWithPath: String(cString: p)) } ?? base
         for part in missing { real = real.appending(path: part) }
         return real.path
     }
@@ -122,6 +123,10 @@ struct SkillsView: View {
         }
         .onAppear { controller.setProject(currentProject?.path) }
         .onChange(of: currentProject?.path) { _, path in controller.setProject(path) }
+        .onChange(of: controller.generation) {
+            // Keep something selected (the first skill, or a replacement for a deleted one).
+            if selected == nil { selection = controller.skills.first?.id }
+        }
         .sheet(isPresented: $showNewSkill) {
             NewSkillSheet(userDirectory: controller.userDirectory, project: currentProject) { file in
                 controller.reload()
