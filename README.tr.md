@@ -200,7 +200,7 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
   yeni pull request) tetiklenen prompt'lar; Run Now ve çalışma geçmişi.
 - 🔎 **Geçmişte arama (⇧⌘H):** eski Claude konuşmalarının tam metninde arama; bir sonucu açınca oturumuna
   gider ya da konuşmayı sürdürür.
-- 🪄 **Yetenekler (Skills):** kullanıcı, proje ve eklenti yeteneklerini gör, önizle, yenisini oluştur, çöpe at.
+- 🪄 **Skills:** kullanıcı, proje ve eklenti skill'lerini gör, önizle, yenisini oluştur, çöpe at.
 - 🔄 **Oturumu Yeniden Başlat (⌥⌘R):** `claude`'dan çıkıp aynı konuşmaya geri döner; yeni MCP sunucuları ve
   ayarlar devreye girer.
 - ✏️ **Pencil (pen.dev):** ClaudeDeck'in başlattığı oturumlar Pencil'ın tasarım araçlarını kullanabilir;
@@ -512,11 +512,11 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
   klasördeki konuşma için klasörü proje olarak eklemeyi önerir.
 - Büyük geçmişler satır satır okunur; eşleşen ilk 200 konuşma gösterilir.
 
-### Yetenekler (Skills)
-- Dosya › Yetenekler… Yetenekler sekmesini açar: senin yeteneklerin (`~/.claude/skills`), seçili projeninkiler
+### Skills
+- Dosya › Skills… Skills sekmesini açar: senin skill'lerin (`~/.claude/skills`), seçili projeninkiler
   (`.claude/skills`) ve kurulu eklentilerinkiler (salt okunur); her biri rozeti, açıklaması ve `SKILL.md`
   önizlemesiyle.
-- Düzenleyicide Aç, Finder'da Göster, **Yeni Yetenek…** (`SKILL.md` şablonlu bir klasör) ve Çöp Sepetine Taşı.
+- Düzenleyicide Aç, Finder'da Göster, **Yeni Skill…** (`SKILL.md` şablonlu bir klasör) ve Çöp Sepetine Taşı.
   Liste diskteki değişiklikleri izler.
 
 ### Pencil (pen.dev)

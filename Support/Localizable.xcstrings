@@ -325,7 +325,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Orada bu adda bir yetenek zaten var."
+            "value": "Orada bu adda bir skill zaten var."
           }
         }
       }
@@ -2988,7 +2988,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yeni Yetenek"
+            "value": "Yeni Skill"
           }
         }
       }
@@ -2998,7 +2998,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yeni Yetenek…"
+            "value": "Yeni Skill…"
           }
         }
       }
@@ -3348,7 +3348,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Henüz yetenek yok"
+            "value": "Henüz skill yok"
           }
         }
       }
@@ -4708,7 +4708,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bir yetenek seçin"
+            "value": "Bir skill seçin"
           }
         }
       }
@@ -4968,7 +4968,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yetenekler"
+            "value": "Skills"
           }
         }
       }
@@ -4978,7 +4978,7 @@
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yetenekler…"
+            "value": "Skills…"
           }
         }
       }
@@ -6242,6 +6242,22 @@
           "stringUnit": {
             "state": "translated",
             "value": "`claude` login shell'de bulunamadı. Claude Code kurulu mu?"
+          }
+        }
+      }
+    },
+    "agents.mainSession": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Main"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ana oturum"
           }
         }
       }

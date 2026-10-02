@@ -275,7 +275,7 @@ private struct AgentTimeline: View {
                 ForEach(lanes) { lane in
                     let node = nodes[lane.id]
                     HStack(spacing: 6) {
-                        Text(verbatim: node.map { $0.agentType ?? $0.label } ?? String(localized: "Main"))
+                        Text(verbatim: node.map { $0.agentType ?? $0.label } ?? String(localized: "agents.mainSession", defaultValue: "Main"))
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
@@ -361,7 +361,7 @@ private struct AgentLog: View {
                 .font(.caption2.monospacedDigit())
                 .foregroundStyle(.tertiary)
             Group {
-                if let node { Text(node.agentType ?? node.label) } else { Text("Main") }
+                if let node { Text(node.agentType ?? node.label) } else { Text(String(localized: "agents.mainSession", defaultValue: "Main")) }
             }
             .font(.caption2)
             .foregroundStyle(.secondary)
