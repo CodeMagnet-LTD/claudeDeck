@@ -67,10 +67,12 @@ private struct AgentsSessionView: View {
             } else if polled || transcriptPath == nil {
                 ContentUnavailableView("Waiting for Transcript", systemImage: "text.page",
                                        description: Text("Agents appear once Claude writes its first message."))
+                    .frame(maxHeight: .infinity)
             } else {
                 ProgressView().controlSize(.small).frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .task(id: transcriptPath) {
             snapshot = nil
             polled = false
