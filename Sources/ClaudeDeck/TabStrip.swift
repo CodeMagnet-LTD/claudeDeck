@@ -16,7 +16,13 @@ struct WorkspaceView: View {
         ZStack {
             layer(.sessions) { DetailView() }
             ForEach(tabs.tabs.filter { $0 != .sessions }, id: \.key) { tab in
-                layer(tab) { TabContent(tab: tab, isSelected: tabs.selected == tab) }
+                layer(tab) {
+                    TabContent(tab: tab, isSelected: tabs.selected == tab)
+                        // A tab's minimum width must not reach the split view: when it outgrows the space
+                        // between the sidebar and the inspector, AppKit loops on constraint passes and throws.
+                        .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity, alignment: .topLeading)
+                        .clipped()
+                }
             }
         }
         .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
