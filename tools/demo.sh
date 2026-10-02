@@ -444,6 +444,38 @@ skill() { # dir, name, description
 skill "$H/skills" release-notes "Drafts release notes from the commits since the last tag."
 skill "$H/skills" pr-review "Reviews the current branch like a careful teammate."
 skill "$ROOT/projects/acme-storefront/.claude/skills" checkout-qa "Walks through the checkout flow and lists regressions."
+# --- Agents inspector: a transcript with subagents for the first session (<id>.jsonl) ---------------
+iso() { date -u -r $((NOW - $1)) +%Y-%m-%dT%H:%M:%S.000Z; }
+asst() { printf '{"type":"assistant","timestamp":"%s","message":{"model":"claude-opus-demo","role":"assistant","content":[%s]}}\n' "$(iso "$1")" "$2"; }
+tool() { printf '{"type":"tool_use","id":"%s","name":"%s","input":%s}' "$1" "$2" "$3"; }
+user() { printf '{"type":"user","timestamp":"%s","message":{"role":"user","content":%s}%s}\n' "$(iso "$1")" "$2" "$3"; }
+CART="$P/acme-storefront/lib/cart.ts"
+SUB="$ROOT/scenes/$S1/subagents"
+mkdir -p "$SUB"
+{
+  asst 1500 "$(tool m1 Read '{"file_path":"'"$P"'/acme-storefront/app/cart/page.tsx"}')"
+  asst 1440 "$(tool t1 Agent '{"subagent_type":"Explore","description":"Map the checkout flow","prompt":"Find every place the checkout total is computed.","run_in_background":true}')"
+  user 1439 '[{"type":"tool_result","tool_use_id":"t1","content":"launched"}]' ',"toolUseResult":{"status":"async_launched","agentId":"ademo1"}'
+  asst 1430 "$(tool t2 Agent '{"subagent_type":"general-purpose","description":"Write cart tests","prompt":"Add tests for discounts and tax rounding.","run_in_background":true}')"
+  user 1429 '[{"type":"tool_result","tool_use_id":"t2","content":"launched"}]' ',"toolUseResult":{"status":"async_launched","agentId":"ademo2"}'
+  user 900 '"<task-notification><task-id>ademo1</task-id><tool-use-id>t1</tool-use-id><status>completed</status><usage><subagent_tokens>48210</subagent_tokens><tool_uses>23</tool_uses><duration_ms>539000</duration_ms></usage></task-notification>"' ''
+  asst 880 "$(tool m2 Edit '{"file_path":"'"$CART"'"}')"
+  asst 60 "$(tool m3 Bash '{"command":"npm test -- cart"}')"
+} > "$ROOT/scenes/$S1.jsonl"
+{
+  asst 1435 "$(tool s1 Grep '{"pattern":"checkoutTotal"}')"
+  asst 1300 "$(tool s2 Read '{"file_path":"'"$CART"'"}')"
+  asst 1000 '{"type":"text","text":"done"}'
+} > "$SUB/agent-ademo1.jsonl"
+printf '{"agentType":"Explore","toolUseId":"t1"}' > "$SUB/agent-ademo1.meta.json"
+{
+  asst 1420 "$(tool s3 Read '{"file_path":"'"$CART"'"}')"
+  asst 1200 "$(tool n1 Agent '{"subagent_type":"Explore","description":"Find tax helpers","prompt":"Where is tax rounding done?"}')"
+  user 1080 '[{"type":"tool_result","tool_use_id":"n1","content":"ok"}]' ',"toolUseResult":{"status":"completed","agentId":"ademo3","totalTokens":9100,"totalToolUseCount":6,"totalDurationMs":120000}'
+  asst 300 "$(tool s4 Write '{"file_path":"'"$P"'/acme-storefront/tests/cart.test.ts"}')"
+  asst 20 "$(tool s5 Bash '{"command":"npx vitest run tests/cart.test.ts"}')"
+} > "$SUB/agent-ademo2.jsonl"
+printf '{"agentType":"general-purpose","toolUseId":"t2"}' > "$SUB/agent-ademo2.meta.json"
 
 echo "Demo data: $ROOT"
 CLAUDEDECK_DEMO=1 \

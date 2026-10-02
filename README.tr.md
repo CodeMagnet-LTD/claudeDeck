@@ -191,6 +191,7 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
   açılır. Sözdizimi renkli, bul-değiştirli hafif bir düzenleyici; "Claude'a Ekle" ile `@yol#L10-20`.
 - 🔀 **Değişiklikler (⌘⇧G):** dosya ya da hunk bazında stage / unstage / discard, commit, push ve pull; commit
   mesajını Claude yazar. Dal değiştirme ve oluşturma, commit grafiği ve worktree yönetimi.
+- 🤖 **Ajanlar (⌘⇧A):** seçili oturumun alt ajanları ağaç, zaman çizelgesi ve canlı günlük olarak.
 - 🐙 **GitHub bağlantıları:** bir oturuma issue ya da pull request bağla; durumunu, review'ları ve CI'ı gör,
   değişince bildirim al. **Claude ile Düzelt**, başarısız bir CI işinin log'unu oturuma gönderir. Senin `gh` CLI'ını kullanır.
 - 📥 **GitHub Gelen Kutusu:** bir projenin deposundaki açık issue'lar ve pull request'ler (hepsi, sana atananlar,
@@ -421,6 +422,15 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
     ve onu kullanan ClaudeDeck oturumlarıyla. İçinde oturum başlatabilir ya da oturumu gösterebilir, Finder'da
     açabilir, kaldırabilir (önce sorar; commit edilmemiş değişikliği varsa **Yine de kaldır** ile uyarır; ana
     çalışma ağacı kaldırılamaz) ya da eskimiş kayıtları temizleyebilirsin.
+
+### Ajanlar (⌘⇧A)
+- Sağ paneldeki **Ajanlar** tarafı (ya da ⌘⇧A) seçili Claude oturumunun alt ajanlarının ne yaptığını, konuşma
+  kaydından canlı olarak gösterir: başlattığı ajanların ağacı (tür, açıklama, çalışıyor / bitti / başarısız /
+  durdu, süre, araç çağrıları ve ajan bitince Claude'un bildirdiği token toplamı); bir alt ajan kendi ajanlarını
+  başlatırsa iç içe görünür. Bir ajana tıklayınca isteminin başı açılır.
+- **Zaman çizelgesi:** son 30 dakikada her ajan için bir satır; çalıştığı aralıklar çubuk olarak görünür.
+- **Etkinlik:** son araç çağrıları, ajanların başlayıp bitmesi; en alttayken yeni olayları kendiliğinden izler.
+- Seçili oturumu izler (kenar çubuğu, panele tıklama, ⌘J); düz terminallerde panel boş kalır.
 
 ### Dosyalar paneli (⌘⇧E)
 - Sidebar'da son tıkladığın projenin (ya da seçili oturumun; worktree oturumunda worktree klasörünün) canlı
