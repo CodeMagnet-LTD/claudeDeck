@@ -94,6 +94,7 @@ final class AppModel {
     // MARK: iCloud sync — end
     // MARK: Automations (AutomationScheduler) — begin
     @ObservationIgnored private(set) var automations: AutomationScheduler?
+    @ObservationIgnored private(set) var githubEvents: GitHubEventPoller?
     // MARK: Automations — end
     // MARK: Usage meter (UsageMonitor, AppModel+UsageLimit) — begin
     let usage = UsageMonitor()
@@ -129,6 +130,7 @@ final class AppModel {
     func start() {
         if !Self.isDemo { installHooks() }
         automations = AutomationScheduler(model: self) // marks runs interrupted by the last quit
+        githubEvents = automations.map { GitHubEventPoller(model: self, scheduler: $0) }
         watcher = DirectoryWatcher(url: statusDir) { [weak self] in
             Task { @MainActor in self?.reloadStatuses() }
         }
@@ -148,6 +150,7 @@ final class AppModel {
                 self.launchDeferred = false
                 self.launchInitialSessions()
                 if !Self.isDemo { self.automations?.start() } // 30 s schedule check + on wake
+                if !Self.isDemo { self.githubEvents?.start() } // GitHub trigger poll every 2 min
             }
         }
     }

@@ -89,6 +89,8 @@ private struct AutomationRow: View {
                         Text("Next: \(next.formatted(AutomationFormat.nextRun))")
                     } else if !automation.enabled {
                         Text("Off")
+                    } else if automation.isWatchingEvents {
+                        Text("Waits for GitHub events")
                     } else {
                         Text("Not scheduled")
                     }
@@ -209,21 +211,35 @@ private struct AutomationEditor: View {
                             AutomationActions.update(automationID, model: model, reschedule: true) { $0.triggers.remove(at: index) }
                         }
                     }
-                    Button {
-                        AutomationActions.update(automationID, model: model, reschedule: true) {
-                            $0.triggers.append(.weekdays(ClockTime(hour: 9, minute: 0)))
+                    HStack(spacing: 16) {
+                        Button {
+                            AutomationActions.update(automationID, model: model, reschedule: true) {
+                                $0.triggers.append(.weekdays(ClockTime(hour: 9, minute: 0)))
+                            }
+                        } label: {
+                            Label("Add Schedule", systemImage: "plus")
                         }
-                    } label: {
-                        Label("Add Schedule", systemImage: "plus")
+                        Button {
+                            AutomationActions.update(automationID, model: model, reschedule: true) {
+                                $0.triggers.append(.github(GitHubEventTrigger(event: .issueOpened)))
+                            }
+                        } label: {
+                            Label("Add GitHub Trigger", systemImage: "plus")
+                        }
                     }
                     .buttonStyle(.borderless)
                 } header: {
-                    Text("Schedule")
+                    Text("Triggers")
                 } footer: {
-                    if let next = automation.nextRunAt, automation.enabled {
-                        Text("Next run: \(next.formatted(AutomationFormat.nextRun))")
-                    } else if automation.triggers.isEmpty {
-                        Text("No schedule: runs only with Run Now.")
+                    VStack(alignment: .leading, spacing: 2) {
+                        if let next = automation.nextRunAt, automation.enabled {
+                            Text("Next run: \(next.formatted(AutomationFormat.nextRun))")
+                        } else if automation.triggers.isEmpty {
+                            Text("No schedule: runs only with Run Now.")
+                        }
+                        if !automation.githubTriggers.isEmpty {
+                            Text("GitHub triggers check the project's repository every 2 minutes with your gh login. Items that already exist when the trigger starts watching don't run it.")
+                        }
                     }
                 }
                 Section("Run") {
@@ -300,6 +316,14 @@ private struct TriggerRow: View {
     let remove: () -> Void
 
     var body: some View {
+        if let event = trigger.githubEvent {
+            GitHubTriggerRow(event: Binding(get: { trigger.githubEvent ?? event }, set: { trigger = .github($0) }), remove: remove)
+        } else {
+            timeRow
+        }
+    }
+
+    private var timeRow: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Picker("Repeat", selection: Binding(get: { trigger.schedule }, set: { trigger = trigger.with(schedule: $0) })) {
@@ -340,6 +364,35 @@ private struct TriggerRow: View {
     }
 }
 
+/// "New issue / pull request" with optional label and author filters.
+private struct GitHubTriggerRow: View {
+    @Binding var event: GitHubEventTrigger
+    let remove: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Picker("Event", selection: $event.event) {
+                    Text("New GitHub issue").tag(GitHubEventTrigger.Event.issueOpened)
+                    Text("New pull request").tag(GitHubEventTrigger.Event.pullRequestOpened)
+                }
+                .labelsHidden()
+                .fixedSize()
+                TextField("Label (any)", text: Binding(get: { event.label ?? "" }, set: { event.label = $0.isEmpty ? nil : $0 }))
+                    .frame(maxWidth: 140)
+                TextField("Author (anyone)", text: Binding(get: { event.author ?? "" }, set: { event.author = $0.isEmpty ? nil : $0 }))
+                    .frame(maxWidth: 140)
+                Spacer()
+                Button(action: remove) { Image(systemName: "minus.circle") }
+                    .buttonStyle(.borderless)
+                    .help("Remove trigger")
+            }
+            .textFieldStyle(.roundedBorder)
+            Text(AutomationTrigger.github(event).sentence).font(.caption).foregroundStyle(.secondary)
+        }
+    }
+}
+
 private struct RunHistory: View {
     @Environment(AppModel.self) private var model
     let automationID: UUID
@@ -356,8 +409,12 @@ private struct RunHistory: View {
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(spacing: 4) {
                             Text(run.startedAt.formatted(date: .abbreviated, time: .shortened))
-                            Text(run.trigger == .manual ? String(localized: "· manual") : String(localized: "· scheduled"))
+                            Text(run.trigger == .manual ? String(localized: "· manual")
+                                 : run.trigger == .event ? String(localized: "· GitHub event") : String(localized: "· scheduled"))
                                 .foregroundStyle(.secondary)
+                        }
+                        if let summary = run.eventSummary {
+                            Text(verbatim: summary).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                         }
                         if let error = run.error {
                             Text(AutomationFormat.localizedError(error)).font(.caption).foregroundStyle(.secondary)
@@ -477,6 +534,7 @@ extension AutomationTrigger {
         case .daily: .daily
         case .weekdays: .weekdays
         case .weekly: .weekly
+        case .github: .daily
         }
     }
 
@@ -484,6 +542,7 @@ extension AutomationTrigger {
         switch self {
         case .hourly(let minute): ClockTime(hour: 9, minute: minute)
         case .daily(let t), .weekdays(let t), .weekly(_, let t): t
+        case .github: ClockTime(hour: 9, minute: 0)
         }
     }
 
@@ -506,6 +565,7 @@ extension AutomationTrigger {
         case .daily: .daily(time)
         case .weekdays: .weekdays(time)
         case .weekly(let day, _): .weekly(weekday: day, time)
+        case .github: self
         }
     }
 
@@ -520,6 +580,11 @@ extension AutomationTrigger {
         case .daily(let t): String(localized: "Every day at \(AutomationFormat.time(t))")
         case .weekdays(let t): String(localized: "Every weekday at \(AutomationFormat.time(t))")
         case .weekly(let day, let t): String(localized: "Every \(AutomationFormat.weekdayName(day)) at \(AutomationFormat.time(t))")
+        case .github(let event):
+            ([event.event == .issueOpened ? String(localized: "When a new issue is opened") : String(localized: "When a new pull request is opened")]
+             + [event.label.flatMap { $0.isEmpty ? nil : String(localized: "labeled “\($0)”") },
+                event.author.flatMap { $0.isEmpty ? nil : String(localized: "by @\($0.hasPrefix("@") ? String($0.dropFirst()) : $0)") }].compactMap { $0 })
+                .joined(separator: ", ")
         }
     }
 }

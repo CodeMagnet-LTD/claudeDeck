@@ -64,6 +64,8 @@ enum DebugSnapshot {
                 model.tabs.open(.repository(repo: parts[1], page: page))
             } else if parts == ["automations"] {
                 model.tabs.open(.automations)
+            } else if parts == ["inbox"] {
+                model.tabs.open(.inbox)
             } else if parts == ["sessions"] {
                 model.tabs.selectSessions()
             } else if parts == ["close-all"] {

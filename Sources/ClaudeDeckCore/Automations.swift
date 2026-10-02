@@ -15,8 +15,7 @@ public struct ClockTime: Codable, Sendable, Equatable, Hashable {
     }
 }
 
-/// When an automation starts on its own. Only time triggers exist for now; other kinds
-/// (e.g. repository events) can be added as new cases.
+/// When an automation starts on its own: a time of day, or a GitHub event in the project's repository.
 public enum AutomationTrigger: Sendable, Equatable, Hashable {
     /// Every hour at `minute`.
     case hourly(minute: Int)
@@ -25,14 +24,23 @@ public enum AutomationTrigger: Sendable, Equatable, Hashable {
     case weekdays(ClockTime)
     /// `weekday` in Calendar convention: 1 = Sunday … 7 = Saturday.
     case weekly(weekday: Int, ClockTime)
+    /// A new issue / pull request in the automation's project repository (see AutomationEvents.swift).
+    case github(GitHubEventTrigger)
 
-    /// The trigger family (for pickers / future non-time kinds).
-    public enum Kind: String, Codable, Sendable, CaseIterable { case time }
-    public var kind: Kind { .time }
+    /// The trigger family.
+    public enum Kind: String, Codable, Sendable, CaseIterable { case time, github }
+    public var kind: Kind {
+        if case .github = self { .github } else { .time }
+    }
+
+    public var githubEvent: GitHubEventTrigger? {
+        if case .github(let event) = self { event } else { nil }
+    }
 
     /// Calendar components that match this trigger's occurrences.
     var components: DateComponents {
         switch self {
+        case .github: DateComponents()
         case .hourly(let minute): DateComponents(minute: min(max(minute, 0), 59), second: 0)
         case .daily(let t), .weekdays(let t): DateComponents(hour: t.hour, minute: t.minute, second: 0)
         case .weekly(let weekday, let t): DateComponents(hour: t.hour, minute: t.minute, second: 0, weekday: min(max(weekday, 1), 7))
@@ -42,6 +50,7 @@ public enum AutomationTrigger: Sendable, Equatable, Hashable {
     /// First occurrence strictly after `date`, in `calendar`'s time zone (DST-safe: a time
     /// skipped by a spring-forward jump runs at the next valid time that day).
     public func nextOccurrence(after date: Date, calendar: Calendar = .current) -> Date? {
+        if kind != .time { return nil }
         var from = date
         // weekdays: step through daily matches until one falls on Mon–Fri (at most 3 steps).
         for _ in 0..<8 {
@@ -57,12 +66,20 @@ public enum AutomationTrigger: Sendable, Equatable, Hashable {
 }
 
 extension AutomationTrigger: Codable {
-    private enum CodingKeys: String, CodingKey { case kind, schedule, minute, hour, weekday }
+    private enum CodingKeys: String, CodingKey { case kind, schedule, minute, hour, weekday, event, label, author }
     private enum Schedule: String, Codable { case hourly, daily, weekdays, weekly }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let kind = try c.decodeIfPresent(String.self, forKey: .kind) ?? Kind.time.rawValue
+        if kind == Kind.github.rawValue {
+            guard let event = try? c.decode(GitHubEventTrigger.Event.self, forKey: .event) else {
+                throw DecodingError.dataCorruptedError(forKey: .event, in: c, debugDescription: "Unsupported GitHub event")
+            }
+            self = .github(GitHubEventTrigger(event: event, label: try c.decodeIfPresent(String.self, forKey: .label),
+                                              author: try c.decodeIfPresent(String.self, forKey: .author)))
+            return
+        }
         guard kind == Kind.time.rawValue, let schedule = try? c.decode(Schedule.self, forKey: .schedule) else {
             throw DecodingError.dataCorruptedError(forKey: .kind, in: c, debugDescription: "Unsupported trigger")
         }
@@ -80,6 +97,10 @@ extension AutomationTrigger: Codable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(kind.rawValue, forKey: .kind)
         switch self {
+        case .github(let event):
+            try c.encode(event.event, forKey: .event)
+            try c.encodeIfPresent(event.label, forKey: .label)
+            try c.encodeIfPresent(event.author, forKey: .author)
         case .hourly(let minute):
             try c.encode(Schedule.hourly, forKey: .schedule)
             try c.encode(minute, forKey: .minute)
@@ -111,7 +132,8 @@ public enum AutomationRunStatus: String, Codable, Sendable, CaseIterable {
 }
 
 public enum AutomationRunTrigger: String, Codable, Sendable {
-    case scheduled, manual
+    /// `event`: a GitHub event trigger (older versions decode it as `scheduled`).
+    case scheduled, manual, event
 }
 
 public struct Automation: Codable, Identifiable, Sendable, Equatable {
@@ -134,6 +156,8 @@ public struct Automation: Codable, Identifiable, Sendable, Equatable {
     public var lastSessionID: UUID?
     public var createdAt: Date
     public var updatedAt: Date
+    /// GitHub event triggers: which repositories were primed and which events already ran.
+    public var eventLedger: AutomationEventLedger
 
     public init(id: UUID = UUID(), name: String = "", prompt: String = "", projectID: UUID? = nil,
                 workspace: AutomationWorkspace = .current, reuseSession: Bool = false,
@@ -155,6 +179,7 @@ public struct Automation: Codable, Identifiable, Sendable, Equatable {
         self.lastSessionID = nil
         self.createdAt = createdAt
         self.updatedAt = createdAt
+        self.eventLedger = AutomationEventLedger()
     }
 
     public init(from decoder: Decoder) throws {
@@ -175,6 +200,7 @@ public struct Automation: Codable, Identifiable, Sendable, Equatable {
         lastSessionID = try c.decodeIfPresent(UUID.self, forKey: .lastSessionID)
         createdAt = try c.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
         updatedAt = try c.decodeIfPresent(Date.self, forKey: .updatedAt) ?? createdAt
+        eventLedger = (try? c.decodeIfPresent(AutomationEventLedger.self, forKey: .eventLedger)) ?? AutomationEventLedger()
     }
 
     /// Earliest occurrence of any trigger strictly after `date`.
@@ -189,6 +215,8 @@ public struct Automation: Codable, Identifiable, Sendable, Equatable {
     /// neither fires nor gets reported as missed.
     public mutating func reschedule(now: Date = Date(), calendar: Calendar = .current) {
         nextRunAt = isSchedulable ? nextRunAt(after: now, calendar: calendar) : nil
+        // Events that arrive while it can't run aren't a backlog to replay: re-prime when it can again.
+        if !isWatchingEvents { eventLedger.primed = [:] }
     }
 }
 
@@ -202,6 +230,9 @@ public struct AutomationRun: Codable, Identifiable, Sendable, Equatable {
     public var status: AutomationRunStatus
     public var sessionID: UUID?
     public var error: String?
+    /// Event runs: the event key (`AutomationEvents.key`) and a one-line summary ("#12 Title").
+    public var eventKey: String?
+    public var eventSummary: String?
 
     public init(id: UUID = UUID(), automationID: UUID, trigger: AutomationRunTrigger, scheduledFor: Date? = nil,
                 startedAt: Date = Date(), status: AutomationRunStatus = .pending) {
@@ -227,6 +258,8 @@ public struct AutomationRun: Codable, Identifiable, Sendable, Equatable {
         status = (try? c.decodeIfPresent(AutomationRunStatus.self, forKey: .status)) ?? .failed
         sessionID = try c.decodeIfPresent(UUID.self, forKey: .sessionID)
         error = try c.decodeIfPresent(String.self, forKey: .error)
+        eventKey = try c.decodeIfPresent(String.self, forKey: .eventKey)
+        eventSummary = try c.decodeIfPresent(String.self, forKey: .eventSummary)
     }
 }
 

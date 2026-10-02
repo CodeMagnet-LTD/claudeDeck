@@ -58,6 +58,7 @@ struct WorkspaceView: View {
         case .diff(let repo, _, _): (repo as NSString).abbreviatingWithTildeInPath
         case .automations: ""
         case .repository(let repo, _): (repo as NSString).abbreviatingWithTildeInPath
+        case .inbox: ""
         }
     }
 }
@@ -84,6 +85,8 @@ private struct TabContent: View {
             AutomationsView()
         case .repository(let repo, let page):
             if isSelected { RepositoryPageView(repo: repo, page: page) }
+        case .inbox:
+            if isSelected { InboxView() }   // polls gh only while visible
         }
     }
 }
@@ -235,6 +238,7 @@ private struct TabItem: View {
         case .diff: Image(systemName: "plus.forwardslash.minus").foregroundStyle(.orange)
         case .automations: Image(systemName: "clock.arrow.circlepath")
         case .repository(_, let page): Image(systemName: page.symbol)
+        case .inbox: Image(systemName: "tray")
         }
     }
 
@@ -482,6 +486,7 @@ extension WorkspaceTab {
         case .diff(let repo, let path, let staged): "diff:\(staged ? "staged" : "worktree"):\(repo):\(path)"
         case .automations: "automations"
         case .repository(let repo, let page): "repo:\(page.rawValue):\(repo)"
+        case .inbox: "inbox"
         }
     }
 
@@ -494,6 +499,7 @@ extension WorkspaceTab {
                 : String(localized: "\((path as NSString).lastPathComponent) (Working Tree)")
         case .automations: String(localized: "Automations")
         case .repository(_, let page): page.title
+        case .inbox: String(localized: "Inbox")
         }
     }
 
@@ -511,6 +517,7 @@ extension WorkspaceTab {
         case .sessions: String(localized: "Terminal sessions (⌘1)")
         case .automations: String(localized: "Automations")
         case .repository(let repo, let page): page.title + " — " + (repo as NSString).abbreviatingWithTildeInPath
+        case .inbox: String(localized: "GitHub issues and pull requests")
         default: url.map { ($0.path as NSString).abbreviatingWithTildeInPath } ?? ""
         }
     }

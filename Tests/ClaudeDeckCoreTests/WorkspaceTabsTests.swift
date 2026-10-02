@@ -172,6 +172,13 @@ import Testing
         #expect(empty.tabs == [.sessions])
     }
 
+    @Test func inboxTabPersists() throws {
+        var list = WorkspaceTabList()
+        list.open(.inbox)
+        let back = try JSONDecoder().decode(WorkspaceTabList.self, from: JSONEncoder().encode(list.persistable))
+        #expect(back.tabs == [.sessions, .inbox] && back.selected == .inbox)
+    }
+
     @Test func oldSettingsDecodeWithTabsDefault() throws {
         let json = #"{"settings":{"openFilesInBuiltInEditor":true}}"#
         let deck = try JSONDecoder().decode(DeckData.self, from: Data(json.utf8))

@@ -206,6 +206,12 @@ extension AppModel {
         tabs.open(.automations)
         showMainWindow()
     }
+
+    /// The Inbox tab (GitHub issues and pull requests).
+    func showInbox() {
+        tabs.open(.inbox)
+        showMainWindow()
+    }
 }
 
 extension UserDefaults {

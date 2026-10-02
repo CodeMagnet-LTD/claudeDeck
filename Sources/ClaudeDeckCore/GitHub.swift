@@ -43,6 +43,8 @@ public struct GitHubChecks: Sendable, Equatable {
     /// Other terminal results that are neither success nor failure (SKIPPED, NEUTRAL, STALE).
     public var skipped = 0
     public var failedNames: [String] = []
+    /// The failed checks with what is known about their GitHub Actions run (for "Fix with Claude").
+    public var failedChecks: [GitHubFailedCheck] = []
 
     public var total: Int { passed + failed + pending + skipped }
     public var outcome: Outcome { failed > 0 ? .failed : pending > 0 ? .pending : .passed }
@@ -283,8 +285,11 @@ public enum GitHub {
         var status: String?
         var conclusion: String?
         var state: String?
+        var detailsUrl: String?
+        var targetUrl: String?
+        var workflowName: String?
         enum CodingKeys: String, CodingKey {
-            case typename = "__typename", name, context, status, conclusion, state
+            case typename = "__typename", name, context, status, conclusion, state, detailsUrl, targetUrl, workflowName
         }
     }
     private struct RawItem: Decodable {
@@ -370,7 +375,10 @@ public enum GitHub {
             if check.typename == "StatusContext" || (check.status == nil && check.state != nil) {
                 switch (check.state ?? "").uppercased() {
                 case "SUCCESS": result.passed += 1
-                case "FAILURE", "ERROR": result.failed += 1; result.failedNames.append(name)
+                case "FAILURE", "ERROR":
+                    result.failed += 1
+                    result.failedNames.append(name)
+                    result.failedChecks.append(GitHubFailedCheck(name: name, workflowName: nil, detailsURL: check.targetUrl))
                 default: result.pending += 1   // PENDING, EXPECTED
                 }
                 continue
@@ -381,6 +389,8 @@ public enum GitHub {
             case "FAILURE", "TIMED_OUT", "CANCELLED", "ACTION_REQUIRED", "STARTUP_FAILURE":
                 result.failed += 1
                 result.failedNames.append(name)
+                result.failedChecks.append(GitHubFailedCheck(name: name, workflowName: check.workflowName.flatMap { $0.isEmpty ? nil : $0 },
+                                                             detailsURL: check.detailsUrl))
             default: result.skipped += 1   // SKIPPED, NEUTRAL, STALE
             }
         }

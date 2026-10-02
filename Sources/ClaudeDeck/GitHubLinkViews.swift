@@ -254,7 +254,9 @@ struct LinkedWorkItemView: View {
                 case .failed:
                     Label("\(checks.failed) of \(checks.total) checks failed", systemImage: "xmark.circle.fill")
                         .foregroundStyle(.red)
-                    if !checks.failedNames.isEmpty {
+                    if let item = model.deck.session(sessionID)?.linkedWorkItem, !checks.failedChecks.isEmpty {
+                        FailedChecksView(pullRequest: item, details: details, sessionID: sessionID, projectID: nil)
+                    } else if !checks.failedNames.isEmpty {
                         Text(checks.failedNames.prefix(4).joined(separator: ", "))
                             .font(.caption).foregroundStyle(.secondary).lineLimit(2)
                     }

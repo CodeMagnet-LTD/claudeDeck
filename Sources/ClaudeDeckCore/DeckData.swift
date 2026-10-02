@@ -212,6 +212,8 @@ public struct DeckData: Codable, Sendable, Equatable {
     public var automations: [Automation] = []
     /// Recent automation runs, newest `maxRunsPerAutomation` per automation.
     public var automationRuns: [AutomationRun] = []
+    /// "Fix with Claude" requests for failed CI check runs (see GitHubInbox.swift).
+    public var ciRepairRequests: [CIRepairRequest] = []
 
     public static let maxPanes = 4
 
@@ -229,6 +231,7 @@ public struct DeckData: Codable, Sendable, Equatable {
         syncState = try c.decodeIfPresent(DeckSyncState.self, forKey: .syncState) ?? DeckSyncState()
         automations = try c.decodeIfPresent([Automation].self, forKey: .automations) ?? []
         automationRuns = try c.decodeIfPresent([AutomationRun].self, forKey: .automationRuns) ?? []
+        ciRepairRequests = (try? c.decodeIfPresent([Lossy<CIRepairRequest>].self, forKey: .ciRepairRequests))?.compactMap(\.value) ?? []
     }
 
     // MARK: Mutations

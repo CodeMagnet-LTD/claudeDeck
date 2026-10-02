@@ -85,22 +85,7 @@ extension AppModel {
     func sendWorkItemToClaude(_ id: UUID) {
         guard let session = deck.session(id), session.kind == .claude, let item = session.linkedWorkItem else { return }
         let title = GitHubMonitor.shared.details[id]?.title
-        let what = item.kind == .pr ? "pull request" : "issue"
-        let message = "Work on this GitHub \(what): #\(item.number)\(title.map { " \($0)" } ?? "")\n\(item.url)"
-        let wasRunning = terminals.isRunning(id)
-        selectedSessionID = id
-        Task { @MainActor in
-            // Just started (or resumed): wait for Claude's prompt before typing.
-            if !wasRunning {
-                launch(id, resume: true)
-                let deadline = ContinuousClock.now + .seconds(30)
-                while ContinuousClock.now < deadline, terminals.isRunning(id), !status(of: id).display.isIdle {
-                    try? await Task.sleep(for: .milliseconds(500))
-                }
-                try? await Task.sleep(for: .seconds(1))
-            }
-            terminals.type(message + "\r", into: id)
-        }
+        sendPrompt(GitHubListItem.workPrompt(kind: item.kind, number: item.number, title: title, url: item.url), to: id)
     }
 }
 
