@@ -436,6 +436,18 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
   CI kırılınca ya da düzelince, review ya da yeni yorum gelince bildirim gönderir.
 - Her şey senin `gh` CLI'ın ve onun oturumu üzerinden gider. `gh` yoksa açılır pencere nasıl kurulacağını anlatır.
 
+### Claude kullanım göstergesi
+- Kenar çubuğunun altında Claude planının 5 saatlik ve haftalık kullanımı, sıfırlanmaya kalan süreyle birlikte
+  görünür (örneğin `5 sa %62 · 1sa 20dk`). Ayrıntılar için üstüne tıkla; menü çubuğu penceresi de aynı özeti gösterir.
+- Claude Code'un zaten açık olan girişini (Anahtar Zinciri'ndeki "Claude Code-credentials" kaydı ya da
+  `~/.claude/.credentials.json`) yalnızca okur: ClaudeDeck bu token'ı asla yenilemez, değiştirmez, saklamaz.
+  Uygulama açıkken 5 dakikada bir sorar, hata olursa daha seyrek. Claude planıyla giriş yoksa (ya da token'ın
+  süresi dolmuşsa, Claude Code yenileyene kadar) gösterge hiç görünmez.
+- **Limit sonrası devam:** bir oturum "You've hit your session limit · resets 3:20am" ile durursa, limit
+  sıfırlanınca ClaudeDeck ona devam mesajını gönderir (her limit için bir kez ve yalnızca oturum hâlâ prompt'ta
+  bekliyorsa). Ayarlar › Oturumlar › "Kullanım limiti sıfırlanınca oturumlara devam et" ile kapatılabilir.
+  Yalnızca ClaudeDeck açıkken gelen limitler fark edilir.
+
 ### Otomasyonlar
 - Kenar çubuğunun altındaki saat düğmesinden, Dosya › "Otomasyonlar…" menüsünden ya da menü çubuğundan
   açılır; sekme olarak gelir.

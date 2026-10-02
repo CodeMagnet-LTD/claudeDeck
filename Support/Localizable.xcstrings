@@ -41,6 +41,16 @@
         }
       }
     },
+    "%@ used": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ kullanıldı"
+          }
+        }
+      }
+    },
     "%@ · %@": {
       "shouldTranslate": false
     },
@@ -137,12 +147,32 @@
         }
       }
     },
+    "%lldd %lldh": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lldg %lldsa"
+          }
+        }
+      }
+    },
     "%lldh": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "%lldsa"
+          }
+        }
+      }
+    },
+    "%lldh %lldm": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lldsa %llddk"
           }
         }
       }
@@ -190,6 +220,26 @@
         }
       }
     },
+    "5-hour usage %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 saatlik kullanım %@"
+          }
+        }
+      }
+    },
+    "5h": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 sa"
+          }
+        }
+      }
+    },
     "A folder can’t be moved into itself.": {
       "localizations": {
         "tr": {
@@ -206,6 +256,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu süreden daha geç fark edilen zamanlanmış çalıştırma (Mac uykudaysa, ClaudeDeck açık değilse) atlanır."
+          }
+        }
+      }
+    },
+    "A session that stopped on the Claude plan's usage limit gets this message once, when the limit resets.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude planının kullanım limitinde duran bir oturuma, limit sıfırlandığında bu mesaj bir kez gönderilir."
           }
         }
       }
@@ -770,6 +830,16 @@
         }
       }
     },
+    "Claude Plan Usage": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Plan Kullanımı"
+          }
+        }
+      }
+    },
     "Claude could not be started.": {
       "localizations": {
         "tr": {
@@ -806,6 +876,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Claude çalışıyor; yeniden başlatmak mevcut turu yarıda keser."
+          }
+        }
+      }
+    },
+    "Claude plan usage": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude plan kullanımı"
+          }
+        }
+      }
+    },
+    "Claude plan usage — click for details": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude plan kullanımı — ayrıntılar için tıklayın"
           }
         }
       }
@@ -1093,6 +1183,16 @@
         }
       }
     },
+    "Continue sessions when the usage limit resets": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kullanım limiti sıfırlanınca oturumlara devam et"
+          }
+        }
+      }
+    },
     "Continue the last run's session": {
       "localizations": {
         "tr": {
@@ -1193,6 +1293,16 @@
         }
       }
     },
+    "Couldn't update — showing values from %@.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güncellenemedi — %@ itibarıyla değerler gösteriliyor."
+          }
+        }
+      }
+    },
     "Couldn’t Install the Hook": {
       "localizations": {
         "tr": {
@@ -1219,6 +1329,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "~/.claude/settings.json okunamadı: %@"
+          }
+        }
+      }
+    },
+    "Current session (5 hours)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçerli oturum (5 saat)"
           }
         }
       }
@@ -3223,6 +3343,16 @@
         }
       }
     },
+    "Resets in %@ (%@)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ sonra sıfırlanır (%@)"
+          }
+        }
+      }
+    },
     "Restart": {
       "localizations": {
         "tr": {
@@ -3963,6 +4093,26 @@
         }
       }
     },
+    "Stopped on the limit — continue when it resets:": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limitte durdu — sıfırlanınca devam edecek:"
+          }
+        }
+      }
+    },
+    "Stopped on the limit:": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Limitte durdu:"
+          }
+        }
+      }
+    },
     "Succeeded": {
       "localizations": {
         "tr": {
@@ -4286,6 +4436,16 @@
         }
       }
     },
+    "This week": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu hafta"
+          }
+        }
+      }
+    },
     "Time": {
       "localizations": {
         "tr": {
@@ -4426,6 +4586,26 @@
         }
       }
     },
+    "Updated %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güncellendi: %@"
+          }
+        }
+      }
+    },
+    "Usage isn't available. Sign in to Claude Code with a Claude plan to see it.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kullanım bilgisi yok. Görmek için Claude Code'a bir Claude planıyla giriş yapın."
+          }
+        }
+      }
+    },
     "Use Regular Expression": {
       "localizations": {
         "tr": {
@@ -4486,12 +4666,32 @@
         }
       }
     },
+    "Week": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hafta"
+          }
+        }
+      }
+    },
     "Weekly changelog": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Haftalık değişiklik günlüğü"
+          }
+        }
+      }
+    },
+    "Weekly usage %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Haftalık kullanım %@"
           }
         }
       }

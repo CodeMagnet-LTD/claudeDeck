@@ -95,6 +95,14 @@ final class AppModel {
     // MARK: Automations (AutomationScheduler) — begin
     @ObservationIgnored private(set) var automations: AutomationScheduler?
     // MARK: Automations — end
+    // MARK: Usage meter (UsageMonitor, AppModel+UsageLimit) — begin
+    let usage = UsageMonitor()
+    /// Sessions that stopped on the plan's usage limit, waiting for the reset to be continued.
+    var usageLimitHits: [UUID: UsageLimitHit] = [:]
+    /// The reset each session was last continued for (one continue per limit event).
+    @ObservationIgnored var continuedLimitResets: [UUID: Date] = [:]
+    @ObservationIgnored var usageLimitTask: Task<Void, Never>?
+    // MARK: Usage meter — end
 
     init(store: DeckDataStore = .default()) {
         self.store = store
@@ -128,6 +136,7 @@ final class AppModel {
         reloadStatuses(initial: true)
         cleanupStatusFiles()
         if !Self.isDemo { sync.start(model: self) } // iCloud sync (no-op unless enabled)
+        usage.start()
         // Resolving `claude` runs the login shell; keep it off the main thread.
         Task { @MainActor in
             claudePath = await Task.detached { ShellEnvironment.resolveClaude() }.value
@@ -316,6 +325,12 @@ final class AppModel {
         tailers[id]?.stop()
         tailers[id] = nil
         let tailer = FileTailer(url: URL(fileURLWithPath: path)) { [weak self] chunk in
+            // Only look for limit events when the chunk may hold one or a hit is waiting to be cleared.
+            let mayMatter = chunk.contains(#""rate_limit""#) || chunk.contains(#""isApiErrorMessage":true"#)
+                || MainActor.assumeIsolated { self?.usageLimitHits[id] != nil }
+            if mayMatter, let limit = Transcript.lastUsageLimitEvent(in: chunk) {
+                Task { @MainActor in self?.receiveUsageLimit(limit, for: id) }
+            }
             guard let signal = Transcript.lastSignal(in: chunk) else { return }
             Task { @MainActor in self?.receive(signal, for: id) }
         }
@@ -418,6 +433,7 @@ final class AppModel {
         }
         deck.updateSession(id) { $0.busyAtQuit = false }
         transcriptSignals[id] = nil
+        usageLimitHits[id] = nil
         answeredAt[id] = nil
         hookStatuses[id] = nil
         launchedAt[id] = Date()
@@ -452,19 +468,25 @@ final class AppModel {
                     try? await Task.sleep(for: .seconds(1))
                 }
             }
-            guard wantsContinue, terminals.isRunning(id) else { return }
-            let custom = deck.settings.continueMessage.trimmingCharacters(in: .whitespacesAndNewlines)
-            let message = custom.isEmpty ? String(localized: "Continue where you left off.") : custom
-            let sentAt = Date()
-            terminals.type(message + "\r", into: id)
-            // While Claude is still starting up (MCP servers connecting) the Enter can get lost and
-            // the message just sits in the input. No UserPromptSubmit yet → press Enter again.
-            for _ in 0..<3 {
-                try? await Task.sleep(for: .seconds(3))
-                guard terminals.isRunning(id) else { return }
-                if let hook = hookStatuses[id], hook.updatedAt > sentAt, hook.event == "UserPromptSubmit" || hook.state != .idle { return }
-                terminals.type("\r", into: id)
-            }
+            guard wantsContinue else { return }
+            await sendContinueMessage(id)
+        }
+    }
+
+    /// Types the "continue" message (Settings › Sessions) into a running Claude session.
+    func sendContinueMessage(_ id: UUID) async {
+        guard terminals.isRunning(id) else { return }
+        let custom = deck.settings.continueMessage.trimmingCharacters(in: .whitespacesAndNewlines)
+        let message = custom.isEmpty ? String(localized: "Continue where you left off.") : custom
+        let sentAt = Date()
+        terminals.type(message + "\r", into: id)
+        // While Claude is still starting up (MCP servers connecting) the Enter can get lost and
+        // the message just sits in the input. No UserPromptSubmit yet → press Enter again.
+        for _ in 0..<3 {
+            try? await Task.sleep(for: .seconds(3))
+            guard terminals.isRunning(id) else { return }
+            if let hook = hookStatuses[id], hook.updatedAt > sentAt, hook.event == "UserPromptSubmit" || hook.state != .idle { return }
+            terminals.type("\r", into: id)
         }
     }
 
@@ -487,6 +509,7 @@ final class AppModel {
         tailers[id] = nil
         pendingCompact.remove(id)
         pendingContinue.remove(id)
+        usageLimitHits[id] = nil
         // On quit, prepareForQuit already recorded which sessions were open and working.
         guard !isQuitting else { return }
         deck.updateSession(id) { $0.isOpen = false; $0.busyAtQuit = false }
@@ -607,12 +630,14 @@ final class AppModel {
         deck.removeSession(id)
         hookStatuses[id] = nil
         transcriptSignals[id] = nil
+        usageLimitHits[id] = nil
         answeredAt[id] = nil
         seenAt[id] = nil
         launchedAt[id] = nil
         lastNotified[id] = nil
         pendingCompact.remove(id)
         pendingContinue.remove(id)
+        usageLimitHits[id] = nil
         scheduleSave()
         onCountsChanged?()
     }

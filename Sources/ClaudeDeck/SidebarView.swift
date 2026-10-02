@@ -32,6 +32,7 @@ struct SidebarView: View {
                     WaitingTray(sessions: waiting, maxHeight: sidebarHeight * 0.4)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
+                UsageMeterFooter()
                 footer
             }
             .animation(.snappy(duration: 0.3), value: waiting.isEmpty)

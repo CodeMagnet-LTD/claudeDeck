@@ -134,6 +134,8 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     public var continueOnlyIfBusy = true
     /// Message to send; empty = the app's localized default.
     public var continueMessage = ""
+    /// A session that stopped on the plan's usage limit gets the "continue" message once the limit resets.
+    public var continueAfterUsageLimit = true
     /// Transcripts bigger than this get `/compact` after an automatic resume.
     /// Legacy (transcript file size); kept so old settings files decode. Not used any more.
     public var compactThresholdKB = 800
@@ -176,6 +178,7 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         // "Continue every resumed session" used to be continueAfterResume without continueOnlyIfBusy.
         continueAllOnResume = try c.decodeIfPresent(Bool.self, forKey: .continueAllOnResume)
             ?? (continueAfterResume && !continueOnlyIfBusy)
+        continueAfterUsageLimit = try c.decodeIfPresent(Bool.self, forKey: .continueAfterUsageLimit) ?? d.continueAfterUsageLimit
         compactThresholdKB = try c.decodeIfPresent(Int.self, forKey: .compactThresholdKB) ?? d.compactThresholdKB
         compactThresholdTokens = try c.decodeIfPresent(Int.self, forKey: .compactThresholdTokens) ?? d.compactThresholdTokens
         notifications = try c.decodeIfPresent(Bool.self, forKey: .notifications) ?? d.notifications

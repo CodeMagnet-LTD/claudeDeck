@@ -38,6 +38,7 @@ struct MenuBarContent: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             Divider()
+            UsageMenuBarSummary()
             ScrollView {
                 VStack(alignment: .leading, spacing: 2) {
                     let sessions = orderedSessions
