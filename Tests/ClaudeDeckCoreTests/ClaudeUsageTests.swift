@@ -61,7 +61,7 @@ import Testing
         #expect(UsageFormat.countdown(to: now.addingTimeInterval(80 * 60), now: now) == "1h 20m")
         #expect(UsageFormat.countdown(to: now.addingTimeInterval(3 * 3600), now: now) == "3h")
         #expect(UsageFormat.countdown(to: now.addingTimeInterval(6 * 86400 + 7 * 3600), now: now) == "6d 7h")
-        #expect(UsageFormat.percent(UsageWindow(usedPercent: 61.6, resetsAt: nil)) == "62%")
+        #expect(UsageFormat.percent(UsageWindow(usedPercent: 61.6, resetsAt: nil), locale: Locale(identifier: "en_US")) == "62%")
     }
 
     @Test func oldSettingsContinueAfterTheLimitByDefault() throws {

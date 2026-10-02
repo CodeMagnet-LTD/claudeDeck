@@ -50,6 +50,9 @@ struct SettingsView: View {
                     .font(.caption).foregroundStyle(.secondary)
                 TextField("Message", text: setting(\.continueMessage), prompt: Text("Continue where you left off."))
                 Toggle("Also send it to every resumed session", isOn: setting(\.continueAllOnResume))
+                Toggle("Continue sessions when the usage limit resets", isOn: setting(\.continueAfterUsageLimit))
+                Text("A session that stopped on the Claude plan's usage limit gets this message once, when the limit resets.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
             Section("Editor") {
                 Toggle("Open text files in the built-in editor (double-click in the Files panel)", isOn: setting(\.openFilesInBuiltInEditor))

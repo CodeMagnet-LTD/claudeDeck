@@ -155,8 +155,9 @@ public enum UsageFormat {
         return mins > 0 ? String(localized: "\(hours)h \(mins)m") : String(localized: "\(hours)h")
     }
 
-    public static func percent(_ window: UsageWindow) -> String {
-        "\(Int(window.usedPercent.rounded()))%"
+    /// "62%" ("%62" in Turkish).
+    public static func percent(_ window: UsageWindow, locale: Locale = .current) -> String {
+        (window.usedPercent.rounded() / 100).formatted(.percent.precision(.fractionLength(0)).locale(locale))
     }
 }
 
@@ -174,21 +175,30 @@ extension Transcript {
     /// The last usage-limit hit, or a later main-thread message that supersedes it, in a chunk of
     /// complete JSONL lines. nil when the chunk has neither.
     public static func lastUsageLimitEvent(in chunk: String) -> UsageLimitEvent? {
+        // Runs on every transcript append: only a possible limit line is JSON-decoded; any other
+        // main-thread message is recognized by its top-level fields' text.
         for line in chunk.split(separator: "\n").reversed() {
-            guard line.contains("\"user\"") || line.contains("\"assistant\""),
-                  let object = try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any],
-                  let type = object["type"] as? String, type == "user" || type == "assistant",
-                  object["isSidechain"] as? Bool != true
-            else { continue }
-            let at = (object["timestamp"] as? String).flatMap(parseDate) ?? Date()
-            if type == "assistant", object["error"] as? String == "rate_limit" || object["isApiErrorMessage"] as? Bool == true,
+            guard line.contains(#""type":"user""#) || line.contains(#""type":"assistant""#) else { continue }
+            if line.contains(#""rate_limit""#) || line.contains(#""isApiErrorMessage":true"#),
+               let object = try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any],
+               object["type"] as? String == "assistant", object["isSidechain"] as? Bool != true,
                let text = messageText(object), isUsageLimitText(text) {
+                let at = (object["timestamp"] as? String).flatMap(parseDate) ?? Date()
                 return .hit(at: at, resetsAt: limitResetDate(in: text, after: at))
             }
+            if line.contains(#""isSidechain":true"#) { continue }
             // Tool results and meta lines (e.g. "[Request interrupted…]") count as activity too.
-            return .cleared(at: at)
+            return .cleared(at: timestampField(line) ?? Date())
         }
         return nil
+    }
+
+    /// The first `"timestamp":"…"` value in a JSONL line, without decoding the line.
+    static func timestampField(_ line: Substring) -> Date? {
+        guard let key = line.range(of: #""timestamp":""#) else { return nil }
+        let rest = line[key.upperBound...]
+        guard let end = rest.firstIndex(of: "\"") else { return nil }
+        return parseDate(String(rest[..<end]))
     }
 
     static func messageText(_ object: [String: Any]) -> String? {

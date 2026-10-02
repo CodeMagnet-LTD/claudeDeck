@@ -428,6 +428,18 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
   merged or closed, CI fails or passes, a review arrives, or new comments come in.
 - Everything goes through your own `gh` CLI and its login. Without `gh`, the popover explains how to set it up.
 
+### Claude usage meter
+- The bottom of the sidebar shows your Claude plan's 5-hour and weekly usage with the time left until each
+  resets (for example `5h 62% · 1h 20m`). Click it for details; the menu bar window shows the same summary.
+- It uses the login Claude Code already has (the "Claude Code-credentials" Keychain item, or
+  `~/.claude/.credentials.json`) read-only: ClaudeDeck never refreshes, changes or stores that token. It asks
+  every 5 minutes while the app runs, less often after errors. Without a Claude plan login (or once the token
+  has expired, until Claude Code renews it) the meter simply stays hidden.
+- **Continue after the limit:** when a session stops with "You've hit your session limit · resets 3:20am",
+  ClaudeDeck sends it the continue message once the limit has reset (once per limit, only if the session is
+  still sitting at its prompt). Turn it off in Settings › Sessions › "Continue sessions when the usage limit
+  resets". Only limits hit while ClaudeDeck is running are noticed.
+
 ### Automations
 - Open them from the clock button at the bottom of the sidebar, File › Automations… or the menu bar. They open as a tab.
 - An automation is a prompt, a project and one or more schedules: every hour at a minute, every day, every
