@@ -325,7 +325,10 @@ final class AppModel {
         tailers[id]?.stop()
         tailers[id] = nil
         let tailer = FileTailer(url: URL(fileURLWithPath: path)) { [weak self] chunk in
-            if let limit = Transcript.lastUsageLimitEvent(in: chunk) {
+            // Only look for limit events when the chunk may hold one or a hit is waiting to be cleared.
+            let mayMatter = chunk.contains(#""rate_limit""#) || chunk.contains(#""isApiErrorMessage":true"#)
+                || MainActor.assumeIsolated { self?.usageLimitHits[id] != nil }
+            if mayMatter, let limit = Transcript.lastUsageLimitEvent(in: chunk) {
                 Task { @MainActor in self?.receiveUsageLimit(limit, for: id) }
             }
             guard let signal = Transcript.lastSignal(in: chunk) else { return }
