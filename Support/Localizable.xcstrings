@@ -41,6 +41,16 @@
         }
       }
     },
+    "%@ tokens": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ token"
+          }
+        }
+      }
+    },
     "%@ · %@": {
       "shouldTranslate": false
     },
@@ -123,6 +133,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%2$lld dosyada %1$lld sonuç"
+          }
+        }
+      }
+    },
+    "%lld tools": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld araç"
           }
         }
       }
@@ -216,6 +236,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Aktif"
+          }
+        }
+      }
+    },
+    "Activity": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Etkinlik"
           }
         }
       }
@@ -366,6 +396,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Claude'a Ekle"
+          }
+        }
+      }
+    },
+    "Agents": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajanlar"
+          }
+        }
+      }
+    },
+    "Agents appear once Claude writes its first message.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude ilk mesajını yazınca ajanlar burada görünür."
           }
         }
       }
@@ -556,6 +606,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Otomasyonlar…"
+          }
+        }
+      }
+    },
+    "Background": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arka planda"
           }
         }
       }
@@ -1413,6 +1473,16 @@
         }
       }
     },
+    "Done": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bitti"
+          }
+        }
+      }
+    },
     "Done — %@": {
       "localizations": {
         "tr": {
@@ -2013,6 +2083,26 @@
         }
       }
     },
+    "Main": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ana oturum"
+          }
+        }
+      }
+    },
+    "Main session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ana oturum"
+          }
+        }
+      }
+    },
     "Mark as Resolved": {
       "localizations": {
         "tr": {
@@ -2363,12 +2453,32 @@
         }
       }
     },
+    "No Session Selected": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seçili Oturum Yok"
+          }
+        }
+      }
+    },
     "No Sessions": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Oturum Yok"
+          }
+        }
+      }
+    },
+    "No activity yet": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz etkinlik yok"
           }
         }
       }
@@ -2493,6 +2603,16 @@
         }
       }
     },
+    "No subagents yet": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz alt ajan yok"
+          }
+        }
+      }
+    },
     "No textual changes": {
       "localizations": {
         "tr": {
@@ -2543,12 +2663,32 @@
         }
       }
     },
+    "Not a Claude Session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Oturumu Değil"
+          }
+        }
+      }
+    },
     "Not a GitHub issue or pull request": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "GitHub issue veya pull request bağlantısı değil"
+          }
+        }
+      }
+    },
+    "Not finished": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tamamlanmadı"
           }
         }
       }
@@ -3513,6 +3653,16 @@
         }
       }
     },
+    "Select a Claude session to see its agents.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajanlarını görmek için bir Claude oturumu seçin."
+          }
+        }
+      }
+    },
     "Select a running session to add this file to it": {
       "localizations": {
         "tr": {
@@ -3583,6 +3733,16 @@
         }
       }
     },
+    "Session Agents (⌘⇧A)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum Ajanları (⌘⇧A)"
+          }
+        }
+      }
+    },
     "Sessions": {
       "localizations": {
         "tr": {
@@ -3609,6 +3769,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ayarlar — otomatik devam, /compact, bildirimler (⌘,)"
+          }
+        }
+      }
+    },
+    "Shell terminals don’t run agents.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kabuk terminalleri ajan çalıştırmaz."
           }
         }
       }
@@ -3879,6 +4049,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bir şablonla başlayın"
+          }
+        }
+      }
+    },
+    "Started: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başladı: %@"
           }
         }
       }
@@ -4306,6 +4486,16 @@
         }
       }
     },
+    "Timeline": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zaman Çizelgesi"
+          }
+        }
+      }
+    },
     "Tracking %@": {
       "localizations": {
         "tr": {
@@ -4352,6 +4542,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kaldır"
+          }
+        }
+      }
+    },
+    "Unknown": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bilinmiyor"
           }
         }
       }
@@ -4452,6 +4652,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bekleyen %lld"
+          }
+        }
+      }
+    },
+    "Waiting for Transcript": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konuşma Kaydı Bekleniyor"
           }
         }
       }
@@ -4961,6 +5171,16 @@
     },
     "−%lld": {
       "shouldTranslate": false
+    },
+    "−30 min": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "−30 dk"
+          }
+        }
+      }
     },
     "⌥-click to add @path#Lline to Claude": {
       "localizations": {

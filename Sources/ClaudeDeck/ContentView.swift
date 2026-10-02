@@ -42,6 +42,13 @@ struct ContentView: View {
                 }
                 .help("Source Control Changes (⌘⇧G)")
                 .keyboardShortcut("g", modifiers: [.command, .shift])
+                Button {
+                    if showFiles && inspectorTab == .agents { showFiles = false } else { inspectorTab = .agents; showFiles = true }
+                } label: {
+                    Label("Agents", systemImage: "point.3.connected.trianglepath.dotted")
+                }
+                .help("Session Agents (⌘⇧A)")
+                .keyboardShortcut("a", modifiers: [.command, .shift])
             }
             ToolbarItem(placement: .navigation) {
                 Button {

@@ -5,10 +5,11 @@ import SwiftUI
 
 /// Which page the right-hand inspector shows.
 enum InspectorTab: String {
-    case files, changes
+    case files, changes, agents
 }
 
-/// The inspector: a Files | Changes switch over the file browser and the source control view.
+/// The inspector: a Files | Changes | Agents switch over the file browser, the source control view
+/// and the selected session's agents (AgentsView.swift).
 struct InspectorPanel: View {
     @Binding var tab: InspectorTab
 
@@ -17,6 +18,7 @@ struct InspectorPanel: View {
             Picker("Inspector", selection: $tab) {
                 Text("Files").tag(InspectorTab.files)
                 Text("Changes").tag(InspectorTab.changes)
+                Text("Agents").tag(InspectorTab.agents)
             }
             .pickerStyle(.segmented)
             .labelsHidden()
@@ -32,6 +34,9 @@ struct InspectorPanel: View {
                     .accessibilityHidden(tab != .files)
                 if tab == .changes {
                     ChangesView().background(.background)
+                }
+                if tab == .agents {
+                    AgentsPanel().background(.background)
                 }
             }
         }
