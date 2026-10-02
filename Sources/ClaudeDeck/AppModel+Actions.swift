@@ -39,6 +39,7 @@ extension AppModel {
             }
             if lastDraggedSessionID == id { return }
             selectedSessionID = id
+            focusTerminal(of: id) // the click is over by now, so the event check in the setter can't see it
         }
     }
 
@@ -52,6 +53,7 @@ extension AppModel {
         if let recent = running.max(by: { ($0.lastActivityAt ?? $0.createdAt) < ($1.lastActivityAt ?? $1.createdAt) }) {
             if project.collapsed { mutate { $0.updateProject(id) { $0.collapsed = false } } }
             selectedSessionID = recent.id
+            focusTerminal(of: recent.id)
         } else if idleExpandedProjects.contains(id) {
             idleExpandedProjects.remove(id)
         } else {

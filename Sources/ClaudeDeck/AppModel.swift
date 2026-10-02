@@ -455,7 +455,16 @@ final class AppModel {
             guard wantsContinue, terminals.isRunning(id) else { return }
             let custom = deck.settings.continueMessage.trimmingCharacters(in: .whitespacesAndNewlines)
             let message = custom.isEmpty ? String(localized: "Continue where you left off.") : custom
+            let sentAt = Date()
             terminals.type(message + "\r", into: id)
+            // While Claude is still starting up (MCP servers connecting) the Enter can get lost and
+            // the message just sits in the input. No UserPromptSubmit yet → press Enter again.
+            for _ in 0..<3 {
+                try? await Task.sleep(for: .seconds(3))
+                guard terminals.isRunning(id) else { return }
+                if let hook = hookStatuses[id], hook.updatedAt > sentAt, hook.event == "UserPromptSubmit" || hook.state != .idle { return }
+                terminals.type("\r", into: id)
+            }
         }
     }
 
