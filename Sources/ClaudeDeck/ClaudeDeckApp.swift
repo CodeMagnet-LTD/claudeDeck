@@ -24,6 +24,7 @@ struct ClaudeDeckApp: App {
                     .keyboardShortcut("t", modifiers: [.command, .option])
                 Divider()
                 OpenAutomationsButton(model: delegate.model) // Automations tab
+                OpenHistorySearchButton(model: delegate.model) // Search and Skills tabs
             }
             CommandGroup(after: .newItem) {
                 Divider()

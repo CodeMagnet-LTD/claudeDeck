@@ -159,6 +159,16 @@ import Testing
         #expect(empty.tabs == [.sessions])
     }
 
+    @Test func searchAndSkillsTabsPersist() throws {
+        var list = WorkspaceTabList()
+        list.open(.search)
+        list.open(.skills)
+        let round = try JSONDecoder().decode(WorkspaceTabList.self, from: JSONEncoder().encode(list.persistable))
+            .restored { _ in true }
+        #expect(round.tabs == [.sessions, .search, .skills])
+        #expect(round.selected == .skills)
+    }
+
     @Test func oldSettingsDecodeWithTabsDefault() throws {
         let json = #"{"settings":{"openFilesInBuiltInEditor":true}}"#
         let deck = try JSONDecoder().decode(DeckData.self, from: Data(json.utf8))

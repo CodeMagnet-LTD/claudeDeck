@@ -306,3 +306,34 @@ public enum HistorySearch {
         return out
     }
 }
+
+// MARK: - Opening a result
+
+extension HistorySearch {
+    /// The deck project a conversation's working directory belongs to: the deepest project whose
+    /// folder is the directory or contains it (worktrees live in `<project>/.claude/worktrees`).
+    public static func owningProject(cwd: String, in projects: [Project]) -> Project? {
+        let cwd = normalized(cwd)
+        return projects
+            .filter { let p = normalized($0.path); return cwd == p || cwd.hasPrefix(p == "/" ? "/" : p + "/") }
+            .max { normalized($0.path).count < normalized($1.path).count }
+    }
+
+    /// `<project>/.claude/worktrees/<name>[/…]` → (`<project>`, `<name>`).
+    public static func worktree(of cwd: String) -> (projectPath: String, name: String)? {
+        let path = normalized(cwd)
+        guard let range = path.range(of: "/.claude/worktrees/") else { return nil }
+        let name = path[range.upperBound...].split(separator: "/").first.map(String.init) ?? ""
+        guard !name.isEmpty else { return nil }
+        return (String(path[..<range.lowerBound]), name)
+    }
+
+    /// The folder to add as a project for a conversation no deck project owns.
+    public static func projectRoot(forCwd cwd: String) -> String {
+        worktree(of: cwd)?.projectPath ?? normalized(cwd)
+    }
+
+    private static func normalized(_ path: String) -> String {
+        path.count > 1 && path.hasSuffix("/") ? String(path.dropLast()) : path
+    }
+}

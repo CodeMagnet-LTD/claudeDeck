@@ -9,6 +9,10 @@ public enum WorkspaceTab: Hashable, Codable, Sendable {
     /// A full-width Changes diff. `repo` is the Changes view's directory, `path` relative to the repo.
     case diff(repo: String, path: String, staged: Bool)
     case automations
+    /// Full-text search over the Claude conversation history.
+    case search
+    /// The Skills browser.
+    case skills
 
     public var fileURL: URL? {
         if case .file(let url) = self { url } else { nil }
@@ -100,13 +104,13 @@ public struct WorkspaceTabList: Equatable, Codable, Sendable {
 
     // MARK: Persistence
 
-    /// What is restored on launch: file and automations tabs (diffs are transient). The selection
+    /// What is restored on launch: file, automations, search and skills tabs (diffs are transient). The selection
     /// survives if it is one of them.
     public var persistable: WorkspaceTabList {
         var copy = self
         copy.tabs = tabs.filter {
             switch $0 {
-            case .sessions, .file, .automations: true
+            case .sessions, .file, .automations, .search, .skills: true
             case .diff: false
             }
         }

@@ -48,8 +48,8 @@ enum DebugSnapshot {
             _ = approve ? model.approvePermission(id, expectedAt: stamp) : model.denyPermission(id, expectedAt: stamp)
         }
         // `<name>.tab`: "diff\t<dir>\t<path>\t<staged 0|1>" opens that diff tab (as a Changes click would),
-        // "file\t<path>\t<preview 0|1>" an editor tab, "automations" / "sessions" those tabs; "close-all"
-        // closes every tab but Sessions.
+        // "file\t<path>\t<preview 0|1>" an editor tab, "automations" / "sessions" / "skills" those tabs,
+        // "search\t<query>\t<all 0|1>" the Search tab with that query; "close-all" closes every tab but Sessions.
         for file in files where file.hasSuffix(".tab") {
             let path = (dir as NSString).appendingPathComponent(file)
             defer { try? FileManager.default.removeItem(atPath: path) }
@@ -60,6 +60,12 @@ enum DebugSnapshot {
                 model.tabs.openFile(URL(fileURLWithPath: parts[1]), preview: parts[2] == "1")
             } else if parts == ["automations"] {
                 model.tabs.open(.automations)
+            } else if parts == ["skills"] {
+                model.showSkills()
+            } else if parts.count == 3, parts[0] == "search" {
+                model.showHistorySearch()
+                HistorySearchController.shared.scope = parts[2] == "1" ? .all : .project
+                HistorySearchController.shared.query = parts[1]
             } else if parts == ["sessions"] {
                 model.tabs.selectSessions()
             } else if parts == ["close-all"] {

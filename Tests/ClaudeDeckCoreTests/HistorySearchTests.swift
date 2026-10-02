@@ -143,6 +143,20 @@ import Testing
         #expect(results("needle", [file]).first?.title == "Generated title")
     }
 
+    @Test func mapsWorkingDirectoriesToProjectsAndWorktrees() {
+        let ab = Project(path: "/a/b"), abc = Project(path: "/a/b-c"), sub = Project(path: "/a/b/packages/web")
+        let projects = [ab, abc, sub]
+        #expect(HistorySearch.owningProject(cwd: "/a/b", in: projects) == ab)
+        #expect(HistorySearch.owningProject(cwd: "/a/b-c/", in: projects) == abc)
+        #expect(HistorySearch.owningProject(cwd: "/a/b/.claude/worktrees/x", in: projects) == ab)
+        #expect(HistorySearch.owningProject(cwd: "/a/b/packages/web/src", in: projects) == sub)
+        #expect(HistorySearch.owningProject(cwd: "/a/bc", in: projects) == nil)
+        #expect(HistorySearch.worktree(of: "/a/b/.claude/worktrees/feat/src")! == ("/a/b", "feat"))
+        #expect(HistorySearch.worktree(of: "/a/b") == nil)
+        #expect(HistorySearch.projectRoot(forCwd: "/a/b/.claude/worktrees/feat") == "/a/b")
+        #expect(HistorySearch.projectRoot(forCwd: "/x/y/") == "/x/y")
+    }
+
     @Test func capsResultsAndCancels() throws {
         let root = try makeRoot()
         let files = try (0..<5).map { try write([Self.user("hit \($0)")], dir: "-p", id: "f\($0)", root: root) }

@@ -77,6 +77,16 @@
         }
       }
     },
+    "%lld matches": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld eşleşme"
+          }
+        }
+      }
+    },
     "%lld new comments": {
       "localizations": {
         "tr": {
@@ -206,6 +216,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu süreden daha geç fark edilen zamanlanmış çalıştırma (Mac uykudaysa, ClaudeDeck açık değilse) atlanır."
+          }
+        }
+      }
+    },
+    "A skill with this name already exists there.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Orada bu adda bir yetenek zaten var."
           }
         }
       }
@@ -340,6 +360,16 @@
         }
       }
     },
+    "Add and Resume": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ekle ve Sürdür"
+          }
+        }
+      }
+    },
     "Add project / new group": {
       "localizations": {
         "tr": {
@@ -370,6 +400,16 @@
         }
       }
     },
+    "Add “%@” as a project?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” proje olarak eklensin mi?"
+          }
+        }
+      }
+    },
     "Alerts": {
       "localizations": {
         "tr": {
@@ -396,6 +436,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld kontrolün tümü başarılı"
+          }
+        }
+      }
+    },
+    "All Projects": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm Projeler"
           }
         }
       }
@@ -646,6 +696,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "İptal edildi"
+          }
+        }
+      }
+    },
+    "Can’t Resume Conversation": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konuşma Sürdürülemiyor"
           }
         }
       }
@@ -1163,6 +1223,16 @@
         }
       }
     },
+    "Copy Session ID": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum Kimliğini Kopyala"
+          }
+        }
+      }
+    },
     "Could not create a session.": {
       "localizations": {
         "tr": {
@@ -1219,6 +1289,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "~/.claude/settings.json okunamadı: %@"
+          }
+        }
+      }
+    },
+    "Create": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oluştur"
           }
         }
       }
@@ -1443,6 +1523,16 @@
         }
       }
     },
+    "Double-click a result to open it; a conversation no session owns is resumed in a new one.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açmak için bir sonuca çift tıklayın; hiçbir oturuma ait olmayan konuşma yeni bir oturumda sürdürülür."
+          }
+        }
+      }
+    },
     "Duplicate": {
       "localizations": {
         "tr": {
@@ -1629,6 +1719,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dosyalar"
+          }
+        }
+      }
+    },
+    "Filter": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Süz"
           }
         }
       }
@@ -1893,6 +1993,16 @@
         }
       }
     },
+    "Its whole folder is moved:\n%@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klasörünün tamamı taşınır:\n%@"
+          }
+        }
+      }
+    },
     "Keep Mine": {
       "localizations": {
         "tr": {
@@ -2013,6 +2123,26 @@
         }
       }
     },
+    "Location": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konum"
+          }
+        }
+      }
+    },
+    "Lowercase letters, digits and hyphens.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Küçük harfler, rakamlar ve kısa çizgiler."
+          }
+        }
+      }
+    },
     "Mark as Resolved": {
       "localizations": {
         "tr": {
@@ -2083,6 +2213,16 @@
         }
       }
     },
+    "Move the skill “%@” to the Trash?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” yeteneği Çöp Sepeti’ne taşınsın mı?"
+          }
+        }
+      }
+    },
     "Move to Group": {
       "localizations": {
         "tr": {
@@ -2099,6 +2239,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Çöpe Taşı"
+          }
+        }
+      }
+    },
+    "Move to Trash…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çöp Sepetine Taşı…"
           }
         }
       }
@@ -2239,6 +2389,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yeni Grup…"
+          }
+        }
+      }
+    },
+    "New Skill": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Yetenek"
+          }
+        }
+      }
+    },
+    "New Skill…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Yetenek…"
           }
         }
       }
@@ -2423,6 +2593,16 @@
         }
       }
     },
+    "No matches": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleşme yok"
+          }
+        }
+      }
+    },
     "No matching files": {
       "localizations": {
         "tr": {
@@ -2489,6 +2669,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zamanlama yok: yalnızca Şimdi Çalıştır ile çalışır."
+          }
+        }
+      }
+    },
+    "No skills yet": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz yetenek yok"
           }
         }
       }
@@ -2623,6 +2813,16 @@
         }
       }
     },
+    "Open Conversation": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konuşmayı Aç"
+          }
+        }
+      }
+    },
     "Open File": {
       "localizations": {
         "tr": {
@@ -2729,6 +2929,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "VS Code'da Aç"
+          }
+        }
+      }
+    },
+    "Open in a ClaudeDeck session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir ClaudeDeck oturumunda açık"
           }
         }
       }
@@ -2903,6 +3113,16 @@
         }
       }
     },
+    "Plugins": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eklentiler"
+          }
+        }
+      }
+    },
     "Presses 1 (Yes) in the terminal": {
       "localizations": {
         "tr": {
@@ -2949,6 +3169,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Proje klasörü"
+          }
+        }
+      }
+    },
+    "Project — %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proje — %@"
           }
         }
       }
@@ -3333,6 +3563,16 @@
         }
       }
     },
+    "Reveal Transcript in Finder": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konuşma Dosyasını Finder’da Göster"
+          }
+        }
+      }
+    },
     "Reveal in Finder": {
       "localizations": {
         "tr": {
@@ -3483,6 +3723,16 @@
         }
       }
     },
+    "Scope": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapsam"
+          }
+        }
+      }
+    },
     "Search": {
       "localizations": {
         "tr": {
@@ -3493,12 +3743,62 @@
         }
       }
     },
+    "Search Conversation History…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konuşma Geçmişinde Ara…"
+          }
+        }
+      }
+    },
+    "Search conversation history (⇧⌘H)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konuşma geçmişinde ara (⇧⌘H)"
+          }
+        }
+      }
+    },
+    "Search conversations": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konuşmalarda ara"
+          }
+        }
+      }
+    },
     "Search files by name": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Dosyaları ada göre ara"
+          }
+        }
+      }
+    },
+    "Search the text of your Claude conversations": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude konuşmalarınızın metninde arayın"
+          }
+        }
+      }
+    },
+    "Searching…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aranıyor…"
           }
         }
       }
@@ -3549,6 +3849,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dosyalarını görmek için bir oturum seç"
+          }
+        }
+      }
+    },
+    "Select a skill": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir yetenek seçin"
           }
         }
       }
@@ -3709,6 +4019,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bildirim göster (izin / soru / bitti)"
+          }
+        }
+      }
+    },
+    "Showing the first %lld conversations. Refine the search to see others.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İlk %lld konuşma gösteriliyor. Diğerlerini görmek için aramayı daraltın."
+          }
+        }
+      }
+    },
+    "Skills": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yetenekler"
+          }
+        }
+      }
+    },
+    "Skills…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yetenekler…"
           }
         }
       }
@@ -4076,6 +4416,26 @@
         }
       }
     },
+    "The conversation ran in %@, which isn’t a ClaudeDeck project yet.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konuşma %@ klasöründe yürütülmüş; bu klasör henüz bir ClaudeDeck projesi değil."
+          }
+        }
+      }
+    },
+    "The conversation’s folder no longer exists:\n%@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konuşmanın klasörü artık yok:\n%@"
+          }
+        }
+      }
+    },
     "The file changed on disk.": {
       "localizations": {
         "tr": {
@@ -4236,12 +4596,32 @@
         }
       }
     },
+    "This Project": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Proje"
+          }
+        }
+      }
+    },
     "This can’t be undone.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Bu işlem geri alınamaz."
+          }
+        }
+      }
+    },
+    "This conversation doesn’t record its folder, so it can’t be resumed here.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu konuşma klasörünü kaydetmemiş, bu yüzden burada sürdürülemiyor."
           }
         }
       }
@@ -4432,6 +4812,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "Düzenli İfade Kullan"
+          }
+        }
+      }
+    },
+    "Use lowercase letters, digits and hyphens only.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca küçük harf, rakam ve kısa çizgi kullanın."
+          }
+        }
+      }
+    },
+    "User": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kullanıcı"
+          }
+        }
+      }
+    },
+    "User (~/.claude/skills)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kullanıcı (~/.claude/skills)"
           }
         }
       }

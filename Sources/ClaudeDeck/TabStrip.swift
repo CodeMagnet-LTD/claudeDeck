@@ -57,6 +57,7 @@ struct WorkspaceView: View {
         case .file(let url): (url.deletingLastPathComponent().path as NSString).abbreviatingWithTildeInPath
         case .diff(let repo, _, _): (repo as NSString).abbreviatingWithTildeInPath
         case .automations: ""
+        case .search, .skills: ""
         }
     }
 }
@@ -81,6 +82,10 @@ private struct TabContent: View {
             if isSelected { DiffTabView(repo: repo, path: path, staged: staged) }
         case .automations:
             AutomationsView()
+        case .search:
+            HistorySearchView()
+        case .skills:
+            SkillsView()
         }
     }
 }
@@ -231,6 +236,8 @@ private struct TabItem: View {
         case .file(let url): Image(nsImage: NSWorkspace.shared.icon(forFile: url.path)).resizable().scaledToFit()
         case .diff: Image(systemName: "plus.forwardslash.minus").foregroundStyle(.orange)
         case .automations: Image(systemName: "clock.arrow.circlepath")
+        case .search: Image(systemName: "text.magnifyingglass")
+        case .skills: Image(systemName: "wand.and.stars")
         }
     }
 
@@ -477,6 +484,8 @@ extension WorkspaceTab {
         case .file(let url): "file:" + url.path
         case .diff(let repo, let path, let staged): "diff:\(staged ? "staged" : "worktree"):\(repo):\(path)"
         case .automations: "automations"
+        case .search: "search"
+        case .skills: "skills"
         }
     }
 
@@ -488,6 +497,8 @@ extension WorkspaceTab {
             staged ? String(localized: "\((path as NSString).lastPathComponent) (Staged)")
                 : String(localized: "\((path as NSString).lastPathComponent) (Working Tree)")
         case .automations: String(localized: "Automations")
+        case .search: String(localized: "Search")
+        case .skills: String(localized: "Skills")
         }
     }
 
@@ -504,6 +515,8 @@ extension WorkspaceTab {
         switch self {
         case .sessions: String(localized: "Terminal sessions (⌘1)")
         case .automations: String(localized: "Automations")
+        case .search: String(localized: "Search conversation history (⇧⌘H)")
+        case .skills: String(localized: "Skills")
         default: url.map { ($0.path as NSString).abbreviatingWithTildeInPath } ?? ""
         }
     }
