@@ -51,6 +51,16 @@
         }
       }
     },
+    "%@ no longer accepts notifications; removed.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ artık bildirim kabul etmiyor; listeden çıkarıldı."
+          }
+        }
+      }
+    },
     "%@ tokens": {
       "localizations": {
         "tr": {
@@ -346,6 +356,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Orada bu adda bir skill zaten var."
+          }
+        }
+      }
+    },
+    "APNs key": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "APNs anahtarı"
           }
         }
       }
@@ -706,6 +726,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Düzelt (amend)"
+          }
+        }
+      }
+    },
+    "Apple Developer › Certificates, IDs & Profiles › Keys › + › Apple Push Notifications service. Download the .p8 once and add it here with its Key ID. The key can send notifications to every app of your team: keep it to your own Macs.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Developer › Certificates, IDs & Profiles › Keys › + › Apple Push Notifications service. .p8 dosyasını bir kez indirip Key ID'siyle buraya ekleyin. Bu anahtar takımınızın tüm uygulamalarına bildirim gönderebilir: yalnızca kendi Mac'lerinizde tutun."
           }
         }
       }
@@ -1110,6 +1140,16 @@
         }
       }
     },
+    "Choose .p8 File…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ".p8 dosyası seç…"
+          }
+        }
+      }
+    },
     "Choose Projects…": {
       "localizations": {
         "tr": {
@@ -1503,6 +1543,16 @@
         }
       }
     },
+    "Connect": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlan"
+          }
+        }
+      }
+    },
     "Connect Claude sessions to Pencil (Pen.app)": {
       "localizations": {
         "tr": {
@@ -1719,6 +1769,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Oturum oluşturulamadı."
+          }
+        }
+      }
+    },
+    "Couldn't answer": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yanıtlanamadı"
           }
         }
       }
@@ -2413,6 +2473,16 @@
         }
       }
     },
+    "Forget This Mac": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Mac'i unut"
+          }
+        }
+      }
+    },
     "General": {
       "localizations": {
         "tr": {
@@ -2683,6 +2753,16 @@
         }
       }
     },
+    "Is Tailscale connected on this iPhone?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu iPhone'da Tailscale bağlı mı?"
+          }
+        }
+      }
+    },
     "Issues": {
       "localizations": {
         "tr": {
@@ -2773,6 +2853,26 @@
         }
       }
     },
+    "Key ID": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Key ID"
+          }
+        }
+      }
+    },
+    "Key loaded ✓": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anahtar yüklendi ✓"
+          }
+        }
+      }
+    },
     "Kind": {
       "localizations": {
         "tr": {
@@ -2789,6 +2889,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Etiket (herhangi)"
+          }
+        }
+      }
+    },
+    "Last notification sent to %@.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son bildirim %@ cihazına gönderildi."
           }
         }
       }
@@ -2959,6 +3069,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mac"
+          }
+        }
+      }
+    },
+    "Mac's Tailscale name (e.g. home-mac)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'in Tailscale adı (ör. ev-mac)"
           }
         }
       }
@@ -3573,6 +3693,16 @@
         }
       }
     },
+    "No iPhone yet: open ClaudeDeck on the iPhone once while it's connected to this Mac.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz iPhone yok: iPhone'da ClaudeDeck'i bu Mac'e bağlıyken bir kez açın."
+          }
+        }
+      }
+    },
     "No matches": {
       "localizations": {
         "tr": {
@@ -3853,6 +3983,16 @@
         }
       }
     },
+    "Notification to %@ failed: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cihazına bildirim gönderilemedi: %@"
+          }
+        }
+      }
+    },
     "Notifications are allowed": {
       "localizations": {
         "tr": {
@@ -3883,6 +4023,16 @@
         }
       }
     },
+    "Notifications from this Mac work.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Mac'ten bildirimler çalışıyor."
+          }
+        }
+      }
+    },
     "OK": {
       "localizations": {
         "tr": {
@@ -3899,6 +4049,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kapalı"
+          }
+        }
+      }
+    },
+    "On the Mac: Settings › Remote (Tailscale) › Other ways to pair › Show Pairing Code.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'te: Ayarlar › Uzak bağlantı (Tailscale) › Diğer eşleştirme yolları › Eşleştirme kodunu göster."
           }
         }
       }
@@ -4219,6 +4379,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eşleştir"
+          }
+        }
+      }
+    },
+    "Pair with Your Mac": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'inizle eşleştirin"
           }
         }
       }
@@ -5133,6 +5303,26 @@
         }
       }
     },
+    "Scan the QR Code": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "QR kodu okut"
+          }
+        }
+      }
+    },
+    "Scan the pairing QR code shown on your Mac.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'inizde gösterilen eşleştirme QR kodunu okutun."
+          }
+        }
+      }
+    },
     "Schedule": {
       "localizations": {
         "tr": {
@@ -5233,6 +5423,16 @@
         }
       }
     },
+    "See and answer the Claude sessions running on your Mac. Both devices need Tailscale, signed in to the same account.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'inizde çalışan Claude oturumlarını görün ve yanıtlayın. İki cihazda da Tailscale, aynı hesapla açık olmalı."
+          }
+        }
+      }
+    },
     "Select All": {
       "localizations": {
         "tr": {
@@ -5319,6 +5519,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bir issue ya da pull request seçin"
+          }
+        }
+      }
+    },
+    "Send Test Notification": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test bildirimi gönder"
           }
         }
       }
@@ -5419,6 +5629,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ayarlı"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlar"
           }
         }
       }
@@ -6073,6 +6293,16 @@
         }
       }
     },
+    "Team ID": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Team ID"
+          }
+        }
+      }
+    },
     "Templates": {
       "localizations": {
         "tr": {
@@ -6116,6 +6346,26 @@
         }
       }
     },
+    "That file isn't an APNs auth key (.p8).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu dosya bir APNs anahtarı (.p8) değil."
+          }
+        }
+      }
+    },
+    "That isn't a ClaudeDeck pairing link.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu bir ClaudeDeck eşleştirme bağlantısı değil."
+          }
+        }
+      }
+    },
     "That isn't a ClaudeDeck pairing link. Copy it from Settings › Remote on the other Mac.": {
       "localizations": {
         "tr": {
@@ -6132,6 +6382,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bu istem diğer Mac'te zaten yanıtlanmış ya da değişmiş."
+          }
+        }
+      }
+    },
+    "The .p8 key can't be read.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ".p8 anahtarı okunamıyor."
           }
         }
       }
@@ -6352,6 +6612,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Parola ya da eşleştirme anahtarı uyuşmuyor."
+          }
+        }
+      }
+    },
+    "The password you set on the Mac in Settings › Remote (Tailscale).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'te Ayarlar › Uzak bağlantı (Tailscale) bölümünde belirlediğiniz parola."
           }
         }
       }
@@ -6876,6 +7146,16 @@
         }
       }
     },
+    "Waiting for you": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Seni bekleyenler"
+          }
+        }
+      }
+    },
     "Waiting for you · %lld": {
       "localizations": {
         "tr": {
@@ -6966,12 +7246,32 @@
         }
       }
     },
+    "With a pairing link": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleştirme bağlantısıyla"
+          }
+        }
+      }
+    },
     "With iCloud Drive on, the hosting Mac also leaves its pairing in iCloud Drive › ClaudeDeck › Remote and the other Mac picks it up.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "iCloud Drive açıksa paylaşan Mac eşleştirmesini iCloud Drive › ClaudeDeck › Remote'a da bırakır, diğer Mac oradan alır."
+          }
+        }
+      }
+    },
+    "With the password": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parolayla"
           }
         }
       }
@@ -7338,6 +7638,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "iCloud Drive açık"
+          }
+        }
+      }
+    },
+    "iPhone notifications": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iPhone bildirimleri"
           }
         }
       }

@@ -35,7 +35,10 @@ struct RemoteSettingsSection: View {
             ))
             if model.deck.settings.remoteHost || model.deck.settings.remoteClient {
                 passwordRow(remote)
-                if model.deck.settings.remoteHost { hostStatus(remote) }
+                if model.deck.settings.remoteHost {
+                    hostStatus(remote)
+                    PhonePushSettings()
+                }
                 if model.deck.settings.remoteClient { clientStatus(remote) }
                 RemoteRequirementsView()
                 DisclosureGroup("Other ways to pair (QR code, link, iCloud Drive)", isExpanded: $showOtherWays) {
@@ -161,6 +164,97 @@ struct RemoteSettingsSection: View {
     private func pair() {
         pasteFailed = !model.remote.pair(link: pasted)
         if !pasteFailed { pasted = "" }
+    }
+}
+
+/// iPhone notifications sent by this Mac through APNs: the auth key and the registered phones.
+struct PhonePushSettings: View {
+    @Environment(AppModel.self) private var model
+    @State private var keyID = ""
+    @State private var teamID = ""
+    @State private var keyPEM = ""
+    @State private var keyError: String?
+    @State private var editing = false
+
+    var body: some View {
+        let remote = model.remote
+        DisclosureGroup("iPhone notifications") {
+            if let apns = remote.local.apns, !editing {
+                LabeledContent("APNs key") {
+                    HStack {
+                        Text(verbatim: "\(apns.keyID) · \(apns.teamID)").foregroundStyle(.secondary)
+                        Button("Change…") { load(apns); editing = true }
+                        Button("Remove", role: .destructive) { remote.setAPNs(nil) }
+                    }
+                }
+            } else {
+                TextField("Key ID", text: $keyID)
+                TextField("Team ID", text: $teamID)
+                HStack {
+                    Button(keyPEM.isEmpty ? "Choose .p8 File…" : "Key loaded ✓") { chooseKey() }
+                    Spacer()
+                    if editing { Button("Cancel") { editing = false } }
+                    Button("Save") { save() }
+                        .disabled(keyID.isEmpty || teamID.isEmpty || keyPEM.isEmpty)
+                }
+                if let keyError { Text(keyError).font(.caption).foregroundStyle(.red) }
+                Text("Apple Developer › Certificates, IDs & Profiles › Keys › + › Apple Push Notifications service. Download the .p8 once and add it here with its Key ID. The key can send notifications to every app of your team: keep it to your own Macs.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            if remote.local.pushDevices.isEmpty {
+                Text("No iPhone yet: open ClaudeDeck on the iPhone once while it's connected to this Mac.")
+                    .font(.caption).foregroundStyle(.secondary)
+            } else {
+                ForEach(remote.local.pushDevices) { device in
+                    HStack {
+                        Image(systemName: "iphone")
+                        Text(device.name)
+                        Text(device.environment == "production" ? "App Store / TestFlight" : "Xcode")
+                            .font(.caption).foregroundStyle(.secondary)
+                        Spacer()
+                        Button(role: .destructive) { remote.removePushDevice(device.token) } label: { Image(systemName: "minus.circle") }
+                            .buttonStyle(.borderless)
+                    }
+                }
+                Button("Send Test Notification") { remote.sendTestPush() }
+                    .disabled(remote.local.apns == nil)
+            }
+            if let status = remote.pushStatus {
+                Text(status).font(.caption).foregroundStyle(.secondary)
+            }
+        }
+    }
+
+    private func load(_ apns: APNsCredentials) {
+        keyID = apns.keyID
+        teamID = apns.teamID
+        keyPEM = apns.keyPEM
+    }
+
+    private func chooseKey() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.init(filenameExtension: "p8") ?? .data]
+        panel.allowsMultipleSelection = false
+        guard panel.runModal() == .OK, let url = panel.url, let text = try? String(contentsOf: url, encoding: .utf8) else { return }
+        keyPEM = text
+        // AuthKey_<KEYID>.p8: the Key ID is in the file name.
+        let name = url.deletingPathExtension().lastPathComponent
+        if keyID.isEmpty, name.hasPrefix("AuthKey_") { keyID = String(name.dropFirst("AuthKey_".count)) }
+    }
+
+    private func save() {
+        let credentials = APNsCredentials(
+            keyID: keyID.trimmingCharacters(in: .whitespaces),
+            teamID: teamID.trimmingCharacters(in: .whitespaces),
+            keyPEM: keyPEM
+        )
+        guard credentials.isValid else {
+            keyError = String(localized: "That file isn't an APNs auth key (.p8).")
+            return
+        }
+        keyError = nil
+        model.remote.setAPNs(credentials)
+        editing = false
     }
 }
 

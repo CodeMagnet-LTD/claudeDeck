@@ -93,6 +93,8 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case terminalStart(sessionID: UUID, cols: Int, rows: Int, screen: Data)
     /// Host → remote: the session isn't running (any more).
     case terminalEnded(sessionID: UUID)
+    /// Phone → host: send push notifications to this device (APNs.swift).
+    case registerPush(token: Data, topic: String, environment: String, deviceName: String)
     case ping
     case pong
     /// Either side, before closing.
@@ -324,6 +326,9 @@ public struct RemoteLocalState: Codable, Sendable, Equatable {
     public var passwordKey: Data?
     /// Remote side: the address the password-found host answered on last time (tried first).
     public var lastHostAddress: String?
+    /// Host side: the APNs auth key for iPhone pushes, and the phones that registered.
+    public var apns: APNsCredentials?
+    public var pushDevices: [PushDevice] = []
 
     public init() {}
 
@@ -337,6 +342,8 @@ public struct RemoteLocalState: Codable, Sendable, Equatable {
         hostUsesPassword = try c.decodeIfPresent(Bool.self, forKey: .hostUsesPassword) ?? false
         passwordKey = try c.decodeIfPresent(Data.self, forKey: .passwordKey)
         lastHostAddress = try c.decodeIfPresent(String.self, forKey: .lastHostAddress)
+        apns = try c.decodeIfPresent(APNsCredentials.self, forKey: .apns)
+        pushDevices = try c.decodeIfPresent([PushDevice].self, forKey: .pushDevices) ?? []
     }
 
     /// Loads the file, or creates (and saves) a fresh identity. The key stays the same across
@@ -364,6 +371,7 @@ public struct RemoteLocalState: Codable, Sendable, Equatable {
     }
 }
 
+#if os(macOS)
 /// Pairing records in a shared folder (iCloud Drive `ClaudeDeck/Remote/<host id>.json`).
 public enum RemotePairingFolder {
     public static func defaultFolder(home: URL = FileManager.default.homeDirectoryForCurrentUser) -> URL? {
@@ -406,3 +414,4 @@ public enum RemotePairingFolder {
         try? FileManager.default.removeItem(at: url(for: id, in: folder))
     }
 }
+#endif

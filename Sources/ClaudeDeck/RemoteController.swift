@@ -3,6 +3,7 @@ import ClaudeDeckCore
 import Foundation
 import Network
 import Observation
+import SystemConfiguration
 
 /// Remote mode (RemoteProtocol.swift). Host side: listens on Tailscale, sends the sessions'
 /// state and answers permission prompts with the same keystrokes as the local buttons. Remote
@@ -62,6 +63,9 @@ final class RemoteController {
     /// Held while a remote watches a terminal: App Nap would otherwise delay the output timer by
     /// seconds when ClaudeDeck is in the background. Doesn't keep the Mac awake.
     @ObservationIgnored private var streamingActivity: NSObjectProtocol?
+    /// Last push result (Settings).
+    private(set) var pushStatus: String?
+    @ObservationIgnored private var apnsToken: (value: String, issuedAt: Date)?
     /// Byte / event counters (DebugSnapshot's remote.txt).
     @ObservationIgnored private(set) var counters: [String: Int] = [:]
 
@@ -96,7 +100,11 @@ final class RemoteController {
         return AppModel.isDemo ? nil : RemotePairingFolder.defaultFolder()
     }()
 
-    static var hostName: String { Host.current().localizedName ?? "Mac" }
+    /// The computer name from System Settings › General › Sharing (not the Bonjour name, which
+    /// gets a " (2)" suffix after a name clash on the network).
+    static var hostName: String {
+        (SCDynamicStoreCopyComputerName(nil, nil) as String?) ?? Host.current().localizedName ?? "Mac"
+    }
 
     init() {
         localURL = DeckDataStore.default().url.deletingLastPathComponent().appending(path: "remote.json")
@@ -110,6 +118,11 @@ final class RemoteController {
         model.onCountsChanged = { [weak self] in
             previous?()
             self?.publishSnapshot()
+        }
+        let previousAttention = model.onAttention
+        model.onAttention = { [weak self] event in
+            previousAttention?(event)
+            self?.push(event)
         }
         model.terminals.onOutput = { [weak self] id, bytes in self?.terminalOutput(id, bytes) }
         model.terminals.onResize = { [weak self] id in self?.terminalResized(id) }
@@ -189,6 +202,9 @@ final class RemoteController {
                     guard let view = self?.model?.terminals.view(for: id), self?.model?.terminals.isRunning(id) == true else { return }
                     view.send(source: view, data: ArraySlice(data))
                 }
+            }
+            server.onRegisterPush = { [weak self] device in
+                MainActor.assumeIsolated { self?.registerPush(device) }
             }
             server.onWatchedChanged = { [weak self] sessions in
                 MainActor.assumeIsolated {
@@ -376,6 +392,81 @@ final class RemoteController {
         guard watched.contains(id) else { return }
         flushOutput(id)
         server?.terminalEnded(sessionID: id)
+    }
+
+    // MARK: Host — iPhone pushes
+
+    func setAPNs(_ credentials: APNsCredentials?) {
+        local.apns = credentials
+        apnsToken = nil
+        saveLocal()
+    }
+
+    func removePushDevice(_ token: Data) {
+        local.pushDevices.removeAll { $0.token == token }
+        saveLocal()
+    }
+
+    private func registerPush(_ device: PushDevice) {
+        if let index = local.pushDevices.firstIndex(where: { $0.token == device.token }) {
+            guard local.pushDevices[index].environment != device.environment || local.pushDevices[index].name != device.name
+                    || local.pushDevices[index].topic != device.topic else { return }
+            local.pushDevices[index] = device
+        } else {
+            // A phone gets a new token after a reinstall: keep one entry per name and app.
+            local.pushDevices.removeAll { $0.name == device.name && $0.topic == device.topic }
+            local.pushDevices.append(device)
+        }
+        saveLocal()
+    }
+
+    /// A session needs the user: tell the phones that aren't connected (a connected phone shows
+    /// its own alert). Unlike the Mac's banner, this isn't skipped when the session is on screen here.
+    private func push(_ event: AttentionEvent) {
+        guard model?.deck.settings.remoteHost == true, let credentials = local.apns, !local.pushDevices.isEmpty else { return }
+        let connected = server?.connectedPushTokens ?? []
+        let devices = local.pushDevices.filter { !connected.contains($0.token) }
+        guard !devices.isEmpty else { return }
+        let stamp = event.activity == .needsPermission ? model?.pendingPermissionStamp(event.sessionID)?.timeIntervalSince1970 : nil
+        let payload = APNs.payload(title: event.title, subtitle: Self.hostName, body: event.body, sessionID: event.sessionID,
+                                   permissionStamp: stamp, blocked: event.activity.isBlocked)
+        send(payload, to: devices, credentials: credentials, collapseID: event.sessionID.uuidString)
+    }
+
+    func sendTestPush() {
+        guard let credentials = local.apns else { return }
+        let payload = APNs.payload(title: "ClaudeDeck", subtitle: Self.hostName, body: String(localized: "Notifications from this Mac work."),
+                                   sessionID: UUID(), permissionStamp: nil, blocked: false)
+        send(payload, to: local.pushDevices, credentials: credentials, collapseID: "test")
+    }
+
+    private func send(_ payload: Data, to devices: [PushDevice], credentials: APNsCredentials, collapseID: String) {
+        // Apple wants the provider token reused for 20–60 minutes.
+        let now = Date()
+        if apnsToken == nil || now.timeIntervalSince(apnsToken!.issuedAt) > 50 * 60 {
+            guard let value = try? APNs.token(credentials, issuedAt: now) else {
+                pushStatus = String(localized: "The .p8 key can't be read.")
+                return
+            }
+            apnsToken = (value, now)
+        }
+        guard let token = apnsToken?.value else { return }
+        for device in devices {
+            Task { @MainActor [weak self] in
+                let result = await APNs.send(payload, to: device, token: token, collapseID: collapseID)
+                guard let self else { return }
+                switch result {
+                case .sent:
+                    self.pushStatus = String(localized: "Last notification sent to \(device.name).")
+                case .unregistered:
+                    self.removePushDevice(device.token)
+                    self.pushStatus = String(localized: "\(device.name) no longer accepts notifications; removed.")
+                case .failed(let reason):
+                    if reason == "ExpiredProviderToken" || reason == "InvalidProviderToken" { self.apnsToken = nil }
+                    self.pushStatus = String(localized: "Notification to \(device.name) failed: \(reason)")
+                }
+            }
+        }
     }
 
     // MARK: Remote — live terminals

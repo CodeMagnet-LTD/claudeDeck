@@ -80,8 +80,9 @@ public final class RemoteChannel: @unchecked Sendable {
                 self.lastReceived = Date()
                 do {
                     for frame in try self.decoder.append(data) {
-                        if let message = try RemoteMessage.decode(frame) {
-                            self.onMessage?(message)
+                        // A message this version doesn't know (the other side is newer): skip it.
+                        if frame.kind == RemoteFrameKind.message.rawValue {
+                            if let message = try? RemoteMessage.decode(frame) { self.onMessage?(message) }
                         } else {
                             self.onFrame?(frame)
                         }
@@ -160,6 +161,8 @@ public final class RemoteServer: @unchecked Sendable {
         var watching: Set<UUID> = []
         /// Watched sessions whose output was dropped (remote too slow): they get a fresh start.
         var resync: Set<UUID> = []
+        /// A phone that registered for pushes (it gets in-app alerts while connected).
+        var pushToken: Data?
     }
 
     /// Output stops being queued for a remote with this much unsent data.
@@ -200,6 +203,8 @@ public final class RemoteServer: @unchecked Sendable {
     }
 
     public var peerNames: [String] { peers.values.map(\.name).sorted() }
+    /// Push tokens of the phones connected right now.
+    public var connectedPushTokens: Set<Data> { Set(peers.values.compactMap(\.pushToken)) }
 
     public struct TerminalStart: Sendable {
         public var cols: Int
@@ -216,6 +221,8 @@ public final class RemoteServer: @unchecked Sendable {
     public var onTerminalOpen: ((UUID) -> TerminalStart?)?
     /// Keystrokes from a remote.
     public var onTerminalInput: ((UUID, Data) -> Void)?
+    /// A phone registered for push notifications.
+    public var onRegisterPush: ((PushDevice) -> Void)?
     /// The set of sessions any remote watches changed (the host taps only those).
     public var onWatchedChanged: ((Set<UUID>) -> Void)?
 
@@ -372,6 +379,9 @@ public final class RemoteServer: @unchecked Sendable {
                 if watchedSessions != wasWatched { onWatchedChanged?(watchedSessions) }
             case .terminalInput(let sessionID, let data) where peer.watching.contains(sessionID):
                 onTerminalInput?(sessionID, data)
+            case .registerPush(let token, let topic, let environment, let deviceName) where !token.isEmpty && !topic.isEmpty:
+                peers[id]?.pushToken = token
+                onRegisterPush?(PushDevice(token: token, topic: topic, environment: environment == "production" ? "production" : "development", name: String(deviceName.prefix(80)), addedAt: Date()))
             default:
                 break
             }
@@ -495,6 +505,10 @@ public final class RemoteHostConnection: @unchecked Sendable {
 
     @discardableResult
     public func sendInput(_ sessionID: UUID, data: Data) -> Bool { sendIfConnected(.terminalInput(sessionID: sessionID, data: data)) }
+
+    /// Any message, while connected.
+    @discardableResult
+    public func send(_ message: RemoteMessage) -> Bool { sendIfConnected(message) }
 
     private func sendIfConnected(_ message: RemoteMessage) -> Bool {
         guard case .connected = state, let channel else { return false }

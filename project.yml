@@ -4,6 +4,7 @@ name: ClaudeDeck
 options:
   deploymentTarget:
     macOS: "15.0"
+    iOS: "18.0"
   createIntermediateGroups: true
   developmentLanguage: en
 # Team, bundle prefix and version live in Config/Shared.xcconfig (override in Config/Local.xcconfig).
@@ -91,6 +92,38 @@ targets:
         PRODUCT_NAME: ClaudeDeckWidget
         ENABLE_HARDENED_RUNTIME: YES
         SKIP_INSTALL: YES
+  # iPhone companion (remote mode): sees the Mac's sessions over Tailscale, answers prompts,
+  # live terminal. Shares only the remote-mode files of ClaudeDeckCore (the rest is macOS-only).
+  ClaudeDeckRemote:
+    type: application
+    platform: iOS
+    sources:
+      - iOS/ClaudeDeckRemote
+      - Sources/ClaudeDeckCore/RemoteProtocol.swift
+      - Sources/ClaudeDeckCore/RemoteTransport.swift
+      - Sources/ClaudeDeckCore/RemoteScreen.swift
+      - Sources/ClaudeDeckCore/TailscaleAddress.swift
+      - Sources/ClaudeDeckCore/APNs.swift
+      - Support/Localizable.xcstrings
+    dependencies:
+      - package: SwiftTerm
+    entitlements:
+      path: iOS/ClaudeDeckRemote.entitlements
+      properties:
+        aps-environment: development
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(DECK_BUNDLE_PREFIX).ClaudeDeckRemote
+        PRODUCT_NAME: ClaudeDeckRemote
+        TARGETED_DEVICE_FAMILY: "1,2"
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_FILE: iOS/Info.plist
+        INFOPLIST_KEY_CFBundleDisplayName: ClaudeDeck
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
+        INFOPLIST_KEY_NSCameraUsageDescription: "Scan the pairing QR code shown on your Mac."
+        INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools
   ClaudeDeckCoreTests:
     type: bundle.unit-test
     platform: macOS
@@ -108,3 +141,7 @@ schemes:
         ClaudeDeckCoreTests: [test]
     test:
       targets: [ClaudeDeckCoreTests]
+  ClaudeDeckRemote:
+    build:
+      targets:
+        ClaudeDeckRemote: all

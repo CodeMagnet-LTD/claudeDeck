@@ -54,6 +54,7 @@ public enum Tailscale {
         return status
     }
 
+    #if os(macOS)
     /// Whether the Tailscale app or CLI is on this Mac.
     public static var isInstalled: Bool {
         FileManager.default.fileExists(atPath: "/Applications/Tailscale.app")
@@ -85,6 +86,8 @@ public enum Tailscale {
         killer.cancel()
         return parseStatus(data)
     }
+
+    #endif
 
     /// Tailscale IPs bound to this Mac's interfaces (works without the CLI).
     public static func interfaceAddresses() -> [String] {
@@ -131,6 +134,7 @@ public enum Tailscale {
     }
 }
 
+#if os(macOS)
 /// The macOS application firewall, read with `socketfilterfw` (no admin rights needed).
 public enum Firewall {
     public struct Status: Sendable, Equatable {
@@ -172,3 +176,4 @@ public enum Firewall {
         return parse(globalState: run(["--getglobalstate"]), blockAll: run(["--getblockall"]), app: run(["--getappblocked", appPath]))
     }
 }
+#endif

@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 import Network
 import Testing
 @testable import ClaudeDeckCore
@@ -378,5 +379,40 @@ import Testing
             guard Date() < deadline else { Issue.record("timed out"); return }
             try await Task.sleep(for: .milliseconds(20))
         }
+    }
+}
+
+@Suite struct APNsTests {
+    @Test func providerTokenVerifiesWithTheKey() throws {
+        let key = P256.Signing.PrivateKey()
+        let credentials = APNsCredentials(keyID: "ABC123DEFG", teamID: "V6G4B5T63L", keyPEM: key.pemRepresentation)
+        #expect(credentials.isValid)
+        let token = try APNs.token(credentials, issuedAt: Date(timeIntervalSince1970: 1_700_000_000))
+        let parts = token.split(separator: ".").map(String.init)
+        #expect(parts.count == 3)
+        func decode(_ s: String) -> Data {
+            var b = s.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+            b += String(repeating: "=", count: (4 - b.count % 4) % 4)
+            return Data(base64Encoded: b)!
+        }
+        #expect(String(decoding: decode(parts[0]), as: UTF8.self) == #"{"alg":"ES256","kid":"ABC123DEFG"}"#)
+        #expect(String(decoding: decode(parts[1]), as: UTF8.self) == #"{"iss":"V6G4B5T63L","iat":1700000000}"#)
+        let signature = try P256.Signing.ECDSASignature(rawRepresentation: decode(parts[2]))
+        #expect(key.publicKey.isValidSignature(signature, for: Data("\(parts[0]).\(parts[1])".utf8)))
+        #expect(!APNsCredentials(keyID: "x", teamID: "y", keyPEM: "not a key").isValid)
+    }
+
+    @Test func payloadCarriesTheStampAsAString() throws {
+        let id = UUID()
+        let data = APNs.payload(title: "api", subtitle: "Home", body: "Needs permission: Bash", sessionID: id, permissionStamp: 1_790_000_000.123456, blocked: true)
+        let root = try #require(try JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let aps = try #require(root["aps"] as? [String: Any])
+        #expect(aps["category"] as? String == "permission")
+        #expect(aps["sound"] as? String == "default")
+        #expect(root["sessionID"] as? String == id.uuidString)
+        #expect((root["stamp"] as? String).flatMap(Double.init) == 1_790_000_000.123456)
+        let idle = try #require(try JSONSerialization.jsonObject(with: APNs.payload(title: "a", subtitle: nil, body: "Done", sessionID: id, permissionStamp: nil, blocked: false)) as? [String: Any])
+        #expect((idle["aps"] as? [String: Any])?["category"] == nil && idle["stamp"] == nil)
+        #expect(APNs.host(for: "production") == "api.push.apple.com" && APNs.host(for: "development") == "api.sandbox.push.apple.com")
     }
 }
