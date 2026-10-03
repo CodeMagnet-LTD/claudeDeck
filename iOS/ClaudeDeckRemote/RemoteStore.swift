@@ -34,6 +34,8 @@ final class RemoteStore {
     @ObservationIgnored private var retryTask: Task<Void, Never>?
     @ObservationIgnored private var retryDelay: TimeInterval = 2
     @ObservationIgnored private var isActive = false
+    /// The app is on screen (scene phase), unlike `isActive`, which a notification action also sets.
+    @ObservationIgnored private var inForeground = false
     /// Waiting `answerAndWait` calls (notification actions), by session.
     @ObservationIgnored private var answerWaiters: [UUID: CheckedContinuation<Bool, Never>] = [:]
     /// Called after connecting (push registration, see PushRegistration).
@@ -89,6 +91,10 @@ final class RemoteStore {
 
     /// Scene phase: connect in front, let go in the background.
     func setActive(_ active: Bool) {
+        inForeground = active
+        // After a refusal (wrong password) only a new pairing retries: each attempt counts
+        // against the Mac's limit.
+        if active, case .refused = connection { isActive = true; return }
         guard active != isActive || (active && connection != .connected && hostConnection == nil) else { return }
         isActive = active
         if active {
@@ -206,6 +212,18 @@ final class RemoteStore {
 
     /// For a notification action: connect if needed, answer, wait for the Mac's result.
     func answerAndWait(_ id: UUID, stamp: Double, approve: Bool, timeout: TimeInterval = 20) async -> Bool {
+        let applied = await answerConnecting(id, stamp: stamp, approve: approve, timeout: timeout)
+        // Answered from the lock screen: let go now. A socket left open until iOS suspends us would
+        // make the Mac think this phone is connected and skip its next push.
+        if !inForeground {
+            close()
+            isActive = false
+            if pairing != nil, connection == .connected || connection == .connecting { connection = .paused }
+        }
+        return applied
+    }
+
+    private func answerConnecting(_ id: UUID, stamp: Double, approve: Bool, timeout: TimeInterval) async -> Bool {
         if connection != .connected {
             isActive = true
             reconnect()
