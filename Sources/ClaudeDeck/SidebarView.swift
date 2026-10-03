@@ -50,7 +50,8 @@ struct SidebarView: View {
         List(selection: Binding(
             get: { model.sidebarSelection },
             set: { id in
-                guard let id else { return }
+                // Rows of the other Mac's sessions aren't local sessions: nothing to select.
+                guard let id, model.remote.snapshot?.session(id) == nil || model.deck.session(id) != nil else { return }
                 layoutController.click()
                 if model.deck.project(id) != nil { model.openProject(id) } else { model.selectFromSidebar(id) }
             }
@@ -89,6 +90,9 @@ struct SidebarView: View {
                     .fixedSize()
                     .help("Add project / new group")
                 }
+            }
+            if model.deck.settings.remoteClient {
+                RemoteSidebarSection(filter: filter)
             }
             // Inactive: everything else in its saved order, collapsible like an accordion.
             // Hidden while a filter is on (nothing there is waiting or working).

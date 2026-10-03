@@ -92,6 +92,8 @@ final class AppModel {
     // MARK: iCloud sync (DeckSyncController) — begin
     @ObservationIgnored let sync = DeckSyncController()
     // MARK: iCloud sync — end
+    /// Remote mode: host for other Macs / show another Mac's sessions (RemoteController).
+    @ObservationIgnored let remote = RemoteController()
     // MARK: Automations (AutomationScheduler) — begin
     @ObservationIgnored private(set) var automations: AutomationScheduler?
     @ObservationIgnored private(set) var githubEvents: GitHubEventPoller?
@@ -138,6 +140,7 @@ final class AppModel {
         reloadStatuses(initial: true)
         cleanupStatusFiles()
         if !Self.isDemo { sync.start(model: self) } // iCloud sync (no-op unless enabled)
+        remote.start(model: self) // no-op unless remote mode is on in Settings
         usage.start()
         // Resolving `claude` runs the login shell; keep it off the main thread.
         Task { @MainActor in
@@ -187,6 +190,7 @@ final class AppModel {
             }
         }
         saveNow()
+        remote.stop()
         terminals.terminateAll()
     }
 

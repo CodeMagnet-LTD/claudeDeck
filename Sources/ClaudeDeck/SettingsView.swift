@@ -91,6 +91,7 @@ struct SettingsView: View {
                     }
                 }
             }
+            RemoteSettingsSection()
             PencilSettingsSection()
             Section("Claude Code Hooks") {
                 LabeledContent("Status") {

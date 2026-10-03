@@ -207,6 +207,12 @@ extension AppModel {
         showMainWindow()
     }
 
+    /// A session of the paired Mac in a live terminal tab (remote mode).
+    func openRemoteTerminal(_ id: UUID) {
+        tabs.open(.remoteTerminal(id))
+        showMainWindow()
+    }
+
     /// The Inbox tab (GitHub issues and pull requests).
     func showInbox() {
         tabs.open(.inbox)

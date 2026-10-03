@@ -17,6 +17,8 @@ public enum WorkspaceTab: Hashable, Codable, Sendable {
     case search
     /// The Skills browser.
     case skills
+    /// Live terminal of a session on the paired Mac (remote mode).
+    case remoteTerminal(UUID)
 
     public var fileURL: URL? {
         if case .file(let url) = self { url } else { nil }
@@ -119,7 +121,7 @@ public struct WorkspaceTabList: Equatable, Codable, Sendable {
         copy.tabs = tabs.filter {
             switch $0 {
             case .sessions, .file, .automations, .inbox, .search, .skills: true
-            case .diff, .repository: false
+            case .diff, .repository, .remoteTerminal: false
             }
         }
         if !copy.tabs.contains(selected) { copy.selected = .sessions }

@@ -164,6 +164,10 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     public var editorWrapLines = true
     /// Files open in their own editor windows instead of tabs in the main window.
     public var openFilesInSeparateWindow = false
+    /// Remote mode, host side: other Macs may connect over Tailscale (RemoteController).
+    public var remoteHost = false
+    /// Remote mode, remote side: show a paired Mac's sessions in the sidebar.
+    public var remoteClient = false
 
     public init() {}
 
@@ -193,6 +197,8 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         editorFontSize = try c.decodeIfPresent(Double.self, forKey: .editorFontSize) ?? d.editorFontSize
         editorWrapLines = try c.decodeIfPresent(Bool.self, forKey: .editorWrapLines) ?? d.editorWrapLines
         openFilesInSeparateWindow = try c.decodeIfPresent(Bool.self, forKey: .openFilesInSeparateWindow) ?? d.openFilesInSeparateWindow
+        remoteHost = try c.decodeIfPresent(Bool.self, forKey: .remoteHost) ?? d.remoteHost
+        remoteClient = try c.decodeIfPresent(Bool.self, forKey: .remoteClient) ?? d.remoteClient
     }
 }
 

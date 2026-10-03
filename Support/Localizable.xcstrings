@@ -41,6 +41,16 @@
         }
       }
     },
+    "%@ is offline in Tailscale": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ Tailscale'de çevrimdışı"
+          }
+        }
+      }
+    },
     "%@ tokens": {
       "localizations": {
         "tr": {
@@ -300,6 +310,16 @@
         }
       }
     },
+    "A password is set": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parola ayarlı"
+          }
+        }
+      }
+    },
     "A scheduled run found later than this (Mac asleep, ClaudeDeck not running) is skipped.": {
       "localizations": {
         "tr": {
@@ -540,6 +560,16 @@
         }
       }
     },
+    "Address": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adres"
+          }
+        }
+      }
+    },
     "Agents": {
       "localizations": {
         "tr": {
@@ -630,6 +660,36 @@
         }
       }
     },
+    "Allow / Deny on a notification needs banners or alerts.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirimdeki İzin ver / Reddet için afiş ya da uyarı açık olmalı."
+          }
+        }
+      }
+    },
+    "Allow ClaudeDeck in System Settings › Network › Firewall › Options.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sistem Ayarları › Ağ › Güvenlik Duvarı › Seçenekler'de ClaudeDeck'e izin verin."
+          }
+        }
+      }
+    },
+    "Allow…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzin ver…"
+          }
+        }
+      }
+    },
     "Also send it to every resumed session": {
       "localizations": {
         "tr": {
@@ -706,6 +766,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bana atananlar"
+          }
+        }
+      }
+    },
+    "At least %lld characters. Type the same password on both Macs: the other Mac is then found through Tailscale, without iCloud Drive.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En az %lld karakter. İki Mac'e de aynı parolayı girin: diğer Mac, iCloud Drive olmadan Tailscale üzerinden bulunur."
           }
         }
       }
@@ -840,6 +910,16 @@
         }
       }
     },
+    "Both Macs need Tailscale, signed in to the same account. The connection stays inside your tailnet.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İki Mac'te de Tailscale, aynı hesapla açık olmalı. Bağlantı tailnet'inizin içinde kalır."
+          }
+        }
+      }
+    },
     "Bounce the Dock icon": {
       "localizations": {
         "tr": {
@@ -960,6 +1040,16 @@
         }
       }
     },
+    "Change…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Değiştir…"
+          }
+        }
+      }
+    },
     "Check Again": {
       "localizations": {
         "tr": {
@@ -1006,6 +1096,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ dalını izleyen yerel bir dal olarak geç"
+          }
+        }
+      }
+    },
+    "Checking this Mac…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Mac kontrol ediliyor…"
           }
         }
       }
@@ -1413,6 +1513,76 @@
         }
       }
     },
+    "Connected": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlı"
+          }
+        }
+      }
+    },
+    "Connected Macs are disconnected. Macs using iCloud Drive pick up the new key on their own; others have to pair again.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlı Mac'lerin bağlantısı kesilir. iCloud Drive kullanan Mac'ler yeni anahtarı kendiliğinden alır; diğerlerinin yeniden eşleşmesi gerekir."
+          }
+        }
+      }
+    },
+    "Connected: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlı: %@"
+          }
+        }
+      }
+    },
+    "Connecting…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlanıyor…"
+          }
+        }
+      }
+    },
+    "Connection": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı"
+          }
+        }
+      }
+    },
+    "Connection closed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı kapandı"
+          }
+        }
+      }
+    },
+    "Connection closed by the other Mac": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantıyı diğer Mac kapattı"
+          }
+        }
+      }
+    },
     "Continue sessions when the usage limit resets": {
       "localizations": {
         "tr": {
@@ -1453,6 +1623,16 @@
         }
       }
     },
+    "Copied": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kopyalandı"
+          }
+        }
+      }
+    },
     "Copy": {
       "localizations": {
         "tr": {
@@ -1479,6 +1659,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Satırı kopyala"
+          }
+        }
+      }
+    },
+    "Copy Pairing Link": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleştirme bağlantısını kopyala"
           }
         }
       }
@@ -1543,6 +1733,16 @@
         }
       }
     },
+    "Couldn't reach the Mac": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'e ulaşılamadı"
+          }
+        }
+      }
+    },
     "Couldn't read %@ in iCloud; it was not overwritten.": {
       "localizations": {
         "tr": {
@@ -1559,6 +1759,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Güncellenemedi — %@ itibarıyla değerler gösteriliyor."
+          }
+        }
+      }
+    },
+    "Couldn't write the pairing to iCloud Drive: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleştirme iCloud Drive'a yazılamadı: %@"
           }
         }
       }
@@ -1609,6 +1819,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Geçerli HEAD’den dal oluştur…"
+          }
+        }
+      }
+    },
+    "Create a new pairing key?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni eşleştirme anahtarı oluşturulsun mu?"
           }
         }
       }
@@ -1869,6 +2089,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Açmak için bir sonuca çift tıklayın; hiçbir oturuma ait olmayan konuşma yeni bir oturumda sürdürülür."
+          }
+        }
+      }
+    },
+    "Download…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndir…"
           }
         }
       }
@@ -2173,6 +2403,16 @@
         }
       }
     },
+    "Forget Pasted Pairing": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yapıştırılan eşleştirmeyi unut"
+          }
+        }
+      }
+    },
     "General": {
       "localizations": {
         "tr": {
@@ -2303,6 +2543,16 @@
         }
       }
     },
+    "Hide Pairing Code": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleştirme kodunu gizle"
+          }
+        }
+      }
+    },
     "Hide from the Dock when the window is closed (menu bar only)": {
       "localizations": {
         "tr": {
@@ -2379,6 +2629,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Denetçi"
+          }
+        }
+      }
+    },
+    "Install it on both Macs and sign in with the same account.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İki Mac'e de kurun ve aynı hesapla oturum açın."
           }
         }
       }
@@ -2573,6 +2833,16 @@
         }
       }
     },
+    "Let my other Macs see and answer this Mac's sessions": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac'lerim bu Mac'in oturumlarını görüp yanıtlayabilsin"
+          }
+        }
+      }
+    },
     "Light": {
       "localizations": {
         "tr": {
@@ -2643,6 +2913,16 @@
         }
       }
     },
+    "Loading the terminal…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminal yükleniyor…"
+          }
+        }
+      }
+    },
     "Location": {
       "localizations": {
         "tr": {
@@ -2673,6 +2953,16 @@
         }
       }
     },
+    "Mac": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac"
+          }
+        }
+      }
+    },
     "Main": {
       "localizations": {
         "tr": {
@@ -2689,6 +2979,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Ana oturum"
+          }
+        }
+      }
+    },
+    "Malformed data from the other Mac": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac'ten bozuk veri geldi"
           }
         }
       }
@@ -2973,6 +3273,26 @@
         }
       }
     },
+    "New Key": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni anahtar"
+          }
+        }
+      }
+    },
+    "New Key…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni anahtar…"
+          }
+        }
+      }
+    },
     "New Session": {
       "localizations": {
         "tr": {
@@ -3143,6 +3463,26 @@
         }
       }
     },
+    "No Mac found yet — turn on hosting on the other Mac, or paste its link": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz Mac bulunamadı — diğer Mac'te paylaşımı açın ya da bağlantısını yapıştırın"
+          }
+        }
+      }
+    },
+    "No Mac to connect to yet": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz bağlanılacak Mac yok"
+          }
+        }
+      }
+    },
     "No Session Selected": {
       "localizations": {
         "tr": {
@@ -3279,6 +3619,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Açık pull request yok"
+          }
+        }
+      }
+    },
+    "No other Mac is online in Tailscale": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tailscale'de çevrimiçi başka Mac yok"
+          }
+        }
+      }
+    },
+    "No password set": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parola ayarlı değil"
           }
         }
       }
@@ -3433,6 +3793,16 @@
         }
       }
     },
+    "Not connected": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlı değil"
+          }
+        }
+      }
+    },
     "Not finished": {
       "localizations": {
         "tr": {
@@ -3453,12 +3823,62 @@
         }
       }
     },
+    "Nothing here": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Burada bir şey yok"
+          }
+        }
+      }
+    },
     "Nothing is waiting for you": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Seni bekleyen bir şey yok"
+          }
+        }
+      }
+    },
+    "Notification banners are off": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirim afişleri kapalı"
+          }
+        }
+      }
+    },
+    "Notifications are allowed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirimlere izin verilmiş"
+          }
+        }
+      }
+    },
+    "Notifications are turned off for ClaudeDeck": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClaudeDeck için bildirimler kapalı"
+          }
+        }
+      }
+    },
+    "Notifications aren't allowed yet": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirimlere henüz izin verilmedi"
           }
         }
       }
@@ -3479,6 +3899,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kapalı"
+          }
+        }
+      }
+    },
+    "On the home Mac, turn on \"Let my other Macs see and answer this Mac's sessions\" and set the same password there.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evdeki Mac'te \"Diğer Mac'lerim bu Mac'in oturumlarını görüp yanıtlayabilsin\" seçeneğini açın ve aynı parolayı orada da girin."
+          }
+        }
+      }
+    },
+    "On the other Mac: Settings › Remote › paste this link. Or scan the code with a phone and send the link over.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac'te: Ayarlar › Uzak bağlantı › bu bağlantıyı yapıştırın. Ya da kodu telefonla okutup bağlantıyı kendinize gönderin."
           }
         }
       }
@@ -3533,6 +3973,26 @@
         }
       }
     },
+    "Open Firewall Settings…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güvenlik duvarı ayarlarını aç…"
+          }
+        }
+      }
+    },
+    "Open Notification Settings…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bildirim ayarlarını aç…"
+          }
+        }
+      }
+    },
     "Open Project in VS Code": {
       "localizations": {
         "tr": {
@@ -3559,6 +4019,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Oturumlarını Yan Yana Aç"
+          }
+        }
+      }
+    },
+    "Open Tailscale": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tailscale'i aç"
+          }
+        }
+      }
+    },
+    "Open Tailscale and connect (or run `tailscale up`).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tailscale'i açıp bağlanın (ya da `tailscale up` çalıştırın)."
           }
         }
       }
@@ -3673,6 +4153,16 @@
         }
       }
     },
+    "Open the live terminal": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canlı terminali aç"
+          }
+        }
+      }
+    },
     "Open the run on GitHub": {
       "localizations": {
         "tr": {
@@ -3703,6 +4193,66 @@
         }
       }
     },
+    "Other Mac": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac"
+          }
+        }
+      }
+    },
+    "Other ways to pair (QR code, link, iCloud Drive)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer eşleştirme yolları (QR kod, bağlantı, iCloud Drive)"
+          }
+        }
+      }
+    },
+    "Pair": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleştir"
+          }
+        }
+      }
+    },
+    "Paired with %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ile eşleşti"
+          }
+        }
+      }
+    },
+    "Password": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parola"
+          }
+        }
+      }
+    },
+    "Password — the same on both Macs": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parola — iki Mac'te de aynı"
+          }
+        }
+      }
+    },
     "Paste": {
       "localizations": {
         "tr": {
@@ -3719,6 +4269,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "https://github.com/owner/repo/pull/12 veya https://github.com/owner/repo/issues/34 gibi bir bağlantı yapıştırın ya da owner/repo#12 yazın."
+          }
+        }
+      }
+    },
+    "Paste a pairing link (claudedeck://pair?…)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleştirme bağlantısını yapıştırın (claudedeck://pair?…)"
           }
         }
       }
@@ -4033,6 +4593,16 @@
         }
       }
     },
+    "Refresh Address": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adresi yenile"
+          }
+        }
+      }
+    },
     "Reinstall": {
       "localizations": {
         "tr": {
@@ -4053,12 +4623,32 @@
         }
       }
     },
+    "Remote (Tailscale)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uzak bağlantı (Tailscale)"
+          }
+        }
+      }
+    },
     "Remote Branches": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Uzak dallar"
+          }
+        }
+      }
+    },
+    "Remote access is off on this Mac.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Mac'te uzak erişim kapalı."
           }
         }
       }
@@ -4369,6 +4959,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Açılışta açık oturumları otomatik devam ettir"
+          }
+        }
+      }
+    },
+    "Retrying in %lld s — %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld sn sonra yeniden denenecek — %@"
           }
         }
       }
@@ -4773,6 +5373,16 @@
         }
       }
     },
+    "Session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum"
+          }
+        }
+      }
+    },
     "Session Agents (⌘⇧A)": {
       "localizations": {
         "tr": {
@@ -4799,6 +5409,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ClaudeDeck kapanırken (ya da çökerken) çalışmakta olan oturumlar bu mesajla her zaman kaldıkları yerden devam eder."
+          }
+        }
+      }
+    },
+    "Set": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarlı"
           }
         }
       }
@@ -4873,6 +5493,16 @@
         }
       }
     },
+    "Show Pairing Code": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleştirme kodunu göster"
+          }
+        }
+      }
+    },
     "Show Previous Tab": {
       "localizations": {
         "tr": {
@@ -4943,6 +5573,16 @@
         }
       }
     },
+    "Show another Mac's sessions in the sidebar": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir Mac'in oturumlarını kenar çubuğunda göster"
+          }
+        }
+      }
+    },
     "Show notifications (permission / question / done)": {
       "localizations": {
         "tr": {
@@ -4959,6 +5599,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "İlk %lld konuşma gösteriliyor. Diğerlerini görmek için aramayı daraltın."
+          }
+        }
+      }
+    },
+    "Sign in to Tailscale.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tailscale'de oturum açın."
           }
         }
       }
@@ -5203,6 +5853,16 @@
         }
       }
     },
+    "Starting…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlatılıyor…"
+          }
+        }
+      }
+    },
     "Starts automatically when the app launches: %@": {
       "localizations": {
         "tr": {
@@ -5363,6 +6023,46 @@
         }
       }
     },
+    "Tailscale is connected": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tailscale bağlı"
+          }
+        }
+      }
+    },
+    "Tailscale is not connected": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tailscale bağlı değil"
+          }
+        }
+      }
+    },
+    "Tailscale is not installed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tailscale kurulu değil"
+          }
+        }
+      }
+    },
+    "Tailscale isn't running on this Mac. Install it and sign in, then try again.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Mac'te Tailscale çalışmıyor. Kurup oturum açın, sonra yeniden deneyin."
+          }
+        }
+      }
+    },
     "Teal": {
       "localizations": {
         "tr": {
@@ -5412,6 +6112,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "Test sağlığı"
+          }
+        }
+      }
+    },
+    "That isn't a ClaudeDeck pairing link. Copy it from Settings › Remote on the other Mac.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu bir ClaudeDeck eşleştirme bağlantısı değil. Diğer Mac'te Ayarlar › Uzak bağlantı'dan kopyalayın."
+          }
+        }
+      }
+    },
+    "That prompt was already answered or changed on the other Mac.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu istem diğer Mac'te zaten yanıtlanmış ya da değişmiş."
           }
         }
       }
@@ -5496,6 +6216,26 @@
         }
       }
     },
+    "The firewall blocks incoming connections": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güvenlik duvarı gelen bağlantıları engelliyor"
+          }
+        }
+      }
+    },
+    "The firewall lets connections in": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Güvenlik duvarı bağlantılara izin veriyor"
+          }
+        }
+      }
+    },
     "The folder %@ is deleted. Its branch is kept.": {
       "localizations": {
         "tr": {
@@ -5516,6 +6256,16 @@
         }
       }
     },
+    "The link contains the key: share it only with your own Macs.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı anahtarı içerir: yalnızca kendi Mac'lerinizle paylaşın."
+          }
+        }
+      }
+    },
     "The main working tree can’t be removed.": {
       "localizations": {
         "tr": {
@@ -5532,6 +6282,76 @@
           "stringUnit": {
             "state": "translated",
             "value": "İşlem tamamlanamadı"
+          }
+        }
+      }
+    },
+    "The other Mac didn't answer": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac yanıt vermedi"
+          }
+        }
+      }
+    },
+    "The other Mac has a different password or pairing key.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac'te parola ya da eşleştirme anahtarı farklı."
+          }
+        }
+      }
+    },
+    "The other Mac runs a different ClaudeDeck version. Update both Macs.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac'te farklı bir ClaudeDeck sürümü çalışıyor. İki Mac'i de güncelleyin."
+          }
+        }
+      }
+    },
+    "The other Mac stopped answering": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac yanıt vermiyor"
+          }
+        }
+      }
+    },
+    "The pairing is shared automatically.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleştirme kendiliğinden paylaşılır."
+          }
+        }
+      }
+    },
+    "The pairing key changed on the other Mac.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac'te eşleştirme anahtarı değişti."
+          }
+        }
+      }
+    },
+    "The password or pairing key doesn't match.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Parola ya da eşleştirme anahtarı uyuşmuyor."
           }
         }
       }
@@ -5706,6 +6526,16 @@
         }
       }
     },
+    "This session isn't running on the other Mac.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu oturum diğer Mac'te çalışmıyor."
+          }
+        }
+      }
+    },
     "This week": {
       "localizations": {
         "tr": {
@@ -5802,6 +6632,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Commit edilmemiş değişiklikler"
+          }
+        }
+      }
+    },
+    "Unexpected message during pairing.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eşleştirme sırasında beklenmeyen mesaj."
           }
         }
       }
@@ -5936,6 +6776,16 @@
         }
       }
     },
+    "Use the same password on the other Mac.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac'te de aynı parolayı kullanın."
+          }
+        }
+      }
+    },
     "Used by: %@. Those sessions can’t restart without it.": {
       "localizations": {
         "tr": {
@@ -6016,6 +6866,16 @@
         }
       }
     },
+    "Waiting for the other Mac…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac bekleniyor…"
+          }
+        }
+      }
+    },
     "Waiting for you · %lld": {
       "localizations": {
         "tr": {
@@ -6026,12 +6886,32 @@
         }
       }
     },
+    "Waiting on port %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ numaralı bağlantı noktasında bekliyor"
+          }
+        }
+      }
+    },
     "Waits for GitHub events": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "GitHub olaylarını bekliyor"
+          }
+        }
+      }
+    },
+    "Wake that Mac and make sure Tailscale is connected there.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O Mac'i uyandırın ve orada Tailscale'in bağlı olduğundan emin olun."
           }
         }
       }
@@ -6082,6 +6962,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Yeni bir pull request açıldığında"
+          }
+        }
+      }
+    },
+    "With iCloud Drive on, the hosting Mac also leaves its pairing in iCloud Drive › ClaudeDeck › Remote and the other Mac picks it up.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive açıksa paylaşan Mac eşleştirmesini iCloud Drive › ClaudeDeck › Remote'a da bırakır, diğer Mac oradan alır."
           }
         }
       }
@@ -6172,6 +7062,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld dosyada kaydedilmemiş değişiklik var."
+          }
+        }
+      }
+    },
+    "You won't hear about prompts on the other Mac.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac'teki istemlerden haberiniz olmaz."
           }
         }
       }
@@ -6408,6 +7308,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "iCloud Drive bu Mac'te açık değil (~/Library/Mobile Documents/com~apple~CloudDocs yok). Sistem Ayarları › Apple Hesabı › iCloud › iCloud Drive'ı aç."
+          }
+        }
+      }
+    },
+    "iCloud Drive is off on this Mac, so nothing is shared through it.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Mac'te iCloud Drive kapalı; onun üzerinden hiçbir şey paylaşılmaz."
+          }
+        }
+      }
+    },
+    "iCloud Drive is off on this Mac: set a password above, the same on both Macs.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Mac'te iCloud Drive kapalı: yukarıda iki Mac'te de aynı olan bir parola belirleyin."
+          }
+        }
+      }
+    },
+    "iCloud Drive is on": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "iCloud Drive açık"
           }
         }
       }

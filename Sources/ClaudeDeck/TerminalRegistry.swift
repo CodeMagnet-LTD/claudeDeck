@@ -261,6 +261,14 @@ final class DeckTerminalView: LocalProcessTerminalView {
         onInput?(data)
         super.send(source: source, data: data)
     }
+
+    /// Raw pty output (remote mode streams it to watching Macs).
+    var onOutput: ((ArraySlice<UInt8>) -> Void)?
+
+    override func dataReceived(slice: ArraySlice<UInt8>) {
+        super.dataReceived(slice: slice)
+        onOutput?(slice)
+    }
 }
 
 /// Owns every terminal view + process for the app's lifetime. Views are re-parented when
@@ -272,6 +280,10 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
     private(set) var titles: [UUID: String] = [:]
     @ObservationIgnored private var views: [UUID: DeckTerminalView] = [:]
     @ObservationIgnored var onExit: ((UUID, Int32?) -> Void)?
+    /// Raw pty output of any terminal (remote mode).
+    @ObservationIgnored var onOutput: ((UUID, ArraySlice<UInt8>) -> Void)?
+    /// A terminal's grid changed size (remote mode).
+    @ObservationIgnored var onResize: ((UUID) -> Void)?
 
     @ObservationIgnored private var clickMonitor: Any?
 
@@ -307,6 +319,7 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         let view = views[id] ?? DeckTerminalView(sessionID: id, fontSize: fontSize)
         view.processDelegate = self
         view.onInput = { [weak self] data in self?.onUserInput?(id, data) }
+        view.onOutput = { [weak self] data in self?.onOutput?(id, data) }
         view.onFocus = { [weak self] in self?.onFocus?(id) }
         view.onMagnify = { [weak self] step in self?.onZoom?(step) }
         view.onOpenFile = { [weak self] url in self?.onOpenFile?(url) }
@@ -339,6 +352,7 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         let view = views[id] ?? DeckTerminalView(sessionID: id, fontSize: fontSize)
         view.processDelegate = self
         view.onInput = { [weak self] data in self?.onUserInput?(id, data) }
+        view.onOutput = { [weak self] data in self?.onOutput?(id, data) }
         view.onFocus = { [weak self] in self?.onFocus?(id) }
         view.onMagnify = { [weak self] step in self?.onZoom?(step) }
         view.onOpenFile = { [weak self] url in self?.onOpenFile?(url) }
@@ -433,7 +447,12 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
 
     // MARK: LocalProcessTerminalViewDelegate
 
-    nonisolated func sizeChanged(source: LocalProcessTerminalView, newCols: Int, newRows: Int) {}
+    nonisolated func sizeChanged(source: LocalProcessTerminalView, newCols: Int, newRows: Int) {
+        MainActor.assumeIsolated {
+            guard let id = (source as? DeckTerminalView)?.sessionID else { return }
+            onResize?(id)
+        }
+    }
 
     nonisolated func setTerminalTitle(source: LocalProcessTerminalView, title: String) {
         MainActor.assumeIsolated {

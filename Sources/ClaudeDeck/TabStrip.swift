@@ -65,7 +65,7 @@ struct WorkspaceView: View {
         case .automations: ""
         case .repository(let repo, _): (repo as NSString).abbreviatingWithTildeInPath
         case .inbox: ""
-        case .search, .skills: ""
+        case .search, .skills, .remoteTerminal: ""
         }
     }
 }
@@ -98,6 +98,9 @@ private struct TabContent: View {
             HistorySearchView()
         case .skills:
             SkillsView()
+        case .remoteTerminal(let id):
+            // Streams only while shown; coming back fetches a fresh screen.
+            if isSelected { RemoteTerminalTab(sessionID: id) }
         }
     }
 }
@@ -252,6 +255,7 @@ private struct TabItem: View {
         case .inbox: Image(systemName: "tray")
         case .search: Image(systemName: "text.magnifyingglass")
         case .skills: Image(systemName: "wand.and.stars")
+        case .remoteTerminal: Image(systemName: "desktopcomputer")
         }
     }
 
@@ -502,6 +506,7 @@ extension WorkspaceTab {
         case .inbox: "inbox"
         case .search: "search"
         case .skills: "skills"
+        case .remoteTerminal(let id): "remote:\(id.uuidString)"
         }
     }
 
@@ -517,6 +522,8 @@ extension WorkspaceTab {
         case .inbox: String(localized: "Inbox")
         case .search: String(localized: "Search")
         case .skills: String(localized: "Skills")
+        case .remoteTerminal(let id):
+            MainActor.assumeIsolated { RemoteController.tabTitle(id) }
         }
     }
 

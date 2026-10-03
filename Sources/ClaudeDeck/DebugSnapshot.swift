@@ -48,6 +48,53 @@ enum DebugSnapshot {
             let stamp = model.pendingPermissionStamp(id)
             _ = approve ? model.approvePermission(id, expectedAt: stamp) : model.denyPermission(id, expectedAt: stamp)
         }
+        // `remote.cmd`: "host" / "client" / "off" turns remote mode on that side (demo testing);
+        // `<session-uuid>.remote-approve` / `.remote-deny` answer a prompt on the paired Mac.
+        for file in files where file == "remote.cmd" {
+            let path = (dir as NSString).appendingPathComponent(file)
+            let command = contents(path).trimmingCharacters(in: .whitespacesAndNewlines)
+            try? FileManager.default.removeItem(atPath: path)
+            model.mutate {
+                $0.settings.remoteHost = command == "host"
+                $0.settings.remoteClient = command == "client"
+            }
+            model.remote.refresh()
+        }
+        let remote = model.remote
+        let remoteLines = ["host: \(remote.hostState) remotes=\(remote.connectedRemotes) last=\(remote.lastRemoteAnswer ?? "-") rejected=\(remote.lastRejectedPeer ?? "-")",
+                           "client: \(remote.connection) answering=\(remote.answering.count) error=\(remote.answerError ?? "-")",
+                           "terminals: \(remote.terminalStates) counters: \(remote.counters.sorted { $0.key < $1.key })"]
+            + (remote.snapshot?.sessions ?? []).map { "  \($0.id.uuidString) \($0.name) \($0.state.rawValue) stamp=\($0.permissionStamp.map { String($0) } ?? "-")" }
+        try? remoteLines.joined(separator: "\n").write(toFile: (dir as NSString).appendingPathComponent("remote.txt"), atomically: true, encoding: .utf8)
+        // `<id>.remote-open` opens the paired Mac's session in a tab; `<id>.remote-type` types its
+        // contents there ("\\r" = Enter); `screen-<id>.txt` holds each live terminal's visible text.
+        for file in files where file.hasSuffix(".remote-open") {
+            let path = (dir as NSString).appendingPathComponent(file)
+            try? FileManager.default.removeItem(atPath: path)
+            if let id = UUID(uuidString: String(file.prefix(36))) { model.openRemoteTerminal(id) }
+        }
+        for file in files where file.hasSuffix(".remote-type") {
+            let path = (dir as NSString).appendingPathComponent(file)
+            let text = contents(path).replacingOccurrences(of: "\\r", with: "\r")
+            try? FileManager.default.removeItem(atPath: path)
+            if let id = UUID(uuidString: String(file.prefix(36))) { model.remote.sendTerminalInput(id, data: Data(text.utf8)) }
+        }
+        for (id, text) in model.remote.debugScreens() {
+            try? text.write(toFile: (dir as NSString).appendingPathComponent("screen-\(id.uuidString).txt"), atomically: true, encoding: .utf8)
+        }
+        // `remote.password`: sets the remote-mode password (both roles).
+        for file in files where file == "remote.password" {
+            let path = (dir as NSString).appendingPathComponent(file)
+            let password = contents(path).trimmingCharacters(in: .whitespacesAndNewlines)
+            try? FileManager.default.removeItem(atPath: path)
+            if !password.isEmpty { model.remote.setPassword(password) }
+        }
+        for file in files where file.hasSuffix(".remote-approve") || file.hasSuffix(".remote-deny") {
+            let path = (dir as NSString).appendingPathComponent(file)
+            try? FileManager.default.removeItem(atPath: path)
+            guard let id = UUID(uuidString: String(file.prefix(36))) else { continue }
+            model.remote.answer(id, stamp: model.remote.snapshot?.session(id)?.permissionStamp, approve: file.hasSuffix(".remote-approve"))
+        }
         // `<name>.tab`: "diff\t<dir>\t<path>\t<staged 0|1>" opens that diff tab (as a Changes click would),
         // "file\t<path>\t<preview 0|1>" an editor tab, "repo\t<dir>\t<history|worktrees>" a repository page,
         // "automations" / "inbox" / "sessions" / "skills" those tabs, "search\t<query>\t<all 0|1>" the Search
