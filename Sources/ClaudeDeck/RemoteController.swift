@@ -41,6 +41,11 @@ final class RemoteController {
     private(set) var availableHosts: [RemotePairing] = []
     /// Online Macs in the tailnet (password mode tries each).
     private(set) var discoveredMacs: [String] = []
+    /// The address the current connection uses (diagnostics).
+    var connectedVia: String? { hostConnection?.connectedAddress }
+    /// Hosts advertising on the local network (Bonjour), this Mac excluded.
+    private(set) var lanHosts: [DiscoveredHost] = []
+    @ObservationIgnored private var lanDiscovery: RemoteDiscovery?
     /// Prompts answered from here, waiting for the host's result.
     private(set) var answering: Set<UUID> = []
     /// Last failed answer (the prompt changed on the host meanwhile).
@@ -159,7 +164,10 @@ final class RemoteController {
     /// Matches both sides to the settings.
     func refresh() {
         guard let settings = model?.deck.settings else { return }
+        // Local-network access changes what the listener accepts and advertises: start it over.
+        if server != nil, hostingLAN != settings.remoteLAN { restartServer() }
         settings.remoteHost ? startHosting() : stopHosting()
+        updateLANDiscovery(settings.remoteClient)
         settings.remoteClient ? reconnect(force: false) : disconnect()
     }
 
@@ -169,13 +177,30 @@ final class RemoteController {
 
     // MARK: Host
 
+    /// Whether the running listener accepts the local network (and advertises over Bonjour).
+    @ObservationIgnored private var hostingLAN = false
+
+    private func restartServer() {
+        watched = []
+        updateStreamingActivity()
+        outputBuffers = [:]
+        server?.stop()
+        server = nil
+        snapshotTimer?.invalidate()
+        snapshotTimer = nil
+        connectedRemotes = []
+    }
+
     private func startHosting() {
         if server == nil {
+            let lan = model?.deck.settings.remoteLAN == true
+            hostingLAN = lan
             let server = RemoteServer(port: Self.port, key: { [weak self] in
                 MainActor.assumeIsolated { self?.model?.deck.settings.remoteHost == true ? self?.local.hostKey : nil }
             }, acceptsPeer: { ip in
-                Tailscale.isTailscaleIP(ip) || (Self.allowLoopback && Tailscale.isLoopback(ip))
+                Tailscale.isTailscaleIP(ip) || (lan && Tailscale.isPrivateLAN(ip)) || (Self.allowLoopback && Tailscale.isLoopback(ip))
             })
+            if lan { server.bonjour = (Self.hostName, local.hostID) }
             server.onStateChange = { [weak self] state in
                 MainActor.assumeIsolated { self?.hostState = state }
             }
@@ -310,7 +335,11 @@ final class RemoteController {
 
     private func publishSnapshot() {
         guard let server, let model else { return }
-        server.snapshot = Self.makeSnapshot(model)
+        var snapshot = Self.makeSnapshot(model)
+        // How to reach this Mac away from home (a phone paired on the local network learns it here).
+        snapshot.hostID = local.hostID
+        snapshot.addresses = hostAddresses.filter { $0 != "127.0.0.1" }
+        server.snapshot = snapshot
     }
 
     private static func makeSnapshot(_ model: AppModel) -> RemoteSnapshot {
@@ -527,8 +556,15 @@ final class RemoteController {
     /// The host this Mac connects to: a pasted link first, then the chosen (or newest) host in iCloud Drive.
     var pairing: RemotePairing? { fixedPairing ?? passwordPairing(addresses: discoveredMacs) }
 
-    /// A host known by its record (pasted link or iCloud Drive).
+    /// A host known by its record (pasted link or iCloud Drive), its local-network address first.
     private var fixedPairing: RemotePairing? {
+        guard var record = recordPairing else { return nil }
+        let local = lanHosts.filter { $0.hostID == record.id }.map(\.address)
+        record.addresses = local + record.addresses.filter { !local.contains($0) }
+        return record
+    }
+
+    private var recordPairing: RemotePairing? {
         if let manual = local.manualPairing {
             // iCloud may have a newer record of the same host (new address or key).
             if let newer = availableHosts.first(where: { $0.id == manual.id }) { return newer }
@@ -538,11 +574,36 @@ final class RemoteController {
         return availableHosts.first
     }
 
+    /// Starts / stops browsing the local network with the remote side.
+    private func updateLANDiscovery(_ on: Bool) {
+        if on, lanDiscovery == nil {
+            let discovery = RemoteDiscovery()
+            discovery.onChange = { [weak self] hosts in
+                MainActor.assumeIsolated { self?.lanHostsChanged(hosts) }
+            }
+            discovery.start()
+            lanDiscovery = discovery
+        } else if !on, let discovery = lanDiscovery {
+            discovery.stop()
+            lanDiscovery = nil
+            lanHosts = []
+        }
+    }
+
+    private func lanHostsChanged(_ hosts: [DiscoveredHost]) {
+        let others = hosts.filter { $0.hostID != local.hostID }
+        guard others != lanHosts else { return }
+        lanHosts = others
+        // At home now: try the local path if we're not connected.
+        if connection != .connected, model?.deck.settings.remoteClient == true { reconnect(force: true) }
+    }
+
     /// The password's key and every candidate address, the last one that worked first.
     private func passwordPairing(addresses: [String]) -> RemotePairing? {
         guard let key = local.passwordKey else { return nil }
         var list: [String] = []
-        for address in [local.lastHostAddress].compactMap({ $0 }) + addresses + (Self.allowLoopback ? ["127.0.0.1"] : [])
+        // Local network first (at home), then the Tailscale address that worked last, then the rest.
+        for address in lanHosts.map(\.address) + [local.lastHostAddress].compactMap({ $0 }) + addresses + (Self.allowLoopback ? ["127.0.0.1"] : [])
         where !list.contains(address) {
             list.append(address)
         }
@@ -633,7 +694,7 @@ final class RemoteController {
             self.discoveryTask = nil
             self.discoveredMacs = (status?.onlineMacs ?? []).filter { $0 != status?.dnsName }
             guard let pairing = self.passwordPairing(addresses: self.discoveredMacs) else {
-                self.scheduleRetry(reason: String(localized: "No other Mac is online in Tailscale"), after: 15)
+                self.scheduleRetry(reason: String(localized: "No other Mac found on the local network or in Tailscale"), after: 15)
                 return
             }
             self.connect(pairing)
@@ -695,8 +756,9 @@ final class RemoteController {
                 terminalStates[id] = .waiting
                 hostConnection?.openTerminal(id)
             }
+            // Remember the Tailscale address only: a Bonjour name is tried first anyway when present.
             if connectedPairing?.id == Self.passwordHostID, let address = hostConnection?.connectedAddress,
-               address != local.lastHostAddress {
+               RemoteBonjour.serviceName(of: address) == nil, address != local.lastHostAddress {
                 local.lastHostAddress = address
                 saveLocal()
             }

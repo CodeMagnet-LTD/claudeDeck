@@ -710,6 +710,16 @@
         }
       }
     },
+    "Also reachable on the local network (encrypted)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yerel ağdan da erişilebilsin (şifreli)"
+          }
+        }
+      }
+    },
     "Also send it to every resumed session": {
       "localizations": {
         "tr": {
@@ -796,6 +806,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bana atananlar"
+          }
+        }
+      }
+    },
+    "At home your other devices find this Mac by its name and connect directly; away, they use Tailscale. Everything is encrypted with the pairing key on both paths.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Evdeyken diğer cihazlarınız bu Mac'i adıyla bulup doğrudan bağlanır; dışarıdayken Tailscale kullanılır. İki yolda da her şey eşleştirme anahtarıyla şifrelenir."
           }
         }
       }
@@ -2203,6 +2223,16 @@
         }
       }
     },
+    "Encryption failed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şifreleme başarısız oldu"
+          }
+        }
+      }
+    },
     "End \"%@\" and remove it from the list?": {
       "localizations": {
         "tr": {
@@ -2419,6 +2449,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Dosyalarda Bul…"
+          }
+        }
+      }
+    },
+    "Find your Mac on this network and connect to it directly.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'inizi bu ağda bulup doğrudan bağlanmak için."
           }
         }
       }
@@ -3049,6 +3089,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Kilitli"
+          }
+        }
+      }
+    },
+    "Looking for Macs on this network…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu ağdaki Mac'ler aranıyor…"
           }
         }
       }
@@ -3753,12 +3803,12 @@
         }
       }
     },
-    "No other Mac is online in Tailscale": {
+    "No other Mac found on the local network or in Tailscale": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tailscale'de çevrimiçi başka Mac yok"
+            "value": "Yerel ağda ya da Tailscale'de başka Mac bulunamadı"
           }
         }
       }
@@ -4053,6 +4103,16 @@
         }
       }
     },
+    "Off: only Tailscale. Turn on to connect directly at home, even without Tailscale.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı: yalnızca Tailscale. Açarsanız evde Tailscale olmadan da doğrudan bağlanılır."
+          }
+        }
+      }
+    },
     "On the Mac: Settings › Remote (Tailscale) › Other ways to pair › Show Pairing Code.": {
       "localizations": {
         "tr": {
@@ -4079,6 +4139,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diğer Mac'te: Ayarlar › Uzak bağlantı › bu bağlantıyı yapıştırın. Ya da kodu telefonla okutup bağlantıyı kendinize gönderin."
+          }
+        }
+      }
+    },
+    "On this network": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu ağda"
           }
         }
       }
@@ -5823,6 +5893,16 @@
         }
       }
     },
+    "Shown when the Mac has \"Also reachable on the local network\" on in Settings › Remote (Tailscale).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'te Ayarlar › Uzak bağlantı (Tailscale) bölümünde \"Yerel ağdan da erişilebilsin\" açıksa burada görünür."
+          }
+        }
+      }
+    },
     "Sign in to Tailscale.": {
       "localizations": {
         "tr": {
@@ -6402,6 +6482,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Uygulama /Applications dışında çalışıyor (%@). Kalıcı giriş öğesi için /Applications'a taşı."
+          }
+        }
+      }
+    },
+    "The connection to the other Mac isn't intact (decryption failed).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac ile bağlantı bozuk (şifre çözülemedi)."
           }
         }
       }

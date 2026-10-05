@@ -84,6 +84,17 @@ struct RemoteSettingsSection: View {
 
     @ViewBuilder
     private func hostStatus(_ remote: RemoteController) -> some View {
+        Toggle("Also reachable on the local network (encrypted)", isOn: Binding(
+            get: { model.deck.settings.remoteLAN },
+            set: { on in
+                model.mutate { $0.settings.remoteLAN = on }
+                remote.refresh()
+            }
+        ))
+        Text(model.deck.settings.remoteLAN
+             ? String(localized: "At home your other devices find this Mac by its name and connect directly; away, they use Tailscale. Everything is encrypted with the pairing key on both paths.")
+             : String(localized: "Off: only Tailscale. Turn on to connect directly at home, even without Tailscale."))
+            .font(.caption).foregroundStyle(.secondary)
         LabeledContent("Status") {
             switch remote.hostState {
             case .listening(let port):

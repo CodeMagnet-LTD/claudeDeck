@@ -27,7 +27,10 @@ final class DebugHooks {
         for file in files {
             let url = dir.appending(path: file)
             let id = UUID(uuidString: String(file.prefix(36)))
-            if file == "pair.txt", let link = try? String(contentsOf: url, encoding: .utf8) {
+            if file == "lanpair.txt", let password = try? String(contentsOf: url, encoding: .utf8), let host = store.lanHosts.first {
+                try? FileManager.default.removeItem(at: url)
+                store.pair(lanHost: host, password: password.trimmingCharacters(in: .whitespacesAndNewlines))
+            } else if file == "pair.txt", let link = try? String(contentsOf: url, encoding: .utf8) {
                 try? FileManager.default.removeItem(at: url)
                 store.pair(link: link)
             } else if file.hasSuffix(".open"), let id {
@@ -43,6 +46,7 @@ final class DebugHooks {
         }
         let push = PushRegistration.shared
         var lines = ["connection: \(store.connection)", "terminals: \(store.terminalStates)",
+                     "lan: \(store.lanHosts.map(\.name)) via=\(store.connectedVia ?? "-") pairing=\(store.pairing?.addresses ?? [])",
                      "push: token=\(push.token?.count ?? 0) env=\(PushRegistration.environment) error=\(push.lastError ?? "-")"]
         for session in store.snapshot?.sessions ?? [] {
             lines.append("  \(session.id.uuidString) \(session.name) \(session.state.rawValue) stamp=\(session.permissionStamp.map { String($0) } ?? "-")")

@@ -55,15 +55,17 @@ enum DebugSnapshot {
             let command = contents(path).trimmingCharacters(in: .whitespacesAndNewlines)
             try? FileManager.default.removeItem(atPath: path)
             model.mutate {
-                $0.settings.remoteHost = command == "host"
-                $0.settings.remoteClient = command == "client"
+                $0.settings.remoteHost = command.hasPrefix("host")
+                $0.settings.remoteLAN = command.hasSuffix("+lan")
+                $0.settings.remoteClient = command.hasPrefix("client")
             }
             model.remote.refresh()
         }
         let remote = model.remote
         let remoteLines = ["host: \(remote.hostState) remotes=\(remote.connectedRemotes) last=\(remote.lastRemoteAnswer ?? "-") rejected=\(remote.lastRejectedPeer ?? "-")",
                            "client: \(remote.connection) answering=\(remote.answering.count) error=\(remote.answerError ?? "-")",
-                           "terminals: \(remote.terminalStates) counters: \(remote.counters.sorted { $0.key < $1.key })"]
+                           "terminals: \(remote.terminalStates) counters: \(remote.counters.sorted { $0.key < $1.key })",
+                           "lan: \(remote.lanHosts.map(\.name)) via=\(remote.connectedVia ?? "-")"]
             + (remote.snapshot?.sessions ?? []).map { "  \($0.id.uuidString) \($0.name) \($0.state.rawValue) stamp=\($0.permissionStamp.map { String($0) } ?? "-")" }
         try? remoteLines.joined(separator: "\n").write(toFile: (dir as NSString).appendingPathComponent("remote.txt"), atomically: true, encoding: .utf8)
         // `<id>.remote-open` opens the paired Mac's session in a tab; `<id>.remote-type` types its

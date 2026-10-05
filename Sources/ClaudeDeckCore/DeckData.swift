@@ -168,6 +168,8 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     public var remoteHost = false
     /// Remote mode, remote side: show a paired Mac's sessions in the sidebar.
     public var remoteClient = false
+    /// Remote mode, host side: also reachable on the local network (Bonjour), not only Tailscale.
+    public var remoteLAN = false
 
     public init() {}
 
@@ -199,6 +201,7 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         openFilesInSeparateWindow = try c.decodeIfPresent(Bool.self, forKey: .openFilesInSeparateWindow) ?? d.openFilesInSeparateWindow
         remoteHost = try c.decodeIfPresent(Bool.self, forKey: .remoteHost) ?? d.remoteHost
         remoteClient = try c.decodeIfPresent(Bool.self, forKey: .remoteClient) ?? d.remoteClient
+        remoteLAN = try c.decodeIfPresent(Bool.self, forKey: .remoteLAN) ?? d.remoteLAN
     }
 }
 

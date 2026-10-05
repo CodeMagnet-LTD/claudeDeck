@@ -416,3 +416,102 @@ import Testing
         #expect(APNs.host(for: "production") == "api.push.apple.com" && APNs.host(for: "development") == "api.sandbox.push.apple.com")
     }
 }
+
+@Suite struct RemoteCryptoTests {
+    func pair(_ key: Data = RemotePairing.makeKey()) -> (host: RemoteCipher, remote: RemoteCipher) {
+        let (a, b) = (RemoteHandshake.makeNonce(), RemoteHandshake.makeNonce())
+        return (RemoteCipher(pairingKey: key, remoteNonce: a, hostNonce: b, role: .host),
+                RemoteCipher(pairingKey: key, remoteNonce: a, hostNonce: b, role: .remote))
+    }
+
+    @Test func roundTripsBothWaysAndHidesThePayload() throws {
+        var (host, remote) = pair()
+        for i in 0..<5 {
+            let frame = RemoteFrame(kind: 2, payload: Data("secret screen \(i)".utf8))
+            let sealed = try host.seal(frame)
+            #expect(sealed.kind == RemoteFrameKind.sealed.rawValue)
+            #expect(sealed.payload.range(of: Data("secret".utf8)) == nil)
+            #expect(try remote.open(sealed) == frame)
+            let back = RemoteFrame(kind: 1, payload: Data("keys \(i)".utf8))
+            #expect(try host.open(remote.seal(back)) == back)
+        }
+    }
+
+    @Test func rejectsTamperingReplayReorderAndWrongKey() throws {
+        var (host, remote) = pair()
+        let first = try host.seal(RemoteFrame(kind: 1, payload: Data("one".utf8)))
+        let second = try host.seal(RemoteFrame(kind: 1, payload: Data("two".utf8)))
+        // Reordered: the second frame can't be opened first.
+        var r1 = remote
+        #expect(throws: RemoteCipher.CipherError.self) { try r1.open(second) }
+        // Tampered.
+        var bad = first
+        bad.payload[bad.payload.startIndex] ^= 1
+        var r2 = remote
+        #expect(throws: RemoteCipher.CipherError.self) { try r2.open(bad) }
+        // In order works; a replay of the first then fails.
+        _ = try remote.open(first)
+        _ = try remote.open(second)
+        #expect(throws: RemoteCipher.CipherError.self) { try remote.open(first) }
+        // Own direction / other key can't open.
+        var hostCopy = host
+        #expect(throws: RemoteCipher.CipherError.self) { try hostCopy.open(first) }
+        var (_, stranger) = pair()
+        #expect(throws: RemoteCipher.CipherError.self) { try stranger.open(first) }
+    }
+}
+
+@Suite(.serialized) struct RemoteLANTests {
+    final class Box<T>: @unchecked Sendable { var value: T; init(_ v: T) { value = v } }
+
+    @Test func privateLANAddresses() {
+        for ip in ["192.168.1.93", "10.0.0.5", "172.16.0.1", "172.31.255.1", "169.254.3.4", "fe80::1%en0", "fd12:3456::1", "::ffff:192.168.1.2"] {
+            #expect(Tailscale.isPrivateLAN(ip), "\(ip)")
+        }
+        for ip in ["8.8.8.8", "172.32.0.1", "100.81.1.3", "2001:4860::8888", "::ffff:8.8.8.8", "mac.local"] {
+            #expect(!Tailscale.isPrivateLAN(ip), "\(ip)")
+        }
+    }
+
+    /// Advertise, discover, connect through the Bonjour service, all encrypted.
+    @Test func findsAndConnectsOverBonjour() async throws {
+        RemoteBonjour.serviceType = "_cdtest._tcp"
+        defer { RemoteBonjour.serviceType = "_claudedeck._tcp" }
+        let queue = DispatchQueue(label: "lan-test")
+        let key = RemotePairing.makeKey()
+        let hostID = UUID()
+        let name = "ClaudeDeck Test \(UInt16.random(in: 1000...9999))"
+        let server = RemoteServer(port: 0, queue: queue, key: { key }, acceptsPeer: { Tailscale.isLoopback($0) || Tailscale.isPrivateLAN($0) })
+        server.bonjour = (name, hostID)
+        queue.sync {
+            server.snapshot = RemoteSnapshot(hostName: "LAN Host", sessions: [])
+            server.start()
+        }
+        defer { queue.sync { server.stop() } }
+        let discovery = RemoteDiscovery(queue: queue)
+        let found = Box<[DiscoveredHost]>([])
+        discovery.onChange = { found.value = $0 }
+        queue.sync { discovery.start() }
+        defer { queue.sync { discovery.stop() } }
+        try await waitUntil(timeout: 10) { queue.sync { found.value.contains { $0.name == name } } }
+        let host = try #require(queue.sync { found.value.first { $0.name == name } })
+        #expect(host.hostID == hostID)
+
+        let pairing = RemotePairing(id: hostID, hostName: name, addresses: [host.address], port: 1, key: key, updatedAt: Date())
+        let client = RemoteHostConnection(pairing: pairing, deviceName: "Phone", queue: queue)
+        let snapshot = Box<RemoteSnapshot?>(nil)
+        client.onSnapshot = { snapshot.value = $0 }
+        queue.sync { client.start() }
+        defer { queue.sync { client.close() } }
+        try await waitUntil(timeout: 10) { queue.sync { snapshot.value != nil } }
+        #expect(snapshot.value?.hostName == "LAN Host")
+    }
+
+    private func waitUntil(timeout: TimeInterval, _ condition: () -> Bool) async throws {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition() {
+            guard Date() < deadline else { Issue.record("timed out"); return }
+            try await Task.sleep(for: .milliseconds(50))
+        }
+    }
+}

@@ -19,6 +19,15 @@ public final class RemoteChannel: @unchecked Sendable {
     public var onClose: ((String?) -> Void)?
     /// Last time anything arrived (keepalive).
     public private(set) var lastReceived = Date()
+    /// Set once the handshake is done: from then on every frame is sealed both ways.
+    private var cipher: RemoteCipher?
+
+    public var isEncrypted: Bool { cipher != nil }
+
+    /// Switches to sealed frames (call right after the last plaintext handshake message).
+    public func startEncrypting(_ cipher: RemoteCipher) {
+        self.cipher = cipher
+    }
 
     public init(connection: NWConnection, queue: DispatchQueue) {
         self.connection = connection
@@ -49,6 +58,11 @@ public final class RemoteChannel: @unchecked Sendable {
 
     public func send(_ frame: RemoteFrame) {
         guard !closed else { return }
+        var frame = frame
+        if cipher != nil {
+            guard let sealed = try? cipher!.seal(frame) else { finish(String(localized: "Encryption failed")); return }
+            frame = sealed
+        }
         let data = frame.encoded()
         pendingBytes += data.count
         connection.send(content: data, completion: .contentProcessed { [weak self] error in
@@ -64,7 +78,8 @@ public final class RemoteChannel: @unchecked Sendable {
     /// Sends `refused` (if given) and closes once it is out.
     public func close(refusing reason: String? = nil) {
         guard !closed else { return }
-        if let reason, let frame = try? RemoteMessage.refused(reason: reason).frame() {
+        if let reason, var frame = try? RemoteMessage.refused(reason: reason).frame() {
+            if cipher != nil, let sealed = try? cipher!.seal(frame) { frame = sealed }
             connection.send(content: frame.encoded(), completion: .contentProcessed { [weak self] _ in
                 self?.finish(nil)
             })
@@ -79,7 +94,19 @@ public final class RemoteChannel: @unchecked Sendable {
             if let data, !data.isEmpty {
                 self.lastReceived = Date()
                 do {
-                    for frame in try self.decoder.append(data) {
+                    for wire in try self.decoder.append(data) {
+                        // After the handshake only sealed frames are accepted (no injected plaintext).
+                        let frame: RemoteFrame
+                        if self.cipher != nil {
+                            guard let opened = try? self.cipher!.open(wire) else {
+                                self.finish(String(localized: "The connection to the other Mac isn't intact (decryption failed)."))
+                                return
+                            }
+                            frame = opened
+                        } else {
+                            guard wire.kind != RemoteFrameKind.sealed.rawValue else { continue }
+                            frame = wire
+                        }
                         // A message this version doesn't know (the other side is newer): skip it.
                         if frame.kind == RemoteFrameKind.message.rawValue {
                             if let message = try? RemoteMessage.decode(frame) { self.onMessage?(message) }
@@ -203,6 +230,9 @@ public final class RemoteServer: @unchecked Sendable {
     }
 
     public var peerNames: [String] { peers.values.map(\.name).sorted() }
+    /// Advertise on the local network (Bonjour) under this name, with the host id in the TXT record.
+    /// Set before `start()`.
+    public var bonjour: (name: String, hostID: UUID)?
     /// Push tokens of the phones connected right now.
     public var connectedPushTokens: Set<Data> { Set(peers.values.compactMap(\.pushToken)) }
 
@@ -303,6 +333,11 @@ public final class RemoteServer: @unchecked Sendable {
                 self.stop(keepState: true)
             default: break
             }
+        }
+        if let bonjour {
+            var txt = NWTXTRecord()
+            txt["id"] = bonjour.hostID.uuidString
+            listener.service = NWListener.Service(name: bonjour.name, type: RemoteBonjour.serviceType, txtRecord: txt)
         }
         listener.newConnectionHandler = { [weak self] connection in self?.accept(connection) }
         self.listener = listener
@@ -415,6 +450,7 @@ public final class RemoteServer: @unchecked Sendable {
             pending[id] = nil
             peers[id] = Peer(channel: peer.channel, name: peer.name ?? "Mac")
             peer.channel.send(.welcome(proof: RemoteHandshake.hostProof(key: key, remoteNonce: remoteNonce, hostNonce: hostNonce)))
+            peer.channel.startEncrypting(RemoteCipher(pairingKey: key, remoteNonce: remoteNonce, hostNonce: hostNonce, role: .host))
             if let snapshot { peer.channel.send(.snapshot(snapshot)) }
             onPeersChanged?(peerNames)
         default:
@@ -534,7 +570,9 @@ public final class RemoteHostConnection: @unchecked Sendable {
         tcp.connectionTimeout = 8
         tcp.enableKeepalive = true
         tcp.keepaliveIdle = 30
-        let connection = NWConnection(host: NWEndpoint.Host(address), port: port, using: NWParameters(tls: nil, tcp: tcp))
+        let endpoint: NWEndpoint = RemoteBonjour.serviceName(of: address).map(RemoteBonjour.endpoint(serviceName:))
+            ?? .hostPort(host: NWEndpoint.Host(address), port: port)
+        let connection = NWConnection(to: endpoint, using: NWParameters(tls: nil, tcp: tcp))
         let channel = RemoteChannel(connection: connection, queue: queue)
         self.channel = channel
         var authenticated = false
@@ -560,6 +598,7 @@ public final class RemoteHostConnection: @unchecked Sendable {
                     return
                 }
                 authenticated = true
+                channel.startEncrypting(RemoteCipher(pairingKey: self.pairing.key, remoteNonce: self.nonce, hostNonce: hostNonce, role: .remote))
                 self.connectedAddress = address
                 self.state = .connected(hostName: nil)
                 self.startPing()

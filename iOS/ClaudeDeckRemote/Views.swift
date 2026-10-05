@@ -189,12 +189,34 @@ struct PairingView: View {
     @State private var link = ""
     @State private var linkFailed = false
     @State private var scanning = false
+    @State private var chosenLAN: DiscoveredHost?
+    @State private var lanPassword = ""
 
     var body: some View {
         Form {
             Section {
                 Text("See and answer the Claude sessions running on your Mac. Both devices need Tailscale, signed in to the same account.")
                     .font(.callout)
+            }
+            Section {
+                if store.lanHosts.isEmpty {
+                    HStack(spacing: 8) {
+                        ProgressView()
+                        Text("Looking for Macs on this network…").foregroundStyle(.secondary)
+                    }
+                }
+                ForEach(store.lanHosts) { host in
+                    Button {
+                        chosenLAN = host
+                        lanPassword = ""
+                    } label: {
+                        Label(host.name, systemImage: "desktopcomputer")
+                    }
+                }
+            } header: {
+                Text("On this network")
+            } footer: {
+                Text("Shown when the Mac has \"Also reachable on the local network\" on in Settings › Remote (Tailscale).")
             }
             if DataScannerViewController.isSupported {
                 Section {
@@ -227,6 +249,18 @@ struct PairingView: View {
             }
         }
         .navigationTitle("Pair with Your Mac")
+        .onAppear { store.startLANDiscovery() }
+        .alert(chosenLAN?.name ?? "", isPresented: Binding(get: { chosenLAN != nil }, set: { if !$0 { chosenLAN = nil } })) {
+            SecureField("Password", text: $lanPassword)
+            Button("Connect") {
+                if let host = chosenLAN { store.pair(lanHost: host, password: lanPassword) }
+                chosenLAN = nil
+            }
+            .disabled(lanPassword.count < RemoteHandshake.minimumPasswordLength)
+            Button("Cancel", role: .cancel) { chosenLAN = nil }
+        } message: {
+            Text("The password you set on the Mac in Settings › Remote (Tailscale).")
+        }
         .sheet(isPresented: $scanning) {
             QRScanner { code in
                 scanning = false

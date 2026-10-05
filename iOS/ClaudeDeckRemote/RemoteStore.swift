@@ -45,10 +45,56 @@ final class RemoteStore {
 
     static let deviceName = UIDevice.current.name
 
+    var connectedVia: String? { hostConnection?.connectedAddress }
+
+    /// ClaudeDeck Macs advertising on this network (Bonjour).
+    private(set) var lanHosts: [DiscoveredHost] = []
+    @ObservationIgnored private let discovery = RemoteDiscovery()
+
     init() {
         let saved = PairingKeychain.load()
         pairing = saved
         connection = saved == nil ? .unpaired : .paused
+        discovery.onChange = { [weak self] hosts in
+            MainActor.assumeIsolated { self?.lanHostsChanged(hosts) }
+        }
+    }
+
+    /// The pairing screen lists Macs on this network before anything is paired.
+    func startLANDiscovery() { discovery.start() }
+
+    private func lanHostsChanged(_ hosts: [DiscoveredHost]) {
+        lanHosts = hosts
+        // Just got home: go local if we aren't connected.
+        if isActive, pairing != nil, connection != .connected, connection != .connecting, !isRefused { reconnect() }
+    }
+
+    private var isRefused: Bool { if case .refused = connection { true } else { false } }
+
+    /// The paired Mac's addresses for this attempt: its local-network name first when it's
+    /// advertising here, then the stored ones (Tailscale).
+    private func effectivePairing(_ pairing: RemotePairing) -> RemotePairing {
+        var copy = pairing
+        let local = lanHosts.filter { $0.hostID == pairing.id }.map(\.address)
+        copy.addresses = local + pairing.addresses.filter { !local.contains($0) }
+        return copy
+    }
+
+    /// The snapshot says who the Mac is and how to reach it away from home: keep that.
+    private func learn(from snapshot: RemoteSnapshot) {
+        guard var stored = pairing else { return }
+        let before = stored
+        if let id = snapshot.hostID { stored.id = id }
+        stored.hostName = snapshot.hostName
+        if let remote = snapshot.addresses, !remote.isEmpty {
+            let bonjour = stored.addresses.filter { RemoteBonjour.serviceName(of: $0) != nil }
+            let typed = stored.addresses.filter { RemoteBonjour.serviceName(of: $0) == nil && !remote.contains($0) }
+            stored.addresses = bonjour + remote + typed
+        }
+        guard stored != before else { return }
+        stored.updatedAt = Date()
+        PairingKeychain.save(stored)
+        pairing = stored
     }
 
     // MARK: Pairing
@@ -62,10 +108,20 @@ final class RemoteStore {
     }
 
     /// The Mac's Tailscale name (or IP) and the password set on it.
+    /// A Mac found on this network and the password set on it.
+    func pair(lanHost: DiscoveredHost, password: String) {
+        var pairing = RemotePairing(
+            id: lanHost.hostID ?? UUID(), hostName: lanHost.name, addresses: [lanHost.address], port: RemotePairing.defaultPort,
+            key: RemoteHandshake.key(fromPassword: password), updatedAt: Date()
+        )
+        pairing.hostName = lanHost.name
+        use(pairing)
+    }
+
     func pair(host: String, password: String, port: UInt16 = RemotePairing.defaultPort) {
         let address = host.trimmingCharacters(in: .whitespacesAndNewlines)
         let pairing = RemotePairing(
-            id: UUID(), hostName: address, addresses: [address], port: port,
+            id: UUID(), hostName: RemoteBonjour.serviceName(of: address) ?? address, addresses: [address], port: port,
             key: RemoteHandshake.key(fromPassword: password), updatedAt: Date()
         )
         use(pairing)
@@ -92,6 +148,7 @@ final class RemoteStore {
     /// Scene phase: connect in front, let go in the background.
     func setActive(_ active: Bool) {
         inForeground = active
+        if active { discovery.start() } else { discovery.stop() }
         // After a refusal (wrong password) only a new pairing retries: each attempt counts
         // against the Mac's limit.
         if active, case .refused = connection { isActive = true; return }
@@ -111,7 +168,7 @@ final class RemoteStore {
         retryTask?.cancel()
         hostConnection?.close()
         connection = .connecting
-        let next = RemoteHostConnection(pairing: pairing, deviceName: Self.deviceName)
+        let next = RemoteHostConnection(pairing: effectivePairing(pairing), deviceName: Self.deviceName)
         next.onStateChange = { [weak self, weak next] state in
             MainActor.assumeIsolated {
                 guard let self, let next, self.hostConnection === next else { return }
@@ -196,6 +253,7 @@ final class RemoteStore {
     private func received(_ new: RemoteSnapshot) {
         let fresh = RemoteSnapshot.newAttention(from: snapshot, to: new)
         snapshot = new
+        learn(from: new)
         answering = answering.filter { new.session($0)?.permissionStamp != nil }
         for session in fresh { LocalAlerts.post(session, hostName: new.hostName) }
     }

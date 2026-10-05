@@ -14,6 +14,8 @@ public enum RemoteFrameKind: UInt8, Sendable {
     case message = 1
     /// Raw pty output of one session (`RemoteTerminalOutput`).
     case terminalOutput = 2
+    /// Any frame, encrypted (RemoteCrypto.swift). Everything after the handshake is sealed.
+    case sealed = 3
 }
 
 public struct RemoteFrame: Sendable, Equatable {
@@ -100,7 +102,8 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     /// Either side, before closing.
     case refused(reason: String)
 
-    public static let protocolVersion = 1
+    /// 2: frames after the handshake are encrypted; the remote proves the key first.
+    public static let protocolVersion = 2
 
     public func frame() throws -> RemoteFrame {
         let encoder = JSONEncoder()
@@ -120,10 +123,16 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
 public struct RemoteSnapshot: Codable, Sendable, Equatable {
     public var hostName: String
     public var sessions: [RemoteSession]
+    /// The host's stable id (matches its Bonjour TXT record) and Tailscale addresses: a phone
+    /// paired on the local network learns how to reach the host when away.
+    public var hostID: UUID?
+    public var addresses: [String]?
 
-    public init(hostName: String, sessions: [RemoteSession]) {
+    public init(hostName: String, sessions: [RemoteSession], hostID: UUID? = nil, addresses: [String]? = nil) {
         self.hostName = hostName
         self.sessions = sessions
+        self.hostID = hostID
+        self.addresses = addresses
     }
 
     public func session(_ id: UUID) -> RemoteSession? { sessions.first { $0.id == id } }

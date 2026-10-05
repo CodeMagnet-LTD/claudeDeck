@@ -128,6 +128,24 @@ public enum Tailscale {
         return false
     }
 
+    /// A private local-network address: 10/8, 172.16/12, 192.168/16, 169.254/16 (and IPv4-mapped),
+    /// fe80::/10 link-local, fc00::/7 unique-local. Never a public internet address.
+    public static func isPrivateLAN(_ ip: String) -> Bool {
+        let bare = ip.split(separator: "%").first.map(String.init) ?? ip
+        func v4(_ b: [UInt8]) -> Bool {
+            b[0] == 10 || (b[0] == 172 && b[1] & 0xF0 == 16) || (b[0] == 192 && b[1] == 168) || (b[0] == 169 && b[1] == 254)
+        }
+        var a4 = in_addr()
+        if inet_pton(AF_INET, bare, &a4) == 1 { return v4(withUnsafeBytes(of: a4) { Array($0) }) }
+        var a6 = in6_addr()
+        if inet_pton(AF_INET6, bare, &a6) == 1 {
+            let b = withUnsafeBytes(of: a6) { Array($0) }
+            if b[0..<10].allSatisfy({ $0 == 0 }), b[10] == 0xFF, b[11] == 0xFF { return v4(Array(b[12...])) }
+            return (b[0] == 0xFE && b[1] & 0xC0 == 0x80) || b[0] & 0xFE == 0xFC
+        }
+        return false
+    }
+
     public static func isLoopback(_ ip: String) -> Bool {
         let bare = ip.split(separator: "%").first.map(String.init) ?? ip
         return bare == "::1" || bare.hasPrefix("127.") || bare == "::ffff:127.0.0.1"
