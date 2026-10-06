@@ -49,7 +49,7 @@ final class DebugHooks {
                      "lan: \(store.lanHosts.map(\.name)) via=\(store.connectedVia ?? "-") pairing=\(store.pairing?.addresses ?? [])",
                      "push: token=\(push.token?.count ?? 0) env=\(PushRegistration.environment) error=\(push.lastError ?? "-")"]
         for session in store.snapshot?.sessions ?? [] {
-            lines.append("  \(session.id.uuidString) \(session.name) \(session.state.rawValue) stamp=\(session.permissionStamp.map { String($0) } ?? "-")")
+            lines.append("  \(session.id.uuidString) \(session.name) \(session.state.rawValue) stamp=\(session.permissionStamp.map { String($0) } ?? "-") unseen=\(session.unseen)")
         }
         for (id, view) in store.debugTerminals() {
             let terminal = view.terminal.getTerminal()

@@ -95,6 +95,15 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case terminalStart(sessionID: UUID, cols: Int, rows: Int, screen: Data)
     /// Host → remote: the session isn't running (any more).
     case terminalEnded(sessionID: UUID)
+    /// Remote → host: a page of a session's conversation (ConversationLog.swift): the latest
+    /// `limit` entries, the ones before `before`, or the ones after `after`.
+    case historyRequest(sessionID: UUID, before: String?, after: String?, limit: Int)
+    /// Host → remote: the answer.
+    case history(sessionID: UUID, page: ChatPage)
+    /// Remote → host: the user looked at this session (clears "your turn").
+    case markSeen(sessionID: UUID)
+    /// Remote → host: type this message into the session and press Enter.
+    case sendPrompt(sessionID: UUID, text: String)
     /// Phone → host: send push notifications to this device (APNs.swift).
     case registerPush(token: Data, topic: String, environment: String, deviceName: String)
     case ping

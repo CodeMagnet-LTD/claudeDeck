@@ -228,6 +228,19 @@ final class RemoteController {
                     view.send(source: view, data: ArraySlice(data))
                 }
             }
+            server.onHistoryRequest = { [weak self] id, before, after, limit, reply in
+                MainActor.assumeIsolated { self?.history(id, before: before, after: after, limit: limit, reply: reply) }
+            }
+            server.onMarkSeen = { [weak self] id in
+                MainActor.assumeIsolated {
+                    guard let model = self?.model, model.deck.session(id) != nil else { return }
+                    model.markSeen(id)
+                    self?.publishSnapshot()
+                }
+            }
+            server.onSendPrompt = { [weak self] id, text in
+                MainActor.assumeIsolated { self?.sendPrompt(id, text: text) }
+            }
             server.onRegisterPush = { [weak self] device in
                 MainActor.assumeIsolated { self?.registerPush(device) }
             }
@@ -423,6 +436,38 @@ final class RemoteController {
         server?.terminalEnded(sessionID: id)
     }
 
+    // MARK: Host — conversation for remotes
+
+    /// Parsed transcripts by session, reused while the file doesn't change.
+    @ObservationIgnored private var historyCache: [UUID: (path: String, size: Int, entries: [ChatEntry])] = [:]
+
+    private func history(_ id: UUID, before: String?, after: String?, limit: Int, reply: @escaping @Sendable (ChatPage?) -> Void) {
+        // The hook's path follows /clear (a new transcript); the deck's is the one it resumed.
+        guard let model, let path = model.hookStatuses[id]?.transcriptPath ?? model.deck.transcriptPath(for: id) else {
+            reply(nil)
+            return
+        }
+        let size = ((try? FileManager.default.attributesOfItem(atPath: path)[.size]) as? NSNumber)?.intValue ?? 0
+        if let cached = historyCache[id], cached.path == path, cached.size == size {
+            reply(ConversationLog.page(cached.entries, before: before, after: after, limit: limit))
+            return
+        }
+        Task { @MainActor [weak self] in
+            let entries = await Task.detached { ConversationLog.entries(of: URL(fileURLWithPath: path)) }.value
+            self?.historyCache[id] = (path, size, entries)
+            reply(ConversationLog.page(entries, before: before, after: after, limit: limit))
+        }
+    }
+
+    /// A message from the phone: typed into the session like the user would. Not while a prompt is
+    /// on screen (Enter would answer it).
+    private func sendPrompt(_ id: UUID, text: String) {
+        guard let model, model.deck.session(id)?.kind == .claude, model.terminals.isRunning(id),
+              !model.status(of: id).display.isBlocked
+        else { return }
+        model.terminals.type(text.trimmingCharacters(in: .whitespacesAndNewlines) + "\r", into: id)
+    }
+
     // MARK: Host — iPhone pushes
 
     func setAPNs(_ credentials: APNsCredentials?) {
@@ -505,6 +550,7 @@ final class RemoteController {
         sinks[id] = sink
         terminalStates[id] = .waiting
         hostConnection?.openTerminal(id)
+        hostConnection?.send(.markSeen(sessionID: id))
     }
 
     /// The tab went away (closed, or not shown any more).

@@ -740,6 +740,16 @@
         }
       }
     },
+    "Answer the prompt above first": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önce yukarıdaki istemi yanıtlayın"
+          }
+        }
+      }
+    },
     "Apple Developer › Certificates, IDs & Profiles › Keys › + › Apple Push Notifications service. Download the .p8 once and add it here with its Key ID. The key can send notifications to every app of your team: keep it to your own Macs.": {
       "localizations": {
         "tr": {
@@ -926,6 +936,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Arka planda"
+          }
+        }
+      }
+    },
+    "Background task finished": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arka plan görevi bitti"
           }
         }
       }
@@ -1693,6 +1713,16 @@
         }
       }
     },
+    "Conversation compacted": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Konuşma özetlendi"
+          }
+        }
+      }
+    },
     "Copied": {
       "localizations": {
         "tr": {
@@ -2189,6 +2219,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Çoğalt"
+          }
+        }
+      }
+    },
+    "Earlier messages": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önceki mesajlar"
           }
         }
       }
@@ -2773,6 +2813,16 @@
         }
       }
     },
+    "Interrupted": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kesildi"
+          }
+        }
+      }
+    },
     "Interrupted when ClaudeDeck quit.": {
       "localizations": {
         "tr": {
@@ -3199,6 +3249,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Mesaj"
+          }
+        }
+      }
+    },
+    "Message Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude'a yaz"
           }
         }
       }
@@ -3779,6 +3839,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Eşleşen dosya yok"
+          }
+        }
+      }
+    },
+    "No messages yet": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz mesaj yok"
           }
         }
       }
@@ -7182,6 +7252,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Sürüm %@"
+          }
+        }
+      }
+    },
+    "View": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görünüm"
           }
         }
       }

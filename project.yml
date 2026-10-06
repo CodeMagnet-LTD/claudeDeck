@@ -106,6 +106,7 @@ targets:
       - Sources/ClaudeDeckCore/APNs.swift
       - Sources/ClaudeDeckCore/RemoteCrypto.swift
       - Sources/ClaudeDeckCore/RemoteDiscovery.swift
+      - Sources/ClaudeDeckCore/ConversationLog.swift
       - Support/Localizable.xcstrings
     dependencies:
       - package: SwiftTerm

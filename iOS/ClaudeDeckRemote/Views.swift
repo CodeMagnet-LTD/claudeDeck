@@ -71,7 +71,8 @@ struct SessionListView: View {
             }
         }
         .navigationTitle(store.snapshot?.hostName ?? store.pairing?.hostName ?? "ClaudeDeck")
-        .navigationDestination(for: UUID.self) { SessionDetailView(sessionID: $0) }
+        // A new identity per session: another session opened from a notification starts fresh.
+        .navigationDestination(for: UUID.self) { SessionDetailView(sessionID: $0).id($0) }
         .refreshable { store.reconnect() }
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {

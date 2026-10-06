@@ -251,6 +251,11 @@ public final class RemoteServer: @unchecked Sendable {
     public var onTerminalOpen: ((UUID) -> TerminalStart?)?
     /// Keystrokes from a remote.
     public var onTerminalInput: ((UUID, Data) -> Void)?
+    /// A remote asked for a page of a conversation; answer through the reply (any queue hop is fine,
+    /// it is sent on the server's queue).
+    public var onHistoryRequest: ((_ sessionID: UUID, _ before: String?, _ after: String?, _ limit: Int, _ reply: @escaping @Sendable (ChatPage?) -> Void) -> Void)?
+    public var onMarkSeen: ((UUID) -> Void)?
+    public var onSendPrompt: ((UUID, String) -> Void)?
     /// A phone registered for push notifications.
     public var onRegisterPush: ((PushDevice) -> Void)?
     /// The set of sessions any remote watches changed (the host taps only those).
@@ -414,6 +419,17 @@ public final class RemoteServer: @unchecked Sendable {
                 if watchedSessions != wasWatched { onWatchedChanged?(watchedSessions) }
             case .terminalInput(let sessionID, let data) where peer.watching.contains(sessionID):
                 onTerminalInput?(sessionID, data)
+            case .historyRequest(let sessionID, let before, let after, let limit):
+                let channel = peer.channel
+                onHistoryRequest?(sessionID, before, after, limit) { [queue] page in
+                    queue.async {
+                        channel.send(.history(sessionID: sessionID, page: page ?? ChatPage(entries: [], hasMoreBefore: false, reset: true)))
+                    }
+                }
+            case .markSeen(let sessionID):
+                onMarkSeen?(sessionID)
+            case .sendPrompt(let sessionID, let text) where !text.isEmpty:
+                onSendPrompt?(sessionID, String(text.prefix(20_000)))
             case .registerPush(let token, let topic, let environment, let deviceName) where !token.isEmpty && !topic.isEmpty:
                 peers[id]?.pushToken = token
                 onRegisterPush?(PushDevice(token: token, topic: topic, environment: environment == "production" ? "production" : "development", name: String(deviceName.prefix(80)), addedAt: Date()))
@@ -509,6 +525,7 @@ public final class RemoteHostConnection: @unchecked Sendable {
     public var onTerminalStart: ((_ sessionID: UUID, _ cols: Int, _ rows: Int, _ screen: Data) -> Void)?
     public var onTerminalOutput: ((_ sessionID: UUID, _ bytes: Data) -> Void)?
     public var onTerminalEnded: ((_ sessionID: UUID) -> Void)?
+    public var onHistory: ((_ sessionID: UUID, _ page: ChatPage) -> Void)?
 
     /// Per address: connect + pairing must finish within this.
     public var handshakeTimeout: TimeInterval = 10
@@ -611,6 +628,8 @@ public final class RemoteHostConnection: @unchecked Sendable {
                 self.onTerminalStart?(id, cols, rows, screen)
             case .terminalEnded(let id) where authenticated:
                 self.onTerminalEnded?(id)
+            case .history(let id, let page) where authenticated:
+                self.onHistory?(id, page)
             case .refused(let reason):
                 if authenticated {
                     self.end(.refused(reason))

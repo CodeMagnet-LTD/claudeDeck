@@ -41,6 +41,7 @@ final class RemoteTerminalUIView: UIView, @preconcurrency TerminalViewDelegate, 
         backgroundColor = .black
         scroll.backgroundColor = .black
         scroll.alwaysBounceVertical = true
+        scroll.showsHorizontalScrollIndicator = true
         scroll.keyboardDismissMode = .interactive
         addSubview(scroll)
         terminal.terminalDelegate = self
@@ -95,10 +96,11 @@ final class RemoteTerminalUIView: UIView, @preconcurrency TerminalViewDelegate, 
             setFont(10)
             terminal.enforceGrid()
             let width = terminal.getOptimalFrameSize().width
-            var size = max(6, (10 * bounds.width / max(width, 1) * 2).rounded(.down) / 2)
+            // Not below 7.5 pt (readable); a wider terminal pans sideways instead.
+            var size = max(7.5, (10 * bounds.width / max(width, 1) * 2).rounded(.down) / 2)
             setFont(size)
             terminal.enforceGrid()
-            while terminal.getOptimalFrameSize().width > bounds.width, size > 6 {
+            while terminal.getOptimalFrameSize().width > bounds.width, size > 7.5 {
                 size -= 0.5
                 setFont(size)
                 terminal.enforceGrid()
@@ -219,6 +221,9 @@ struct SessionDetailView: View {
     @Environment(RemoteStore.self) private var store
     let sessionID: UUID
     @State private var keyboardToggle = 0
+    @AppStorage("detail.mode") private var mode = Mode.conversation
+
+    enum Mode: String { case conversation, terminal }
 
     var body: some View {
         let session = store.snapshot?.session(sessionID)
@@ -239,6 +244,32 @@ struct SessionDetailView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(.bar)
             }
+            Picker("View", selection: $mode) {
+                Text("Conversation").tag(Mode.conversation)
+                Text("Terminal").tag(Mode.terminal)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            if mode == .conversation {
+                ConversationView(sessionID: sessionID)
+            } else {
+                terminal
+            }
+        }
+        .navigationTitle(session?.name ?? String(localized: "Session"))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            if mode == .terminal {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { keyboardToggle += 1 } label: { Image(systemName: "keyboard") }
+                        .disabled(store.terminalStates[sessionID] != .live)
+                }
+            }
+        }
+    }
+
+    private var terminal: some View {
             RemoteTerminalRepresentable(sessionID: sessionID, store: store, keyboardToggle: keyboardToggle)
                 .overlay {
                     if let message = overlayMessage {
@@ -250,15 +281,6 @@ struct SessionDetailView: View {
                         .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 10))
                     }
                 }
-        }
-        .navigationTitle(session?.name ?? String(localized: "Session"))
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { keyboardToggle += 1 } label: { Image(systemName: "keyboard") }
-                    .disabled(store.terminalStates[sessionID] != .live)
-            }
-        }
     }
 
     private var overlayMessage: String? {

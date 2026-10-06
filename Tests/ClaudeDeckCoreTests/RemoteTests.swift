@@ -515,3 +515,96 @@ import Testing
         }
     }
 }
+
+@Suite struct ConversationLogTests {
+    static let jsonl = """
+    {"type":"user","uuid":"u1","timestamp":"2026-10-06T10:00:00.000Z","message":{"role":"user","content":"Fix the login bug"}}
+    {"type":"assistant","uuid":"a1","message":{"content":[{"type":"thinking","thinking":"hmm"},{"type":"text","text":"Looking at it."},{"type":"tool_use","id":"t1","name":"Bash","input":{"command":"git status\\nmore","description":"Show status"}}]}}
+    {"type":"user","uuid":"u2","message":{"content":[{"type":"tool_result","tool_use_id":"t1","content":"On branch main","is_error":false}]}}
+    {"type":"assistant","uuid":"a2","isSidechain":true,"message":{"content":[{"type":"text","text":"subagent noise"}]}}
+    {"type":"assistant","uuid":"a3","message":{"content":[{"type":"tool_use","id":"t2","name":"Edit","input":{"file_path":"/Users/me/app/Sources/Login.swift"}}]}}
+    {"type":"user","uuid":"u3","message":{"content":[{"type":"tool_result","tool_use_id":"t2","content":[{"type":"text","text":"String not found"}],"is_error":true}]}}
+    {"type":"user","uuid":"u4","isMeta":true,"message":{"content":"<system-reminder>x</system-reminder>"}}
+    {"type":"user","uuid":"u5","message":{"content":"<command-name>/compact</command-name><command-args></command-args>"}}
+    {"type":"user","uuid":"u6","message":{"content":"<local-command-stdout>done</local-command-stdout>"}}
+    {"type":"user","uuid":"u7","message":{"content":[{"type":"text","text":"[Request interrupted by user for tool use]"}]}}
+    {"type":"user","uuid":"u8","message":{"content":"<task-notification><task-id>b1</task-id><status>completed</status><summary>Agent \\"Map the flow\\" finished</summary></task-notification>"}}
+    {"type":"user","uuid":"u9","message":{"content":"<user-prompt-submit-hook>note</user-prompt-submit-hook>"}}
+    {"type":"user","uuid":"u10","message":{"content":"<b>bold</b> is how you write it"}}
+    {"type":"attachment","uuid":"x"}
+    not json
+    """
+
+    @Test func parsesTheReadableConversation() {
+        let entries = ConversationLog.entries(fromJSONL: Self.jsonl)
+        #expect(entries.map(\.kind) == [.user, .assistant, .tool, .tool, .system, .system, .system, .user])
+        #expect(entries[6].text.hasSuffix("Agent \"Map the flow\" finished"))
+        #expect(entries[7].text.hasPrefix("<b>bold</b>"))
+        #expect(entries[0].text == "Fix the login bug" && entries[0].date != nil)
+        #expect(entries[2].text == "Show status — git status" && entries[2].toolName == "Bash" && entries[2].result == "On branch main" && !entries[2].isError)
+        #expect(entries[3].text == "Sources/Login.swift" && entries[3].result == "String not found" && entries[3].isError)
+        #expect(entries[4].text == "/compact")
+        #expect(entries[5].kind == .system)
+        #expect(!entries.contains { $0.text.contains("subagent") })
+    }
+
+    @Test func pagesLatestBeforeAndAfter() {
+        let entries = (0..<10).map { ChatEntry(id: "e\($0)", kind: .user, text: "\($0)") }
+        let latest = ConversationLog.page(entries, before: nil, after: nil, limit: 4)
+        #expect(latest.entries.map(\.id) == ["e6", "e7", "e8", "e9"] && latest.hasMoreBefore && latest.reset)
+        let older = ConversationLog.page(entries, before: "e6", after: nil, limit: 4)
+        #expect(older.entries.map(\.id) == ["e2", "e3", "e4", "e5"] && older.hasMoreBefore && !older.reset && older.before == "e6")
+        let oldest = ConversationLog.page(entries, before: "e2", after: nil, limit: 4)
+        #expect(oldest.entries.map(\.id) == ["e0", "e1"] && !oldest.hasMoreBefore)
+        let newer = ConversationLog.page(entries, before: nil, after: "e7", limit: 4)
+        #expect(newer.entries.map(\.id) == ["e8", "e9"] && !newer.reset)
+        let none = ConversationLog.page(entries, before: nil, after: "e9", limit: 4)
+        #expect(none.entries.isEmpty && !none.reset)
+        // Unknown anchor (a new transcript after /clear): start over.
+        let gone = ConversationLog.page(entries, before: nil, after: "zz", limit: 3)
+        #expect(gone.reset && gone.entries.map(\.id) == ["e7", "e8", "e9"])
+    }
+}
+
+@Suite(.serialized) struct RemoteHistoryLoopbackTests {
+    final class Box<T>: @unchecked Sendable { var value: T; init(_ v: T) { value = v } }
+
+    @Test func historySeenAndPrompt() async throws {
+        let queue = DispatchQueue(label: "history-test")
+        let key = RemotePairing.makeKey()
+        let id = UUID()
+        let server = RemoteServer(port: 0, queue: queue, key: { key }, acceptsPeer: Tailscale.isLoopback)
+        let seen = Box<[UUID]>([]), prompts = Box<[String]>([])
+        server.onHistoryRequest = { _, before, after, limit, reply in
+            let entries = (0..<5).map { ChatEntry(id: "e\($0)", kind: .assistant, text: "line \($0)") }
+            DispatchQueue.global().async { reply(ConversationLog.page(entries, before: before, after: after, limit: limit)) }
+        }
+        server.onMarkSeen = { seen.value.append($0) }
+        server.onSendPrompt = { _, text in prompts.value.append(text) }
+        queue.sync { server.start() }
+        defer { queue.sync { server.stop() } }
+        let port = try await RemoteLoopbackTests.listeningPort(server, queue: queue)
+        let client = RemoteHostConnection(pairing: RemotePairing(id: UUID(), hostName: "h", addresses: ["127.0.0.1"], port: port, key: key, updatedAt: Date()), deviceName: "Phone", queue: queue)
+        let pages = Box<[ChatPage]>([])
+        client.onHistory = { _, page in pages.value.append(page) }
+        queue.sync { client.start() }
+        defer { queue.sync { client.close() } }
+        try await waitUntil { queue.sync { if case .connected = client.state { true } else { false } } }
+        queue.sync {
+            client.send(.historyRequest(sessionID: id, before: nil, after: nil, limit: 2))
+            client.send(.markSeen(sessionID: id))
+            client.send(.sendPrompt(sessionID: id, text: "continue"))
+        }
+        try await waitUntil { queue.sync { !pages.value.isEmpty && !seen.value.isEmpty && !prompts.value.isEmpty } }
+        #expect(pages.value.first?.entries.map(\.id) == ["e3", "e4"])
+        #expect(seen.value == [id] && prompts.value == ["continue"])
+    }
+
+    private func waitUntil(timeout: TimeInterval = 5, _ condition: () -> Bool) async throws {
+        let deadline = Date().addingTimeInterval(timeout)
+        while !condition() {
+            guard Date() < deadline else { Issue.record("timed out"); return }
+            try await Task.sleep(for: .milliseconds(20))
+        }
+    }
+}

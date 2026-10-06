@@ -25,6 +25,18 @@ final class RemoteStore {
     private(set) var answering: Set<UUID> = []
     var answerError: String?
 
+    // Conversations (ConversationView).
+    struct Conversation: Equatable {
+        var entries: [ChatEntry] = []
+        var hasMoreBefore = false
+        var loaded = false
+        var loadingOlder = false
+    }
+    private(set) var conversations: [UUID: Conversation] = [:]
+    /// Conversations on screen: kept current and marked seen.
+    @ObservationIgnored private var openConversations: Set<UUID> = []
+    @ObservationIgnored private var conversationTimer: Timer?
+
     // Live terminals (RemoteTerminalView).
     enum TerminalState: Equatable { case waiting, live, ended }
     private(set) var terminalStates: [UUID: TerminalState] = [:]
@@ -186,6 +198,9 @@ final class RemoteStore {
                 self.answerWaiters.removeValue(forKey: id)?.resume(returning: applied)
             }
         }
+        next.onHistory = { [weak self] id, page in
+            MainActor.assumeIsolated { self?.received(page, for: id) }
+        }
         next.onTerminalStart = { [weak self] id, cols, rows, screen in
             MainActor.assumeIsolated {
                 guard let self, let sink = self.sinks[id] else { return }
@@ -226,6 +241,7 @@ final class RemoteStore {
                 terminalStates[id] = .waiting
                 hostConnection?.openTerminal(id)
             }
+            for id in openConversations { requestLatest(id) }
             onConnected?()
         case .disconnected(let reason):
             hostConnection = nil
@@ -251,9 +267,16 @@ final class RemoteStore {
     }
 
     private func received(_ new: RemoteSnapshot) {
+        let old = snapshot
         let fresh = RemoteSnapshot.newAttention(from: snapshot, to: new)
         snapshot = new
         learn(from: new)
+        for id in openConversations {
+            guard let session = new.session(id) else { continue }
+            // Watching it finish here counts as seeing it.
+            if session.state == .idle, session.unseen { _ = send(.markSeen(sessionID: id)) }
+            if old?.session(id) != session { requestNewer(id) }
+        }
         answering = answering.filter { new.session($0)?.permissionStamp != nil }
         for session in fresh { LocalAlerts.post(session, hostName: new.hostName) }
     }
@@ -300,6 +323,89 @@ final class RemoteStore {
                 self?.answerWaiters.removeValue(forKey: id)?.resume(returning: false)
             }
         }
+    }
+
+    // MARK: Conversations
+
+    func openConversation(_ id: UUID) {
+        openConversations.insert(id)
+        _ = send(.markSeen(sessionID: id))
+        requestLatest(id)
+        // Tool results and long answers grow without a state change: check every few seconds.
+        if conversationTimer == nil {
+            conversationTimer = Timer.scheduledTimer(withTimeInterval: 4, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated {
+                    guard let self else { return }
+                    for id in self.openConversations { self.requestNewer(id) }
+                }
+            }
+        }
+    }
+
+    func closeConversation(_ id: UUID) {
+        openConversations.remove(id)
+        if openConversations.isEmpty {
+            conversationTimer?.invalidate()
+            conversationTimer = nil
+        }
+    }
+
+    private func requestLatest(_ id: UUID) {
+        _ = send(.historyRequest(sessionID: id, before: nil, after: nil, limit: 80))
+    }
+
+    /// New entries since the last complete one (a tool call without its result yet comes again).
+    private func requestNewer(_ id: UUID) {
+        guard let entries = conversations[id]?.entries, conversations[id]?.loaded == true else { requestLatest(id); return }
+        guard let anchor = entries.last(where: { $0.kind != .tool || $0.result != nil }) else { requestLatest(id); return }
+        _ = send(.historyRequest(sessionID: id, before: nil, after: anchor.id, limit: 120))
+    }
+
+    func loadOlder(_ id: UUID) {
+        guard var conversation = conversations[id], conversation.hasMoreBefore, !conversation.loadingOlder,
+              let first = conversation.entries.first else { return }
+        conversation.loadingOlder = true
+        conversations[id] = conversation
+        _ = send(.historyRequest(sessionID: id, before: first.id, after: nil, limit: 80))
+    }
+
+    private func received(_ page: ChatPage, for id: UUID) {
+        var conversation = conversations[id] ?? Conversation()
+        if page.reset {
+            conversation.entries = page.entries
+            conversation.hasMoreBefore = page.hasMoreBefore
+        } else if page.before != nil {
+            let known = Set(conversation.entries.map(\.id))
+            conversation.entries = page.entries.filter { !known.contains($0.id) } + conversation.entries
+            conversation.hasMoreBefore = page.hasMoreBefore
+            conversation.loadingOlder = false
+        } else {
+            for entry in page.entries {
+                if let index = conversation.entries.firstIndex(where: { $0.id == entry.id }) {
+                    conversation.entries[index] = entry
+                } else {
+                    conversation.entries.append(entry)
+                }
+            }
+        }
+        conversation.loaded = true
+        if conversations[id] != conversation { conversations[id] = conversation }
+    }
+
+    /// Typed into the session on the Mac (not while it shows a prompt).
+    @discardableResult
+    func sendPrompt(_ id: UUID, text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty, snapshot?.session(id)?.state.isBlocked == false else { return false }
+        guard send(.sendPrompt(sessionID: id, text: trimmed)) else { return false }
+        // The answer shows up through the conversation updates.
+        Task { @MainActor [weak self] in
+            for _ in 0..<4 {
+                try? await Task.sleep(for: .seconds(1))
+                self?.requestNewer(id)
+            }
+        }
+        return true
     }
 
     // MARK: Terminals
