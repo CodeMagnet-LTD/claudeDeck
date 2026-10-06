@@ -280,14 +280,18 @@ struct SessionDetailView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(.bar)
             }
-            Picker("View", selection: $mode) {
-                Text("Conversation").tag(Mode.conversation)
-                Text("Terminal").tag(Mode.terminal)
+            // A plain terminal has no conversation.
+            let isShell = session?.state == .shell
+            if !isShell {
+                Picker("View", selection: $mode) {
+                    Text("Conversation").tag(Mode.conversation)
+                    Text("Terminal").tag(Mode.terminal)
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
             }
-            .pickerStyle(.segmented)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            if mode == .conversation {
+            if mode == .conversation, !isShell {
                 ConversationView(sessionID: sessionID)
             } else {
                 terminal
@@ -296,7 +300,7 @@ struct SessionDetailView: View {
         .navigationTitle(session?.name ?? String(localized: "Session"))
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            if mode == .terminal {
+            if mode == .terminal || session?.state == .shell {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button { fitToScreen.toggle() } label: {
                         Image(systemName: fitToScreen ? "arrow.down.right.and.arrow.up.left" : "arrow.up.left.and.arrow.down.right")

@@ -243,6 +243,41 @@ final class RemoteController {
             server.onStartSession = { [weak self] projectID, prompt in
                 MainActor.assumeIsolated { self?.startSession(in: projectID, prompt: prompt) }
             }
+            server.onStartShell = { [weak self] projectID, command in
+                MainActor.assumeIsolated {
+                    guard let model = self?.model, model.deck.project(projectID) != nil else { return nil }
+                    let trimmed = command?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                    let id = trimmed.isEmpty ? model.newShell(in: projectID) : model.newCommandShell(in: projectID, command: trimmed)
+                    self?.publishSnapshot()
+                    return id
+                }
+            }
+            server.onPastConversations = { [weak self] projectID, reply in
+                MainActor.assumeIsolated {
+                    guard let path = self?.model?.deck.project(projectID)?.path else { reply([]); return }
+                    Task.detached {
+                        reply(TranscriptIndex.sessions(forProject: path, limit: 40).map {
+                            RemotePastConversation(id: $0.id, title: $0.title, modifiedAt: $0.modifiedAt)
+                        })
+                    }
+                }
+            }
+            server.onResumeConversation = { [weak self] projectID, conversationID in
+                MainActor.assumeIsolated {
+                    guard let model = self?.model, model.deck.project(projectID) != nil,
+                          conversationID.allSatisfy({ $0.isHexDigit || $0 == "-" }) else { return nil }
+                    let id = model.newSession(in: projectID, resumeID: conversationID)
+                    self?.publishSnapshot()
+                    return id
+                }
+            }
+            server.onInterrupt = { [weak self] id in
+                MainActor.assumeIsolated {
+                    // Only while working: on a prompt, Esc means Deny (the phone has a button for that).
+                    guard let model = self?.model, model.terminals.isRunning(id), model.status(of: id).display.isRunning else { return }
+                    model.terminals.type("\u{1b}", into: id)
+                }
+            }
             server.onStopSession = { [weak self] id in
                 MainActor.assumeIsolated {
                     guard let model = self?.model, model.terminals.isRunning(id) else { return }
@@ -390,6 +425,10 @@ final class RemoteController {
         // How to reach this Mac away from home (a phone paired on the local network learns it here).
         snapshot.hostID = local.hostID
         snapshot.projects = model.deck.projects.map { RemoteProject(id: $0.id, name: $0.name) }
+        if case .ok(let usage) = model.usage.state {
+            snapshot.usage = RemoteUsage(fiveHour: usage.fiveHour?.usedPercent, fiveHourResetsAt: usage.fiveHour?.resetsAt,
+                                         week: usage.sevenDay?.usedPercent, weekResetsAt: usage.sevenDay?.resetsAt)
+        }
         snapshot.addresses = hostAddresses.filter { $0 != "127.0.0.1" }
         server.snapshot = snapshot
     }

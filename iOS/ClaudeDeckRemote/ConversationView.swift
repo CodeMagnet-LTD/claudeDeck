@@ -43,6 +43,14 @@ struct ConversationView: View {
                             HStack(spacing: 6) {
                                 ProgressView().controlSize(.small)
                                 Text(session?.detail ?? String(localized: "Running")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                Spacer(minLength: 4)
+                                Button {
+                                    store.interrupt(sessionID)
+                                } label: {
+                                    Label("Stop", systemImage: "stop.circle").font(.caption)
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
                             }
                             .id("working")
                         }

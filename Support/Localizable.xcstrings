@@ -280,6 +280,16 @@
         }
       }
     },
+    "5 hours": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5 saat"
+          }
+        }
+      }
+    },
     "5-hour usage %@": {
       "localizations": {
         "tr": {
@@ -1533,6 +1543,16 @@
         }
       }
     },
+    "Command (optional), e.g. yarn dev": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Komut (isteğe bağlı), ör. yarn dev"
+          }
+        }
+      }
+    },
     "Command to run on open": {
       "localizations": {
         "tr": {
@@ -1689,6 +1709,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Bağlantıyı diğer Mac kapattı"
+          }
+        }
+      }
+    },
+    "Continue a past conversation": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eski bir konuşmaya devam et"
           }
         }
       }
@@ -4503,6 +4533,16 @@
         }
       }
     },
+    "Opens a shell in the project folder on the Mac.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'te proje klasöründe bir kabuk açar."
+          }
+        }
+      }
+    },
     "Orange": {
       "localizations": {
         "tr": {
@@ -7102,6 +7142,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Tetikleyiciler"
+          }
+        }
+      }
+    },
+    "Type": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tür"
           }
         }
       }

@@ -258,6 +258,10 @@ public final class RemoteServer: @unchecked Sendable {
     /// Start a session in a project; return its id (sent back to the remote that asked).
     public var onStartSession: ((_ projectID: UUID, _ prompt: String?) -> UUID?)?
     public var onStopSession: ((UUID) -> Void)?
+    public var onStartShell: ((_ projectID: UUID, _ command: String?) -> UUID?)?
+    public var onPastConversations: ((_ projectID: UUID, _ reply: @escaping @Sendable ([RemotePastConversation]) -> Void) -> Void)?
+    public var onResumeConversation: ((_ projectID: UUID, _ conversationID: String) -> UUID?)?
+    public var onInterrupt: ((UUID) -> Void)?
     public var onResumeSession: ((UUID) -> Void)?
     /// A watching remote wants the terminal at this grid (0 cols = release).
     public var onTerminalFit: ((UUID, Int, Int) -> Void)?
@@ -438,6 +442,21 @@ public final class RemoteServer: @unchecked Sendable {
                 if let id = onStartSession?(projectID, prompt.map { String($0.prefix(20_000)) }) {
                     peer.channel.send(.sessionStarted(sessionID: id))
                 }
+            case .startShell(let projectID, let command):
+                if let id = onStartShell?(projectID, command.map { String($0.prefix(2_000)) }) {
+                    peer.channel.send(.sessionStarted(sessionID: id))
+                }
+            case .pastConversationsRequest(let projectID):
+                let channel = peer.channel
+                onPastConversations?(projectID) { [queue] items in
+                    queue.async { channel.send(.pastConversations(projectID: projectID, items: items)) }
+                }
+            case .resumeConversation(let projectID, let conversationID):
+                if let id = onResumeConversation?(projectID, conversationID) {
+                    peer.channel.send(.sessionStarted(sessionID: id))
+                }
+            case .interrupt(let sessionID):
+                onInterrupt?(sessionID)
             case .stopSession(let sessionID):
                 onStopSession?(sessionID)
             case .resumeSession(let sessionID):
@@ -543,6 +562,7 @@ public final class RemoteHostConnection: @unchecked Sendable {
     public var onTerminalEnded: ((_ sessionID: UUID) -> Void)?
     public var onHistory: ((_ sessionID: UUID, _ page: ChatPage) -> Void)?
     public var onSessionStarted: ((UUID) -> Void)?
+    public var onPastConversations: ((UUID, [RemotePastConversation]) -> Void)?
 
     /// Per address: connect + pairing must finish within this.
     public var handshakeTimeout: TimeInterval = 10
@@ -649,6 +669,8 @@ public final class RemoteHostConnection: @unchecked Sendable {
                 self.onHistory?(id, page)
             case .sessionStarted(let id) where authenticated:
                 self.onSessionStarted?(id)
+            case .pastConversations(let projectID, let items) where authenticated:
+                self.onPastConversations?(projectID, items)
             case .refused(let reason):
                 if authenticated {
                     self.end(.refused(reason))

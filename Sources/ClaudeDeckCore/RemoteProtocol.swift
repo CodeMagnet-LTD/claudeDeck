@@ -107,6 +107,15 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case startSession(projectID: UUID, prompt: String?)
     /// Host → remote: the session `startSession` created (the phone opens it).
     case sessionStarted(sessionID: UUID)
+    /// Remote → host: a plain terminal in a project, optionally running `command`.
+    case startShell(projectID: UUID, command: String?)
+    /// Remote → host: the project's past Claude conversations (like the Mac's Resume window).
+    case pastConversationsRequest(projectID: UUID)
+    case pastConversations(projectID: UUID, items: [RemotePastConversation])
+    /// Remote → host: a new session resuming one of those conversations.
+    case resumeConversation(projectID: UUID, conversationID: String)
+    /// Remote → host: press Esc in a working session (interrupts Claude).
+    case interrupt(sessionID: UUID)
     /// Remote → host: end a running session / resume a closed one.
     case stopSession(sessionID: UUID)
     case resumeSession(sessionID: UUID)
@@ -144,6 +153,8 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
     public var sessions: [RemoteSession]
     /// Projects a remote can start sessions in.
     public var projects: [RemoteProject]?
+    /// The plan's usage meter (Settings › usage on the Mac), when known.
+    public var usage: RemoteUsage?
     /// The host's stable id (matches its Bonjour TXT record) and Tailscale addresses: a phone
     /// paired on the local network learns how to reach the host when away.
     public var hostID: UUID?
@@ -157,6 +168,30 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
     }
 
     public func session(_ id: UUID) -> RemoteSession? { sessions.first { $0.id == id } }
+}
+
+public struct RemoteUsage: Codable, Sendable, Equatable {
+    public var fiveHour: Double?
+    public var fiveHourResetsAt: Date?
+    public var week: Double?
+    public var weekResetsAt: Date?
+    public init(fiveHour: Double?, fiveHourResetsAt: Date?, week: Double?, weekResetsAt: Date?) {
+        self.fiveHour = fiveHour
+        self.fiveHourResetsAt = fiveHourResetsAt
+        self.week = week
+        self.weekResetsAt = weekResetsAt
+    }
+}
+
+public struct RemotePastConversation: Codable, Sendable, Equatable, Identifiable {
+    public var id: String
+    public var title: String
+    public var modifiedAt: Date
+    public init(id: String, title: String, modifiedAt: Date) {
+        self.id = id
+        self.title = title
+        self.modifiedAt = modifiedAt
+    }
 }
 
 public struct RemoteProject: Codable, Sendable, Equatable, Identifiable {

@@ -201,6 +201,9 @@ final class RemoteStore {
         next.onSessionStarted = { [weak self] id in
             MainActor.assumeIsolated { self?.path = [id] }
         }
+        next.onPastConversations = { [weak self] projectID, items in
+            MainActor.assumeIsolated { self?.pastConversations[projectID] = items }
+        }
         next.onHistory = { [weak self] id, page in
             MainActor.assumeIsolated { self?.received(page, for: id) }
         }
@@ -340,6 +343,25 @@ final class RemoteStore {
     }
 
     func stopSession(_ id: UUID) { _ = send(.stopSession(sessionID: id)) }
+
+    func startShell(in projectID: UUID, command: String) {
+        let text = command.trimmingCharacters(in: .whitespacesAndNewlines)
+        _ = send(.startShell(projectID: projectID, command: text.isEmpty ? nil : text))
+    }
+
+    /// The project's past conversations, by project (filled by the Mac's answer).
+    private(set) var pastConversations: [UUID: [RemotePastConversation]] = [:]
+
+    func loadPastConversations(_ projectID: UUID) {
+        _ = send(.pastConversationsRequest(projectID: projectID))
+    }
+
+    func resumeConversation(_ conversationID: String, in projectID: UUID) {
+        _ = send(.resumeConversation(projectID: projectID, conversationID: conversationID))
+    }
+
+    /// Esc in a working session.
+    func interrupt(_ id: UUID) { _ = send(.interrupt(sessionID: id)) }
 
     func resumeSession(_ id: UUID) {
         guard send(.resumeSession(sessionID: id)) else { return }

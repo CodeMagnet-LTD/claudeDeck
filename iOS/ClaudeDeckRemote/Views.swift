@@ -56,6 +56,7 @@ struct SessionListView: View {
         let projectNames = sessions.map(\.project).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
         List {
             ConnectionBanner()
+            if let usage = store.snapshot?.usage { UsageRow(usage: usage) }
             if !waiting.isEmpty {
                 Section("Waiting for you") {
                     ForEach(waiting) { SessionRowLink(session: $0, showProject: true) }
@@ -134,24 +135,87 @@ struct SessionRowLink: View {
     }
 }
 
-/// Start a Claude session in one of the Mac's projects, optionally with a first message.
+/// The plan's usage, like the Mac's sidebar meter.
+struct UsageRow: View {
+    let usage: RemoteUsage
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let value = usage.fiveHour { meter(String(localized: "5 hours"), value, usage.fiveHourResetsAt) }
+            if let value = usage.week { meter(String(localized: "Week"), value, usage.weekResetsAt) }
+        }
+        .padding(.vertical, 2)
+    }
+
+    private func meter(_ title: String, _ value: Double, _ reset: Date?) -> some View {
+        HStack(spacing: 8) {
+            Text(title).font(.caption).frame(width: 60, alignment: .leading)
+            ProgressView(value: min(max(value, 0), 100), total: 100)
+                .tint(value >= 90 ? .red : value >= 70 ? .orange : .green)
+            Text("\(Int(value.rounded()))%").font(.caption.monospacedDigit()).frame(width: 40, alignment: .trailing)
+            if let reset {
+                Text(reset, style: .relative).font(.caption2).foregroundStyle(.secondary).frame(width: 70, alignment: .trailing)
+            }
+        }
+    }
+}
+
+/// Start a Claude session (new, or resuming a past conversation) or a terminal in one of the Mac's projects.
 struct NewSessionView: View {
     @Environment(RemoteStore.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var projectID: UUID?
     @State private var prompt = ""
+    @State private var kind = Kind.claude
+    @State private var command = ""
+
+    enum Kind { case claude, terminal }
 
     var body: some View {
         Form {
             Picker("Project", selection: $projectID) {
                 ForEach(store.projects) { Text($0.name).tag(Optional($0.id)) }
             }
-            Section {
-                TextField("What should Claude do? (optional)", text: $prompt, axis: .vertical)
-                    .lineLimit(3...8)
-            } footer: {
-                Text("Sent once Claude has started on the Mac.")
+            Picker("Type", selection: $kind) {
+                Text("Claude").tag(Kind.claude)
+                Text("Terminal").tag(Kind.terminal)
             }
+            .pickerStyle(.segmented)
+            if kind == .claude {
+                Section {
+                    TextField("What should Claude do? (optional)", text: $prompt, axis: .vertical)
+                        .lineLimit(3...8)
+                } footer: {
+                    Text("Sent once Claude has started on the Mac.")
+                }
+                if let projectID, let past = store.pastConversations[projectID], !past.isEmpty {
+                    Section("Continue a past conversation") {
+                        ForEach(past) { item in
+                            Button {
+                                store.resumeConversation(item.id, in: projectID)
+                                dismiss()
+                            } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(item.title).lineLimit(2).foregroundStyle(.primary)
+                                    Text(item.modifiedAt, style: .relative).font(.caption).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                Section {
+                    TextField("Command (optional), e.g. yarn dev", text: $command)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .font(.body.monospaced())
+                } footer: {
+                    Text("Opens a shell in the project folder on the Mac.")
+                }
+            }
+        }
+        .onChange(of: projectID, initial: true) { _, id in
+            if let id { store.loadPastConversations(id) }
         }
         .navigationTitle("New Session")
         .navigationBarTitleDisplayMode(.inline)
@@ -159,7 +223,9 @@ struct NewSessionView: View {
             ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
             ToolbarItem(placement: .confirmationAction) {
                 Button("Start") {
-                    if let projectID { store.startSession(in: projectID, prompt: prompt) }
+                    if let projectID {
+                        if kind == .claude { store.startSession(in: projectID, prompt: prompt) } else { store.startShell(in: projectID, command: command) }
+                    }
                     dismiss()
                 }
                 .disabled(projectID == nil || store.connection != .connected)
