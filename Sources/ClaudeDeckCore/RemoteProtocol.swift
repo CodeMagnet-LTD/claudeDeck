@@ -93,6 +93,9 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     /// Host → remote: the terminal's size and current screen (ANSI); output frames follow.
     /// Sent again after a resize or when the remote fell behind.
     case terminalStart(sessionID: UUID, cols: Int, rows: Int, screen: Data)
+    /// Remote → host: size the session's terminal to this grid while watched (a phone fits it to
+    /// its screen); `cols == 0` gives the size back to the host's window.
+    case terminalFit(sessionID: UUID, cols: Int, rows: Int)
     /// Host → remote: the session isn't running (any more).
     case terminalEnded(sessionID: UUID)
     /// Remote → host: a page of a session's conversation (ConversationLog.swift): the latest

@@ -255,6 +255,8 @@ public final class RemoteServer: @unchecked Sendable {
     /// it is sent on the server's queue).
     public var onHistoryRequest: ((_ sessionID: UUID, _ before: String?, _ after: String?, _ limit: Int, _ reply: @escaping @Sendable (ChatPage?) -> Void) -> Void)?
     public var onMarkSeen: ((UUID) -> Void)?
+    /// A watching remote wants the terminal at this grid (0 cols = release).
+    public var onTerminalFit: ((UUID, Int, Int) -> Void)?
     public var onSendPrompt: ((UUID, String) -> Void)?
     /// A phone registered for push notifications.
     public var onRegisterPush: ((PushDevice) -> Void)?
@@ -426,6 +428,8 @@ public final class RemoteServer: @unchecked Sendable {
                         channel.send(.history(sessionID: sessionID, page: page ?? ChatPage(entries: [], hasMoreBefore: false, reset: true)))
                     }
                 }
+            case .terminalFit(let sessionID, let cols, let rows) where peer.watching.contains(sessionID):
+                onTerminalFit?(sessionID, cols == 0 ? 0 : min(max(cols, 20), 500), min(max(rows, 5), 300))
             case .markSeen(let sessionID):
                 onMarkSeen?(sessionID)
             case .sendPrompt(let sessionID, let text) where !text.isEmpty:

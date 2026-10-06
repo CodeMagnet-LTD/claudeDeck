@@ -262,6 +262,30 @@ final class DeckTerminalView: LocalProcessTerminalView {
         super.send(source: source, data: data)
     }
 
+    /// Grid imposed by a remote viewer (a phone fits the terminal to its screen); nil = the frame decides.
+    var forcedGrid: (cols: Int, rows: Int)? {
+        didSet { applyForcedGrid(release: forcedGrid == nil && oldValue != nil) }
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        if forcedGrid != nil { applyForcedGrid(release: false) }
+    }
+
+    private func applyForcedGrid(release: Bool) {
+        if release {
+            // Back to the window's size.
+            setFrameSize(frame.size)
+            return
+        }
+        guard let grid = forcedGrid else { return }
+        let terminal = getTerminal()
+        guard terminal.cols != grid.cols || terminal.rows != grid.rows else { return }
+        terminal.resize(cols: grid.cols, rows: grid.rows)
+        sizeChanged(source: terminal)  // tells the pty (SIGWINCH) and our delegate
+        needsDisplay = true
+    }
+
     /// Raw pty output (remote mode streams it to watching Macs).
     var onOutput: ((ArraySlice<UInt8>) -> Void)?
 

@@ -240,6 +240,7 @@ final class RemoteStore {
             for id in sinks.keys {
                 terminalStates[id] = .waiting
                 hostConnection?.openTerminal(id)
+                if let grid = fitGrids[id] { hostConnection?.send(.terminalFit(sessionID: id, cols: grid.0, rows: grid.1)) }
             }
             for id in openConversations { requestLatest(id) }
             onConnected?()
@@ -414,6 +415,7 @@ final class RemoteStore {
         sinks[id] = sink
         terminalStates[id] = .waiting
         hostConnection?.openTerminal(id)
+        if let grid = fitGrids[id] { hostConnection?.send(.terminalFit(sessionID: id, cols: grid.0, rows: grid.1)) }
     }
 
     func detachTerminal(_ id: UUID, sink: RemoteTerminalSink) {
@@ -427,6 +429,13 @@ final class RemoteStore {
         guard terminalStates[id] == .live else { return }
         hostConnection?.sendInput(id, data: data)
     }
+
+    /// Fit mode: size the Mac's terminal to this screen (0 cols gives it back). Re-sent after reconnects.
+    func fitTerminal(_ id: UUID, cols: Int, rows: Int) {
+        if cols == 0 { fitGrids[id] = nil } else { fitGrids[id] = (cols, rows) }
+        hostConnection?.send(.terminalFit(sessionID: id, cols: cols, rows: rows))
+    }
+    @ObservationIgnored private var fitGrids: [UUID: (Int, Int)] = [:]
 
     func redrawTerminal(_ id: UUID) {
         guard sinks[id] != nil else { return }

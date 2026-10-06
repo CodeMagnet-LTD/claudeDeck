@@ -65,6 +65,8 @@ final class RemoteController {
     @ObservationIgnored private var outputBuffers: [UUID: Data] = [:]
     @ObservationIgnored private var flushScheduled = false
     @ObservationIgnored private var resizeTasks: [UUID: Task<Void, Never>] = [:]
+    /// Host side: terminals sized by a remote viewer.
+    @ObservationIgnored private var fitted: Set<UUID> = []
     /// Held while a remote watches a terminal: App Nap would otherwise delay the output timer by
     /// seconds when ClaudeDeck is in the background. Doesn't keep the Mac awake.
     @ObservationIgnored private var streamingActivity: NSObjectProtocol?
@@ -180,7 +182,14 @@ final class RemoteController {
     /// Whether the running listener accepts the local network (and advertises over Bonjour).
     @ObservationIgnored private var hostingLAN = false
 
+    /// Terminals sized by a remote viewer get the window's size back.
+    private func releaseFitted() {
+        for id in fitted { model?.terminals.view(for: id)?.forcedGrid = nil }
+        fitted = []
+    }
+
     private func restartServer() {
+        releaseFitted()
         watched = []
         updateStreamingActivity()
         outputBuffers = [:]
@@ -231,6 +240,13 @@ final class RemoteController {
             server.onHistoryRequest = { [weak self] id, before, after, limit, reply in
                 MainActor.assumeIsolated { self?.history(id, before: before, after: after, limit: limit, reply: reply) }
             }
+            server.onTerminalFit = { [weak self] id, cols, rows in
+                MainActor.assumeIsolated {
+                    guard let view = self?.model?.terminals.view(for: id) else { return }
+                    view.forcedGrid = cols == 0 ? nil : (cols, rows)
+                    if cols == 0 { self?.fitted.remove(id) } else { self?.fitted.insert(id) }
+                }
+            }
             server.onMarkSeen = { [weak self] id in
                 MainActor.assumeIsolated {
                     guard let model = self?.model, model.deck.session(id) != nil else { return }
@@ -249,6 +265,11 @@ final class RemoteController {
                     guard let self else { return }
                     self.watched = sessions
                     self.outputBuffers = self.outputBuffers.filter { sessions.contains($0.key) }
+                    // Nobody watches any more: the window gets its size back.
+                    for id in self.fitted where !sessions.contains(id) {
+                        self.model?.terminals.view(for: id)?.forcedGrid = nil
+                        self.fitted.remove(id)
+                    }
                     self.updateStreamingActivity()
                 }
             }
@@ -265,6 +286,7 @@ final class RemoteController {
 
     private func stopHosting() {
         guard server != nil || !hostAddresses.isEmpty else { return }
+        releaseFitted()
         watched = []
         updateStreamingActivity()
         outputBuffers = [:]
