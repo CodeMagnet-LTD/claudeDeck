@@ -344,7 +344,8 @@ struct RemoteSidebarSection: View {
     var body: some View {
         let remote = model.remote
         let sessions = (remote.snapshot?.sessions ?? []).filter { session in
-            switch filter {
+            guard session.state != .notStarted else { return false }  // closed: phone-only list
+            return switch filter {
             case .all: true
             case .waiting: session.needsAttention
             case .working: session.state == .running

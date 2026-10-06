@@ -103,6 +103,13 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case historyRequest(sessionID: UUID, before: String?, after: String?, limit: Int)
     /// Host → remote: the answer.
     case history(sessionID: UUID, page: ChatPage)
+    /// Remote → host: start a Claude session in a project (and type `prompt` once it's ready).
+    case startSession(projectID: UUID, prompt: String?)
+    /// Host → remote: the session `startSession` created (the phone opens it).
+    case sessionStarted(sessionID: UUID)
+    /// Remote → host: end a running session / resume a closed one.
+    case stopSession(sessionID: UUID)
+    case resumeSession(sessionID: UUID)
     /// Remote → host: the user looked at this session (clears "your turn").
     case markSeen(sessionID: UUID)
     /// Remote → host: type this message into the session and press Enter.
@@ -135,6 +142,8 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
 public struct RemoteSnapshot: Codable, Sendable, Equatable {
     public var hostName: String
     public var sessions: [RemoteSession]
+    /// Projects a remote can start sessions in.
+    public var projects: [RemoteProject]?
     /// The host's stable id (matches its Bonjour TXT record) and Tailscale addresses: a phone
     /// paired on the local network learns how to reach the host when away.
     public var hostID: UUID?
@@ -148,6 +157,15 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
     }
 
     public func session(_ id: UUID) -> RemoteSession? { sessions.first { $0.id == id } }
+}
+
+public struct RemoteProject: Codable, Sendable, Equatable, Identifiable {
+    public var id: UUID
+    public var name: String
+    public init(id: UUID, name: String) {
+        self.id = id
+        self.name = name
+    }
 }
 
 public struct RemoteSession: Codable, Sendable, Equatable, Identifiable {

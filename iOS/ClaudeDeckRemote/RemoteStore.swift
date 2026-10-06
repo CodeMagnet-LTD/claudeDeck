@@ -198,6 +198,9 @@ final class RemoteStore {
                 self.answerWaiters.removeValue(forKey: id)?.resume(returning: applied)
             }
         }
+        next.onSessionStarted = { [weak self] id in
+            MainActor.assumeIsolated { self?.path = [id] }
+        }
         next.onHistory = { [weak self] id, page in
             MainActor.assumeIsolated { self?.received(page, for: id) }
         }
@@ -324,6 +327,23 @@ final class RemoteStore {
                 self?.answerWaiters.removeValue(forKey: id)?.resume(returning: false)
             }
         }
+    }
+
+    // MARK: Sessions
+
+    var projects: [RemoteProject] { snapshot?.projects ?? [] }
+
+    /// A new Claude session in a project on the Mac; it opens here once started.
+    func startSession(in projectID: UUID, prompt: String) {
+        let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        _ = send(.startSession(projectID: projectID, prompt: text.isEmpty ? nil : text))
+    }
+
+    func stopSession(_ id: UUID) { _ = send(.stopSession(sessionID: id)) }
+
+    func resumeSession(_ id: UUID) {
+        guard send(.resumeSession(sessionID: id)) else { return }
+        path = [id]
     }
 
     // MARK: Conversations

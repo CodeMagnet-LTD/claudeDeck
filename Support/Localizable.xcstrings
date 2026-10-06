@@ -1320,6 +1320,16 @@
         }
       }
     },
+    "Claude stops on the Mac. You can resume the conversation later.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Mac'te durur. Konuşmaya daha sonra devam edebilirsiniz."
+          }
+        }
+      }
+    },
     "Claude took too long to answer.": {
       "localizations": {
         "tr": {
@@ -1459,6 +1469,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Terminali Kapat"
+          }
+        }
+      }
+    },
+    "Closed sessions (%lld)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı oturumlar (%lld)"
           }
         }
       }
@@ -5703,6 +5723,16 @@
         }
       }
     },
+    "Sent once Claude has started on the Mac.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude Mac'te başlayınca gönderilir."
+          }
+        }
+      }
+    },
     "Sent to Claude %@. A re-run that fails again can be fixed again.": {
       "localizations": {
         "tr": {
@@ -6143,6 +6173,16 @@
         }
       }
     },
+    "Start": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başlat"
+          }
+        }
+      }
+    },
     "Start Automatically When the App Opens": {
       "localizations": {
         "tr": {
@@ -6293,12 +6333,42 @@
         }
       }
     },
+    "Stop": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durdur"
+          }
+        }
+      }
+    },
+    "Stop %@?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ durdurulsun mu?"
+          }
+        }
+      }
+    },
     "Stop Following": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Takibi Bırak"
+          }
+        }
+      }
+    },
+    "Stop Session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturumu durdur"
           }
         }
       }
@@ -7392,6 +7462,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Haftalık kullanım %@"
+          }
+        }
+      }
+    },
+    "What should Claude do? (optional)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude ne yapsın? (isteğe bağlı)"
           }
         }
       }

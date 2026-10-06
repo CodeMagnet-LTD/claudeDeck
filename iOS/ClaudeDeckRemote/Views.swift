@@ -45,9 +45,12 @@ struct RootView: View {
 struct SessionListView: View {
     @Environment(RemoteStore.self) private var store
     @State private var showSettings = false
+    @State private var showNewSession = false
 
     var body: some View {
-        let sessions = store.snapshot?.sessions ?? []
+        let all = store.snapshot?.sessions ?? []
+        let sessions = all.filter { $0.state != .notStarted }
+        let closed = all.filter { $0.state == .notStarted }
         let waiting = sessions.filter(\.needsAttention)
         let projects = Dictionary(grouping: sessions, by: \.project)
         let projectNames = sessions.map(\.project).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
@@ -66,6 +69,26 @@ struct SessionListView: View {
             if store.connection == .connected, sessions.isEmpty {
                 Text("No running sessions").foregroundStyle(.secondary)
             }
+            if !closed.isEmpty {
+                Section {
+                    DisclosureGroup("Closed sessions (\(closed.count))") {
+                        ForEach(closed) { session in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(session.name).lineLimit(1)
+                                    if !session.project.isEmpty, !session.name.hasPrefix(session.project) {
+                                        Text(session.project).font(.caption).foregroundStyle(.secondary)
+                                    }
+                                }
+                                Spacer()
+                                Button("Resume") { store.resumeSession(session.id) }
+                                    .buttonStyle(.bordered)
+                                    .controlSize(.small)
+                            }
+                        }
+                    }
+                }
+            }
             if let error = store.answerError {
                 Text(error).font(.footnote).foregroundStyle(.orange)
             }
@@ -75,22 +98,74 @@ struct SessionListView: View {
         .navigationDestination(for: UUID.self) { SessionDetailView(sessionID: $0).id($0) }
         .refreshable { store.reconnect() }
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .topBarLeading) {
                 Button { showSettings = true } label: { Image(systemName: "gearshape") }
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { showNewSession = true } label: { Image(systemName: "plus") }
+                    .disabled(store.connection != .connected || store.projects.isEmpty)
             }
         }
         .sheet(isPresented: $showSettings) { NavigationStack { SettingsView() } }
+        .sheet(isPresented: $showNewSession) { NavigationStack { NewSessionView() } }
     }
 }
 
 struct SessionRowLink: View {
+    @Environment(RemoteStore.self) private var store
     let session: RemoteSession
     let showProject: Bool
+    @State private var confirmStop = false
 
     var body: some View {
         NavigationLink(value: session.id) {
             SessionRow(session: session, showProject: showProject)
         }
+        .swipeActions(edge: .trailing) {
+            if session.state != .shell {
+                Button("Stop", role: .destructive) { confirmStop = true }
+            }
+        }
+        .confirmationDialog("Stop \(session.name)?", isPresented: $confirmStop, titleVisibility: .visible) {
+            Button("Stop Session", role: .destructive) { store.stopSession(session.id) }
+        } message: {
+            Text("Claude stops on the Mac. You can resume the conversation later.")
+        }
+    }
+}
+
+/// Start a Claude session in one of the Mac's projects, optionally with a first message.
+struct NewSessionView: View {
+    @Environment(RemoteStore.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @State private var projectID: UUID?
+    @State private var prompt = ""
+
+    var body: some View {
+        Form {
+            Picker("Project", selection: $projectID) {
+                ForEach(store.projects) { Text($0.name).tag(Optional($0.id)) }
+            }
+            Section {
+                TextField("What should Claude do? (optional)", text: $prompt, axis: .vertical)
+                    .lineLimit(3...8)
+            } footer: {
+                Text("Sent once Claude has started on the Mac.")
+            }
+        }
+        .navigationTitle("New Session")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Start") {
+                    if let projectID { store.startSession(in: projectID, prompt: prompt) }
+                    dismiss()
+                }
+                .disabled(projectID == nil || store.connection != .connected)
+            }
+        }
+        .onAppear { if projectID == nil { projectID = store.projects.first?.id } }
     }
 }
 

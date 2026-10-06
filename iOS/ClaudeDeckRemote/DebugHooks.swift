@@ -33,6 +33,15 @@ final class DebugHooks {
             } else if file == "pair.txt", let link = try? String(contentsOf: url, encoding: .utf8) {
                 try? FileManager.default.removeItem(at: url)
                 store.pair(link: link)
+            } else if file == "start.txt", let prompt = try? String(contentsOf: url, encoding: .utf8), let project = store.projects.first {
+                try? FileManager.default.removeItem(at: url)
+                store.startSession(in: project.id, prompt: prompt)
+            } else if file.hasSuffix(".stop"), let id {
+                try? FileManager.default.removeItem(at: url)
+                store.stopSession(id)
+            } else if file.hasSuffix(".resume"), let id {
+                try? FileManager.default.removeItem(at: url)
+                store.resumeSession(id)
             } else if file.hasSuffix(".open"), let id {
                 try? FileManager.default.removeItem(at: url)
                 store.path = [id]
@@ -45,7 +54,7 @@ final class DebugHooks {
             }
         }
         let push = PushRegistration.shared
-        var lines = ["connection: \(store.connection)", "terminals: \(store.terminalStates)",
+        var lines = ["connection: \(store.connection) path=\(store.path) projects=\(store.projects.map(\.name))", "terminals: \(store.terminalStates)",
                      "lan: \(store.lanHosts.map(\.name)) via=\(store.connectedVia ?? "-") pairing=\(store.pairing?.addresses ?? [])",
                      "push: token=\(push.token?.count ?? 0) env=\(PushRegistration.environment) error=\(push.lastError ?? "-")"]
         for session in store.snapshot?.sessions ?? [] {

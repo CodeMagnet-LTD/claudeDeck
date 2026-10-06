@@ -240,6 +240,22 @@ final class RemoteController {
             server.onHistoryRequest = { [weak self] id, before, after, limit, reply in
                 MainActor.assumeIsolated { self?.history(id, before: before, after: after, limit: limit, reply: reply) }
             }
+            server.onStartSession = { [weak self] projectID, prompt in
+                MainActor.assumeIsolated { self?.startSession(in: projectID, prompt: prompt) }
+            }
+            server.onStopSession = { [weak self] id in
+                MainActor.assumeIsolated {
+                    guard let model = self?.model, model.terminals.isRunning(id) else { return }
+                    model.stop(id)
+                }
+            }
+            server.onResumeSession = { [weak self] id in
+                MainActor.assumeIsolated {
+                    guard let model = self?.model, model.deck.session(id)?.kind == .claude, !model.terminals.isRunning(id) else { return }
+                    model.launch(id, resume: model.canResume(id))
+                    self?.publishSnapshot()
+                }
+            }
             server.onTerminalFit = { [weak self] id, cols, rows in
                 MainActor.assumeIsolated {
                     guard let view = self?.model?.terminals.view(for: id) else { return }
@@ -373,6 +389,7 @@ final class RemoteController {
         var snapshot = Self.makeSnapshot(model)
         // How to reach this Mac away from home (a phone paired on the local network learns it here).
         snapshot.hostID = local.hostID
+        snapshot.projects = model.deck.projects.map { RemoteProject(id: $0.id, name: $0.name) }
         snapshot.addresses = hostAddresses.filter { $0 != "127.0.0.1" }
         server.snapshot = snapshot
     }
@@ -380,7 +397,9 @@ final class RemoteController {
     private static func makeSnapshot(_ model: AppModel) -> RemoteSnapshot {
         let sessions: [RemoteSession] = model.deck.sessions.compactMap { session in
             let status = model.status(of: session.id)
-            guard let state = RemoteSession.State(status.display), state != .notStarted else { return nil }
+            guard let state = RemoteSession.State(status.display) else { return nil }
+            // Closed sessions only when they can be resumed (the phone lists them under "Closed").
+            if state == .notStarted, session.kind != .claude || !model.canResume(session.id) { return nil }
             return RemoteSession(
                 id: session.id,
                 name: session.name,
@@ -479,6 +498,27 @@ final class RemoteController {
             self?.historyCache[id] = (path, size, entries)
             reply(ConversationLog.page(entries, before: before, after: after, limit: limit))
         }
+    }
+
+    /// A new Claude session from the phone; the first message goes in once Claude is ready.
+    private func startSession(in projectID: UUID, prompt: String?) -> UUID? {
+        guard let model, model.deck.project(projectID) != nil else { return nil }
+        let title = prompt?.split(separator: "\n").first.map(String.init)
+        guard let id = model.newSession(in: projectID, title: title.flatMap { $0.isEmpty ? nil : $0 }) else { return nil }
+        publishSnapshot()
+        if let prompt, !prompt.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let launched = Date()
+            Task { @MainActor [weak self] in
+                // Like an automation: wait for this process's first hook (Claude is up), then a moment for the input box.
+                for _ in 0..<120 {
+                    if let hook = self?.model?.hookStatuses[id], hook.updatedAt >= launched { break }
+                    try? await Task.sleep(for: .milliseconds(500))
+                }
+                try? await Task.sleep(for: .seconds(1))
+                self?.sendPrompt(id, text: prompt)
+            }
+        }
+        return id
     }
 
     /// A message from the phone: typed into the session like the user would. Not while a prompt is

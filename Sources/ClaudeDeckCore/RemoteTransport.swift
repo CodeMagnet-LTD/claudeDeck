@@ -255,6 +255,10 @@ public final class RemoteServer: @unchecked Sendable {
     /// it is sent on the server's queue).
     public var onHistoryRequest: ((_ sessionID: UUID, _ before: String?, _ after: String?, _ limit: Int, _ reply: @escaping @Sendable (ChatPage?) -> Void) -> Void)?
     public var onMarkSeen: ((UUID) -> Void)?
+    /// Start a session in a project; return its id (sent back to the remote that asked).
+    public var onStartSession: ((_ projectID: UUID, _ prompt: String?) -> UUID?)?
+    public var onStopSession: ((UUID) -> Void)?
+    public var onResumeSession: ((UUID) -> Void)?
     /// A watching remote wants the terminal at this grid (0 cols = release).
     public var onTerminalFit: ((UUID, Int, Int) -> Void)?
     public var onSendPrompt: ((UUID, String) -> Void)?
@@ -430,6 +434,14 @@ public final class RemoteServer: @unchecked Sendable {
                 }
             case .terminalFit(let sessionID, let cols, let rows) where peer.watching.contains(sessionID):
                 onTerminalFit?(sessionID, cols == 0 ? 0 : min(max(cols, 20), 500), min(max(rows, 5), 300))
+            case .startSession(let projectID, let prompt):
+                if let id = onStartSession?(projectID, prompt.map { String($0.prefix(20_000)) }) {
+                    peer.channel.send(.sessionStarted(sessionID: id))
+                }
+            case .stopSession(let sessionID):
+                onStopSession?(sessionID)
+            case .resumeSession(let sessionID):
+                onResumeSession?(sessionID)
             case .markSeen(let sessionID):
                 onMarkSeen?(sessionID)
             case .sendPrompt(let sessionID, let text) where !text.isEmpty:
@@ -530,6 +542,7 @@ public final class RemoteHostConnection: @unchecked Sendable {
     public var onTerminalOutput: ((_ sessionID: UUID, _ bytes: Data) -> Void)?
     public var onTerminalEnded: ((_ sessionID: UUID) -> Void)?
     public var onHistory: ((_ sessionID: UUID, _ page: ChatPage) -> Void)?
+    public var onSessionStarted: ((UUID) -> Void)?
 
     /// Per address: connect + pairing must finish within this.
     public var handshakeTimeout: TimeInterval = 10
@@ -634,6 +647,8 @@ public final class RemoteHostConnection: @unchecked Sendable {
                 self.onTerminalEnded?(id)
             case .history(let id, let page) where authenticated:
                 self.onHistory?(id, page)
+            case .sessionStarted(let id) where authenticated:
+                self.onSessionStarted?(id)
             case .refused(let reason):
                 if authenticated {
                     self.end(.refused(reason))
