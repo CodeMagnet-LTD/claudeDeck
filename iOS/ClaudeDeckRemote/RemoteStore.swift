@@ -201,6 +201,18 @@ final class RemoteStore {
         next.onSessionStarted = { [weak self] id in
             MainActor.assumeIsolated { self?.path = [id] }
         }
+        next.onFileReply = { [weak self] message in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                switch message {
+                case .directory(let projectID, let path, let entries, let error):
+                    self.directories[Self.fileKey(projectID, path)] = DirectoryState(entries: entries, error: error)
+                case .file(let projectID, let path, let text, let size, let error):
+                    self.files[Self.fileKey(projectID, path)] = FileState(text: text, size: size, error: error)
+                default: break
+                }
+            }
+        }
         next.onPastConversations = { [weak self] projectID, items in
             MainActor.assumeIsolated { self?.pastConversations[projectID] = items }
         }
@@ -358,6 +370,23 @@ final class RemoteStore {
 
     func resumeConversation(_ conversationID: String, in projectID: UUID) {
         _ = send(.resumeConversation(projectID: projectID, conversationID: conversationID))
+    }
+
+    // MARK: Files (FileBrowser)
+
+    struct DirectoryState: Equatable { var entries: [RemoteFileEntry]; var error: String? }
+    struct FileState: Equatable { var text: String?; var size: Int; var error: String? }
+    private(set) var directories: [String: DirectoryState] = [:]
+    private(set) var files: [String: FileState] = [:]
+
+    static func fileKey(_ projectID: UUID, _ path: String) -> String { "\(projectID.uuidString)/\(path)" }
+
+    func listDirectory(_ projectID: UUID, path: String) {
+        _ = send(.listDirectory(projectID: projectID, path: path))
+    }
+
+    func readFile(_ projectID: UUID, path: String) {
+        _ = send(.readFile(projectID: projectID, path: path))
     }
 
     /// Esc in a working session.

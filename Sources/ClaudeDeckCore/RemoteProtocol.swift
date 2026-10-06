@@ -114,6 +114,12 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case pastConversations(projectID: UUID, items: [RemotePastConversation])
     /// Remote → host: a new session resuming one of those conversations.
     case resumeConversation(projectID: UUID, conversationID: String)
+    /// Remote → host: a folder of a project (path relative to the project, "" = its root).
+    case listDirectory(projectID: UUID, path: String)
+    case directory(projectID: UUID, path: String, entries: [RemoteFileEntry], error: String?)
+    /// Remote → host: a text file of a project (at most `RemoteFiles.maxFileSize`).
+    case readFile(projectID: UUID, path: String)
+    case file(projectID: UUID, path: String, text: String?, size: Int, error: String?)
     /// Remote → host: press Esc in a working session (interrupts Claude).
     case interrupt(sessionID: UUID)
     /// Remote → host: end a running session / resume a closed one.
@@ -180,6 +186,18 @@ public struct RemoteUsage: Codable, Sendable, Equatable {
         self.fiveHourResetsAt = fiveHourResetsAt
         self.week = week
         self.weekResetsAt = weekResetsAt
+    }
+}
+
+public struct RemoteFileEntry: Codable, Sendable, Equatable, Identifiable {
+    public var name: String
+    public var isDirectory: Bool
+    public var size: Int
+    public var id: String { name }
+    public init(name: String, isDirectory: Bool, size: Int) {
+        self.name = name
+        self.isDirectory = isDirectory
+        self.size = size
     }
 }
 

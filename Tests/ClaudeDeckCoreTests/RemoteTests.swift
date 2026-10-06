@@ -608,3 +608,26 @@ import Testing
         }
     }
 }
+
+@Suite struct RemoteFilesTests {
+    @Test func staysInsideTheProject() throws {
+        let tmp = FileManager.default.temporaryDirectory.appending(path: "rf-\(UUID().uuidString)")
+        let root = tmp.appending(path: "proj")
+        try FileManager.default.createDirectory(at: root.appending(path: "src"), withIntermediateDirectories: true)
+        try "secret".write(to: tmp.appending(path: "outside.txt"), atomically: true, encoding: .utf8)
+        try "hello".write(to: root.appending(path: "src/a.txt"), atomically: true, encoding: .utf8)
+        try Data([0, 1, 2]).write(to: root.appending(path: "bin.dat"))
+        try FileManager.default.createSymbolicLink(at: root.appending(path: "escape"), withDestinationURL: tmp)
+        defer { try? FileManager.default.removeItem(at: tmp) }
+
+        #expect(RemoteFiles.read("src/a.txt", in: root.path).text == "hello")
+        #expect(RemoteFiles.read("../outside.txt", in: root.path).text == nil)
+        #expect(RemoteFiles.read("escape/outside.txt", in: root.path).text == nil)
+        #expect(RemoteFiles.read("/etc/hosts", in: root.path).text == nil || RemoteFiles.resolve("/etc/hosts", in: root.path)?.path.hasPrefix(root.resolvingSymlinksInPath().path) == true)
+        #expect(RemoteFiles.read("bin.dat", in: root.path).error != nil)
+        let listing = RemoteFiles.list("", in: root.path)
+        #expect(listing.entries.first?.name == "escape" || listing.entries.first?.name == "src")
+        #expect(listing.entries.contains { $0.name == "src" && $0.isDirectory })
+        #expect(RemoteFiles.list("..", in: root.path).error != nil)
+    }
+}

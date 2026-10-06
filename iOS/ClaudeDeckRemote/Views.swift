@@ -103,6 +103,10 @@ struct SessionListView: View {
                 Button { showSettings = true } label: { Image(systemName: "gearshape") }
             }
             ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink { ProjectFilesView() } label: { Image(systemName: "folder") }
+                    .disabled(store.connection != .connected || store.projects.isEmpty)
+            }
+            ToolbarItem(placement: .topBarTrailing) {
                 Button { showNewSession = true } label: { Image(systemName: "plus") }
                     .disabled(store.connection != .connected || store.projects.isEmpty)
             }
@@ -188,7 +192,15 @@ struct NewSessionView: View {
                 } footer: {
                     Text("Sent once Claude has started on the Mac.")
                 }
-                if let projectID, let past = store.pastConversations[projectID], !past.isEmpty {
+                if let projectID, let past = store.pastConversations[projectID], let latest = past.first {
+                    Section {
+                        Button {
+                            store.resumeConversation(latest.id, in: projectID)
+                            dismiss()
+                        } label: {
+                            Label("Continue the latest conversation", systemImage: "arrow.uturn.forward")
+                        }
+                    }
                     Section("Continue a past conversation") {
                         ForEach(past) { item in
                             Button {

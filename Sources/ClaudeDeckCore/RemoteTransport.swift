@@ -262,6 +262,8 @@ public final class RemoteServer: @unchecked Sendable {
     public var onPastConversations: ((_ projectID: UUID, _ reply: @escaping @Sendable ([RemotePastConversation]) -> Void) -> Void)?
     public var onResumeConversation: ((_ projectID: UUID, _ conversationID: String) -> UUID?)?
     public var onInterrupt: ((UUID) -> Void)?
+    /// `.listDirectory` / `.readFile`: answer with `.directory` / `.file` through the reply.
+    public var onFileRequest: ((_ request: RemoteMessage, _ reply: @escaping @Sendable (RemoteMessage) -> Void) -> Void)?
     public var onResumeSession: ((UUID) -> Void)?
     /// A watching remote wants the terminal at this grid (0 cols = release).
     public var onTerminalFit: ((UUID, Int, Int) -> Void)?
@@ -457,6 +459,9 @@ public final class RemoteServer: @unchecked Sendable {
                 }
             case .interrupt(let sessionID):
                 onInterrupt?(sessionID)
+            case .listDirectory, .readFile:
+                let channel = peer.channel
+                onFileRequest?(message) { [queue] answer in queue.async { channel.send(answer) } }
             case .stopSession(let sessionID):
                 onStopSession?(sessionID)
             case .resumeSession(let sessionID):
@@ -563,6 +568,8 @@ public final class RemoteHostConnection: @unchecked Sendable {
     public var onHistory: ((_ sessionID: UUID, _ page: ChatPage) -> Void)?
     public var onSessionStarted: ((UUID) -> Void)?
     public var onPastConversations: ((UUID, [RemotePastConversation]) -> Void)?
+    /// `.directory` / `.file` answers.
+    public var onFileReply: ((RemoteMessage) -> Void)?
 
     /// Per address: connect + pairing must finish within this.
     public var handshakeTimeout: TimeInterval = 10
@@ -671,6 +678,8 @@ public final class RemoteHostConnection: @unchecked Sendable {
                 self.onSessionStarted?(id)
             case .pastConversations(let projectID, let items) where authenticated:
                 self.onPastConversations?(projectID, items)
+            case .directory, .file:
+                if authenticated { self.onFileReply?(message) }
             case .refused(let reason):
                 if authenticated {
                     self.end(.refused(reason))

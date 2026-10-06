@@ -40,6 +40,10 @@ final class DebugHooks {
                 try? FileManager.default.removeItem(at: url)
                 store.startShell(in: project.id, command: command)
                 store.loadPastConversations(project.id)
+            } else if file == "files.txt", let target = try? String(contentsOf: url, encoding: .utf8), let project = store.projects.first {
+                try? FileManager.default.removeItem(at: url)
+                store.listDirectory(project.id, path: "")
+                store.readFile(project.id, path: target.trimmingCharacters(in: .whitespacesAndNewlines))
             } else if file.hasSuffix(".stop"), let id {
                 try? FileManager.default.removeItem(at: url)
                 store.stopSession(id)
@@ -58,7 +62,8 @@ final class DebugHooks {
             }
         }
         let push = PushRegistration.shared
-        var lines = ["connection: \(store.connection) path=\(store.path) projects=\(store.projects.map(\.name))", "terminals: \(store.terminalStates) usage=\(store.snapshot?.usage.map { "\($0.fiveHour ?? -1)/\($0.week ?? -1)" } ?? "-") past=\(store.pastConversations.values.map(\.count))",
+        var lines = ["connection: \(store.connection) path=\(store.path) projects=\(store.projects.map(\.name))", "files: dirs=\(store.directories.values.map { $0.entries.map(\.name) }) file=\(store.files.values.map { "\($0.size):\($0.text?.prefix(30) ?? "")|\($0.error ?? "")" })",
+                     "terminals: \(store.terminalStates) usage=\(store.snapshot?.usage.map { "\($0.fiveHour ?? -1)/\($0.week ?? -1)" } ?? "-") past=\(store.pastConversations.values.map(\.count))",
                      "lan: \(store.lanHosts.map(\.name)) via=\(store.connectedVia ?? "-") pairing=\(store.pairing?.addresses ?? [])",
                      "push: token=\(push.token?.count ?? 0) env=\(PushRegistration.environment) error=\(push.lastError ?? "-")"]
         for session in store.snapshot?.sessions ?? [] {

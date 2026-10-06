@@ -278,6 +278,26 @@ final class RemoteController {
                     model.terminals.type("\u{1b}", into: id)
                 }
             }
+            server.onFileRequest = { [weak self] request, reply in
+                MainActor.assumeIsolated {
+                    switch request {
+                    case .listDirectory(let projectID, let path):
+                        guard let root = self?.model?.deck.project(projectID)?.path else { return }
+                        Task.detached {
+                            let result = RemoteFiles.list(path, in: root)
+                            reply(.directory(projectID: projectID, path: path, entries: result.entries, error: result.error))
+                        }
+                    case .readFile(let projectID, let path):
+                        guard let root = self?.model?.deck.project(projectID)?.path else { return }
+                        Task.detached {
+                            let result = RemoteFiles.read(path, in: root)
+                            reply(.file(projectID: projectID, path: path, text: result.text, size: result.size, error: result.error))
+                        }
+                    default:
+                        break
+                    }
+                }
+            }
             server.onStopSession = { [weak self] id in
                 MainActor.assumeIsolated {
                     guard let model = self?.model, model.terminals.isRunning(id) else { return }

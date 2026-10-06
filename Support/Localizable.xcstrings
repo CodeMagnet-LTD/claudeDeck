@@ -1040,6 +1040,26 @@
         }
       }
     },
+    "Can't read this file": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu dosya okunamıyor"
+          }
+        }
+      }
+    },
+    "Can't read this folder": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu klasör okunamıyor"
+          }
+        }
+      }
+    },
     "Can't restart \"%@\"": {
       "localizations": {
         "tr": {
@@ -1743,6 +1763,16 @@
         }
       }
     },
+    "Continue the latest conversation": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son konuşmaya devam et"
+          }
+        }
+      }
+    },
     "Continue where you left off.": {
       "localizations": {
         "tr": {
@@ -2299,6 +2329,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Düzenleyici"
+          }
+        }
+      }
+    },
+    "Empty folder": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boş klasör"
           }
         }
       }
@@ -4093,6 +4133,16 @@
         }
       }
     },
+    "Not a text file": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Metin dosyası değil"
+          }
+        }
+      }
+    },
     "Not connected": {
       "localizations": {
         "tr": {
@@ -4569,6 +4619,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Diğer eşleştirme yolları (QR kod, bağlantı, iCloud Drive)"
+          }
+        }
+      }
+    },
+    "Outside the project": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proje dışında"
           }
         }
       }
@@ -7112,6 +7172,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Zaman Çizelgesi"
+          }
+        }
+      }
+    },
+    "Too large to show here": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Burada gösterilemeyecek kadar büyük"
           }
         }
       }
