@@ -19,8 +19,10 @@ enum StatusStyle {
         }
     }
 
+    /// Dark text on the light fills (yellow, green), white on the dark ones (red, blue): white on
+    /// green was unreadable in dark mode.
     static func pillText(for display: DisplayState) -> Color {
-        display.isIdle ? .black.opacity(0.8) : .white
+        display.isIdle || display.isRunning || display == .starting ? .black.opacity(0.8) : .white
     }
 
     static func color(for display: DisplayState) -> Color {

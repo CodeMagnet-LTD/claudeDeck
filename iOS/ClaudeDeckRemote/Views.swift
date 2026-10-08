@@ -285,7 +285,7 @@ struct StatusPill: View {
     var body: some View {
         Text(SessionStyle.label(state))
             .font(.caption2.weight(.semibold))
-            .foregroundStyle(state == .idle ? Color.black.opacity(0.8) : .white)
+            .foregroundStyle(state == .idle || state == .running || state == .starting ? Color.black.opacity(0.8) : .white)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(SessionStyle.color(state), in: Capsule())

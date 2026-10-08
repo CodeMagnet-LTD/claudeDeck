@@ -108,6 +108,9 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        // Rows moving between sections (Active ↔ Inactive) land at once: an animated move while
+        // row heights also change left a stale copy drawn over the next row.
+        .transaction(value: layout) { $0.animation = nil }
     }
 
     private var filterBar: some View {
