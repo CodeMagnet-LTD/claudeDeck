@@ -16,8 +16,12 @@ public struct ChatEntry: Codable, Sendable, Equatable, Identifiable {
     public var result: String?
     public var isError: Bool
     public var date: Date?
+    /// AskUserQuestion: what Claude asked, and once answered, the answers by question text.
+    public var questions: [ChatQuestion]?
+    public var answers: [String: String]?
 
-    public init(id: String, kind: Kind, text: String, toolName: String? = nil, result: String? = nil, isError: Bool = false, date: Date? = nil) {
+    public init(id: String, kind: Kind, text: String, toolName: String? = nil, result: String? = nil, isError: Bool = false, date: Date? = nil,
+                questions: [ChatQuestion]? = nil, answers: [String: String]? = nil) {
         self.id = id
         self.kind = kind
         self.text = text
@@ -25,6 +29,87 @@ public struct ChatEntry: Codable, Sendable, Equatable, Identifiable {
         self.result = result
         self.isError = isError
         self.date = date
+        self.questions = questions
+        self.answers = answers
+    }
+}
+
+/// One question of an AskUserQuestion call (the terminal shows each as a tab).
+public struct ChatQuestion: Codable, Sendable, Equatable {
+    public struct Option: Codable, Sendable, Equatable {
+        public var label: String
+        public var description: String?
+        public init(label: String, description: String? = nil) {
+            self.label = label
+            self.description = description
+        }
+    }
+
+    public var header: String?
+    public var question: String
+    public var multiSelect: Bool
+    public var options: [Option]
+
+    public init(header: String? = nil, question: String, multiSelect: Bool = false, options: [Option]) {
+        self.header = header
+        self.question = question
+        self.multiSelect = multiSelect
+        self.options = options
+    }
+
+    static func parse(_ input: [String: Any]) -> [ChatQuestion]? {
+        guard let raw = input["questions"] as? [[String: Any]] else { return nil }
+        let questions = raw.compactMap { q -> ChatQuestion? in
+            guard let text = q["question"] as? String else { return nil }
+            let options = (q["options"] as? [[String: Any]] ?? []).compactMap { o in
+                (o["label"] as? String).map { Option(label: $0, description: o["description"] as? String) }
+            }
+            return ChatQuestion(header: q["header"] as? String, question: text, multiSelect: q["multiSelect"] as? Bool ?? false, options: options)
+        }
+        return questions.isEmpty ? nil : questions
+    }
+}
+
+/// The phone's answer to one question: chosen option indexes, or (single choice) its own text.
+public struct QuestionAnswer: Codable, Sendable, Equatable {
+    public var options: [Int]
+    public var text: String?
+    public init(options: [Int] = [], text: String? = nil) {
+        self.options = options
+        self.text = text
+    }
+}
+
+/// The keys that answer an AskUserQuestion prompt in the terminal, typed one chunk at a time with
+/// a short pause (sent at once, the prompt drops some). Verified against Claude Code 2.1:
+/// - one single-choice question: its number answers it;
+/// - otherwise each question is a tab, then a Submit tab: a single choice's number answers and
+///   moves on; a multiple choice's numbers toggle and Tab moves on; "1" on Submit sends.
+/// - own text: the number of "Type something", the text, Return (it moves on too).
+public enum QuestionKeys {
+    public static func keys(for questions: [ChatQuestion], answers: [QuestionAnswer]) -> [String]? {
+        guard !questions.isEmpty, answers.count == questions.count else { return nil }
+        let tabbed = questions.count > 1 || questions.contains(where: \.multiSelect)
+        var keys: [String] = []
+        for (question, answer) in zip(questions, answers) {
+            let count = question.options.count
+            // The prompt numbers options 1-9; "Type something" comes right after them.
+            guard count > 0, count < 9, answer.options.allSatisfy({ (0..<count).contains($0) }) else { return nil }
+            if question.multiSelect {
+                guard !answer.options.isEmpty, answer.text == nil else { return nil }
+                keys += Set(answer.options).sorted().map { String($0 + 1) }
+                keys.append("\t")
+            } else if let text = answer.text {
+                let line = text.split(whereSeparator: \.isNewline).joined(separator: " ").trimmingCharacters(in: .whitespaces)
+                guard answer.options.isEmpty, !line.isEmpty else { return nil }
+                keys += [String(count + 1), line, "\r"]
+            } else {
+                guard answer.options.count == 1 else { return nil }
+                keys.append(String(answer.options[0] + 1))
+            }
+        }
+        if tabbed { keys.append("1") }
+        return keys
     }
 }
 
@@ -95,6 +180,9 @@ public enum ConversationLog {
                             guard let toolID = block["tool_use_id"] as? String, let at = toolIndex[toolID] else { continue }
                             entries[at].result = resultText(block["content"])
                             entries[at].isError = block["is_error"] as? Bool ?? false
+                            if entries[at].questions != nil {
+                                entries[at].answers = (object["toolUseResult"] as? [String: Any])?["answers"] as? [String: String]
+                            }
                         default:
                             break
                         }
@@ -111,7 +199,9 @@ public enum ConversationLog {
                         let name = block["name"] as? String ?? "Tool"
                         let id = block["id"] as? String ?? "\(uuid)#\(index)"
                         toolIndex[id] = entries.count
-                        entries.append(ChatEntry(id: id, kind: .tool, text: summary(tool: name, input: block["input"] as? [String: Any] ?? [:]), toolName: name, date: date))
+                        let input = block["input"] as? [String: Any] ?? [:]
+                        entries.append(ChatEntry(id: id, kind: .tool, text: summary(tool: name, input: input), toolName: name, date: date,
+                                                 questions: name == "AskUserQuestion" ? ChatQuestion.parse(input) : nil))
                     default:
                         break // thinking, server tools
                     }
@@ -185,6 +275,7 @@ public enum ConversationLog {
         case "WebSearch": string("query")
         case "Agent", "Task": string("description")
         case "TodoWrite": (input["todos"] as? [Any]).map { "\($0.count)" }
+        case "AskUserQuestion": ChatQuestion.parse(input)?.first?.question
         default: input.values.lazy.compactMap { ($0 as? String)?.nilIfEmpty }.first
         }
         let line = (value ?? "").split(separator: "\n").first.map(String.init) ?? ""

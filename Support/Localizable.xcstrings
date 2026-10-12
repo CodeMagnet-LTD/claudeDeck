@@ -1,6 +1,76 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Choose one or more": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir veya daha fazlasını seçin"
+          }
+        }
+      }
+    },
+    "Hide Hidden Files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gizli Dosyaları Gizle"
+          }
+        }
+      }
+    },
+    "Other…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer…"
+          }
+        }
+      }
+    },
+    "Send Answers": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cevapları Gönder"
+          }
+        }
+      }
+    },
+    "Show Hidden Files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gizli Dosyaları Göster"
+          }
+        }
+      }
+    },
+    "The other Mac didn't answer. Update ClaudeDeck on it, or answer in the terminal.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac yanıt vermedi. Oradaki ClaudeDeck'i güncelleyin ya da terminalden cevaplayın."
+          }
+        }
+      }
+    },
+    "Your answer": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cevabınız"
+          }
+        }
+      }
+    },
     "\"%@\" in ~/.claude/settings.json has an unexpected format; left untouched.": {
       "localizations": {
         "tr": {

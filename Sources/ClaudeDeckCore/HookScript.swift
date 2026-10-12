@@ -7,11 +7,11 @@ import Foundation
 /// and atomically writes `~/.claude/deck/sessions/<session_id>.json`.
 /// `$PPID` is the `claude` process itself (verified), so the app can check liveness.
 public enum HookScript {
-    public static let version = 4
+    public static let version = 5
 
     public static let source = #"""
 #!/bin/sh
-# ClaudeDeck status hook v4 — managed by ClaudeDeck.app, do not edit.
+# ClaudeDeck status hook v5 — managed by ClaudeDeck.app, do not edit.
 [ -n "$CLAUDEDECK_TERMINAL_ID" ] || { cat >/dev/null; exit 0; }
 JQ=/usr/bin/jq
 [ -x "$JQ" ] || JQ=$(command -v jq) || exit 0
@@ -34,7 +34,8 @@ def tooldetail: (.tool_input // {}) as $t
       elif $t.pattern then ": " + ($t.pattern | tostring)
       elif $t.description then ": " + ($t.description | tostring)
       else "" end);
-def question: (.tool_input.questions[0].question // .tool_input.question // "Claude is asking a question");
+def question: (.tool_input.questions[0].question // .tool_input.question // "Claude is asking a question")
+  + ((.tool_input.questions // []) | length | if . > 1 then " (+\(. - 1))" else "" end);
 def waiting: $prev != null and ($prev.state == "needsPermission" or $prev.state == "needsAnswer");
 def sig: ((.tool_name // "") + ":" + ((.tool_input // {}) | tojson)) | .[0:300];
 # While a prompt is open, tool events of *other* (parallel) tools must not hide it.
@@ -54,7 +55,9 @@ def othertool: waiting and (
      (if .tool_name == "AskUserQuestion" then {state: "needsAnswer", detail: (question | clip(200))}
       else {state: "needsPermission", detail: (tooldetail | clip(200))} end)
    elif $e == "Notification" then
-     (if .notification_type == "permission_prompt" then {state: "needsPermission"}
+     # A question (AskUserQuestion) also sends permission_prompt: it stays a question.
+     (if .notification_type == "permission_prompt" then
+        (if $prev != null and $prev.state == "needsAnswer" then {state: "needsAnswer"} else {state: "needsPermission"} end)
       elif .notification_type == "elicitation_dialog" or .notification_type == "agent_needs_input" then {state: "needsAnswer"}
       elif .notification_type == "idle_prompt" then (if waiting then null else {state: "idle"} end)
       else null end)
@@ -72,8 +75,13 @@ def othertool: waiting and (
 | if $s == null then empty else
   { session_id, terminal_id: $tid, pid: $pid, cwd, transcript_path,
     state: $s.state, detail: $s.detail,
-    tool_name: (.tool_name // null), notification_type: (.notification_type // null),
-    tool_use_id: (if $e == "Notification" then $prev.tool_use_id else .tool_use_id end),
+    tool_name: (if $e == "Notification" then $prev.tool_name else (.tool_name // null) end),
+    notification_type: (.notification_type // null),
+    # PermissionRequest has no tool_use_id: the PreToolUse of the same call had it.
+    tool_use_id: (if $e == "Notification" then $prev.tool_use_id
+                  elif .tool_use_id != null then .tool_use_id
+                  elif $prev != null and .tool_name != null and $prev.tool_sig == sig then $prev.tool_use_id
+                  else null end),
     tool_sig: (if $e == "Notification" then $prev.tool_sig elif .tool_name then sig else null end),
   } + (if $e == "Notification" and $prev != null and $prev.state == $s.state
         then {event: $prev.event, source: $prev.source, updated_at: $prev.updated_at}

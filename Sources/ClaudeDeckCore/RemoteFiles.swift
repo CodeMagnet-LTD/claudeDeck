@@ -17,10 +17,11 @@ public enum RemoteFiles {
     public static func list(_ relative: String, in root: String) -> RemoteMessage.DirectoryResult {
         guard let url = resolve(relative, in: root) else { return ([], String(localized: "Outside the project")) }
         let keys: [URLResourceKey] = [.isDirectoryKey, .fileSizeKey]
-        guard let items = try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles]) else {
+        guard let items = try? FileManager.default.contentsOfDirectory(at: url, includingPropertiesForKeys: keys, options: []) else {
             return ([], String(localized: "Can't read this folder"))
         }
-        let entries = items.compactMap { item -> RemoteFileEntry? in
+        // Dot-files are sent too (the phone hides them unless asked); .git and .DS_Store never.
+        let entries = items.filter { $0.lastPathComponent != ".git" && $0.lastPathComponent != ".DS_Store" }.compactMap { item -> RemoteFileEntry? in
             let values = try? item.resourceValues(forKeys: Set(keys))
             return RemoteFileEntry(name: item.lastPathComponent, isDirectory: values?.isDirectory ?? false, size: values?.fileSize ?? 0)
         }

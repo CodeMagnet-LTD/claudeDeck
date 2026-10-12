@@ -104,6 +104,26 @@ import Testing
         #expect(s.state == .running)
     }
 
+    /// What Claude Code sends for AskUserQuestion: PreToolUse, PermissionRequest (no tool_use_id),
+    /// then a permission_prompt notification that must not turn the question into a permission.
+    @Test func questionStaysAQuestion() throws {
+        let input = #""tool_name":"AskUserQuestion","tool_input":{"questions":[{"question":"Which color?"},{"question":"Which toppings?"}]}"#
+        let pre = try #require(try run(#"{"session_id":"s1","hook_event_name":"PreToolUse","tool_use_id":"Q1",\#(input)}"#))
+        #expect(pre.state == .needsAnswer)
+        #expect(pre.detail == "Which color? (+1)")
+        let request = try #require(try run(#"{"session_id":"s1","hook_event_name":"PermissionRequest",\#(input)}"#))
+        #expect(request.state == .needsAnswer)
+        #expect(request.toolUseID == "Q1")
+        Thread.sleep(forTimeInterval: 0.05)
+        let s = try #require(try run(#"{"session_id":"s1","hook_event_name":"Notification","notification_type":"permission_prompt","message":"Claude needs your permission"}"#))
+        #expect(s.state == .needsAnswer)
+        #expect(s.detail == "Which color? (+1)")
+        #expect(s.toolName == "AskUserQuestion")
+        #expect(s.toolUseID == "Q1")
+        // Same prompt, same stamp.
+        #expect(s.updatedAt == request.updatedAt)
+    }
+
     @Test func idlePromptKeepsTheRealEvent() throws {
         try run(#"{"session_id":"s1","hook_event_name":"SessionStart","source":"resume"}"#)
         let s = try #require(try run(#"{"session_id":"s1","hook_event_name":"Notification","notification_type":"idle_prompt","message":"waiting"}"#))

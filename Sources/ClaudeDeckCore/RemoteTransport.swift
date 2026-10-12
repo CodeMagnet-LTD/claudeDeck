@@ -205,6 +205,8 @@ public final class RemoteServer: @unchecked Sendable {
     public var onPeersChanged: (([String]) -> Void)?
     /// A remote answered a prompt; return whether the keystroke was sent.
     public var onPermission: ((_ sessionID: UUID, _ stamp: Double, _ approve: Bool) -> Bool)?
+    /// A remote answered a question; reply whether the keys are being typed.
+    public var onAnswerQuestion: ((_ sessionID: UUID, _ toolUseID: String, _ answers: [QuestionAnswer], _ reply: @escaping @Sendable (Bool) -> Void) -> Void)?
     /// The latest snapshot; setting a different one sends it to every remote.
     public var snapshot: RemoteSnapshot? {
         didSet {
@@ -419,6 +421,11 @@ public final class RemoteServer: @unchecked Sendable {
             case .permission(let sessionID, let stamp, let approve):
                 let applied = onPermission?(sessionID, stamp, approve) ?? false
                 peer.channel.send(.permissionResult(sessionID: sessionID, approve: approve, applied: applied))
+            case .answerQuestion(let sessionID, let toolUseID, let answers):
+                let channel = peer.channel
+                onAnswerQuestion?(sessionID, toolUseID, answers) { [queue] applied in
+                    queue.async { channel.send(.permissionResult(sessionID: sessionID, approve: true, applied: applied)) }
+                }
             case .terminalOpen(let sessionID):
                 let wasWatched = watchedSessions
                 peers[id]?.watching.insert(sessionID)

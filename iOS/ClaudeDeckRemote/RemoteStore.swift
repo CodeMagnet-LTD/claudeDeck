@@ -296,7 +296,7 @@ final class RemoteStore {
             if session.state == .idle, session.unseen { _ = send(.markSeen(sessionID: id)) }
             if old?.session(id) != session { requestNewer(id) }
         }
-        answering = answering.filter { new.session($0)?.permissionStamp != nil }
+        answering = answering.filter { new.session($0)?.permissionStamp != nil || new.session($0)?.state == .needsAnswer }
         for session in fresh { LocalAlerts.post(session, hostName: new.hostName) }
     }
 
@@ -307,6 +307,21 @@ final class RemoteStore {
         guard let stamp, let hostConnection, hostConnection.sendPermission(sessionID: id, stamp: stamp, approve: approve) else { return false }
         answering.insert(id)
         answerError = nil
+        return true
+    }
+
+    /// Answers Claude's question (one answer per question); the Mac types it into the prompt.
+    @discardableResult
+    func answerQuestion(_ id: UUID, toolUseID: String, answers: [QuestionAnswer]) -> Bool {
+        guard send(.answerQuestion(sessionID: id, toolUseID: toolUseID, answers: answers)) else { return false }
+        answering.insert(id)
+        answerError = nil
+        // A Mac without question support never replies.
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(10))
+            guard let self, self.answering.remove(id) != nil else { return }
+            self.answerError = String(localized: "The other Mac didn't answer. Update ClaudeDeck on it, or answer in the terminal.")
+        }
         return true
     }
 

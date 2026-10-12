@@ -226,6 +226,12 @@ final class RemoteController {
                     return applied
                 }
             }
+            server.onAnswerQuestion = { [weak self] id, toolUseID, answers, reply in
+                MainActor.assumeIsolated {
+                    guard let self else { reply(false); return }
+                    self.answerQuestion(id, toolUseID: toolUseID, answers: answers, reply: reply)
+                }
+            }
             server.onTerminalOpen = { [weak self] id in
                 MainActor.assumeIsolated { self?.terminalStart(id) }
             }
@@ -556,6 +562,37 @@ final class RemoteController {
             let entries = await Task.detached { ConversationLog.entries(of: URL(fileURLWithPath: path)) }.value
             self?.historyCache[id] = (path, size, entries)
             reply(ConversationLog.page(entries, before: before, after: after, limit: limit))
+        }
+    }
+
+    /// Question prompts being answered from a phone (keys still going in), by tool call.
+    @ObservationIgnored private var answeringQuestions: Set<String> = []
+
+    /// Answers the AskUserQuestion prompt on screen by typing what the user would. Only for the
+    /// call the hook says is waiting, read back from the transcript (the keys depend on its shape).
+    private func answerQuestion(_ id: UUID, toolUseID: String, answers: [QuestionAnswer], reply: @escaping @Sendable (Bool) -> Void) {
+        guard let model, model.deck.session(id)?.kind == .claude, model.terminals.isRunning(id),
+              model.status(of: id).display == .activity(.needsAnswer),
+              let hook = model.hookStatuses[id], hook.toolUseID == nil || hook.toolUseID == toolUseID,
+              !answeringQuestions.contains(toolUseID)
+        else { reply(false); return }
+        history(id, before: nil, after: nil, limit: 40) { [weak self] page in
+            Task { @MainActor in
+                // The latest question, still unanswered, is the one the phone answered.
+                guard let self, let entry = page?.entries.last(where: { $0.questions != nil }), entry.id == toolUseID,
+                      entry.result == nil, let questions = entry.questions,
+                      let keys = QuestionKeys.keys(for: questions, answers: answers),
+                      self.model?.status(of: id).display == .activity(.needsAnswer),
+                      self.answeringQuestions.insert(toolUseID).inserted
+                else { reply(false); return }
+                reply(true)
+                for key in keys {
+                    guard let model = self.model, model.terminals.isRunning(id) else { break }
+                    model.terminals.type(key, into: id)
+                    try? await Task.sleep(for: .milliseconds(300))
+                }
+                self.answeringQuestions.remove(toolUseID)
+            }
         }
     }
 

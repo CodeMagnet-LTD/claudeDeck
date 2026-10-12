@@ -17,10 +17,12 @@ struct DirectoryView: View {
     let projectID: UUID
     let path: String
     let title: String
+    @AppStorage("files.showHidden") private var showHidden = false
 
     var body: some View {
         let state = store.directories[RemoteStore.fileKey(projectID, path)]
-        List(state?.entries ?? []) { entry in
+        let entries = (state?.entries ?? []).filter { showHidden || !$0.isHidden }
+        List(entries) { entry in
             let child = path.isEmpty ? entry.name : path + "/" + entry.name
             if entry.isDirectory {
                 NavigationLink { DirectoryView(projectID: projectID, path: child, title: entry.name) } label: {
@@ -40,10 +42,16 @@ struct DirectoryView: View {
         .overlay {
             if state == nil { ProgressView() }
             else if let error = state?.error { Text(error).foregroundStyle(.secondary) }
-            else if state?.entries.isEmpty == true { Text("Empty folder").foregroundStyle(.secondary) }
+            else if entries.isEmpty { Text("Empty folder").foregroundStyle(.secondary) }
         }
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { showHidden.toggle() } label: { Image(systemName: showHidden ? "eye" : "eye.slash") }
+                    .accessibilityLabel(showHidden ? "Hide Hidden Files" : "Show Hidden Files")
+            }
+        }
         .refreshable { store.listDirectory(projectID, path: path) }
         .onAppear { store.listDirectory(projectID, path: path) }
     }

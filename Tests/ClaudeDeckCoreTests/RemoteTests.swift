@@ -564,6 +564,43 @@ import Testing
         let gone = ConversationLog.page(entries, before: nil, after: "zz", limit: 3)
         #expect(gone.reset && gone.entries.map(\.id) == ["e7", "e8", "e9"])
     }
+
+    /// The shape Claude Code writes for AskUserQuestion: the call, then its answers in `toolUseResult`.
+    @Test func parsesQuestionsAndAnswers() throws {
+        let jsonl = """
+        {"type":"assistant","uuid":"a1","message":{"content":[{"type":"tool_use","id":"q1","name":"AskUserQuestion","input":{"questions":[{"question":"Which color?","header":"Color","multiSelect":false,"options":[{"label":"Red","description":"Warm"},{"label":"Blue"}]},{"question":"Which toppings?","header":"Toppings","multiSelect":true,"options":[{"label":"Cheese"},{"label":"Olives"},{"label":"Basil"}]}]}}]}}
+        {"type":"assistant","uuid":"a2","message":{"content":[{"type":"tool_use","id":"q2","name":"AskUserQuestion","input":{"questions":[{"question":"Tea?","options":[{"label":"Yes"},{"label":"No"}]}]}}]}}
+        {"type":"user","uuid":"u1","toolUseResult":{"questions":[],"answers":{"Tea?":"Yes"}},"message":{"content":[{"type":"tool_result","tool_use_id":"q2","content":"Your questions have been answered"}]}}
+        """
+        let entries = ConversationLog.entries(fromJSONL: jsonl)
+        let open = try #require(entries.first)
+        #expect(open.text == "Which color?")
+        #expect(open.questions?.count == 2 && open.result == nil && open.answers == nil)
+        #expect(open.questions?[0].header == "Color" && open.questions?[0].options[0] == ChatQuestion.Option(label: "Red", description: "Warm"))
+        #expect(open.questions?[1].multiSelect == true && open.questions?[1].options.count == 3)
+        #expect(entries[1].answers == ["Tea?": "Yes"] && entries[1].result != nil)
+        // An entry from an older host (no questions) still decodes.
+        let old = try JSONDecoder().decode(ChatEntry.self, from: Data(#"{"id":"x","kind":"tool","text":"t","isError":false}"#.utf8))
+        #expect(old.questions == nil)
+    }
+
+    @Test func questionKeys() {
+        let color = ChatQuestion(question: "Color?", options: [.init(label: "Red"), .init(label: "Green"), .init(label: "Blue")])
+        let toppings = ChatQuestion(question: "Toppings?", multiSelect: true, options: [.init(label: "Cheese"), .init(label: "Olives"), .init(label: "Basil")])
+        // One single-choice question: the number answers it, no Submit tab.
+        #expect(QuestionKeys.keys(for: [color], answers: [.init(options: [1])]) == ["2"])
+        #expect(QuestionKeys.keys(for: [color], answers: [.init(text: "Teal\nish")]) == ["4", "Teal ish", "\r"])
+        // Tabs: numbers answer / toggle, Tab leaves a multiple choice, "1" submits.
+        #expect(QuestionKeys.keys(for: [color, toppings], answers: [.init(options: [1]), .init(options: [2, 0])]) == ["2", "1", "3", "\t", "1"])
+        #expect(QuestionKeys.keys(for: [toppings], answers: [.init(options: [1])]) == ["2", "\t", "1"])
+        #expect(QuestionKeys.keys(for: [color, color], answers: [.init(text: "Ist"), .init(options: [2])]) == ["4", "Ist", "\r", "3", "1"])
+        // Incomplete or out of range: nothing typed.
+        #expect(QuestionKeys.keys(for: [color, toppings], answers: [.init(options: [1])]) == nil)
+        #expect(QuestionKeys.keys(for: [color], answers: [.init(options: [3])]) == nil)
+        #expect(QuestionKeys.keys(for: [color], answers: [.init(options: [0, 1])]) == nil)
+        #expect(QuestionKeys.keys(for: [toppings], answers: [.init()]) == nil)
+        #expect(QuestionKeys.keys(for: [color], answers: [.init(text: "  ")]) == nil)
+    }
 }
 
 @Suite(.serialized) struct RemoteHistoryLoopbackTests {
@@ -617,6 +654,8 @@ import Testing
         try "secret".write(to: tmp.appending(path: "outside.txt"), atomically: true, encoding: .utf8)
         try "hello".write(to: root.appending(path: "src/a.txt"), atomically: true, encoding: .utf8)
         try Data([0, 1, 2]).write(to: root.appending(path: "bin.dat"))
+        try "x".write(to: root.appending(path: ".env"), atomically: true, encoding: .utf8)
+        try FileManager.default.createDirectory(at: root.appending(path: ".git"), withIntermediateDirectories: true)
         try FileManager.default.createSymbolicLink(at: root.appending(path: "escape"), withDestinationURL: tmp)
         defer { try? FileManager.default.removeItem(at: tmp) }
 
@@ -628,6 +667,8 @@ import Testing
         let listing = RemoteFiles.list("", in: root.path)
         #expect(listing.entries.first?.name == "escape" || listing.entries.first?.name == "src")
         #expect(listing.entries.contains { $0.name == "src" && $0.isDirectory })
+        #expect(listing.entries.contains { $0.name == ".env" && $0.isHidden })
+        #expect(!listing.entries.contains { $0.name == ".git" })
         #expect(RemoteFiles.list("..", in: root.path).error != nil)
     }
 }

@@ -84,6 +84,9 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case permission(sessionID: UUID, stamp: Double, approve: Bool)
     /// Host → remote: whether the keystroke was sent.
     case permissionResult(sessionID: UUID, approve: Bool, applied: Bool)
+    /// Remote → host: answer the AskUserQuestion prompt of tool call `toolUseID` (one answer per
+    /// question); the host types the keys. Answered with `permissionResult(approve: true)`.
+    case answerQuestion(sessionID: UUID, toolUseID: String, answers: [QuestionAnswer])
     /// Remote → host: start watching a session's terminal.
     case terminalOpen(sessionID: UUID)
     /// Remote → host: stop watching.
@@ -194,6 +197,8 @@ public struct RemoteFileEntry: Codable, Sendable, Equatable, Identifiable {
     public var isDirectory: Bool
     public var size: Int
     public var id: String { name }
+    /// Dot-file hidden by default on the phone (except the useful ones, as on the Mac).
+    public var isHidden: Bool { name.hasPrefix(".") && name != ".claude" && name != ".github" }
     public init(name: String, isDirectory: Bool, size: Int) {
         self.name = name
         self.isDirectory = isDirectory
