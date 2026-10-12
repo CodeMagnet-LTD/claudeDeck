@@ -6,6 +6,21 @@
     <description>ClaudeDeck updates</description>
     <language>en</language>
     <item>
+      <title>ClaudeDeck 0.4.1</title>
+      <pubDate>Mon, 12 Oct 2026 22:17:56 GMT</pubDate>
+      <sparkle:version>8</sparkle:version>
+      <sparkle:shortVersionString>0.4.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/CodeMagnet-LTD/claudeDeck/releases/tag/v0.4.1</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p>ClaudeDeck 0.4.1 makes pairing links work when opened from outside the app.</p>
+<h3>Fixes</h3>
+<ul>
+<li><b>Opening a <code>claudedeck://pair</code> link pairs this Mac.</b> A link opened from a browser, Messages or Notes used to only bring ClaudeDeck to the front; pairing worked only by pasting the link in Settings › Remote. ClaudeDeck now shows the other Mac's name and addresses and asks first, since the link replaces the current pairing. It then turns on showing another Mac's sessions if needed and connects. A damaged link, or this Mac's own link, says so instead of doing nothing.</li>
+</ul>
+<p>Installed 0.2.x or later? This update arrives through <b>ClaudeDeck › Check for Updates…</b> (or on its own within a day).</p>]]></description>
+      <enclosure url="https://github.com/CodeMagnet-LTD/claudeDeck/releases/download/v0.4.1/ClaudeDeck-0.4.1.dmg" sparkle:edSignature="0inVGUcH/eBFQSxNIhG6G+2Cjt8U/Yo9AmhfHVGENfzX/CjDK6SmVogsu4n7buG8ZkvwtA671D7qWGQgYZQ4Bg==" length="15776262" type="application/octet-stream"/>
+    </item>
+    <item>
       <title>ClaudeDeck 0.4.0</title>
       <pubDate>Mon, 12 Oct 2026 21:19:03 GMT</pubDate>
       <sparkle:version>7</sparkle:version>
