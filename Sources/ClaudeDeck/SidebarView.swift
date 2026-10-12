@@ -67,7 +67,7 @@ struct SidebarView: View {
             Section {
                 ForEach(layout.active, id: \.self) { SidebarItemView(item: $0, layout: layout) }
                 if layout.active.isEmpty {
-                    Text(filter == .waiting ? "Nothing is waiting for you" : "No running sessions")
+                    Text(layout.filter == .waiting ? "Nothing is waiting for you" : "No running sessions")
                         .font(.callout).foregroundStyle(.tertiary)
                 }
             } header: {
@@ -92,11 +92,11 @@ struct SidebarView: View {
                 }
             }
             if model.deck.settings.remoteClient {
-                RemoteSidebarSection(filter: filter)
+                RemoteSidebarSection(filter: layout.filter)
             }
             // Inactive: everything else in its saved order, collapsible like an accordion.
             // Hidden while a filter is on (nothing there is waiting or working).
-            if filter == .all {
+            if layout.filter == .all {
                 Section(isExpanded: $inactiveExpanded) {
                     ForEach(layout.inactive, id: \.self) { SidebarItemView(item: $0, layout: layout) }
                 } header: {
@@ -108,6 +108,10 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        // A filter switch adds or drops whole sections and most rows at once; diffing that inside
+        // the NSTableView jumbled the rows and could raise a constraint exception during layout.
+        // A fresh list per filter sidesteps it.
+        .id(layout.filter)
         // Rows moving between sections (Active ↔ Inactive) land at once: an animated move while
         // row heights also change left a stale copy drawn over the next row.
         .transaction(value: layout) { $0.animation = nil }

@@ -107,6 +107,9 @@ public struct SidebarLayout: Sendable, Equatable {
     public var sessionsInProject: [UUID: [UUID]] = [:]
     /// Projects shown as one row (their only session). Based on all sessions, not the filtered ones.
     public var compact: Set<UUID> = []
+    /// The filter this layout was built for; the view takes it from here so the filter and the
+    /// rows it selects always change together.
+    public var filter: SidebarFilter = .all
 
     public init() {}
 
@@ -117,6 +120,7 @@ public struct SidebarLayout: Sendable, Equatable {
     ///     never reshuffles the unfiltered order).
     public static func build(groups: [UUID], projects: [SidebarProject], filter: SidebarFilter, order: inout ActivationOrder) -> SidebarLayout {
         var layout = SidebarLayout()
+        layout.filter = filter
         let knownGroups = Set(groups)
         func visibleSessions(_ p: SidebarProject) -> [UUID] { p.sessions.filter(filter.matches).map(\.id) }
         func isShown(_ p: SidebarProject) -> Bool { filter == .all || !visibleSessions(p).isEmpty }
