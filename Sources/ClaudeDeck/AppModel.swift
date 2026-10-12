@@ -483,16 +483,27 @@ final class AppModel {
     /// Types the "continue" message (Settings › Sessions) into a running Claude session.
     func sendContinueMessage(_ id: UUID) async {
         guard terminals.isRunning(id) else { return }
+        // Wait for this process's SessionStart: typed earlier, the text can land before the input exists.
+        let launched = launchedAt[id] ?? .distantPast
+        let readyBy = ContinuousClock.now + .seconds(30)
+        while ContinuousClock.now < readyBy, terminals.isRunning(id),
+              !(hookStatuses[id].map { $0.updatedAt >= launched } ?? false) {
+            try? await Task.sleep(for: .milliseconds(500))
+        }
+        guard terminals.isRunning(id) else { return }
         let custom = deck.settings.continueMessage.trimmingCharacters(in: .whitespacesAndNewlines)
         let message = custom.isEmpty ? String(localized: "Continue where you left off.") : custom
         let sentAt = Date()
         terminals.type(message + "\r", into: id)
-        // While Claude is still starting up (MCP servers connecting) the Enter can get lost and
-        // the message just sits in the input. No UserPromptSubmit yet → press Enter again.
-        for _ in 0..<3 {
+        // With many sessions resuming at once, Claude can take a long while connecting MCP servers;
+        // an Enter pressed meanwhile is lost and the message just sits in the input. Until a
+        // UserPromptSubmit shows up, press Enter again — for up to ~45 s.
+        for _ in 0..<15 {
             try? await Task.sleep(for: .seconds(3))
             guard terminals.isRunning(id) else { return }
             if let hook = hookStatuses[id], hook.updatedAt > sentAt, hook.event == "UserPromptSubmit" || hook.state != .idle { return }
+            // A prompt on screen: Enter would pick its first option.
+            if status(of: id).display.isBlocked { return }
             terminals.type("\r", into: id)
         }
     }
