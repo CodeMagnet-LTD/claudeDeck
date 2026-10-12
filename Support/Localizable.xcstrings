@@ -51,12 +51,62 @@
         }
       }
     },
+    "Show the sessions of “%@”?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” oturumları gösterilsin mi?"
+          }
+        }
+      }
+    },
+    "The link is incomplete or damaged. Copy it again on the hosting Mac (Settings › Remote).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link eksik ya da bozuk. Oturumları paylaşan Mac'te (Ayarlar › Remote) yeniden kopyalayın."
+          }
+        }
+      }
+    },
     "The other Mac didn't answer. Update ClaudeDeck on it, or answer in the terminal.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
             "value": "Diğer Mac yanıt vermedi. Oradaki ClaudeDeck'i güncelleyin ya da terminalden cevaplayın."
+          }
+        }
+      }
+    },
+    "This Mac will connect to %@ and show that Mac's sessions in the sidebar. Only continue if you copied this link from your own Mac.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Mac %@ adresine bağlanacak ve o Mac'in oturumlarını kenar çubuğunda gösterecek. Yalnızca bu linki kendi Mac'inizden kopyaladıysanız devam edin."
+          }
+        }
+      }
+    },
+    "This is the link of this Mac. Open it on the other Mac.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu, bu Mac'in kendi linki. Diğer Mac'te açın."
+          }
+        }
+      }
+    },
+    "This pairing link can't be used": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu eşleştirme linki kullanılamıyor"
           }
         }
       }

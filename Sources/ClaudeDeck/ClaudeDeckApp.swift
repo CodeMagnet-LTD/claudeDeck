@@ -106,9 +106,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         widget.publishQuit()
     }
 
-    /// `claudedeck://session/<uuid>` from the desktop widget.
+    /// `claudedeck://session/<uuid>` from the desktop widget, `claudedeck://pair?…` from a host Mac.
     func application(_ application: NSApplication, open urls: [URL]) {
-        for url in urls { WidgetBridge.handle(url, model: model) }
+        for url in urls {
+            if url.host() == "pair" { model.remote.confirmPairing(link: url.absoluteString) } else { WidgetBridge.handle(url, model: model) }
+        }
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }

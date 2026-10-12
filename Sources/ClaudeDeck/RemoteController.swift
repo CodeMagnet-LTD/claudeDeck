@@ -834,6 +834,33 @@ final class RemoteController {
         return true
     }
 
+    /// A pairing link opened from outside the app (browser, Messages…): asks first, since it
+    /// replaces this Mac's pairing, then shows that host's sessions in the sidebar.
+    func confirmPairing(link: String) {
+        model?.openMainWindow?()
+        NSApp.activate()
+        let alert = NSAlert()
+        guard let pairing = RemotePairing.parse(link: link), pairing.id != local.hostID else {
+            alert.messageText = String(localized: "This pairing link can't be used")
+            alert.informativeText = RemotePairing.parse(link: link) == nil
+                ? String(localized: "The link is incomplete or damaged. Copy it again on the hosting Mac (Settings › Remote).")
+                : String(localized: "This is the link of this Mac. Open it on the other Mac.")
+            alert.addButton(withTitle: String(localized: "OK"))
+            alert.runAsSheet()
+            return
+        }
+        alert.messageText = String(localized: "Show the sessions of “\(pairing.hostName)”?")
+        alert.informativeText = String(localized: "This Mac will connect to \(pairing.addresses.joined(separator: ", ")) and show that Mac's sessions in the sidebar. Only continue if you copied this link from your own Mac.")
+        alert.addButton(withTitle: String(localized: "Pair"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
+        guard alert.runAsSheet() == .alertFirstButtonReturn, let model else { return }
+        if !model.deck.settings.remoteClient {
+            model.mutate { $0.settings.remoteClient = true }
+            refresh()
+        }
+        pair(link: link)
+    }
+
     func forgetPairing() {
         local.manualPairing = nil
         local.pairedHostID = nil
