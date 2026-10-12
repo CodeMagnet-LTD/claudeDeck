@@ -6,6 +6,34 @@
     <description>ClaudeDeck updates</description>
     <language>en</language>
     <item>
+      <title>ClaudeDeck 0.4.0</title>
+      <pubDate>Mon, 12 Oct 2026 21:19:03 GMT</pubDate>
+      <sparkle:version>7</sparkle:version>
+      <sparkle:shortVersionString>0.4.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/CodeMagnet-LTD/claudeDeck/releases/tag/v0.4.0</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p>ClaudeDeck 0.4.0 adds remote mode: follow and drive one Mac's Claude sessions from another Mac or from the ClaudeDeck iPhone companion.</p>
+<h3>New</h3>
+<ul>
+<li><b>Remote mode (Settings › Remote).</b> One Mac hosts its sessions; another ClaudeDeck shows them in its own sidebar section, notifies you when they need you, answers permission prompts and opens their live terminals. Works over Tailscale, and optionally on the local network (off by default, found over Bonjour). Pairing with the same password on both Macs, an iCloud Drive record, or a QR code / <code>claudedeck://pair</code> link. Every connection is encrypted after a mutual key proof.</li>
+<li><b>iPhone companion hosting.</b> The hosting Mac also serves the ClaudeDeck iPhone app:</li>
+<li>its sessions with Allow / Deny, a readable conversation view and the live terminal fitted to the phone;</li>
+<li>Claude's questions, including multi-question prompts, answered from the phone;</li>
+<li>start, stop and resume sessions;</li>
+<li>open terminals and continue past conversations;</li>
+<li>browse project files;</li>
+<li>push notifications sent straight to Apple with your own .p8 key.</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+<li>A question from Claude (AskUserQuestion) no longer shows as a permission prompt, whose Allow button picked the first option.</li>
+<li>Switching the sidebar filter no longer jumbles rows; the Running pill is readable in dark mode; rows no longer overlap after moving between Active and Inactive.</li>
+<li>"Continue where you left off." waits for Claude to start and keeps retrying Enter while many sessions resume at once, never while a prompt is on screen.</li>
+</ul>
+<p>Installed 0.2.x or 0.3.x? This update arrives through <b>ClaudeDeck › Check for Updates…</b> (or on its own within a day).</p>]]></description>
+      <enclosure url="https://github.com/CodeMagnet-LTD/claudeDeck/releases/download/v0.4.0/ClaudeDeck-0.4.0.dmg" sparkle:edSignature="I7m26Y8YOeHODoB1cIEnB3Vt4aCoZoMfrTqRzXIDS7xbMU/Xp/pPLj/c5tT5JDxsBXITAPsfQmych5Ww3tRRCQ==" length="15775479" type="application/octet-stream"/>
+    </item>
+    <item>
       <title>ClaudeDeck 0.3.0</title>
       <pubDate>Fri, 02 Oct 2026 21:45:54 GMT</pubDate>
       <sparkle:version>6</sparkle:version>
