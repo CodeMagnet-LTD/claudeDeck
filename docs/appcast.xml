@@ -6,6 +6,22 @@
     <description>ClaudeDeck updates</description>
     <language>en</language>
     <item>
+      <title>ClaudeDeck 0.4.2</title>
+      <pubDate>Wed, 14 Oct 2026 21:41:15 GMT</pubDate>
+      <sparkle:version>9</sparkle:version>
+      <sparkle:shortVersionString>0.4.2</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/CodeMagnet-LTD/claudeDeck/releases/tag/v0.4.2</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p>ClaudeDeck 0.4.2 tidies up the sidebar.</p>
+<h3>Fixes</h3>
+<ul>
+<li><b>No leftover row after deleting a session.</b> When a project went from two sessions to one, the deleted session's row could stay drawn over the rows below.</li>
+<li><b>The + menu shows on every project row.</b> Single-session projects now show it all the time, not only while the pointer is over the row.</li>
+</ul>
+<p>Installed 0.2.x or later? This update arrives through <b>ClaudeDeck › Check for Updates…</b> (or on its own within a day).</p>]]></description>
+      <enclosure url="https://github.com/CodeMagnet-LTD/claudeDeck/releases/download/v0.4.2/ClaudeDeck-0.4.2.dmg" sparkle:edSignature="yDXAlW3gytKQMR2oUOLYMnTsYNqw0WVoKNcuMzZWsxFQjIUc3ZDphp+NHK95g3m9qhIHsdb3VsaWFFOCZ7SpAw==" length="15796116" type="application/octet-stream"/>
+    </item>
+    <item>
       <title>ClaudeDeck 0.4.1</title>
       <pubDate>Mon, 12 Oct 2026 22:17:56 GMT</pubDate>
       <sparkle:version>8</sparkle:version>
