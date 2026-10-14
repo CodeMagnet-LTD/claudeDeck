@@ -208,4 +208,16 @@ import Testing
         #expect(!r12)
         #expect(gate.shown == 1)
     }
+
+    /// A project switching between one row and a header with sessions gets a new row identity.
+    @Test func rowKeyFollowsCompactState() {
+        let id = UUID()
+        var layout = SidebarLayout()
+        let expanded = layout.rowKey(.project(id))
+        layout.compact.insert(id)
+        #expect(layout.rowKey(.project(id)) != expanded)
+        #expect(layout.rowKey(.project(id)).item == .project(id))
+        let group = UUID()
+        #expect(layout.rowKey(.group(group)) == SidebarLayout().rowKey(.group(group)))
+    }
 }

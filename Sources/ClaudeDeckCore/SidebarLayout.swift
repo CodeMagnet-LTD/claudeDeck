@@ -113,6 +113,19 @@ public struct SidebarLayout: Sendable, Equatable {
 
     public init() {}
 
+    /// A sidebar row's identity. A project shown as one row and the same project with its
+    /// sessions under it are different rows: reshaped in place (after deleting its second
+    /// session, say), the list left the removed child row drawn over the rows below.
+    public struct RowKey: Hashable, Sendable {
+        public var item: SidebarItem
+        public var compact: Bool
+    }
+
+    public func rowKey(_ item: SidebarItem) -> RowKey {
+        if case .project(let id) = item { return RowKey(item: item, compact: compact.contains(id)) }
+        return RowKey(item: item, compact: false)
+    }
+
     /// - Parameters:
     ///   - groups: group ids in their saved order.
     ///   - projects: projects in their saved order.

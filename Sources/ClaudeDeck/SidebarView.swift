@@ -59,13 +59,13 @@ struct SidebarView: View {
             let pinned = layout.pinned.compactMap { model.deck.project($0) }
             if !pinned.isEmpty {
                 Section("Pinned") {
-                    ForEach(pinned) { ProjectEntry(project: $0, layout: layout) }
+                    ForEach(pinned.map { (layout.rowKey(.project($0.id)), $0) }, id: \.0) { ProjectEntry(project: $0.1, layout: layout) }
                 }
             }
             // Active: projects and groups with a running terminal, in the order they became active.
             // Status changes never reorder them; the status shows in place.
             Section {
-                ForEach(layout.active, id: \.self) { SidebarItemView(item: $0, layout: layout) }
+                ForEach(layout.active.map(layout.rowKey), id: \.self) { SidebarItemView(item: $0.item, layout: layout) }
                 if layout.active.isEmpty {
                     Text(layout.filter == .waiting ? "Nothing is waiting for you" : "No running sessions")
                         .font(.callout).foregroundStyle(.tertiary)
@@ -98,7 +98,7 @@ struct SidebarView: View {
             // Hidden while a filter is on (nothing there is waiting or working).
             if layout.filter == .all {
                 Section(isExpanded: $inactiveExpanded) {
-                    ForEach(layout.inactive, id: \.self) { SidebarItemView(item: $0, layout: layout) }
+                    ForEach(layout.inactive.map(layout.rowKey), id: \.self) { SidebarItemView(item: $0.item, layout: layout) }
                 } header: {
                     HStack(spacing: 4) {
                         Text("Inactive")
@@ -277,7 +277,7 @@ struct GroupRow: View {
             get: { !group.collapsed },
             set: { expanded in model.mutate { $0.updateGroup(group.id) { $0.collapsed = !expanded } } }
         )) {
-            ForEach(projects) { ProjectEntry(project: $0, layout: layout) }
+            ForEach(projects.map { (layout.rowKey(.project($0.id)), $0) }, id: \.0) { ProjectEntry(project: $0.1, layout: layout) }
         } label: {
             HStack(spacing: 6) {
                 Circle().fill(GroupPalette.color(group.colorIndex)).frame(width: 8, height: 8)
@@ -370,7 +370,6 @@ struct CompactProjectRow: View {
     let project: Project
     let session: DeckSession
     @State private var showResume = false
-    @State private var hovering = false
 
     var body: some View {
         let status = model.status(of: session.id)
@@ -391,17 +390,15 @@ struct CompactProjectRow: View {
                     }
                     GitHubLinkBadge(session: session)
                     Spacer(minLength: 4)
-                    if hovering {
-                        Menu {
-                            NewSessionItems(project: project, showResume: $showResume)
-                        } label: {
-                            Image(systemName: "plus")
-                        }
-                        .menuStyle(.borderlessButton)
-                        .menuIndicator(.hidden)
-                        .fixedSize()
-                        .help("New Claude session or terminal")
+                    Menu {
+                        NewSessionItems(project: project, showResume: $showResume)
+                    } label: {
+                        Image(systemName: "plus")
                     }
+                    .menuStyle(.borderlessButton)
+                    .menuIndicator(.hidden)
+                    .fixedSize()
+                    .help("New Claude session or terminal")
                     RowTime(date: status.updatedAt)
                 }
                 SessionStatusLine(session: session, status: status, unseen: unseen)
@@ -411,7 +408,6 @@ struct CompactProjectRow: View {
         .flashOnStateChange(status.display)
         .contentShape(Rectangle())
         .onTapGesture { model.selectedSessionID = session.id }
-        .onHover { hovering = $0 }
         .help(project.path)
         .contextMenu {
             SessionMenu(session: session)

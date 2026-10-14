@@ -35,6 +35,12 @@ enum DebugSnapshot {
             try? FileManager.default.removeItem(atPath: path)
             if let project = UUID(uuidString: String(file.dropLast(6))) { model.newShell(in: project) }
         }
+        // `<session-uuid>.remove`: deletes that session, as its context menu does.
+        for file in files where file.hasSuffix(".remove") {
+            let path = (dir as NSString).appendingPathComponent(file)
+            try? FileManager.default.removeItem(atPath: path)
+            if let id = UUID(uuidString: String(file.dropLast(7))) { model.removeSession(id) }
+        }
         for file in files where file.hasSuffix(".paste") {
             let path = (dir as NSString).appendingPathComponent(file)
             try? FileManager.default.removeItem(atPath: path)
@@ -195,7 +201,15 @@ enum DebugSnapshot {
     private static func writeRowCounts(to dir: String) {
         var lines: [String] = []
         func walk(_ v: NSView) {
-            if let t = v as? NSTableView { lines.append("\(type(of: t)) rows=\(t.numberOfRows) frame=\(t.frame.integral)") }
+            if let t = v as? NSTableView {
+                lines.append("\(type(of: t)) rows=\(t.numberOfRows) frame=\(t.frame.integral)")
+                // Every row view the table holds: one not at its row's place is drawn as a stale copy.
+                for sub in t.subviews.sorted(by: { $0.frame.minY < $1.frame.minY }) where !sub.isHidden && sub.alphaValue > 0 {
+                    let row = (sub as? NSTableRowView).map { t.row(for: $0) } ?? -2
+                    let expected = row >= 0 ? t.rect(ofRow: row).integral : .zero
+                    lines.append("  \(type(of: sub)) row=\(row) frame=\(sub.frame.integral)\(row >= 0 && expected != sub.frame.integral ? " expected=\(expected)" : "")")
+                }
+            }
             v.subviews.forEach(walk)
         }
         for w in NSApp.windows where w.isVisible { if let c = w.contentView?.superview ?? w.contentView { walk(c) } }
