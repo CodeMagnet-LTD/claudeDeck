@@ -209,6 +209,7 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
   açılınca otomatik başlar.
 - ☁️ **iCloud eşitleme (isteğe bağlı):** proje listesi ve gruplar Mac'lerin arasında eşitlenir.
 - 🎨 Açık/koyu tema, terminal yakınlaştırma (⌘+ / ⌘- / ⌘0), ⌘V ile Claude'a resim yapıştırma.
+- ⌨️ Terminal.app'teki gibi terminal kısayolları: ⌘F arama (⌘G sonraki), ⌘K temizle, ⌘⌫ satır başına kadar sil.
 
 ## Kurulum
 

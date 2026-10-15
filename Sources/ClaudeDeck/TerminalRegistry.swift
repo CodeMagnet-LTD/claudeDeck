@@ -257,6 +257,34 @@ final class DeckTerminalView: LocalProcessTerminalView {
         super.paste(sender)
     }
 
+    /// Terminal.app keys the menu bar doesn't route here: ⌘F find bar, ⌘G next match
+    /// (⇧Return in the bar goes back; ⇧⌘G stays Changes), ⌘K clear, ⌘⌫ delete to line start.
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        // Focus is in this terminal or its find bar (the field editor sits inside it).
+        guard let focused = window?.firstResponder as? NSView, focused.isDescendant(of: self) else {
+            return super.performKeyEquivalent(with: event)
+        }
+        let mods = event.modifierFlags.intersection([.command, .option, .shift, .control])
+        guard mods == .command else { return super.performKeyEquivalent(with: event) }
+        switch event.charactersIgnoringModifiers?.lowercased() {
+        case "f": findAction(.showFindInterface)
+        case "g": findAction(.nextMatch)
+        case "k":
+            // Wipe screen + scrollback, then Ctrl+L so the shell / Claude redraws its prompt.
+            feed(text: "\u{1b}[H\u{1b}[2J\u{1b}[3J")
+            send(txt: "\u{0c}")
+        case "\u{7f}": send(txt: "\u{15}")  // Ctrl+U
+        default: return super.performKeyEquivalent(with: event)
+        }
+        return true
+    }
+
+    private func findAction(_ action: NSTextFinder.Action) {
+        let item = NSMenuItem()
+        item.tag = action.rawValue
+        performTextFinderAction(item)
+    }
+
     override func send(source: TerminalView, data: ArraySlice<UInt8>) {
         onInput?(data)
         super.send(source: source, data: data)

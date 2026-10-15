@@ -207,6 +207,7 @@ Billing, usage limits and sign-in stay entirely with Claude Code. ClaudeDeck doe
   `yarn start` that runs when the app launches.
 - ☁️ **iCloud sync (optional):** your project list and groups stay in sync across your Macs.
 - 🎨 Light and dark themes, terminal zoom (⌘+ / ⌘- / ⌘0), and ⌘V to paste images into Claude.
+- ⌨️ Terminal keys like Terminal.app: ⌘F find (⌘G next), ⌘K clear, ⌘⌫ delete to line start.
 - 🌐 **English and Turkish.** The app follows your system language. To choose one just for ClaudeDeck,
   go to System Settings › General › Language & Region › Applications.
 
