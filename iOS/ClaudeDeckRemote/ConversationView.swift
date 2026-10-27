@@ -1,4 +1,6 @@
+import PhotosUI
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// A session's conversation, readable on a phone: messages, Claude's answers, tool steps (tap for
 /// the result), older entries on scrolling up, and a field to send a message.
@@ -7,6 +9,11 @@ struct ConversationView: View {
     let sessionID: UUID
     @State private var draft = ""
     @FocusState private var composing: Bool
+    @State private var attachments: [Attachment] = []
+    @State private var photoItems: [PhotosPickerItem] = []
+    @State private var choosingPhotos = false
+    @State private var choosingFiles = false
+    @State private var attachError: String?
 
     var body: some View {
         let conversation = store.conversations[sessionID]
@@ -89,25 +96,166 @@ struct ConversationView: View {
     @ViewBuilder
     private func composer(_ session: RemoteSession?) -> some View {
         let blocked = session?.state.isBlocked == true
-        HStack(alignment: .bottom, spacing: 8) {
-            TextField(blocked ? String(localized: "Answer the prompt above first") : String(localized: "Message Claude"),
-                      text: $draft, axis: .vertical)
-                .lineLimit(1...5)
-                .focused($composing)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
-                .disabled(blocked)
-            Button {
-                if store.sendPrompt(sessionID, text: draft) { draft = "" }
-            } label: {
-                Image(systemName: "arrow.up.circle.fill").font(.system(size: 30))
+        let sending = store.sendingFiles.contains(sessionID)
+        VStack(alignment: .leading, spacing: 6) {
+            if let error = attachError ?? store.promptError {
+                Text(error).font(.caption).foregroundStyle(.red).padding(.horizontal, 4)
             }
-            .disabled(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || blocked || store.connection != .connected)
+            if !attachments.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(attachments) { attachment in
+                            AttachmentChip(attachment: attachment) {
+                                attachments.removeAll { $0.id == attachment.id }
+                                attachError = nil
+                            }
+                        }
+                    }
+                }
+                .disabled(sending)
+            }
+            HStack(alignment: .bottom, spacing: 8) {
+                Menu {
+                    Button { choosingPhotos = true } label: { Label("Photo Library", systemImage: "photo.on.rectangle") }
+                    Button { choosingFiles = true } label: { Label("Choose File", systemImage: "doc") }
+                } label: {
+                    Image(systemName: "paperclip").font(.system(size: 20)).frame(width: 30, height: 36)
+                }
+                .disabled(blocked || sending)
+                TextField(blocked ? String(localized: "Answer the prompt above first") : String(localized: "Message Claude"),
+                          text: $draft, axis: .vertical)
+                    .lineLimit(1...5)
+                    .focused($composing)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
+                    .disabled(blocked)
+                if sending {
+                    ProgressView().frame(width: 30, height: 36)
+                } else {
+                    Button {
+                        if attachments.isEmpty {
+                            if store.sendPrompt(sessionID, text: draft) { draft = "" }
+                        } else {
+                            // Cleared once the Mac took it (a failure keeps them for another try).
+                            store.sendPrompt(sessionID, text: draft, files: attachments.map(\.upload))
+                        }
+                    } label: {
+                        Image(systemName: "arrow.up.circle.fill").font(.system(size: 30))
+                    }
+                    .disabled((draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && attachments.isEmpty)
+                              || blocked || store.connection != .connected)
+                }
+            }
         }
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .background(.bar)
+        .onChange(of: sending) { was, now in
+            if was, !now, store.promptError == nil {
+                draft = ""
+                attachments = []
+            }
+        }
+        .photosPicker(isPresented: $choosingPhotos, selection: $photoItems, maxSelectionCount: 5, matching: .images)
+        .onChange(of: photoItems) { _, items in
+            guard !items.isEmpty else { return }
+            photoItems = []
+            Task {
+                for item in items {
+                    guard let data = try? await item.loadTransferable(type: Data.self) else { continue }
+                    add(Attachment.photo(data, number: attachments.count + 1))
+                }
+            }
+        }
+        .fileImporter(isPresented: $choosingFiles, allowedContentTypes: [.item], allowsMultipleSelection: true) { result in
+            guard case .success(let urls) = result else { return }
+            for url in urls {
+                let scoped = url.startAccessingSecurityScopedResource()
+                defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+                guard let data = try? Data(contentsOf: url) else {
+                    attachError = String(localized: "Couldn't read \(url.lastPathComponent).")
+                    continue
+                }
+                add(Attachment.file(data, name: url.lastPathComponent))
+            }
+        }
+    }
+
+    private func add(_ attachment: Attachment?) {
+        guard let attachment else { return }
+        let total = attachments.reduce(attachment.upload.data.count) { $0 + $1.upload.data.count }
+        guard total <= RemoteUpload.maxTotalBytes else {
+            attachError = String(localized: "Too large: up to 5 MB of files per message.")
+            return
+        }
+        attachError = nil
+        attachments.append(attachment)
+    }
+}
+
+/// A photo or file waiting to go with the next message.
+struct Attachment: Identifiable {
+    let id = UUID()
+    let upload: RemoteUpload
+    let thumbnail: UIImage?
+
+    /// Longest side in pixels: plenty for Claude, a few hundred KB as JPEG.
+    static let maxPixels: CGFloat = 2000
+
+    /// A photo, resized and made JPEG (HEIC isn't one Claude reads).
+    static func photo(_ data: Data, number: Int, name: String? = nil) -> Attachment? {
+        guard let image = UIImage(data: data) else { return nil }
+        let scale = min(1, maxPixels / max(image.size.width, image.size.height))
+        let size = CGSize(width: (image.size.width * scale).rounded(), height: (image.size.height * scale).rounded())
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        let resized = UIGraphicsImageRenderer(size: size, format: format).image { _ in image.draw(in: CGRect(origin: .zero, size: size)) }
+        guard let jpeg = resized.jpegData(compressionQuality: 0.8) else { return nil }
+        let base = name.map { ($0 as NSString).deletingPathExtension } ?? "photo-\(number)"
+        return Attachment(upload: RemoteUpload(name: base + ".jpg", data: jpeg), thumbnail: resized)
+    }
+
+    /// Any file; images other than GIF go through `photo`.
+    static func file(_ data: Data, name: String) -> Attachment? {
+        let type = UTType(filenameExtension: (name as NSString).pathExtension)
+        if let type, type.conforms(to: .image), !type.conforms(to: .gif) {
+            return photo(data, number: 0, name: name)
+        }
+        return Attachment(upload: RemoteUpload(name: name, data: data), thumbnail: type?.conforms(to: .gif) == true ? UIImage(data: data) : nil)
+    }
+}
+
+struct AttachmentChip: View {
+    let attachment: Attachment
+    let remove: () -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if let thumbnail = attachment.thumbnail {
+                Image(uiImage: thumbnail)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: 36, height: 36)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+            } else {
+                Image(systemName: "doc").frame(width: 36, height: 36)
+                    .background(Color(.tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 6))
+            }
+            VStack(alignment: .leading, spacing: 1) {
+                Text(attachment.upload.name).font(.caption).lineLimit(1)
+                Text(ByteCountFormatter.string(fromByteCount: Int64(attachment.upload.data.count), countStyle: .file))
+                    .font(.caption2).foregroundStyle(.secondary)
+            }
+            .frame(maxWidth: 140, alignment: .leading)
+            Button(action: remove) {
+                Image(systemName: "xmark.circle.fill").foregroundStyle(.secondary)
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(4)
+        .padding(.trailing, 4)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
     }
 }
 

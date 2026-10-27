@@ -228,7 +228,9 @@ public enum ConversationLog {
         }
         // The CLI's own tagged messages (command output, reminders, hook notes…), not the user's words.
         if text.hasPrefix("Caveat:") || isTagBlock(text) { return nil }
-        return ChatEntry(id: id, kind: .user, text: String(text.prefix(maxText)), date: date)
+        // A file sent from the phone (RemoteController saves them under ClaudeDeckUploads/): just its name.
+        let shown = text.replacingOccurrences(of: #"@\S*/ClaudeDeckUploads/[0-9]+-[0-9A-F]{4}/(\S+)"#, with: "📎 $1", options: .regularExpression)
+        return ChatEntry(id: id, kind: .user, text: String(shown.prefix(maxText)), date: date)
     }
 
     /// `<name …>…</name>` from start to end.

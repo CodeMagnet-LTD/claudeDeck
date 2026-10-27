@@ -270,6 +270,8 @@ public final class RemoteServer: @unchecked Sendable {
     /// A watching remote wants the terminal at this grid (0 cols = release).
     public var onTerminalFit: ((UUID, Int, Int) -> Void)?
     public var onSendPrompt: ((UUID, String) -> Void)?
+    /// A message with files; reply nil once it's going in, else why not.
+    public var onSendPromptWithFiles: ((_ sessionID: UUID, _ text: String, _ files: [RemoteUpload], _ reply: @escaping @Sendable (String?) -> Void) -> Void)?
     /// A phone registered for push notifications.
     public var onRegisterPush: ((PushDevice) -> Void)?
     /// The set of sessions any remote watches changed (the host taps only those).
@@ -477,6 +479,12 @@ public final class RemoteServer: @unchecked Sendable {
                 onMarkSeen?(sessionID)
             case .sendPrompt(let sessionID, let text) where !text.isEmpty:
                 onSendPrompt?(sessionID, String(text.prefix(20_000)))
+            case .sendPromptWithFiles(let sessionID, let text, let files)
+                where !files.isEmpty && files.reduce(0, { $0 + $1.data.count }) <= RemoteUpload.maxTotalBytes:
+                let channel = peer.channel
+                onSendPromptWithFiles?(sessionID, String(text.prefix(20_000)), files) { [queue] error in
+                    queue.async { channel.send(.promptResult(sessionID: sessionID, error: error)) }
+                }
             case .registerPush(let token, let topic, let environment, let deviceName) where !token.isEmpty && !topic.isEmpty:
                 peers[id]?.pushToken = token
                 onRegisterPush?(PushDevice(token: token, topic: topic, environment: environment == "production" ? "production" : "development", name: String(deviceName.prefix(80)), addedAt: Date()))
@@ -574,6 +582,7 @@ public final class RemoteHostConnection: @unchecked Sendable {
     public var onTerminalEnded: ((_ sessionID: UUID) -> Void)?
     public var onHistory: ((_ sessionID: UUID, _ page: ChatPage) -> Void)?
     public var onSessionStarted: ((UUID) -> Void)?
+    public var onPromptResult: ((_ sessionID: UUID, _ error: String?) -> Void)?
     public var onPastConversations: ((UUID, [RemotePastConversation]) -> Void)?
     /// `.directory` / `.file` answers.
     public var onFileReply: ((RemoteMessage) -> Void)?
@@ -683,6 +692,8 @@ public final class RemoteHostConnection: @unchecked Sendable {
                 self.onHistory?(id, page)
             case .sessionStarted(let id) where authenticated:
                 self.onSessionStarted?(id)
+            case .promptResult(let id, let error) where authenticated:
+                self.onPromptResult?(id, error)
             case .pastConversations(let projectID, let items) where authenticated:
                 self.onPastConversations?(projectID, items)
             case .directory, .file:

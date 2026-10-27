@@ -34,13 +34,15 @@ final class RemoteStore {
     }
     private(set) var conversations: [UUID: Conversation] = [:]
     /// Conversations on screen: kept current and marked seen.
-    @ObservationIgnored private var openConversations: Set<UUID> = []
+    /// Counted: the same session can be open in two windows.
+    @ObservationIgnored private var openConversations: [UUID: Int] = [:]
     @ObservationIgnored private var conversationTimer: Timer?
 
     // Live terminals (RemoteTerminalView).
     enum TerminalState: Equatable { case waiting, live, ended }
     private(set) var terminalStates: [UUID: TerminalState] = [:]
-    @ObservationIgnored private var sinks: [UUID: RemoteTerminalSink] = [:]
+    /// Several per session when it's open in more than one window.
+    @ObservationIgnored private var sinks: [UUID: [RemoteTerminalSink]] = [:]
 
     @ObservationIgnored private var hostConnection: RemoteHostConnection?
     @ObservationIgnored private var retryTask: Task<Void, Never>?
@@ -52,8 +54,27 @@ final class RemoteStore {
     @ObservationIgnored private var answerWaiters: [UUID: CheckedContinuation<Bool, Never>] = [:]
     /// Called after connecting (push registration, see PushRegistration).
     @ObservationIgnored var onConnected: (() -> Void)?
-    /// Sessions pushed on the navigation stack (notification taps open a session).
-    var path: [UUID] = []
+    /// Messages with files on their way, by session (sending a few MB takes a moment).
+    private(set) var sendingFiles: Set<UUID> = []
+    /// Why the last message with files didn't go in.
+    var promptError: String?
+
+    // Windows (iPad): each keeps its own selection; the store only routes "show this session".
+    struct OpenRequest: Equatable {
+        let session: UUID
+        /// The window that should show it; nil: whichever window takes it first.
+        let scene: UUID?
+        let token = UUID()
+    }
+    var openRequest: OpenRequest?
+    /// Debug hooks: open a session in a new window.
+    var newWindowRequest: OpenRequest?
+    /// Open windows and what each shows.
+    @ObservationIgnored private(set) var scenes: [UUID: UUID?] = [:]
+    /// The window last brought to the front: notification taps open there.
+    @ObservationIgnored private var activeScene: UUID?
+    /// The window that last started a session: it shows it once the Mac has it.
+    @ObservationIgnored private var startingScene: UUID?
 
     static let deviceName = UIDevice.current.name
 
@@ -199,7 +220,16 @@ final class RemoteStore {
             }
         }
         next.onSessionStarted = { [weak self] id in
-            MainActor.assumeIsolated { self?.path = [id] }
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.open(id, in: self.startingScene)
+            }
+        }
+        next.onPromptResult = { [weak self] id, error in
+            MainActor.assumeIsolated {
+                guard let self, self.sendingFiles.remove(id) != nil else { return }
+                self.promptError = error
+            }
         }
         next.onFileReply = { [weak self] message in
             MainActor.assumeIsolated {
@@ -221,13 +251,13 @@ final class RemoteStore {
         }
         next.onTerminalStart = { [weak self] id, cols, rows, screen in
             MainActor.assumeIsolated {
-                guard let self, let sink = self.sinks[id] else { return }
+                guard let self, let sinks = self.sinks[id] else { return }
                 self.terminalStates[id] = .live
-                sink.start(cols: cols, rows: rows, screen: screen)
+                for sink in sinks { sink.start(cols: cols, rows: rows, screen: screen) }
             }
         }
         next.onTerminalOutput = { [weak self] id, bytes in
-            MainActor.assumeIsolated { self?.sinks[id]?.feed(bytes) }
+            MainActor.assumeIsolated { self?.sinks[id]?.forEach { $0.feed(bytes) } }
         }
         next.onTerminalEnded = { [weak self] id in
             MainActor.assumeIsolated {
@@ -260,7 +290,7 @@ final class RemoteStore {
                 hostConnection?.openTerminal(id)
                 if let grid = fitGrids[id] { hostConnection?.send(.terminalFit(sessionID: id, cols: grid.0, rows: grid.1)) }
             }
-            for id in openConversations { requestLatest(id) }
+            for id in openConversations.keys { requestLatest(id) }
             onConnected?()
         case .disconnected(let reason):
             hostConnection = nil
@@ -290,7 +320,7 @@ final class RemoteStore {
         let fresh = RemoteSnapshot.newAttention(from: snapshot, to: new)
         snapshot = new
         learn(from: new)
-        for id in openConversations {
+        for id in openConversations.keys {
             guard let session = new.session(id) else { continue }
             // Watching it finish here counts as seeing it.
             if session.state == .idle, session.unseen { _ = send(.markSeen(sessionID: id)) }
@@ -364,14 +394,16 @@ final class RemoteStore {
     var projects: [RemoteProject] { snapshot?.projects ?? [] }
 
     /// A new Claude session in a project on the Mac; it opens here once started.
-    func startSession(in projectID: UUID, prompt: String) {
+    func startSession(in projectID: UUID, prompt: String, from scene: UUID? = nil) {
+        startingScene = scene
         let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
         _ = send(.startSession(projectID: projectID, prompt: text.isEmpty ? nil : text))
     }
 
     func stopSession(_ id: UUID) { _ = send(.stopSession(sessionID: id)) }
 
-    func startShell(in projectID: UUID, command: String) {
+    func startShell(in projectID: UUID, command: String, from scene: UUID? = nil) {
+        startingScene = scene
         let text = command.trimmingCharacters(in: .whitespacesAndNewlines)
         _ = send(.startShell(projectID: projectID, command: text.isEmpty ? nil : text))
     }
@@ -383,7 +415,8 @@ final class RemoteStore {
         _ = send(.pastConversationsRequest(projectID: projectID))
     }
 
-    func resumeConversation(_ conversationID: String, in projectID: UUID) {
+    func resumeConversation(_ conversationID: String, in projectID: UUID, from scene: UUID? = nil) {
+        startingScene = scene
         _ = send(.resumeConversation(projectID: projectID, conversationID: conversationID))
     }
 
@@ -407,15 +440,33 @@ final class RemoteStore {
     /// Esc in a working session.
     func interrupt(_ id: UUID) { _ = send(.interrupt(sessionID: id)) }
 
-    func resumeSession(_ id: UUID) {
+    func resumeSession(_ id: UUID, from scene: UUID? = nil) {
         guard send(.resumeSession(sessionID: id)) else { return }
-        path = [id]
+        open(id, in: scene)
+    }
+
+    // MARK: Windows
+
+    /// Shows a session in a window (default: the one last in front).
+    func open(_ id: UUID, in scene: UUID? = nil) {
+        let target = scene ?? activeScene
+        openRequest = OpenRequest(session: id, scene: target.flatMap { scenes[$0] != nil ? $0 : nil })
+    }
+
+    func sceneAppeared(_ scene: UUID) { if scenes[scene] == nil { scenes[scene] = .some(nil) } }
+    func sceneActivated(_ scene: UUID) { activeScene = scene }
+    func sceneSelected(_ scene: UUID, session: UUID?) { scenes[scene] = .some(session) }
+
+    func sceneDisappeared(_ scene: UUID) {
+        scenes[scene] = nil
+        if activeScene == scene { activeScene = nil }
+        if startingScene == scene { startingScene = nil }
     }
 
     // MARK: Conversations
 
     func openConversation(_ id: UUID) {
-        openConversations.insert(id)
+        openConversations[id, default: 0] += 1
         _ = send(.markSeen(sessionID: id))
         requestLatest(id)
         // Tool results and long answers grow without a state change: check every few seconds.
@@ -423,14 +474,15 @@ final class RemoteStore {
             conversationTimer = Timer.scheduledTimer(withTimeInterval: 4, repeats: true) { [weak self] _ in
                 MainActor.assumeIsolated {
                     guard let self else { return }
-                    for id in self.openConversations { self.requestNewer(id) }
+                    for id in self.openConversations.keys { self.requestNewer(id) }
                 }
             }
         }
     }
 
     func closeConversation(_ id: UUID) {
-        openConversations.remove(id)
+        guard let count = openConversations[id] else { return }
+        openConversations[id] = count > 1 ? count - 1 : nil
         if openConversations.isEmpty {
             conversationTimer?.invalidate()
             conversationTimer = nil
@@ -495,17 +547,46 @@ final class RemoteStore {
         return true
     }
 
+    /// A message with photos / files: the Mac saves them and puts them in with the text.
+    @discardableResult
+    func sendPrompt(_ id: UUID, text: String, files: [RemoteUpload]) -> Bool {
+        guard !files.isEmpty else { return sendPrompt(id, text: text) }
+        guard snapshot?.session(id)?.state.isBlocked == false, !sendingFiles.contains(id) else { return false }
+        guard send(.sendPromptWithFiles(sessionID: id, text: text.trimmingCharacters(in: .whitespacesAndNewlines), files: files)) else { return false }
+        sendingFiles.insert(id)
+        promptError = nil
+        Task { @MainActor [weak self] in
+            // An older Mac skips the message without answering.
+            try? await Task.sleep(for: .seconds(60))
+            guard let self, self.sendingFiles.remove(id) != nil else { return }
+            self.promptError = String(localized: "The other Mac didn't answer. Update ClaudeDeck on it.")
+        }
+        Task { @MainActor [weak self] in
+            for _ in 0..<6 {
+                try? await Task.sleep(for: .seconds(1.5))
+                self?.requestNewer(id)
+            }
+        }
+        return true
+    }
+
     // MARK: Terminals
 
     func attachTerminal(_ id: UUID, sink: RemoteTerminalSink) {
-        sinks[id] = sink
-        terminalStates[id] = .waiting
+        // Opening again gives every view of it a fresh screen, the new one included.
+        sinks[id, default: []].append(sink)
+        if terminalStates[id] != .live { terminalStates[id] = .waiting }
         hostConnection?.openTerminal(id)
         if let grid = fitGrids[id] { hostConnection?.send(.terminalFit(sessionID: id, cols: grid.0, rows: grid.1)) }
     }
 
     func detachTerminal(_ id: UUID, sink: RemoteTerminalSink) {
-        guard sinks[id] === sink else { return }
+        guard let views = sinks[id], views.contains(where: { $0 === sink }) else { return }
+        let rest = views.filter { $0 !== sink }
+        guard rest.isEmpty else {
+            sinks[id] = rest
+            return
+        }
         sinks[id] = nil
         terminalStates[id] = nil
         hostConnection?.closeTerminal(id)
@@ -518,6 +599,8 @@ final class RemoteStore {
 
     /// Fit mode: size the Mac's terminal to this screen (0 cols gives it back). Re-sent after reconnects.
     func fitTerminal(_ id: UUID, cols: Int, rows: Int) {
+        // Closing one of several views keeps the size the others fit.
+        if cols == 0, (sinks[id]?.count ?? 0) > 1 { return }
         if cols == 0 { fitGrids[id] = nil } else { fitGrids[id] = (cols, rows) }
         hostConnection?.send(.terminalFit(sessionID: id, cols: cols, rows: rows))
     }
@@ -530,7 +613,7 @@ final class RemoteStore {
 
     /// Open terminal views (DebugHooks).
     func debugTerminals() -> [UUID: RemoteTerminalUIView] {
-        sinks.compactMapValues { $0 as? RemoteTerminalUIView }
+        sinks.compactMapValues { $0.first as? RemoteTerminalUIView }
     }
 
     /// Sends a message only while connected (push registration).

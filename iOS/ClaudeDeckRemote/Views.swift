@@ -27,15 +27,65 @@ enum SessionStyle {
     }
 }
 
+extension EnvironmentValues {
+    /// The window this view is in: sessions started here open here.
+    @Entry var sceneID: UUID?
+}
+
+/// One window. Each keeps its own selection, so two windows can show two sessions; a regular width
+/// shows the list beside the session, a compact one (iPhone, Slide Over) collapses to a stack.
 struct RootView: View {
     @Environment(RemoteStore.self) private var store
+    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.supportsMultipleWindows) private var supportsMultipleWindows
+    /// The window's value: the session it was opened for, then whatever it shows.
+    @Binding var windowSession: UUID?
+    @State private var sceneID = UUID()
+    @State private var selection: UUID?
 
     var body: some View {
-        @Bindable var store = store
-        if store.pairing == nil {
-            NavigationStack { PairingView() }
-        } else {
-            NavigationStack(path: $store.path) { SessionListView() }
+        Group {
+            if store.pairing == nil {
+                NavigationStack { PairingView() }
+            } else {
+                NavigationSplitView {
+                    SessionListView(selection: $selection)
+                } detail: {
+                    // A new identity per session: another session opened from a notification starts fresh.
+                    if let selection {
+                        SessionDetailView(sessionID: selection).id(selection)
+                    } else {
+                        ContentUnavailableView("No Session Selected", systemImage: "terminal")
+                    }
+                }
+            }
+        }
+        .environment(\.sceneID, sceneID)
+        .onAppear {
+            store.sceneAppeared(sceneID)
+            if selection == nil { selection = windowSession }
+        }
+        .onDisappear { store.sceneDisappeared(sceneID) }
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            if phase == .active { store.sceneActivated(sceneID) }
+        }
+        .onChange(of: selection, initial: true) { _, id in
+            store.sceneSelected(sceneID, session: id)
+            // Not on iPhone: restoring it would reopen the last session on every launch.
+            if let id, supportsMultipleWindows { windowSession = id }
+        }
+        // Initial too: a notification tap that launched the app is waiting for the first window.
+        .onChange(of: store.openRequest, initial: true) { _, request in
+            guard let request, store.openRequest?.token == request.token,
+                  request.scene == nil || request.scene == sceneID else { return }
+            store.openRequest = nil
+            selection = request.session
+        }
+        .onChange(of: store.newWindowRequest) { _, request in
+            guard let request, store.newWindowRequest?.token == request.token else { return }
+            store.newWindowRequest = nil
+            openWindow(value: request.session)
         }
     }
 }
@@ -44,6 +94,8 @@ struct RootView: View {
 
 struct SessionListView: View {
     @Environment(RemoteStore.self) private var store
+    @Environment(\.sceneID) private var sceneID
+    @Binding var selection: UUID?
     @State private var showSettings = false
     @State private var showNewSession = false
 
@@ -54,7 +106,7 @@ struct SessionListView: View {
         let waiting = sessions.filter(\.needsAttention)
         let projects = Dictionary(grouping: sessions, by: \.project)
         let projectNames = sessions.map(\.project).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
-        List {
+        List(selection: $selection) {
             ConnectionBanner()
             if let usage = store.snapshot?.usage { UsageRow(usage: usage) }
             if !waiting.isEmpty {
@@ -82,7 +134,7 @@ struct SessionListView: View {
                                     }
                                 }
                                 Spacer()
-                                Button("Resume") { store.resumeSession(session.id) }
+                                Button("Resume") { store.resumeSession(session.id, from: sceneID) }
                                     .buttonStyle(.bordered)
                                     .controlSize(.small)
                             }
@@ -95,8 +147,6 @@ struct SessionListView: View {
             }
         }
         .navigationTitle(store.snapshot?.hostName ?? store.pairing?.hostName ?? "ClaudeDeck")
-        // A new identity per session: another session opened from a notification starts fresh.
-        .navigationDestination(for: UUID.self) { SessionDetailView(sessionID: $0).id($0) }
         .refreshable { store.reconnect() }
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
@@ -118,6 +168,8 @@ struct SessionListView: View {
 
 struct SessionRowLink: View {
     @Environment(RemoteStore.self) private var store
+    @Environment(\.supportsMultipleWindows) private var supportsMultipleWindows
+    @Environment(\.openWindow) private var openWindow
     let session: RemoteSession
     let showProject: Bool
     @State private var confirmStop = false
@@ -125,6 +177,13 @@ struct SessionRowLink: View {
     var body: some View {
         NavigationLink(value: session.id) {
             SessionRow(session: session, showProject: showProject)
+        }
+        .contextMenu {
+            if supportsMultipleWindows {
+                Button { openWindow(value: session.id) } label: {
+                    Label("Open in New Window", systemImage: "macwindow.badge.plus")
+                }
+            }
         }
         .swipeActions(edge: .trailing) {
             if session.state != .shell {
@@ -167,6 +226,7 @@ struct UsageRow: View {
 /// Start a Claude session (new, or resuming a past conversation) or a terminal in one of the Mac's projects.
 struct NewSessionView: View {
     @Environment(RemoteStore.self) private var store
+    @Environment(\.sceneID) private var sceneID
     @Environment(\.dismiss) private var dismiss
     @State private var projectID: UUID?
     @State private var prompt = ""
@@ -195,7 +255,7 @@ struct NewSessionView: View {
                 if let projectID, let past = store.pastConversations[projectID], let latest = past.first {
                     Section {
                         Button {
-                            store.resumeConversation(latest.id, in: projectID)
+                            store.resumeConversation(latest.id, in: projectID, from: sceneID)
                             dismiss()
                         } label: {
                             Label("Continue the latest conversation", systemImage: "arrow.uturn.forward")
@@ -204,7 +264,7 @@ struct NewSessionView: View {
                     Section("Continue a past conversation") {
                         ForEach(past) { item in
                             Button {
-                                store.resumeConversation(item.id, in: projectID)
+                                store.resumeConversation(item.id, in: projectID, from: sceneID)
                                 dismiss()
                             } label: {
                                 VStack(alignment: .leading, spacing: 2) {
@@ -236,7 +296,7 @@ struct NewSessionView: View {
             ToolbarItem(placement: .confirmationAction) {
                 Button("Start") {
                     if let projectID {
-                        if kind == .claude { store.startSession(in: projectID, prompt: prompt) } else { store.startShell(in: projectID, command: command) }
+                        if kind == .claude { store.startSession(in: projectID, prompt: prompt, from: sceneID) } else { store.startShell(in: projectID, command: command, from: sceneID) }
                     }
                     dismiss()
                 }

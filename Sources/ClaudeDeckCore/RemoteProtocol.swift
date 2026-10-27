@@ -132,6 +132,11 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case markSeen(sessionID: UUID)
     /// Remote → host: type this message into the session and press Enter.
     case sendPrompt(sessionID: UUID, text: String)
+    /// Remote → host: a message with files. The host saves them and puts them in with the text
+    /// (images as pasted images, other files as @mentions). Answered with `promptResult`.
+    case sendPromptWithFiles(sessionID: UUID, text: String, files: [RemoteUpload])
+    /// Host → remote: whether the message with files went in (nil) or why not.
+    case promptResult(sessionID: UUID, error: String?)
     /// Phone → host: send push notifications to this device (APNs.swift).
     case registerPush(token: Data, topic: String, environment: String, deviceName: String)
     case ping
@@ -153,6 +158,34 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .secondsSince1970
         return try decoder.decode(RemoteMessage.self, from: frame.payload)
+    }
+}
+
+/// A file the phone attaches to a message (photos are resized and made JPEG on the phone).
+public struct RemoteUpload: Codable, Sendable, Equatable {
+    public var name: String
+    public var data: Data
+
+    public init(name: String, data: Data) {
+        self.name = name
+        self.data = data
+    }
+
+    /// For all files of one message: base64 in JSON must stay under `RemoteFrame.maxPayload`.
+    public static let maxTotalBytes = 5 << 20
+
+    /// The host's folder for them (in its temporary folder).
+    public static let folderName = "ClaudeDeckUploads"
+
+    /// Pasted into Claude Code, a path with one of these extensions becomes an attached image.
+    public static let imageExtensions: Set<String> = ["png", "jpg", "jpeg", "gif", "webp"]
+
+    /// A file name safe to type into a prompt: no spaces (they end an @mention) or odd characters.
+    public static func safeName(_ name: String) -> String {
+        let allowed = Set("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-")
+        var safe = String(name.map { allowed.contains($0) ? $0 : "-" }.prefix(80))
+        while safe.hasPrefix(".") || safe.hasPrefix("-") { safe.removeFirst() }
+        return safe.isEmpty ? "file" : safe
     }
 }
 

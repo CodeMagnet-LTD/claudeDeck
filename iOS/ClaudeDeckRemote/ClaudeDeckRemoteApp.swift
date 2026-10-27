@@ -7,8 +7,10 @@ struct ClaudeDeckRemoteApp: App {
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some Scene {
-        WindowGroup {
-            RootView()
+        // A window per session (iPad). The value follows the window's selection, so "Open in New
+        // Window" brings forward the window already showing that session.
+        WindowGroup(for: UUID.self) { $session in
+            RootView(windowSession: $session)
                 .environment(delegate.store)
                 .onOpenURL { url in delegate.store.pair(link: url.absoluteString) }
                 .onChange(of: scenePhase, initial: true) { _, phase in
@@ -63,7 +65,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         let stamp = (info["stamp"] as? String).flatMap(Double.init) ?? (info["stamp"] as? Double)
         let action = response.actionIdentifier
         await MainActor.run {
-            if action == UNNotificationDefaultActionIdentifier { store.path = [id] }
+            if action == UNNotificationDefaultActionIdentifier { store.open(id) }
         }
         guard action == LocalAlerts.approveAction || action == LocalAlerts.denyAction, let stamp else { return }
         let applied = await store.answerAndWait(id, stamp: stamp, approve: action == LocalAlerts.approveAction)

@@ -334,6 +334,12 @@ final class RemoteController {
             server.onSendPrompt = { [weak self] id, text in
                 MainActor.assumeIsolated { self?.sendPrompt(id, text: text) }
             }
+            server.onSendPromptWithFiles = { [weak self] id, text, files, reply in
+                MainActor.assumeIsolated {
+                    guard let self else { reply(String(localized: "ClaudeDeck isn't ready.")); return }
+                    reply(self.sendPrompt(id, text: text, files: files))
+                }
+            }
             server.onRegisterPush = { [weak self] device in
                 MainActor.assumeIsolated { self?.registerPush(device) }
             }
@@ -624,6 +630,60 @@ final class RemoteController {
               !model.status(of: id).display.isBlocked
         else { return }
         model.terminals.type(text.trimmingCharacters(in: .whitespacesAndNewlines) + "\r", into: id)
+    }
+
+    /// Files from the phone, kept a week (Claude may read them again later in the conversation).
+    /// In the temporary folder: its path has no spaces (Application Support does), which would end
+    /// the @mention.
+    private var uploadsFolder: URL { FileManager.default.temporaryDirectory.appending(path: RemoteUpload.folderName) }
+
+    /// A message with files: saved under `uploadsFolder`, then each image pasted on its own (so
+    /// Claude Code attaches it), then the other files as @mentions with the text, then Enter.
+    /// Returns why not, or nil when it's going in.
+    private func sendPrompt(_ id: UUID, text: String, files: [RemoteUpload]) -> String? {
+        guard let model, model.deck.session(id)?.kind == .claude, model.terminals.isRunning(id) else {
+            return String(localized: "This session isn't running on the other Mac.")
+        }
+        guard !model.status(of: id).display.isBlocked else { return String(localized: "Answer the prompt above first") }
+        let fileManager = FileManager.default
+        let week = Date().addingTimeInterval(-7 * 24 * 3600)
+        for old in (try? fileManager.contentsOfDirectory(at: uploadsFolder, includingPropertiesForKeys: [.contentModificationDateKey])) ?? [] {
+            let modified = (try? old.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate ?? .distantPast
+            if modified < week { try? fileManager.removeItem(at: old) }
+        }
+        let folder = uploadsFolder.appending(path: "\(Int(Date().timeIntervalSince1970))-\(UUID().uuidString.prefix(4))")
+        var images: [String] = []
+        var others: [String] = []
+        do {
+            try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
+            var used: Set<String> = []
+            for file in files {
+                var name = RemoteUpload.safeName(file.name)
+                while used.contains(name) { name = "1-" + name }
+                used.insert(name)
+                let url = folder.appending(path: name)
+                try file.data.write(to: url)
+                if RemoteUpload.imageExtensions.contains(url.pathExtension.lowercased()) { images.append(url.path) } else { others.append(url.path) }
+            }
+        } catch {
+            return String(localized: "Couldn't save the files on the other Mac: \(error.localizedDescription)")
+        }
+        let body = (images.isEmpty ? "" : " ") + others.map { "@\($0) " }.joined() + text.trimmingCharacters(in: .whitespacesAndNewlines)
+        Task { @MainActor [weak self] in
+            for path in images {
+                guard let model = self?.model, model.terminals.isRunning(id) else { return }
+                model.terminals.paste(path, into: id)
+                // Claude Code reads the image before the next paste.
+                try? await Task.sleep(for: .milliseconds(400))
+            }
+            guard let model = self?.model, model.terminals.isRunning(id) else { return }
+            if !body.trimmingCharacters(in: .whitespaces).isEmpty {
+                model.terminals.paste(body, into: id)
+                try? await Task.sleep(for: .milliseconds(500))
+            }
+            model.terminals.type("\r", into: id)
+        }
+        return nil
     }
 
     // MARK: Host — iPhone pushes

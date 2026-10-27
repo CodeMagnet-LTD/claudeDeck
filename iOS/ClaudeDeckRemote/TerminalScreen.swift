@@ -256,7 +256,8 @@ struct SessionDetailView: View {
     @Environment(RemoteStore.self) private var store
     let sessionID: UUID
     @State private var keyboardToggle = 0
-    @AppStorage("detail.mode") private var mode = Mode.conversation
+    /// Per window: two windows can show a conversation and a terminal side by side.
+    @SceneStorage("detail.mode") private var mode = Mode.conversation
     @AppStorage("terminal.fit") private var fitToScreen = true
 
     enum Mode: String { case conversation, terminal }

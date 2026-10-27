@@ -436,6 +436,8 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
     /// newlines goes in as a bracketed paste, since a raw newline in the pty would submit early.
     func type(_ text: String, into id: UUID) {
         guard let view = views[id], running.contains(id) else { return }
+        // Return on its own is a key press, not a line to paste.
+        guard text != "\r" else { view.send(txt: text); return }
         let submit = text.hasSuffix("\r") && text.count > 1
         var body = submit ? String(text.dropLast()) : text
         let multiline = body.contains(where: \.isNewline)
@@ -447,6 +449,13 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
             guard let self, self.running.contains(id) else { return }
             self.views[id]?.send(txt: "\r")
         }
+    }
+
+    /// Pastes text as the terminal would (bracketed): Claude Code turns a pasted image path into
+    /// an attached image.
+    func paste(_ text: String, into id: UUID) {
+        guard let view = views[id], running.contains(id) else { return }
+        view.send(txt: "\u{1B}[200~" + text + "\u{1B}[201~")
     }
 
     /// Ends the claude process. SwiftTerm's `terminate()` cancels its own exit monitor, so the

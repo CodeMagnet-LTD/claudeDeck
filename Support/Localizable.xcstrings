@@ -8413,6 +8413,86 @@
     },
     "●%lld": {
       "shouldTranslate": false
+    },
+    "Photo Library": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoğraf Arşivi"
+          }
+        }
+      }
+    },
+    "Choose File": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya Seç"
+          }
+        }
+      }
+    },
+    "Couldn't read %@.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ okunamadı."
+          }
+        }
+      }
+    },
+    "Too large: up to 5 MB of files per message.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çok büyük: mesaj başına en fazla 5 MB dosya."
+          }
+        }
+      }
+    },
+    "The other Mac didn't answer. Update ClaudeDeck on it.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac yanıt vermedi. Oradaki ClaudeDeck'i güncelleyin."
+          }
+        }
+      }
+    },
+    "Open in New Window": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Pencerede Aç"
+          }
+        }
+      }
+    },
+    "ClaudeDeck isn't ready.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClaudeDeck hazır değil."
+          }
+        }
+      }
+    },
+    "Couldn't save the files on the other Mac: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalar diğer Mac'e kaydedilemedi: %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -601,6 +601,19 @@ import Testing
         #expect(QuestionKeys.keys(for: [toppings], answers: [.init()]) == nil)
         #expect(QuestionKeys.keys(for: [color], answers: [.init(text: "  ")]) == nil)
     }
+
+    @Test func uploads() throws {
+        // Typed into a prompt: no spaces (an @mention ends there), no leading dot or dash.
+        #expect(RemoteUpload.safeName("my notes.txt") == "my-notes.txt")
+        #expect(RemoteUpload.safeName("..çay & simit.PNG") == "ay---simit.PNG")
+        #expect(RemoteUpload.safeName("   ") == "file")
+        // A message with files survives the wire.
+        let message = RemoteMessage.sendPromptWithFiles(sessionID: UUID(), text: "Look", files: [RemoteUpload(name: "a.jpg", data: Data([1, 2, 3]))])
+        #expect(try RemoteMessage.decode(message.frame()) == message)
+        // In the conversation, a sent file shows by name.
+        let line = #"{"type":"user","uuid":"u1","message":{"role":"user","content":"[Image #1] @/var/folders/k2/abc/T/ClaudeDeckUploads/1793051586-E3C5/my-notes.txt What is it?"}}"#
+        #expect(ConversationLog.entries(fromJSONL: line).first?.text == "[Image #1] 📎 my-notes.txt What is it?")
+    }
 }
 
 @Suite(.serialized) struct RemoteHistoryLoopbackTests {
