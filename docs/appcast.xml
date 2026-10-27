@@ -6,6 +6,16 @@
     <description>ClaudeDeck updates</description>
     <language>en</language>
     <item>
+      <title>ClaudeDeck 0.4.4</title>
+      <pubDate>Tue, 27 Oct 2026 23:44:40 GMT</pubDate>
+      <sparkle:version>11</sparkle:version>
+      <sparkle:shortVersionString>0.4.4</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/CodeMagnet-LTD/claudeDeck/releases/tag/v0.4.4</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p><b>Full Changelog</b>: https://github.com/CodeMagnet-LTD/claudeDeck/compare/v0.4.3...v0.4.4</p>]]></description>
+      <enclosure url="https://github.com/CodeMagnet-LTD/claudeDeck/releases/download/v0.4.4/ClaudeDeck-0.4.4.dmg" sparkle:edSignature="G2R9NO0qZM8oifX/3V0JZ8o58vhAAaicaxQgQAHuozJj4eNDXfk4Wnpr45AoNatvigHZUx8UHhJWbcNwGknCCQ==" length="15903005" type="application/octet-stream"/>
+    </item>
+    <item>
       <title>ClaudeDeck 0.4.3</title>
       <pubDate>Thu, 15 Oct 2026 18:14:24 GMT</pubDate>
       <sparkle:version>10</sparkle:version>
