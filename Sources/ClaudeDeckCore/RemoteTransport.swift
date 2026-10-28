@@ -272,6 +272,8 @@ public final class RemoteServer: @unchecked Sendable {
     public var onSendPrompt: ((UUID, String) -> Void)?
     /// A message with files; reply nil once it's going in, else why not.
     public var onSendPromptWithFiles: ((_ sessionID: UUID, _ text: String, _ files: [RemoteUpload], _ reply: @escaping @Sendable (String?) -> Void) -> Void)?
+    /// Files to paste into a watched terminal; reply nil once they're going in, else why not.
+    public var onPasteFiles: ((_ sessionID: UUID, _ files: [RemoteUpload], _ reply: @escaping @Sendable (String?) -> Void) -> Void)?
     /// A phone registered for push notifications.
     public var onRegisterPush: ((PushDevice) -> Void)?
     /// The set of sessions any remote watches changed (the host taps only those).
@@ -483,6 +485,12 @@ public final class RemoteServer: @unchecked Sendable {
                 where !files.isEmpty && files.reduce(0, { $0 + $1.data.count }) <= RemoteUpload.maxTotalBytes:
                 let channel = peer.channel
                 onSendPromptWithFiles?(sessionID, String(text.prefix(20_000)), files) { [queue] error in
+                    queue.async { channel.send(.promptResult(sessionID: sessionID, error: error)) }
+                }
+            case .pasteFiles(let sessionID, let files)
+                where !files.isEmpty && files.reduce(0, { $0 + $1.data.count }) <= RemoteUpload.maxTotalBytes:
+                let channel = peer.channel
+                onPasteFiles?(sessionID, files) { [queue] error in
                     queue.async { channel.send(.promptResult(sessionID: sessionID, error: error)) }
                 }
             case .registerPush(let token, let topic, let environment, let deviceName) where !token.isEmpty && !topic.isEmpty:

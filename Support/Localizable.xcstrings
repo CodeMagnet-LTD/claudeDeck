@@ -8513,6 +8513,16 @@
           }
         }
       }
+    },
+    "Sending files…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalar gönderiliyor…"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -135,6 +135,9 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     /// Remote → host: a message with files. The host saves them and puts them in with the text
     /// (images as pasted images, other files as @mentions). Answered with `promptResult`.
     case sendPromptWithFiles(sessionID: UUID, text: String, files: [RemoteUpload])
+    /// Remote → host: files dropped / pasted into a watched terminal (another Mac). The host saves
+    /// them and pastes them in like `sendPromptWithFiles`, without Enter. Answered with `promptResult`.
+    case pasteFiles(sessionID: UUID, files: [RemoteUpload])
     /// Host → remote: whether the message with files went in (nil) or why not.
     case promptResult(sessionID: UUID, error: String?)
     /// Phone → host: send push notifications to this device (APNs.swift).

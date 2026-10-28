@@ -69,7 +69,7 @@ enum DebugSnapshot {
         }
         let remote = model.remote
         let remoteLines = ["host: \(remote.hostState) remotes=\(remote.connectedRemotes) last=\(remote.lastRemoteAnswer ?? "-") rejected=\(remote.lastRejectedPeer ?? "-")",
-                           "client: \(remote.connection) answering=\(remote.answering.count) error=\(remote.answerError ?? "-")",
+                           "client: \(remote.connection) answering=\(remote.answering.count) error=\(remote.answerError ?? "-") uploads=\(remote.uploads)",
                            "terminals: \(remote.terminalStates) counters: \(remote.counters.sorted { $0.key < $1.key })",
                            "lan: \(remote.lanHosts.map(\.name)) via=\(remote.connectedVia ?? "-")",
                            "projects: \(remote.hostProjects.map(\.name)) past=\(remote.hostPastConversations.mapValues(\.count).values.sorted())"]
@@ -106,6 +106,18 @@ enum DebugSnapshot {
             try? FileManager.default.removeItem(atPath: (dir as NSString).appendingPathComponent(file))
             guard let id = UUID(uuidString: String(file.prefix(36))) else { continue }
             if file.hasSuffix(".remote-resume") { model.remote.resumeHostSession(id) } else { model.remote.stopHostSession(id) }
+        }
+        // `<id>.remote-files`: the listed paths (one per line) as if dropped on that remote terminal.
+        for file in files where file.hasSuffix(".remote-files") {
+            let path = (dir as NSString).appendingPathComponent(file)
+            let urls = contents(path).split(separator: "\n").map { URL(fileURLWithPath: String($0)) }
+            try? FileManager.default.removeItem(atPath: path)
+            if let id = UUID(uuidString: String(file.prefix(36))) { model.remote.pasteFiles(id, files: RemoteUploadReader.files(urls)) }
+        }
+        // `zoom.in` / `zoom.out`: ⌘+ / ⌘- for the terminals.
+        for file in files where file == "zoom.in" || file == "zoom.out" {
+            try? FileManager.default.removeItem(atPath: (dir as NSString).appendingPathComponent(file))
+            model.zoomTerminals(by: file == "zoom.in" ? 1 : -1)
         }
         for (id, text) in model.remote.debugScreens() {
             try? text.write(toFile: (dir as NSString).appendingPathComponent("screen-\(id.uuidString).txt"), atomically: true, encoding: .utf8)
@@ -242,7 +254,8 @@ enum DebugSnapshot {
             guard let view = window.contentView?.superview ?? window.contentView else { continue }
             guard let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else { continue }
             view.cacheDisplay(in: view.bounds, to: rep)
-            let name = window.title.isEmpty ? "window-\(i)" : window.title
+            // A title like "api · ./dev.sh" would otherwise point into a folder that doesn't exist.
+            let name = window.title.isEmpty ? "window-\(i)" : window.title.replacingOccurrences(of: "/", with: "∕")
             try? rep.representation(using: .png, properties: [:])?
                 .write(to: URL(fileURLWithPath: dir).appending(path: "\(name).png"))
         }

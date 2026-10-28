@@ -340,6 +340,12 @@ final class RemoteController {
                     reply(self.sendPrompt(id, text: text, files: files))
                 }
             }
+            server.onPasteFiles = { [weak self] id, files, reply in
+                MainActor.assumeIsolated {
+                    guard let self else { reply(String(localized: "ClaudeDeck isn't ready.")); return }
+                    reply(self.pasteFiles(id, files: files))
+                }
+            }
             server.onRegisterPush = { [weak self] device in
                 MainActor.assumeIsolated { self?.registerPush(device) }
             }
@@ -645,6 +651,36 @@ final class RemoteController {
             return String(localized: "This session isn't running on the other Mac.")
         }
         guard !model.status(of: id).display.isBlocked else { return String(localized: "Answer the prompt above first") }
+        let saved: (images: [String], others: [String])
+        do { saved = try saveUploads(files) } catch {
+            return String(localized: "Couldn't save the files on the other Mac: \(error.localizedDescription)")
+        }
+        put(saved, text: text, submit: true, into: id)
+        return nil
+    }
+
+    /// Files dropped / pasted into a terminal on another Mac: like `sendPrompt` without Enter, so
+    /// the user goes on typing. A plain terminal gets the paths.
+    private func pasteFiles(_ id: UUID, files: [RemoteUpload]) -> String? {
+        guard let model, let session = model.deck.session(id), model.terminals.isRunning(id) else {
+            return String(localized: "This session isn't running on the other Mac.")
+        }
+        guard !model.status(of: id).display.isBlocked else { return String(localized: "Answer the prompt above first") }
+        let saved: (images: [String], others: [String])
+        do { saved = try saveUploads(files) } catch {
+            return String(localized: "Couldn't save the files on the other Mac: \(error.localizedDescription)")
+        }
+        if session.kind == .claude {
+            put(saved, text: "", submit: false, into: id)
+        } else {
+            // The folder and names have no spaces: no quoting needed.
+            model.terminals.paste((saved.images + saved.others).joined(separator: " ") + " ", into: id)
+        }
+        return nil
+    }
+
+    /// Writes the files to a new folder under `uploadsFolder` (dropping folders older than a week).
+    private func saveUploads(_ files: [RemoteUpload]) throws -> (images: [String], others: [String]) {
         let fileManager = FileManager.default
         let week = Date().addingTimeInterval(-7 * 24 * 3600)
         for old in (try? fileManager.contentsOfDirectory(at: uploadsFolder, includingPropertiesForKeys: [.contentModificationDateKey])) ?? [] {
@@ -652,25 +688,27 @@ final class RemoteController {
             if modified < week { try? fileManager.removeItem(at: old) }
         }
         let folder = uploadsFolder.appending(path: "\(Int(Date().timeIntervalSince1970))-\(UUID().uuidString.prefix(4))")
+        try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
         var images: [String] = []
         var others: [String] = []
-        do {
-            try fileManager.createDirectory(at: folder, withIntermediateDirectories: true)
-            var used: Set<String> = []
-            for file in files {
-                var name = RemoteUpload.safeName(file.name)
-                while used.contains(name) { name = "1-" + name }
-                used.insert(name)
-                let url = folder.appending(path: name)
-                try file.data.write(to: url)
-                if RemoteUpload.imageExtensions.contains(url.pathExtension.lowercased()) { images.append(url.path) } else { others.append(url.path) }
-            }
-        } catch {
-            return String(localized: "Couldn't save the files on the other Mac: \(error.localizedDescription)")
+        var used: Set<String> = []
+        for file in files {
+            var name = RemoteUpload.safeName(file.name)
+            while used.contains(name) { name = "1-" + name }
+            used.insert(name)
+            let url = folder.appending(path: name)
+            try file.data.write(to: url)
+            if RemoteUpload.imageExtensions.contains(url.pathExtension.lowercased()) { images.append(url.path) } else { others.append(url.path) }
         }
-        let body = (images.isEmpty ? "" : " ") + others.map { "@\($0) " }.joined() + text.trimmingCharacters(in: .whitespacesAndNewlines)
+        return (images, others)
+    }
+
+    /// Each image pasted on its own (a pasted image path becomes an attachment only alone), then
+    /// the other files as @mentions with the text, then Enter when `submit`.
+    private func put(_ saved: (images: [String], others: [String]), text: String, submit: Bool, into id: UUID) {
+        let body = (saved.images.isEmpty ? "" : " ") + saved.others.map { "@\($0) " }.joined() + text.trimmingCharacters(in: .whitespacesAndNewlines)
         Task { @MainActor [weak self] in
-            for path in images {
+            for path in saved.images {
                 guard let model = self?.model, model.terminals.isRunning(id) else { return }
                 model.terminals.paste(path, into: id)
                 // Claude Code reads the image before the next paste.
@@ -681,9 +719,8 @@ final class RemoteController {
                 model.terminals.paste(body, into: id)
                 try? await Task.sleep(for: .milliseconds(500))
             }
-            model.terminals.type("\r", into: id)
+            if submit { model.terminals.type("\r", into: id) }
         }
-        return nil
     }
 
     // MARK: Host — iPhone pushes
@@ -1038,6 +1075,12 @@ final class RemoteController {
         next.onPastConversations = { [weak self] projectID, items in
             MainActor.assumeIsolated { self?.hostPastConversations[projectID] = items }
         }
+        next.onPromptResult = { [weak self] id, error in
+            MainActor.assumeIsolated {
+                guard let self, self.uploads[id] == .sending else { return }
+                if let error { self.uploadFailed(id, error) } else { self.uploads[id] = nil }
+            }
+        }
         hostConnection = next
         next.start()
     }
@@ -1166,6 +1209,39 @@ final class RemoteController {
 
     func stopHostSession(_ id: UUID) {
         _ = hostConnection?.send(.stopSession(sessionID: id))
+    }
+
+    enum UploadState: Equatable { case sending, failed(String) }
+    /// Files dropped / pasted into the other Mac's terminals, by session.
+    private(set) var uploads: [UUID: UploadState] = [:]
+
+    /// Files dropped / pasted into a terminal of the other Mac: it saves them and pastes them in.
+    func pasteFiles(_ id: UUID, files: [RemoteUpload]) {
+        guard !files.isEmpty, uploads[id] != .sending else { return }
+        guard files.reduce(0, { $0 + $1.data.count }) <= RemoteUpload.maxTotalBytes else {
+            uploadFailed(id, String(localized: "Too large: up to 5 MB of files per message."))
+            return
+        }
+        guard hostConnection?.send(.pasteFiles(sessionID: id, files: files)) == true else {
+            uploadFailed(id, String(localized: "Waiting for the other Mac…"))
+            return
+        }
+        uploads[id] = .sending
+        Task { @MainActor [weak self] in
+            // An older host skips the message without answering.
+            try? await Task.sleep(for: .seconds(60))
+            guard let self, self.uploads[id] == .sending else { return }
+            self.uploadFailed(id, String(localized: "The other Mac didn't answer. Update ClaudeDeck on it."))
+        }
+    }
+
+    private func uploadFailed(_ id: UUID, _ message: String) {
+        let state = UploadState.failed(message)
+        uploads[id] = state
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(6))
+            if self?.uploads[id] == state { self?.uploads[id] = nil }
+        }
     }
 
     /// Remote sessions that need the user (dock badge).

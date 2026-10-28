@@ -2,6 +2,7 @@ import AppKit
 import ClaudeDeckCore
 import SwiftTerm
 import SwiftUI
+import UniformTypeIdentifiers
 
 // Live terminal for remote mode (RemoteScreen.swift). Host: the screen is read back from the
 // terminal's cells for a watcher's first frame. Remote: a terminal view pinned to the host's
@@ -73,6 +74,21 @@ protocol RemoteTerminalSink: AnyObject {
 final class FixedGridTerminalView: TerminalView {
     var gridCols = 80
     var gridRows = 24
+    /// ⌘V with files or an image (no text) on the pasteboard: they go to the other Mac instead.
+    var onPasteFiles: (([RemoteUpload]) -> Void)?
+
+    override func paste(_ sender: Any) {
+        let pasteboard = NSPasteboard.general
+        let urls = RemoteUploadReader.fileURLs(pasteboard)
+        if !urls.isEmpty, let onPasteFiles {
+            onPasteFiles(RemoteUploadReader.files(urls))
+        } else if pasteboard.string(forType: .string) == nil, let image = NSImage(pasteboard: pasteboard),
+                  let upload = RemoteUploadReader.image(image, name: "pasted-image"), let onPasteFiles {
+            onPasteFiles([upload])
+        } else {
+            super.paste(sender)
+        }
+    }
 
     override func setFrameSize(_ newSize: NSSize) {
         super.setFrameSize(newSize)
@@ -94,10 +110,18 @@ final class FixedGridTerminalView: TerminalView {
 /// columns fit the width.
 final class RemoteTerminalContainer: NSView, @preconcurrency TerminalViewDelegate, RemoteTerminalSink {
     let terminal = FixedGridTerminalView(frame: NSRect(x: 0, y: 0, width: 800, height: 600))
-    var preferredFontSize: CGFloat
+    /// ⌘+ / ⌘-: refits right away (the width didn't change, so layout alone wouldn't) and asks
+    /// the host for a fresh screen, since a font change reflows SwiftTerm's buffer.
+    var preferredFontSize: CGFloat {
+        didSet { if preferredFontSize != oldValue { fit(force: true) } }
+    }
     var onInput: ((Data) -> Void)?
     /// The grid was disturbed (font change): ask the host for a fresh screen.
     var onNeedsRedraw: (() -> Void)?
+    /// Files dropped on the terminal or pasted into it.
+    var onFiles: (([RemoteUpload]) -> Void)? {
+        didSet { terminal.onPasteFiles = onFiles }
+    }
     private var fittedWidth: CGFloat = -1
     private var fontSize: CGFloat = 0
 
@@ -110,6 +134,19 @@ final class RemoteTerminalContainer: NSView, @preconcurrency TerminalViewDelegat
         applyColors()
         addSubview(terminal)
         setFont(fontSize)
+        registerForDraggedTypes([.fileURL])
+    }
+
+    override func draggingEntered(_ sender: NSDraggingInfo) -> NSDragOperation {
+        onFiles != nil && !RemoteUploadReader.fileURLs(sender.draggingPasteboard).isEmpty ? .copy : []
+    }
+
+    override func performDragOperation(_ sender: NSDraggingInfo) -> Bool {
+        let urls = RemoteUploadReader.fileURLs(sender.draggingPasteboard)
+        guard let onFiles, !urls.isEmpty else { return false }
+        onFiles(RemoteUploadReader.files(urls))
+        window?.makeFirstResponder(terminal)
+        return true
     }
 
     required init?(coder: NSCoder) { fatalError("not used") }
@@ -248,16 +285,14 @@ struct RemoteTerminalRepresentable: NSViewRepresentable {
         let id = sessionID
         view.onInput = { [weak remote] data in remote?.sendTerminalInput(id, data: data) }
         view.onNeedsRedraw = { [weak remote] in remote?.redrawTerminal(id) }
+        view.onFiles = { [weak remote] files in remote?.pasteFiles(id, files: files) }
         remote.attachTerminal(id, sink: view)
         DispatchQueue.main.async { view.window?.makeFirstResponder(view.terminal) }
         return view
     }
 
     func updateNSView(_ view: RemoteTerminalContainer, context: Context) {
-        if view.preferredFontSize != fontSize {
-            view.preferredFontSize = fontSize
-            view.needsLayout = true
-        }
+        view.preferredFontSize = fontSize
     }
 
     static func dismantleNSView(_ view: RemoteTerminalContainer, coordinator: Coordinator) {
@@ -306,6 +341,25 @@ struct RemoteTerminalTab: View {
             .background(.bar)
             Divider()
             RemoteTerminalRepresentable(sessionID: sessionID, remote: remote, fontSize: CGFloat(model.deck.settings.terminalFontSize))
+                .overlay(alignment: .bottom) {
+                    if let upload = remote.uploads[sessionID] {
+                        HStack(spacing: 6) {
+                            switch upload {
+                            case .sending:
+                                ProgressView().controlSize(.small)
+                                Text("Sending files…")
+                            case .failed(let message):
+                                Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+                                Text(message)
+                            }
+                        }
+                        .font(.callout)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.regularMaterial, in: Capsule())
+                        .padding(12)
+                    }
+                }
                 .overlay {
                     if let message = overlayMessage(remote) {
                         VStack(spacing: 8) {
@@ -326,5 +380,52 @@ struct RemoteTerminalTab: View {
         case .ended: return String(localized: "This session isn't running on the other Mac.")
         default: return String(localized: "Loading the terminal…")
         }
+    }
+}
+
+// MARK: Remote — files
+
+/// Files and images for the other Mac (drop / ⌘V): big or odd-format images become a resized JPEG,
+/// like the phone sends them.
+enum RemoteUploadReader {
+    static let maxPixels: CGFloat = 2000
+
+    static func fileURLs(_ pasteboard: NSPasteboard) -> [URL] {
+        (pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [URL] ?? [])
+            .filter { !$0.hasDirectoryPath }
+    }
+
+    static func files(_ urls: [URL]) -> [RemoteUpload] {
+        urls.compactMap { url in
+            guard let data = try? Data(contentsOf: url) else { return nil }
+            let ext = url.pathExtension.lowercased()
+            let isImage = UTType(filenameExtension: ext)?.conforms(to: .image) == true && ext != "gif"
+            if isImage, data.count > 1_500_000 || !RemoteUpload.imageExtensions.contains(ext), let image = NSImage(data: data) {
+                return self.image(image, name: url.deletingPathExtension().lastPathComponent)
+            }
+            return RemoteUpload(name: url.lastPathComponent, data: data)
+        }
+    }
+
+    /// PNG while small, else JPEG; at most `maxPixels` on the long side.
+    static func image(_ image: NSImage, name: String) -> RemoteUpload? {
+        guard var cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return nil }
+        let scale = min(1, maxPixels / CGFloat(max(cgImage.width, cgImage.height)))
+        if scale < 1 {
+            let width = Int(CGFloat(cgImage.width) * scale), height = Int(CGFloat(cgImage.height) * scale)
+            guard let context = CGContext(data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+                                          space: CGColorSpaceCreateDeviceRGB(), bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+            else { return nil }
+            context.interpolationQuality = .high
+            context.draw(cgImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+            guard let scaled = context.makeImage() else { return nil }
+            cgImage = scaled
+        }
+        let rep = NSBitmapImageRep(cgImage: cgImage)
+        if let png = rep.representation(using: .png, properties: [:]), png.count <= 1_500_000 {
+            return RemoteUpload(name: name + ".png", data: png)
+        }
+        guard let jpeg = rep.representation(using: .jpeg, properties: [.compressionFactor: 0.85]) else { return nil }
+        return RemoteUpload(name: name + ".jpg", data: jpeg)
     }
 }
