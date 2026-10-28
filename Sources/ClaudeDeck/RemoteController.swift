@@ -1031,6 +1031,13 @@ final class RemoteController {
                 self.terminalStates[id] = .ended
             }
         }
+        // A session this Mac started there: show its terminal.
+        next.onSessionStarted = { [weak self] id in
+            MainActor.assumeIsolated { self?.model?.openRemoteTerminal(id) }
+        }
+        next.onPastConversations = { [weak self] projectID, items in
+            MainActor.assumeIsolated { self?.hostPastConversations[projectID] = items }
+        }
         hostConnection = next
         next.start()
     }
@@ -1123,6 +1130,42 @@ final class RemoteController {
         answering.insert(id)
         answerError = nil
         return true
+    }
+
+    // MARK: Remote — sessions on the other Mac
+
+    /// The other Mac's projects (New Session sheet).
+    var hostProjects: [RemoteProject] { snapshot?.projects ?? [] }
+    /// Earlier conversations of the other Mac's projects, newest first.
+    private(set) var hostPastConversations: [UUID: [RemotePastConversation]] = [:]
+
+    /// A new Claude session there; the first message goes in once Claude is up.
+    func startHostSession(in projectID: UUID, prompt: String) {
+        let text = prompt.trimmingCharacters(in: .whitespacesAndNewlines)
+        _ = hostConnection?.send(.startSession(projectID: projectID, prompt: text.isEmpty ? nil : text))
+    }
+
+    func startHostShell(in projectID: UUID, command: String) {
+        let text = command.trimmingCharacters(in: .whitespacesAndNewlines)
+        _ = hostConnection?.send(.startShell(projectID: projectID, command: text.isEmpty ? nil : text))
+    }
+
+    func resumeHostConversation(_ conversationID: String, in projectID: UUID) {
+        _ = hostConnection?.send(.resumeConversation(projectID: projectID, conversationID: conversationID))
+    }
+
+    func loadHostPastConversations(_ projectID: UUID) {
+        _ = hostConnection?.send(.pastConversationsRequest(projectID: projectID))
+    }
+
+    /// A closed session there, started again; the host doesn't answer, so its terminal opens now.
+    func resumeHostSession(_ id: UUID) {
+        guard hostConnection?.send(.resumeSession(sessionID: id)) == true else { return }
+        model?.openRemoteTerminal(id)
+    }
+
+    func stopHostSession(_ id: UUID) {
+        _ = hostConnection?.send(.stopSession(sessionID: id))
     }
 
     /// Remote sessions that need the user (dock badge).

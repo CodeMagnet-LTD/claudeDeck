@@ -71,7 +71,8 @@ enum DebugSnapshot {
         let remoteLines = ["host: \(remote.hostState) remotes=\(remote.connectedRemotes) last=\(remote.lastRemoteAnswer ?? "-") rejected=\(remote.lastRejectedPeer ?? "-")",
                            "client: \(remote.connection) answering=\(remote.answering.count) error=\(remote.answerError ?? "-")",
                            "terminals: \(remote.terminalStates) counters: \(remote.counters.sorted { $0.key < $1.key })",
-                           "lan: \(remote.lanHosts.map(\.name)) via=\(remote.connectedVia ?? "-")"]
+                           "lan: \(remote.lanHosts.map(\.name)) via=\(remote.connectedVia ?? "-")",
+                           "projects: \(remote.hostProjects.map(\.name)) past=\(remote.hostPastConversations.mapValues(\.count).values.sorted())"]
             + (remote.snapshot?.sessions ?? []).map { "  \($0.id.uuidString) \($0.name) \($0.state.rawValue) stamp=\($0.permissionStamp.map { String($0) } ?? "-")" }
         try? remoteLines.joined(separator: "\n").write(toFile: (dir as NSString).appendingPathComponent("remote.txt"), atomically: true, encoding: .utf8)
         // `<id>.remote-open` opens the paired Mac's session in a tab; `<id>.remote-type` types its
@@ -86,6 +87,25 @@ enum DebugSnapshot {
             let text = contents(path).replacingOccurrences(of: "\\r", with: "\r")
             try? FileManager.default.removeItem(atPath: path)
             if let id = UUID(uuidString: String(file.prefix(36))) { model.remote.sendTerminalInput(id, data: Data(text.utf8)) }
+        }
+        // `remote.start`: a Claude session with this prompt in the paired Mac's first project
+        // ("shell:" first: a terminal); `<id>.remote-resume` / `.remote-stop` act on its sessions.
+        for file in files where file == "remote.start" {
+            let path = (dir as NSString).appendingPathComponent(file)
+            let text = contents(path)
+            try? FileManager.default.removeItem(atPath: path)
+            guard let project = model.remote.hostProjects.first else { continue }
+            if text.hasPrefix("shell:") {
+                model.remote.startHostShell(in: project.id, command: String(text.dropFirst(6)))
+            } else {
+                model.remote.startHostSession(in: project.id, prompt: text)
+            }
+            model.remote.loadHostPastConversations(project.id)
+        }
+        for file in files where file.hasSuffix(".remote-resume") || file.hasSuffix(".remote-stop") {
+            try? FileManager.default.removeItem(atPath: (dir as NSString).appendingPathComponent(file))
+            guard let id = UUID(uuidString: String(file.prefix(36))) else { continue }
+            if file.hasSuffix(".remote-resume") { model.remote.resumeHostSession(id) } else { model.remote.stopHostSession(id) }
         }
         for (id, text) in model.remote.debugScreens() {
             try? text.write(toFile: (dir as NSString).appendingPathComponent("screen-\(id.uuidString).txt"), atomically: true, encoding: .utf8)

@@ -340,11 +340,14 @@ struct RemoteSidebarSection: View {
     @Environment(AppModel.self) private var model
     let filter: SidebarFilter
     @AppStorage("sidebar.remoteExpanded", store: .windowState) private var expanded = true
+    @AppStorage("sidebar.remoteClosedExpanded", store: .windowState) private var closedExpanded = false
+    @State private var showNewSession = false
 
     var body: some View {
         let remote = model.remote
+        let closed = (remote.snapshot?.sessions ?? []).filter { $0.state == .notStarted }
         let sessions = (remote.snapshot?.sessions ?? []).filter { session in
-            guard session.state != .notStarted else { return false }  // closed: phone-only list
+            guard session.state != .notStarted else { return false }  // closed: their own list below
             return switch filter {
             case .all: true
             case .waiting: session.needsAttention
@@ -357,6 +360,12 @@ struct RemoteSidebarSection: View {
                 if sessions.isEmpty {
                     Text(filter == .all ? "No running sessions" : "Nothing here")
                         .font(.callout).foregroundStyle(.tertiary)
+                }
+                if filter == .all, !closed.isEmpty {
+                    DisclosureGroup("Closed sessions (\(closed.count))", isExpanded: $closedExpanded) {
+                        ForEach(closed) { RemoteClosedSessionRow(session: $0).selectionDisabled() }
+                    }
+                    .selectionDisabled()
                 }
             } else {
                 RemoteConnectionLabel().font(.caption)
@@ -372,11 +381,110 @@ struct RemoteSidebarSection: View {
                     Text("\(sessions.count)").foregroundStyle(.tertiary)
                 }
                 Spacer()
+                if remote.connection == .connected, !remote.hostProjects.isEmpty {
+                    Button { showNewSession = true } label: { Image(systemName: "plus") }
+                        .buttonStyle(.borderless)
+                        .help("New session on the other Mac")
+                }
                 Circle()
                     .fill(remote.connection == .connected ? Color.green : Color.secondary.opacity(0.5))
                     .frame(width: 6, height: 6)
                     .help(remote.connection == .connected ? "Connected" : "Not connected")
             }
+            .sheet(isPresented: $showNewSession) { RemoteNewSessionSheet() }
+        }
+    }
+}
+
+/// A closed session of the other Mac, to start again.
+struct RemoteClosedSessionRow: View {
+    @Environment(AppModel.self) private var model
+    let session: RemoteSession
+
+    var body: some View {
+        HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(session.name).lineLimit(1)
+                if !session.project.isEmpty, !session.name.hasPrefix(session.project) {
+                    Text(session.project).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                }
+            }
+            Spacer(minLength: 4)
+            Button("Resume") { model.remote.resumeHostSession(session.id) }
+                .controlSize(.small)
+        }
+        .padding(.vertical, 1)
+    }
+}
+
+/// Start a Claude session (new, or a past conversation) or a terminal in one of the other Mac's projects.
+struct RemoteNewSessionSheet: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
+    @State private var projectID: UUID?
+    @State private var kind = Kind.claude
+    @State private var prompt = ""
+    @State private var command = ""
+
+    enum Kind { case claude, terminal }
+
+    var body: some View {
+        let remote = model.remote
+        VStack(alignment: .leading, spacing: 12) {
+            Text("New Session").font(.headline)
+            Picker("Project", selection: $projectID) {
+                ForEach(remote.hostProjects) { Text($0.name).tag(Optional($0.id)) }
+            }
+            Picker("Type", selection: $kind) {
+                Text("Claude").tag(Kind.claude)
+                Text("Terminal").tag(Kind.terminal)
+            }
+            .pickerStyle(.segmented)
+            if kind == .claude {
+                TextField("What should Claude do? (optional)", text: $prompt, axis: .vertical)
+                    .lineLimit(3...8)
+                Text("Sent once Claude has started on the Mac.").font(.caption).foregroundStyle(.secondary)
+                if let projectID, let past = remote.hostPastConversations[projectID], !past.isEmpty {
+                    Text("Continue a past conversation").font(.subheadline.weight(.semibold)).padding(.top, 4)
+                    List(past.prefix(20)) { item in
+                        Button {
+                            remote.resumeHostConversation(item.id, in: projectID)
+                            dismiss()
+                        } label: {
+                            HStack {
+                                Text(item.title).lineLimit(1)
+                                Spacer(minLength: 8)
+                                Text(item.modifiedAt, style: .relative).font(.caption).foregroundStyle(.secondary)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .frame(height: 160)
+                }
+            } else {
+                TextField("Command (optional), e.g. yarn dev", text: $command)
+                    .font(.body.monospaced())
+                Text("Opens a shell in the project folder on the Mac.").font(.caption).foregroundStyle(.secondary)
+            }
+            HStack {
+                Spacer()
+                Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                Button("Start") {
+                    if let projectID {
+                        if kind == .claude { remote.startHostSession(in: projectID, prompt: prompt) } else { remote.startHostShell(in: projectID, command: command) }
+                    }
+                    dismiss()
+                }
+                .keyboardShortcut(.defaultAction)
+                .disabled(projectID == nil || remote.connection != .connected)
+            }
+        }
+        .padding(16)
+        .frame(width: 460)
+        .onAppear { if projectID == nil { projectID = remote.hostProjects.first?.id } }
+        .onChange(of: projectID, initial: true) { _, id in
+            if let id { remote.loadHostPastConversations(id) }
         }
     }
 }
@@ -384,6 +492,7 @@ struct RemoteSidebarSection: View {
 struct RemoteSessionRow: View {
     @Environment(AppModel.self) private var model
     let session: RemoteSession
+    @State private var confirmStop = false
 
     var body: some View {
         let display = session.state.display
@@ -430,6 +539,18 @@ struct RemoteSessionRow: View {
         .contentShape(Rectangle())
         .onTapGesture { model.openRemoteTerminal(session.id) }
         .help("Open the live terminal")
+        .contextMenu {
+            Button("Open Terminal") { model.openRemoteTerminal(session.id) }
+            if session.state != .shell {
+                Divider()
+                Button("Stop", role: .destructive) { confirmStop = true }
+            }
+        }
+        .confirmationDialog("Stop \(session.name)?", isPresented: $confirmStop) {
+            Button("Stop Session", role: .destructive) { model.remote.stopHostSession(session.id) }
+        } message: {
+            Text("Claude stops on the Mac. You can resume the conversation later.")
+        }
     }
 }
 

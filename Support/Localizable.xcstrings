@@ -8493,6 +8493,26 @@
           }
         }
       }
+    },
+    "New session on the other Mac": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac'te yeni oturum"
+          }
+        }
+      }
+    },
+    "Open Terminal": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminali Aç"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
