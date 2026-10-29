@@ -83,6 +83,8 @@ final class AppModel {
     /// Set by the UI layer (notifications, dock, bounce).
     @ObservationIgnored var onAttention: ((AttentionEvent) -> Void)?
     @ObservationIgnored var onCountsChanged: (() -> Void)?
+    /// After the deck was saved (projects renamed, pinned…): remote mode republishes.
+    @ObservationIgnored var onSaved: (() -> Void)?
     /// Opens the main window scene (set by a SwiftUI view that has `openWindow`).
     @ObservationIgnored var openMainWindow: (() -> Void)?
     /// Opens a file in the built-in editor window (set alongside `openMainWindow`).
@@ -698,6 +700,7 @@ final class AppModel {
         // iCloud sync: stamp local project/group edits and write the shared file.
         if let synced = sync.prepareSave(deck) { deck = synced }
         try? store.save(deck)
+        onSaved?()
     }
 }
 

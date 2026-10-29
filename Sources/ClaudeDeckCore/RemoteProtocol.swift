@@ -256,9 +256,19 @@ public struct RemotePastConversation: Codable, Sendable, Equatable, Identifiable
 public struct RemoteProject: Codable, Sendable, Equatable, Identifiable {
     public var id: UUID
     public var name: String
-    public init(id: UUID, name: String) {
+    /// Pinned on the host: shown first, even without a running session.
+    public var pinned: Bool
+    public init(id: UUID, name: String, pinned: Bool = false) {
         self.id = id
         self.name = name
+        self.pinned = pinned
+    }
+
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        pinned = try c.decodeIfPresent(Bool.self, forKey: .pinned) ?? false  // older hosts
     }
 }
 

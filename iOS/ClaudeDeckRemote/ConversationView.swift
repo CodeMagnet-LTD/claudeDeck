@@ -14,6 +14,8 @@ struct ConversationView: View {
     @State private var choosingPhotos = false
     @State private var choosingFiles = false
     @State private var attachError: String?
+    /// Shift+Return on a hardware keyboard: the next newline stays a newline.
+    @State private var shiftReturn = false
 
     var body: some View {
         let conversation = store.conversations[sessionID]
@@ -130,16 +132,27 @@ struct ConversationView: View {
                     .padding(.vertical, 8)
                     .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
                     .disabled(blocked)
+                    .submitLabel(.send)
+                    .onKeyPress(.return, phases: .down) { press in
+                        guard press.modifiers.contains(.shift) else { send(session); return .handled }
+                        shiftReturn = true
+                        return .ignored
+                    }
+                    // Return sends, like the terminal: a single typed newline (on-screen keyboard)
+                    // is taken back out and sends the message; a pasted text keeps its lines.
+                    .onChange(of: draft) { old, new in
+                        let typedNewline = new.count == old.count + 1
+                            && new.filter(\.isNewline).count == old.filter(\.isNewline).count + 1
+                        defer { if typedNewline { shiftReturn = false } }
+                        guard typedNewline, !shiftReturn else { return }
+                        draft = old
+                        send(session)
+                    }
                 if sending {
                     ProgressView().frame(width: 30, height: 36)
                 } else {
                     Button {
-                        if attachments.isEmpty {
-                            if store.sendPrompt(sessionID, text: draft) { draft = "" }
-                        } else {
-                            // Cleared once the Mac took it (a failure keeps them for another try).
-                            store.sendPrompt(sessionID, text: draft, files: attachments.map(\.upload))
-                        }
+                        send(session)
                     } label: {
                         Image(systemName: "arrow.up.circle.fill").font(.system(size: 30))
                     }
@@ -179,6 +192,18 @@ struct ConversationView: View {
                 }
                 add(Attachment.file(data, name: url.lastPathComponent))
             }
+        }
+    }
+
+    private func send(_ session: RemoteSession?) {
+        guard session?.state.isBlocked != true, store.connection == .connected, !store.sendingFiles.contains(sessionID),
+              !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !attachments.isEmpty
+        else { return }
+        if attachments.isEmpty {
+            if store.sendPrompt(sessionID, text: draft) { draft = "" }
+        } else {
+            // Cleared once the Mac took it (a failure keeps them for another try).
+            store.sendPrompt(sessionID, text: draft, files: attachments.map(\.upload))
         }
     }
 

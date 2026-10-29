@@ -440,6 +440,9 @@ final class RemoteStore {
     /// Esc in a working session.
     func interrupt(_ id: UUID) { _ = send(.interrupt(sessionID: id)) }
 
+    /// Clears "your turn" without opening the session.
+    func markSeen(_ id: UUID) { _ = send(.markSeen(sessionID: id)) }
+
     func resumeSession(_ id: UUID, from scene: UUID? = nil) {
         guard send(.resumeSession(sessionID: id)) else { return }
         open(id, in: scene)

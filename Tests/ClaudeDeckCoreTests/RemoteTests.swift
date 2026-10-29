@@ -613,6 +613,9 @@ import Testing
         // In the conversation, a sent file shows by name.
         let line = #"{"type":"user","uuid":"u1","message":{"role":"user","content":"[Image #1] @/var/folders/k2/abc/T/ClaudeDeckUploads/1793051586-E3C5/my-notes.txt What is it?"}}"#
         #expect(ConversationLog.entries(fromJSONL: line).first?.text == "[Image #1] 📎 my-notes.txt What is it?")
+        // A project from an older host (no pin) still decodes, unpinned.
+        let old = try JSONDecoder().decode(RemoteProject.self, from: Data(#"{"id":"C0000000-0000-0000-0000-000000000001","name":"api"}"#.utf8))
+        #expect(old.name == "api" && !old.pinned)
     }
 }
 

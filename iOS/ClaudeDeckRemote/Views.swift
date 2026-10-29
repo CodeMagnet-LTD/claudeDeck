@@ -98,6 +98,8 @@ struct SessionListView: View {
     @Binding var selection: UUID?
     @State private var showSettings = false
     @State private var showNewSession = false
+    /// The project the New Session sheet starts on (a pinned project's row).
+    @State private var newSessionProject: UUID?
 
     var body: some View {
         let all = store.snapshot?.sessions ?? []
@@ -105,7 +107,11 @@ struct SessionListView: View {
         let closed = all.filter { $0.state == .notStarted }
         let waiting = sessions.filter(\.needsAttention)
         let projects = Dictionary(grouping: sessions, by: \.project)
-        let projectNames = sessions.map(\.project).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
+        // Pinned on the Mac: first, and shown even without a running session.
+        let pinned = store.projects.filter(\.pinned)
+        let pinnedNames = Set(pinned.map(\.name))
+        let projectNames = pinned.map(\.name).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
+            + sessions.map(\.project).reduce(into: [String]()) { if !$0.contains($1), !pinnedNames.contains($1) { $0.append($1) } }
         List(selection: $selection) {
             ConnectionBanner()
             if let usage = store.snapshot?.usage { UsageRow(usage: usage) }
@@ -115,8 +121,26 @@ struct SessionListView: View {
                 }
             }
             ForEach(projectNames, id: \.self) { project in
-                Section(project.isEmpty ? String(localized: "Sessions") : project) {
+                Section {
                     ForEach(projects[project] ?? []) { SessionRowLink(session: $0, showProject: false) }
+                    if projects[project] == nil, let id = pinned.first(where: { $0.name == project })?.id {
+                        Button {
+                            newSessionProject = id
+                            showNewSession = true
+                        } label: {
+                            Label("New Session", systemImage: "plus")
+                        }
+                        .disabled(store.connection != .connected)
+                    }
+                } header: {
+                    Group {
+                        if pinnedNames.contains(project) {
+                            Label(project, systemImage: "pin.fill")
+                        } else {
+                            Text(project.isEmpty ? String(localized: "Sessions") : project)
+                        }
+                    }
+                    .contextMenu { projectMenu(project, running: projects[project] ?? []) }
                 }
             }
             if store.connection == .connected, sessions.isEmpty {
@@ -138,6 +162,11 @@ struct SessionListView: View {
                                     .buttonStyle(.bordered)
                                     .controlSize(.small)
                             }
+                            .contextMenu {
+                                Button { store.resumeSession(session.id, from: sceneID) } label: {
+                                    Label("Resume", systemImage: "play")
+                                }
+                            }
                         }
                     }
                 }
@@ -157,12 +186,38 @@ struct SessionListView: View {
                     .disabled(store.connection != .connected || store.projects.isEmpty)
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button { showNewSession = true } label: { Image(systemName: "plus") }
+                Button {
+                    newSessionProject = nil
+                    showNewSession = true
+                } label: { Image(systemName: "plus") }
                     .disabled(store.connection != .connected || store.projects.isEmpty)
             }
         }
         .sheet(isPresented: $showSettings) { NavigationStack { SettingsView() } }
-        .sheet(isPresented: $showNewSession) { NavigationStack { NewSessionView() } }
+        .sheet(isPresented: $showNewSession) { NavigationStack { NewSessionView(initialProject: newSessionProject) } }
+    }
+}
+
+extension SessionListView {
+    /// The Mac's project menu, as far as the other Mac can be asked to (no pin / rename there yet).
+    @ViewBuilder
+    func projectMenu(_ name: String, running: [RemoteSession]) -> some View {
+        if let project = store.projects.first(where: { $0.name == name }) {
+            Button {
+                newSessionProject = project.id
+                showNewSession = true
+            } label: { Label("New Session…", systemImage: "plus") }
+            Button { store.startShell(in: project.id, command: "", from: sceneID) } label: {
+                Label("New Terminal", systemImage: "apple.terminal")
+            }
+        }
+        let claude = running.filter { $0.state != .shell }
+        if !claude.isEmpty {
+            Divider()
+            Button(role: .destructive) { claude.forEach { store.stopSession($0.id) } } label: {
+                Label("End All Sessions (\(claude.count))", systemImage: "power")
+            }
+        }
     }
 }
 
@@ -179,10 +234,26 @@ struct SessionRowLink: View {
             SessionRow(session: session, showProject: showProject)
         }
         .contextMenu {
+            // Like the Mac's session menu, as far as the other Mac can be asked to.
+            if let stamp = session.permissionStamp {
+                Button { store.answer(session.id, stamp: stamp, approve: true) } label: { Label("Allow", systemImage: "checkmark") }
+                Button(role: .destructive) { store.answer(session.id, stamp: stamp, approve: false) } label: { Label("Deny", systemImage: "xmark") }
+                Divider()
+            }
             if supportsMultipleWindows {
                 Button { openWindow(value: session.id) } label: {
                     Label("Open in New Window", systemImage: "macwindow.badge.plus")
                 }
+            }
+            if session.state == .running {
+                Button { store.interrupt(session.id) } label: { Label("Interrupt (Esc)", systemImage: "stop.circle") }
+            }
+            if session.unseen {
+                Button { store.markSeen(session.id) } label: { Label("Mark as Seen", systemImage: "eye") }
+            }
+            if session.state != .shell {
+                Divider()
+                Button(role: .destructive) { confirmStop = true } label: { Label("End Session", systemImage: "power") }
             }
         }
         .swipeActions(edge: .trailing) {
@@ -228,6 +299,7 @@ struct NewSessionView: View {
     @Environment(RemoteStore.self) private var store
     @Environment(\.sceneID) private var sceneID
     @Environment(\.dismiss) private var dismiss
+    var initialProject: UUID? = nil
     @State private var projectID: UUID?
     @State private var prompt = ""
     @State private var kind = Kind.claude
@@ -303,7 +375,7 @@ struct NewSessionView: View {
                 .disabled(projectID == nil || store.connection != .connected)
             }
         }
-        .onAppear { if projectID == nil { projectID = store.projects.first?.id } }
+        .onAppear { if projectID == nil { projectID = initialProject ?? store.projects.first?.id } }
     }
 }
 

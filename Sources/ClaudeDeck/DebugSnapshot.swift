@@ -72,7 +72,7 @@ enum DebugSnapshot {
                            "client: \(remote.connection) answering=\(remote.answering.count) error=\(remote.answerError ?? "-") uploads=\(remote.uploads)",
                            "terminals: \(remote.terminalStates) counters: \(remote.counters.sorted { $0.key < $1.key })",
                            "lan: \(remote.lanHosts.map(\.name)) via=\(remote.connectedVia ?? "-")",
-                           "projects: \(remote.hostProjects.map(\.name)) past=\(remote.hostPastConversations.mapValues(\.count).values.sorted())"]
+                           "projects: \(remote.hostProjects.map { $0.pinned ? "📌" + $0.name : $0.name }) past=\(remote.hostPastConversations.mapValues(\.count).values.sorted())"]
             + (remote.snapshot?.sessions ?? []).map { "  \($0.id.uuidString) \($0.name) \($0.state.rawValue) stamp=\($0.permissionStamp.map { String($0) } ?? "-")" }
         try? remoteLines.joined(separator: "\n").write(toFile: (dir as NSString).appendingPathComponent("remote.txt"), atomically: true, encoding: .utf8)
         // `<id>.remote-open` opens the paired Mac's session in a tab; `<id>.remote-type` types its
@@ -113,6 +113,11 @@ enum DebugSnapshot {
             let urls = contents(path).split(separator: "\n").map { URL(fileURLWithPath: String($0)) }
             try? FileManager.default.removeItem(atPath: path)
             if let id = UUID(uuidString: String(file.prefix(36))) { model.remote.pasteFiles(id, files: RemoteUploadReader.files(urls)) }
+        }
+        // `<project-uuid>.pin`: toggles the project's pin.
+        for file in files where file.hasSuffix(".pin") {
+            try? FileManager.default.removeItem(atPath: (dir as NSString).appendingPathComponent(file))
+            if let id = UUID(uuidString: String(file.prefix(36))) { model.mutate { $0.updateProject(id) { $0.pinned.toggle() } } }
         }
         // `zoom.in` / `zoom.out`: ⌘+ / ⌘- for the terminals.
         for file in files where file == "zoom.in" || file == "zoom.out" {

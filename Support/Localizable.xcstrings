@@ -8523,6 +8523,36 @@
           }
         }
       }
+    },
+    "New Session…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Oturum…"
+          }
+        }
+      }
+    },
+    "Interrupt (Esc)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durdur (Esc)"
+          }
+        }
+      }
+    },
+    "Mark as Seen": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Görüldü Olarak İşaretle"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

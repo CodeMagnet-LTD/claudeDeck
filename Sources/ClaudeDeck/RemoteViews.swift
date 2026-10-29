@@ -342,10 +342,14 @@ struct RemoteSidebarSection: View {
     @AppStorage("sidebar.remoteExpanded", store: .windowState) private var expanded = true
     @AppStorage("sidebar.remoteClosedExpanded", store: .windowState) private var closedExpanded = false
     @State private var showNewSession = false
+    @State private var newSessionProject: UUID?
 
     var body: some View {
         let remote = model.remote
         let closed = (remote.snapshot?.sessions ?? []).filter { $0.state == .notStarted }
+        // Pinned on the other Mac: their sessions first, and the projects shown even when idle.
+        let pinned = remote.hostProjects.filter(\.pinned)
+        let pinnedNames = Set(pinned.map(\.name))
         let sessions = (remote.snapshot?.sessions ?? []).filter { session in
             guard session.state != .notStarted else { return false }  // closed: their own list below
             return switch filter {
@@ -353,11 +357,21 @@ struct RemoteSidebarSection: View {
             case .waiting: session.needsAttention
             case .working: session.state == .running
             }
-        }
+        }.sorted { pinnedNames.contains($0.project) && !pinnedNames.contains($1.project) }
+        let idlePinned = pinned.filter { project in !sessions.contains { $0.project == project.name } }
         Section(isExpanded: $expanded) {
             if remote.connection == .connected {
                 ForEach(sessions) { RemoteSessionRow(session: $0).selectionDisabled() }
-                if sessions.isEmpty {
+                if filter == .all {
+                    ForEach(idlePinned) { project in
+                        RemotePinnedProjectRow(project: project) {
+                            newSessionProject = project.id
+                            showNewSession = true
+                        }
+                        .selectionDisabled()
+                    }
+                }
+                if sessions.isEmpty, filter != .all || idlePinned.isEmpty {
                     Text(filter == .all ? "No running sessions" : "Nothing here")
                         .font(.callout).foregroundStyle(.tertiary)
                 }
@@ -382,7 +396,10 @@ struct RemoteSidebarSection: View {
                 }
                 Spacer()
                 if remote.connection == .connected, !remote.hostProjects.isEmpty {
-                    Button { showNewSession = true } label: { Image(systemName: "plus") }
+                    Button {
+                        newSessionProject = nil
+                        showNewSession = true
+                    } label: { Image(systemName: "plus") }
                         .buttonStyle(.borderless)
                         .help("New session on the other Mac")
                 }
@@ -391,8 +408,27 @@ struct RemoteSidebarSection: View {
                     .frame(width: 6, height: 6)
                     .help(remote.connection == .connected ? "Connected" : "Not connected")
             }
-            .sheet(isPresented: $showNewSession) { RemoteNewSessionSheet() }
+            .sheet(isPresented: $showNewSession) { RemoteNewSessionSheet(initialProject: newSessionProject) }
         }
+    }
+}
+
+/// A pinned project of the other Mac with nothing running: one click to start there.
+struct RemotePinnedProjectRow: View {
+    let project: RemoteProject
+    let newSession: () -> Void
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "pin.fill").font(.caption).foregroundStyle(.secondary)
+            Text(project.name).lineLimit(1)
+            Spacer(minLength: 4)
+            Button(action: newSession) { Image(systemName: "plus") }
+                .buttonStyle(.borderless)
+                .help("New session on the other Mac")
+        }
+        .padding(.vertical, 1)
+        .contextMenu { Button("New Session…", action: newSession) }
     }
 }
 
@@ -421,6 +457,7 @@ struct RemoteClosedSessionRow: View {
 struct RemoteNewSessionSheet: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
+    var initialProject: UUID? = nil
     @State private var projectID: UUID?
     @State private var kind = Kind.claude
     @State private var prompt = ""
@@ -482,7 +519,7 @@ struct RemoteNewSessionSheet: View {
         }
         .padding(16)
         .frame(width: 460)
-        .onAppear { if projectID == nil { projectID = remote.hostProjects.first?.id } }
+        .onAppear { if projectID == nil { projectID = initialProject ?? remote.hostProjects.first?.id } }
         .onChange(of: projectID, initial: true) { _, id in
             if let id { remote.loadHostPastConversations(id) }
         }

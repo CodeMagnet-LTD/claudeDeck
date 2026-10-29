@@ -126,6 +126,11 @@ final class RemoteController {
             previous?()
             self?.publishSnapshot()
         }
+        let previousSaved = model.onSaved
+        model.onSaved = { [weak self] in
+            previousSaved?()
+            self?.publishSnapshot()
+        }
         let previousAttention = model.onAttention
         model.onAttention = { [weak self] event in
             previousAttention?(event)
@@ -462,7 +467,9 @@ final class RemoteController {
         var snapshot = Self.makeSnapshot(model)
         // How to reach this Mac away from home (a phone paired on the local network learns it here).
         snapshot.hostID = local.hostID
-        snapshot.projects = model.deck.projects.map { RemoteProject(id: $0.id, name: $0.name) }
+        // Pinned first, like the sidebar.
+        snapshot.projects = (model.deck.projects.filter(\.pinned) + model.deck.projects.filter { !$0.pinned })
+            .map { RemoteProject(id: $0.id, name: $0.name, pinned: $0.pinned) }
         if case .ok(let usage) = model.usage.state {
             snapshot.usage = RemoteUsage(fiveHour: usage.fiveHour?.usedPercent, fiveHourResetsAt: usage.fiveHour?.resetsAt,
                                          week: usage.sevenDay?.usedPercent, weekResetsAt: usage.sevenDay?.resetsAt)
