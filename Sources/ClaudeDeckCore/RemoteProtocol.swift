@@ -140,6 +140,11 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case pasteFiles(sessionID: UUID, files: [RemoteUpload])
     /// Host → remote: whether the message with files went in (nil) or why not.
     case promptResult(sessionID: UUID, error: String?)
+    /// Remote → host: the session's permission mode, after pressing Shift+Tab once when `cycle`
+    /// (manual → accept edits → plan → auto…). Answered with `permissionModeIs`.
+    case permissionMode(sessionID: UUID, cycle: Bool)
+    /// Host → remote: the mode as Claude Code's status line shows it ("plan mode"), nil if unknown.
+    case permissionModeIs(sessionID: UUID, mode: String?)
     /// Phone → host: send push notifications to this device (APNs.swift).
     case registerPush(token: Data, topic: String, environment: String, deviceName: String)
     case ping
@@ -161,6 +166,18 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .secondsSince1970
         return try decoder.decode(RemoteMessage.self, from: frame.payload)
+    }
+}
+
+/// Claude Code's permission mode, read from the line under its input box
+/// ("⏸ plan mode on (shift+tab to cycle) · ← for agents", "⏵⏵ accept edits on").
+public enum PermissionModeLine {
+    public static func mode(in lines: [String]) -> String? {
+        for line in lines.reversed() {
+            guard let match = line.firstMatch(of: /(?:⏸|⏵⏵|⏵)\s*(.+?)\s+on\b/) else { continue }
+            return String(match.1)
+        }
+        return nil
     }
 }
 

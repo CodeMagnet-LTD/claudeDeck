@@ -345,6 +345,12 @@ final class RemoteController {
                     reply(self.sendPrompt(id, text: text, files: files))
                 }
             }
+            server.onPermissionMode = { [weak self] id, cycle, reply in
+                MainActor.assumeIsolated {
+                    guard let self else { reply(nil); return }
+                    self.permissionMode(id, cycle: cycle, reply: reply)
+                }
+            }
             server.onPasteFiles = { [weak self] id, files, reply in
                 MainActor.assumeIsolated {
                     guard let self else { reply(String(localized: "ClaudeDeck isn't ready.")); return }
@@ -684,6 +690,20 @@ final class RemoteController {
             model.terminals.paste((saved.images + saved.others).joined(separator: " ") + " ", into: id)
         }
         return nil
+    }
+
+    /// The mode under Claude Code's input box, after Shift+Tab when `cycle` (not while a prompt is
+    /// showing: there Shift+Tab means something else).
+    private func permissionMode(_ id: UUID, cycle: Bool, reply: @escaping @Sendable (String?) -> Void) {
+        guard let model, model.deck.session(id)?.kind == .claude, model.terminals.isRunning(id) else { reply(nil); return }
+        let press = cycle && !model.status(of: id).display.isBlocked
+        if press { model.terminals.type("\u{1B}[Z", into: id) }
+        Task { @MainActor [weak self] in
+            if press { try? await Task.sleep(for: .milliseconds(400)) }
+            guard let view = self?.model?.terminals.view(for: id) else { reply(nil); return }
+            let lines = TerminalCapture.screen(of: view, scrollback: 0).lines.suffix(8).map { $0.map(\.text).joined() }
+            reply(PermissionModeLine.mode(in: Array(lines)))
+        }
     }
 
     /// Writes the files to a new folder under `uploadsFolder` (dropping folders older than a week).

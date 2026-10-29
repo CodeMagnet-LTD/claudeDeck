@@ -3,7 +3,7 @@ import UIKit
 
 /// Simulator testing: with `CLAUDEDECK_DEBUG=1` in the launch environment, files dropped into
 /// `tmp/debug/` drive the app and `tmp/debug/remote.txt` reports its state.
-///   pair.txt (a claudedeck:// link) · <id>.open · <id>.window (new window) · <id>.attach (an off-screen terminal, for .type and screen-<id>.txt) · <id>.answer (JSON [QuestionAnswer]) · <id>.files (text, sent with a photo and a file) · <id>.approve / <id>.deny · <id>.type (text, "\r" = Enter)
+///   pair.txt (a claudedeck:// link) · <id>.open · <id>.window (new window) · <id>.mode (Shift+Tab) · <id>.attach (an off-screen terminal, for .type and screen-<id>.txt) · <id>.answer (JSON [QuestionAnswer]) · <id>.files (text, sent with a photo and a file) · <id>.approve / <id>.deny · <id>.type (text, "\r" = Enter)
 @MainActor
 final class DebugHooks {
     private let store: RemoteStore
@@ -75,6 +75,9 @@ final class DebugHooks {
                 }
                 let files = [Attachment.photo(image.pngData()!, number: 1), Attachment.file(Data("The secret word is kiwi.\n".utf8), name: "my notes.txt")]
                 store.sendPrompt(id, text: text, files: files.compactMap { $0?.upload })
+            } else if file.hasSuffix(".mode"), let id {
+                try? FileManager.default.removeItem(at: url)
+                store.permissionMode(id, cycle: true)
             } else if file.hasSuffix(".window"), let id {
                 try? FileManager.default.removeItem(at: url)
                 store.newWindowRequest = RemoteStore.OpenRequest(session: id, scene: nil)
@@ -87,7 +90,7 @@ final class DebugHooks {
             }
         }
         let push = PushRegistration.shared
-        var lines = ["connection: \(store.connection) sendingFiles=\(store.sendingFiles.count) promptError=\(store.promptError ?? "-") windows=\(store.scenes.map { "\($0.key.uuidString.prefix(8)):\($0.value?.uuidString.suffix(4) ?? "-")" }.sorted()) projects=\(store.projects.map(\.name))", "files: dirs=\(store.directories.values.map { $0.entries.map(\.name) }) file=\(store.files.values.map { "\($0.size):\($0.text?.prefix(30) ?? "")|\($0.error ?? "")" })",
+        var lines = ["connection: \(store.connection) modes=\(store.permissionModes.values.sorted()) sendingFiles=\(store.sendingFiles.count) promptError=\(store.promptError ?? "-") windows=\(store.scenes.map { "\($0.key.uuidString.prefix(8)):\($0.value?.uuidString.suffix(4) ?? "-")" }.sorted()) projects=\(store.projects.map(\.name))", "files: dirs=\(store.directories.values.map { $0.entries.map(\.name) }) file=\(store.files.values.map { "\($0.size):\($0.text?.prefix(30) ?? "")|\($0.error ?? "")" })",
                      "terminals: \(store.terminalStates) usage=\(store.snapshot?.usage.map { "\($0.fiveHour ?? -1)/\($0.week ?? -1)" } ?? "-") past=\(store.pastConversations.values.map(\.count))",
                      "lan: \(store.lanHosts.map(\.name)) via=\(store.connectedVia ?? "-") pairing=\(store.pairing?.addresses ?? [])",
                      "push: token=\(push.token?.count ?? 0) env=\(PushRegistration.environment) error=\(push.lastError ?? "-")"]

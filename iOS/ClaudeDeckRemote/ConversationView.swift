@@ -91,8 +91,13 @@ struct ConversationView: View {
             Divider()
             composer(session)
         }
-        .onAppear { store.openConversation(sessionID) }
+        .onAppear {
+            store.openConversation(sessionID)
+            store.permissionMode(sessionID)
+        }
         .onDisappear { store.closeConversation(sessionID) }
+        // The mode can change on the Mac too; it shows again after each turn.
+        .onChange(of: session?.state) { _, _ in store.permissionMode(sessionID) }
     }
 
     @ViewBuilder
@@ -115,6 +120,18 @@ struct ConversationView: View {
                     }
                 }
                 .disabled(sending)
+            }
+            if let session, session.state != .shell {
+                let mode = store.permissionModes[sessionID]
+                Button { store.permissionMode(sessionID, cycle: true) } label: {
+                    Label(mode.map { $0.prefix(1).uppercased() + $0.dropFirst() } ?? String(localized: "Permission Mode"),
+                          systemImage: Self.modeSymbol(mode))
+                        .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(blocked || store.connection != .connected)
+                .accessibilityHint(Text("Switches to the next permission mode, like Shift+Tab"))
             }
             HStack(alignment: .bottom, spacing: 8) {
                 Menu {
@@ -193,6 +210,15 @@ struct ConversationView: View {
                 add(Attachment.file(data, name: url.lastPathComponent))
             }
         }
+    }
+
+    static func modeSymbol(_ mode: String?) -> String {
+        let mode = mode?.lowercased() ?? ""
+        if mode.contains("plan") { return "list.bullet.clipboard" }
+        if mode.contains("accept") { return "checkmark.circle" }
+        if mode.contains("auto") || mode.contains("bypass") { return "bolt.fill" }
+        if mode.contains("manual") || mode.contains("default") { return "hand.raised" }
+        return "slider.horizontal.3"
     }
 
     private func send(_ session: RemoteSession?) {
@@ -301,9 +327,7 @@ struct ChatEntryView: View {
                     .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 16))
             }
         case .assistant:
-            Text(Self.markdown(entry.text))
-                .textSelection(.enabled)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            MarkdownView(text: entry.text)
         case .tool:
             VStack(alignment: .leading, spacing: 4) {
                 Button {
@@ -508,6 +532,63 @@ struct QuestionCard: View {
             if let error = store.answerError {
                 Text(error).font(.caption).foregroundStyle(.red)
             }
+        }
+    }
+}
+
+/// Claude's answer: inline markdown, with tables drawn as tables (scrolling sideways when wide).
+struct MarkdownView: View {
+    let text: String
+
+    var body: some View {
+        let blocks = MarkdownBlocks.split(text)
+        VStack(alignment: .leading, spacing: 8) {
+            ForEach(Array(blocks.enumerated()), id: \.offset) { _, block in
+                switch block {
+                case .text(let text):
+                    Text(ChatEntryView.markdown(text))
+                        .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                case .table(let header, let rows):
+                    MarkdownTableView(header: header, rows: rows)
+                }
+            }
+        }
+    }
+}
+
+struct MarkdownTableView: View {
+    let header: [String]
+    let rows: [[String]]
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            Grid(alignment: .leading, horizontalSpacing: 14, verticalSpacing: 6) {
+                GridRow {
+                    ForEach(header.indices, id: \.self) { cell(header[$0], bold: true) }
+                }
+                Divider()
+                ForEach(rows.indices, id: \.self) { row in
+                    GridRow {
+                        ForEach(rows[row].indices, id: \.self) { cell(rows[row][$0]) }
+                    }
+                    if row < rows.count - 1 { Divider().opacity(0.5) }
+                }
+            }
+            .padding(10)
+        }
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 10))
+    }
+
+    /// Long cells wrap at a fixed width instead of making the table endless (in a sideways
+    /// scroll view nothing else bounds them, and the row wouldn't grow for the wrapped lines).
+    @ViewBuilder
+    private func cell(_ text: String, bold: Bool = false) -> some View {
+        let label = Text(ChatEntryView.markdown(text)).font(.subheadline).fontWeight(bold ? .semibold : .regular)
+        if text.count > 32 {
+            label.frame(width: 260, alignment: .leading).fixedSize(horizontal: false, vertical: true)
+        } else {
+            label.fixedSize()
         }
     }
 }

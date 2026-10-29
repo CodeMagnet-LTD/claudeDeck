@@ -152,12 +152,15 @@ public enum ConversationLog {
     public static func entries(fromJSONL text: String) -> [ChatEntry] {
         var entries: [ChatEntry] = []
         var toolIndex: [String: Int] = [:]
+        // Messages typed while Claude was busy are logged as queued commands; on the rare
+        // occasion the same text is logged again as a user message, it shows once.
+        var queued: Set<String> = []
         let iso = ISO8601DateFormatter()
         iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         for line in text.split(separator: "\n", omittingEmptySubsequences: true) {
             guard let object = try? JSONSerialization.jsonObject(with: Data(line.utf8)) as? [String: Any] else { continue }
             let type = object["type"] as? String
-            guard type == "user" || type == "assistant" else { continue }
+            guard type == "user" || type == "assistant" || type == "attachment" else { continue }
             if object["isSidechain"] as? Bool == true { continue }
             let uuid = object["uuid"] as? String ?? UUID().uuidString
             let date = (object["timestamp"] as? String).flatMap { iso.date(from: $0) }
@@ -167,9 +170,17 @@ public enum ConversationLog {
                 entries.append(ChatEntry(id: uuid, kind: .system, text: String(localized: "Conversation compacted"), date: date))
                 continue
             }
+            if type == "attachment" {
+                if let text = queuedPrompt(object["attachment"] as? [String: Any]), let entry = userEntry(text, id: uuid, date: date) {
+                    queued.insert(text.trimmingCharacters(in: .whitespacesAndNewlines))
+                    entries.append(entry)
+                }
+                continue
+            }
             if type == "user" {
                 if object["isMeta"] as? Bool == true { continue }
                 if let content = message["content"] as? String {
+                    if queued.remove(content.trimmingCharacters(in: .whitespacesAndNewlines)) != nil { continue }
                     if let entry = userEntry(content, id: uuid, date: date) { entries.append(entry) }
                 } else if let blocks = message["content"] as? [[String: Any]] {
                     for (index, block) in blocks.enumerated() {
@@ -209,6 +220,25 @@ public enum ConversationLog {
             }
         }
         return entries
+    }
+
+    /// A message the user typed while Claude was busy (Claude Code queues it and reads it in at
+    /// the next step). Not other agents' messages; task notifications go through `userEntry`.
+    static func queuedPrompt(_ attachment: [String: Any]?) -> String? {
+        guard let attachment, attachment["type"] as? String == "queued_command" else { return nil }
+        let origin = (attachment["origin"] as? [String: Any])?["kind"] as? String
+        let mode = attachment["commandMode"] as? String
+        guard origin == "human" || mode == "task-notification" else { return nil }
+        if let prompt = attachment["prompt"] as? String { return prompt }
+        guard let blocks = attachment["prompt"] as? [[String: Any]] else { return nil }
+        let parts = blocks.compactMap { block -> String? in
+            switch block["type"] as? String {
+            case "text": block["text"] as? String
+            case "image": "[Image]"
+            default: nil
+            }
+        }
+        return parts.isEmpty ? nil : parts.joined(separator: " ")
     }
 
     /// A user line, or nil for the CLI's own bookkeeping (command echoes, caveats, reminders).
@@ -307,4 +337,82 @@ public enum ConversationLog {
 
 private extension String {
     var nilIfEmpty: String? { isEmpty ? nil : self }
+}
+
+/// Markdown tables in Claude's answers, split out so the phone can draw them as tables (the rest
+/// stays inline markdown).
+public enum MarkdownBlocks {
+    public enum Block: Equatable, Sendable {
+        case text(String)
+        case table(header: [String], rows: [[String]])
+    }
+
+    public static func split(_ text: String) -> [Block] {
+        let lines = text.components(separatedBy: "\n")
+        var blocks: [Block] = []
+        var pending: [String] = []
+        var fenced = false
+        var i = 0
+        func flush() {
+            let joined = pending.joined(separator: "\n").trimmingCharacters(in: .newlines)
+            if !joined.isEmpty { blocks.append(.text(joined)) }
+            pending = []
+        }
+        while i < lines.count {
+            let line = lines[i]
+            if line.trimmingCharacters(in: .whitespaces).hasPrefix("```") { fenced.toggle() }
+            // A table: a | row, then a |---|---| row, then more | rows (not inside a code block).
+            if !fenced, isRow(line), i + 1 < lines.count, isSeparator(lines[i + 1]) {
+                flush()
+                let header = cells(line)
+                var rows: [[String]] = []
+                i += 2
+                while i < lines.count, isRow(lines[i]) {
+                    var row = cells(lines[i])
+                    row += Array(repeating: "", count: max(0, header.count - row.count))
+                    rows.append(Array(row.prefix(header.count)))
+                    i += 1
+                }
+                blocks.append(.table(header: header, rows: rows))
+                continue
+            }
+            pending.append(line)
+            i += 1
+        }
+        flush()
+        return blocks
+    }
+
+    static func isRow(_ line: String) -> Bool {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        return trimmed.hasPrefix("|") && trimmed.dropFirst().contains("|")
+    }
+
+    static func isSeparator(_ line: String) -> Bool {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        return isRow(trimmed) && cells(trimmed).allSatisfy { !$0.isEmpty && $0.allSatisfy { ":-".contains($0) } && $0.contains("-") }
+    }
+
+    /// The cells of a `| a | b |` row (`\|` stays a bar inside a cell).
+    static func cells(_ line: String) -> [String] {
+        var trimmed = line.trimmingCharacters(in: .whitespaces)
+        if trimmed.hasPrefix("|") { trimmed.removeFirst() }
+        if trimmed.hasSuffix("|"), !trimmed.hasSuffix("\\|") { trimmed.removeLast() }
+        var cells: [String] = []
+        var current = ""
+        var escaped = false
+        for ch in trimmed {
+            if escaped {
+                if ch != "|" { current.append("\\") }
+                current.append(ch)
+                escaped = false
+                continue
+            }
+            if ch == "\\" { escaped = true; continue }
+            if ch == "|" { cells.append(current.trimmingCharacters(in: .whitespaces)); current = ""; continue }
+            current.append(ch)
+        }
+        cells.append(current.trimmingCharacters(in: .whitespaces))
+        return cells
+    }
 }

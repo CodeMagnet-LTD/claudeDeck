@@ -54,6 +54,8 @@ final class RemoteStore {
     @ObservationIgnored private var answerWaiters: [UUID: CheckedContinuation<Bool, Never>] = [:]
     /// Called after connecting (push registration, see PushRegistration).
     @ObservationIgnored var onConnected: (() -> Void)?
+    /// Claude Code's permission mode per session, as the Mac's screen last showed it.
+    private(set) var permissionModes: [UUID: String] = [:]
     /// Messages with files on their way, by session (sending a few MB takes a moment).
     private(set) var sendingFiles: Set<UUID> = []
     /// Why the last message with files didn't go in.
@@ -224,6 +226,9 @@ final class RemoteStore {
                 guard let self else { return }
                 self.open(id, in: self.startingScene)
             }
+        }
+        next.onPermissionMode = { [weak self] id, mode in
+            MainActor.assumeIsolated { self?.permissionModes[id] = mode }
         }
         next.onPromptResult = { [weak self] id, error in
             MainActor.assumeIsolated {
@@ -439,6 +444,9 @@ final class RemoteStore {
 
     /// Esc in a working session.
     func interrupt(_ id: UUID) { _ = send(.interrupt(sessionID: id)) }
+
+    /// Asks the Mac for the session's permission mode; `cycle` presses Shift+Tab first.
+    func permissionMode(_ id: UUID, cycle: Bool = false) { _ = send(.permissionMode(sessionID: id, cycle: cycle)) }
 
     /// Clears "your turn" without opening the session.
     func markSeen(_ id: UUID) { _ = send(.markSeen(sessionID: id)) }

@@ -617,6 +617,39 @@ import Testing
         let old = try JSONDecoder().decode(RemoteProject.self, from: Data(#"{"id":"C0000000-0000-0000-0000-000000000001","name":"api"}"#.utf8))
         #expect(old.name == "api" && !old.pinned)
     }
+
+    @Test func queuedMessagesShow() {
+        let lines = [
+            #"{"type":"user","uuid":"u1","message":{"role":"user","content":"First"}}"#,
+            // Typed while Claude was busy: only logged as a queued command.
+            #"{"type":"attachment","uuid":"a1","attachment":{"type":"queued_command","commandMode":"prompt","humanTurn":true,"origin":{"kind":"human"},"prompt":"Also check the tests"}}"#,
+            #"{"type":"attachment","uuid":"a2","attachment":{"type":"queued_command","commandMode":"prompt","origin":{"kind":"human"},"prompt":[{"type":"image","source":{}},{"type":"text","text":"This screen"}]}}"#,
+            // Another agent's message and other attachments stay out.
+            #"{"type":"attachment","uuid":"a3","attachment":{"type":"queued_command","commandMode":"prompt","origin":{"kind":"peer","from":"x"},"prompt":"<peer>hi</peer>"}}"#,
+            #"{"type":"attachment","uuid":"a4","attachment":{"type":"date","date":"today"}}"#,
+            // Logged again as a user message: shown once.
+            #"{"type":"user","uuid":"u2","message":{"role":"user","content":"Also check the tests"}}"#,
+        ].joined(separator: "\n")
+        let entries = ConversationLog.entries(fromJSONL: lines)
+        #expect(entries.map(\.text) == ["First", "Also check the tests", "[Image] This screen"])
+        #expect(entries.allSatisfy { $0.kind == .user })
+    }
+
+    @Test func permissionModeLine() {
+        #expect(PermissionModeLine.mode(in: ["❯", "  ⏸ manual mode on · ← for agents"]) == "manual mode")
+        #expect(PermissionModeLine.mode(in: ["  ⏵⏵ accept edits on (shift+tab to cycle) · ← for agents"]) == "accept edits")
+        #expect(PermissionModeLine.mode(in: ["  ⏸ plan mode on (shift+tab to cycle)", ""]) == "plan mode")
+        #expect(PermissionModeLine.mode(in: ["no status here"]) == nil)
+    }
+
+    @Test func markdownTables() {
+        let text = "Here:\n\n| Name | Size |\n|---|:--:|\n| a \\| b | 1 |\n| c |\n\nDone.\n```\n| not | a |\n|---|---|\n```"
+        let blocks = MarkdownBlocks.split(text)
+        #expect(blocks.count == 3)
+        #expect(blocks[0] == .text("Here:"))
+        #expect(blocks[1] == .table(header: ["Name", "Size"], rows: [["a | b", "1"], ["c", ""]]))
+        if case .text(let rest) = blocks[2] { #expect(rest.hasPrefix("Done.") && rest.contains("| not | a |")) } else { Issue.record("expected text") }
+    }
 }
 
 @Suite(.serialized) struct RemoteHistoryLoopbackTests {

@@ -8553,6 +8553,26 @@
           }
         }
       }
+    },
+    "Permission Mode": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzin Modu"
+          }
+        }
+      }
+    },
+    "Switches to the next permission mode, like Shift+Tab": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Shift+Tab gibi sıradaki izin moduna geçer"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
