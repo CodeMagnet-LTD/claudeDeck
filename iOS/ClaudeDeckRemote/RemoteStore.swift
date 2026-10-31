@@ -562,6 +562,10 @@ final class RemoteStore {
     @discardableResult
     func sendPrompt(_ id: UUID, text: String, files: [RemoteUpload]) -> Bool {
         guard !files.isEmpty else { return sendPrompt(id, text: text) }
+        guard snapshot?.supports(RemoteSnapshot.Feature.files) == true else {
+            promptError = String(localized: "Update ClaudeDeck on the Mac to send photos and files.")
+            return false
+        }
         guard snapshot?.session(id)?.state.isBlocked == false, !sendingFiles.contains(id) else { return false }
         guard send(.sendPromptWithFiles(sessionID: id, text: text.trimmingCharacters(in: .whitespacesAndNewlines), files: files)) else { return false }
         sendingFiles.insert(id)

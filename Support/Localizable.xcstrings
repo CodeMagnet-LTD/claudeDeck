@@ -8573,6 +8573,26 @@
           }
         }
       }
+    },
+    "Update ClaudeDeck on the Mac to send photos and files.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoğraf ve dosya göndermek için Mac'teki ClaudeDeck'i güncelleyin."
+          }
+        }
+      }
+    },
+    "Update ClaudeDeck on the other Mac to send files.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya göndermek için diğer Mac'teki ClaudeDeck'i güncelleyin."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

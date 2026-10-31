@@ -473,6 +473,7 @@ final class RemoteController {
         var snapshot = Self.makeSnapshot(model)
         // How to reach this Mac away from home (a phone paired on the local network learns it here).
         snapshot.hostID = local.hostID
+        snapshot.features = RemoteSnapshot.Feature.all
         // Pinned first, like the sidebar.
         snapshot.projects = (model.deck.projects.filter(\.pinned) + model.deck.projects.filter { !$0.pinned })
             .map { RemoteProject(id: $0.id, name: $0.name, pinned: $0.pinned) }
@@ -1245,6 +1246,10 @@ final class RemoteController {
     /// Files dropped / pasted into a terminal of the other Mac: it saves them and pastes them in.
     func pasteFiles(_ id: UUID, files: [RemoteUpload]) {
         guard !files.isEmpty, uploads[id] != .sending else { return }
+        guard snapshot?.supports(RemoteSnapshot.Feature.files) == true else {
+            uploadFailed(id, String(localized: "Update ClaudeDeck on the other Mac to send files."))
+            return
+        }
         guard files.reduce(0, { $0 + $1.data.count }) <= RemoteUpload.maxTotalBytes else {
             uploadFailed(id, String(localized: "Too large: up to 5 MB of files per message."))
             return

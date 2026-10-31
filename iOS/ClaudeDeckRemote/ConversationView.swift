@@ -121,7 +121,7 @@ struct ConversationView: View {
                 }
                 .disabled(sending)
             }
-            if let session, session.state != .shell {
+            if let session, session.state != .shell, store.snapshot?.supports(RemoteSnapshot.Feature.permissionMode) == true {
                 let mode = store.permissionModes[sessionID]
                 Button { store.permissionMode(sessionID, cycle: true) } label: {
                     Label(mode.map { $0.prefix(1).uppercased() + $0.dropFirst() } ?? String(localized: "Permission Mode"),
@@ -135,8 +135,13 @@ struct ConversationView: View {
             }
             HStack(alignment: .bottom, spacing: 8) {
                 Menu {
-                    Button { choosingPhotos = true } label: { Label("Photo Library", systemImage: "photo.on.rectangle") }
-                    Button { choosingFiles = true } label: { Label("Choose File", systemImage: "doc") }
+                    if store.snapshot?.supports(RemoteSnapshot.Feature.files) == true {
+                        Button { choosingPhotos = true } label: { Label("Photo Library", systemImage: "photo.on.rectangle") }
+                        Button { choosingFiles = true } label: { Label("Choose File", systemImage: "doc") }
+                    } else {
+                        // An older ClaudeDeck on the Mac would skip the files without answering.
+                        Text("Update ClaudeDeck on the Mac to send photos and files.")
+                    }
                 } label: {
                     Image(systemName: "paperclip").font(.system(size: 20)).frame(width: 30, height: 36)
                 }

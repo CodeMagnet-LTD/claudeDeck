@@ -221,6 +221,19 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
     /// paired on the local network learns how to reach the host when away.
     public var hostID: UUID?
     public var addresses: [String]?
+    /// What the host understands beyond the basics (`Feature`); nil from hosts older than 0.4.6,
+    /// which skip messages they don't know, so a remote checks before sending them.
+    public var features: Set<String>?
+
+    public enum Feature {
+        /// `sendPromptWithFiles` (phone) and `pasteFiles` (another Mac).
+        public static let files = "files"
+        /// `permissionMode`.
+        public static let permissionMode = "permissionMode"
+        public static let all: Set<String> = [files, permissionMode]
+    }
+
+    public func supports(_ feature: String) -> Bool { features?.contains(feature) == true }
 
     public init(hostName: String, sessions: [RemoteSession], hostID: UUID? = nil, addresses: [String]? = nil) {
         self.hostName = hostName
