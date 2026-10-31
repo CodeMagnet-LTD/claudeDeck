@@ -642,6 +642,15 @@ import Testing
         #expect(PermissionModeLine.mode(in: ["no status here"]) == nil)
     }
 
+    @Test func markdownHeadingsAndToolNames() {
+        #expect(MarkdownBlocks.split("## Hava durumu\nTek satır.\n```\n# not a heading\n```") ==
+                [.heading(level: 2, text: "Hava durumu"), .text("Tek satır.\n```\n# not a heading\n```")])
+        #expect(MarkdownBlocks.split("#hashtag") == [.text("#hashtag")])
+        #expect(MarkdownBlocks.shortToolNames("mcp__claude-in-chrome__javascript_tool: const x") == "claude-in-chrome · javascript_tool: const x")
+        #expect(MarkdownBlocks.shortToolNames("mcp__claude_ai_Gmail__search") == "claude_ai_Gmail · search")
+        #expect(MarkdownBlocks.shortToolNames("Bash: ls") == "Bash: ls")
+    }
+
     @Test func markdownTables() {
         let text = "Here:\n\n| Name | Size |\n|---|:--:|\n| a \\| b | 1 |\n| c |\n\nDone.\n```\n| not | a |\n|---|---|\n```"
         let blocks = MarkdownBlocks.split(text)

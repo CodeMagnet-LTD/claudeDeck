@@ -401,7 +401,7 @@ struct SessionRow: View {
                 HStack(spacing: 6) {
                     StatusPill(state: session.state)
                     if let detail = session.detail {
-                        Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                        Text(MarkdownBlocks.shortToolNames(detail)).font(.caption).foregroundStyle(.secondary).lineLimit(2)
                     }
                 }
             }

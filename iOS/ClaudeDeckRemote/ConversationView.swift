@@ -58,7 +58,7 @@ struct ConversationView: View {
                         if session?.state == .running {
                             HStack(spacing: 6) {
                                 ProgressView().controlSize(.small)
-                                Text(session?.detail ?? String(localized: "Running")).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                Text(MarkdownBlocks.shortToolNames(session?.detail ?? String(localized: "Running"))).font(.caption).foregroundStyle(.secondary).lineLimit(1)
                                 Spacer(minLength: 4)
                                 Button {
                                     store.interrupt(sessionID)
@@ -342,7 +342,7 @@ struct ChatEntryView: View {
                         Image(systemName: Self.symbol(entry.toolName))
                             .foregroundStyle(entry.isError ? Color.red : Color.secondary)
                             .frame(width: 16)
-                        Text(entry.toolName ?? "").font(.caption.weight(.semibold))
+                        Text(MarkdownBlocks.shortToolNames(entry.toolName ?? "")).font(.caption.weight(.semibold))
                         Text(entry.text).font(.caption).foregroundStyle(.secondary).lineLimit(expanded ? nil : 1)
                         Spacer(minLength: 0)
                         if entry.result != nil {
@@ -553,6 +553,11 @@ struct MarkdownView: View {
                 case .text(let text):
                     Text(ChatEntryView.markdown(text))
                         .textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                case .heading(let level, let text):
+                    Text(ChatEntryView.markdown(text))
+                        .font(level <= 1 ? .title3.weight(.bold) : level == 2 ? .headline : .subheadline.weight(.semibold))
+                        .padding(.top, 4)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 case .table(let header, let rows):
                     MarkdownTableView(header: header, rows: rows)

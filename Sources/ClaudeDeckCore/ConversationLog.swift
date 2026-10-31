@@ -344,7 +344,14 @@ private extension String {
 public enum MarkdownBlocks {
     public enum Block: Equatable, Sendable {
         case text(String)
+        case heading(level: Int, text: String)
         case table(header: [String], rows: [[String]])
+    }
+
+    /// "mcp__claude-in-chrome__javascript_tool" → "claude-in-chrome · javascript_tool", anywhere in
+    /// the text (tool names and the status line's "Tool: input").
+    public static func shortToolNames(_ text: String) -> String {
+        text.replacingOccurrences(of: #"\bmcp__(.+?)__(\w+)"#, with: "$1 · $2", options: .regularExpression)
     }
 
     public static func split(_ text: String) -> [Block] {
@@ -374,6 +381,13 @@ public enum MarkdownBlocks {
                     i += 1
                 }
                 blocks.append(.table(header: header, rows: rows))
+                continue
+            }
+            // "## Title" (not inside a code block): a heading of its own.
+            if !fenced, let match = line.firstMatch(of: /^(#{1,6})\s+(.+?)\s*#*\s*$/) {
+                flush()
+                blocks.append(.heading(level: match.1.count, text: String(match.2)))
+                i += 1
                 continue
             }
             pending.append(line)
