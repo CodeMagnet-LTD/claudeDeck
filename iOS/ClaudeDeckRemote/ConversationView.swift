@@ -48,11 +48,14 @@ struct ConversationView: View {
                         // The question the prompt on the Mac is showing: answerable here.
                         let pendingQuestion = session?.state == .needsAnswer
                             ? conversation?.entries.last(where: { $0.questions != nil }).flatMap { $0.result == nil ? $0.id : nil } : nil
-                        ForEach(conversation?.entries ?? []) { entry in
-                            if entry.questions != nil {
+                        ForEach(ChatItem.group(conversation?.entries ?? [])) { item in
+                            switch item {
+                            case .entry(let entry) where entry.questions != nil:
                                 QuestionCard(entry: entry, sessionID: sessionID, pending: entry.id == pendingQuestion).id(entry.id)
-                            } else {
+                            case .entry(let entry):
                                 ChatEntryView(entry: entry).id(entry.id)
+                            case .tools(let entries):
+                                ToolGroupView(entries: entries).id(item.id)
                             }
                         }
                         if session?.state == .running {
@@ -600,5 +603,71 @@ struct MarkdownTableView: View {
         } else {
             label.fixedSize()
         }
+    }
+}
+
+/// A conversation row: an entry, or several finished calls of the same tool in a row (like the
+/// terminal's "Called claude-in-chrome 4 times").
+enum ChatItem: Identifiable {
+    case entry(ChatEntry)
+    case tools([ChatEntry])
+
+    var id: String {
+        switch self {
+        case .entry(let entry): entry.id
+        case .tools(let entries): "tools-" + (entries.first?.id ?? "")
+        }
+    }
+
+    static func group(_ entries: [ChatEntry]) -> [ChatItem] {
+        var items: [ChatItem] = []
+        var run: [ChatEntry] = []
+        func flush() {
+            if run.count > 1 { items.append(.tools(run)) } else { items += run.map(ChatItem.entry) }
+            run = []
+        }
+        for entry in entries {
+            // Finished, plain tool calls group; a running one or a question stays on its own.
+            let groupable = entry.kind == .tool && entry.questions == nil && entry.result != nil
+            if groupable, let first = run.first, first.toolName == entry.toolName {
+                run.append(entry)
+            } else {
+                flush()
+                if groupable { run = [entry] } else { items.append(.entry(entry)) }
+            }
+        }
+        flush()
+        return items
+    }
+}
+
+struct ToolGroupView: View {
+    let entries: [ChatEntry]
+    @State private var expanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Button {
+                withAnimation(.snappy(duration: 0.2)) { expanded.toggle() }
+            } label: {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    let failed = entries.contains(where: \.isError)
+                    Image(systemName: ChatEntryView.symbol(entries.first?.toolName))
+                        .foregroundStyle(failed ? Color.red : Color.secondary)
+                        .frame(width: 16)
+                    Text(MarkdownBlocks.shortToolNames(entries.first?.toolName ?? "")).font(.caption.weight(.semibold))
+                    Text("×\(entries.count)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary)
+                        .rotationEffect(.degrees(expanded ? 90 : 0))
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            if expanded {
+                ForEach(entries) { ChatEntryView(entry: $0).padding(.leading, 12) }
+            }
+        }
+        .padding(.vertical, 2)
     }
 }
