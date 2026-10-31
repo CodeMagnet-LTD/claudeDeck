@@ -448,6 +448,9 @@ final class RemoteStore {
     /// Asks the Mac for the session's permission mode; `cycle` presses Shift+Tab first.
     func permissionMode(_ id: UUID, cycle: Bool = false) { _ = send(.permissionMode(sessionID: id, cycle: cycle)) }
 
+    /// Pin / unpin or rename one of the Mac's projects.
+    func projectAction(_ projectID: UUID, _ action: RemoteProjectAction) { _ = send(.projectAction(projectID: projectID, action: action)) }
+
     /// Clears "your turn" without opening the session.
     func markSeen(_ id: UUID) { _ = send(.markSeen(sessionID: id)) }
 

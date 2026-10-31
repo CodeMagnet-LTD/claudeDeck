@@ -8593,6 +8593,16 @@
           }
         }
       }
+    },
+    "Browse Files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalara Göz At"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

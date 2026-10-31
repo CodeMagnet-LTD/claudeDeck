@@ -100,6 +100,9 @@ struct SessionListView: View {
     @State private var showNewSession = false
     /// The project the New Session sheet starts on (a pinned project's row).
     @State private var newSessionProject: UUID?
+    @State private var browsingProject: RemoteProject?
+    @State private var renamingProject: RemoteProject?
+    @State private var renameText = ""
 
     var body: some View {
         let all = store.snapshot?.sessions ?? []
@@ -110,37 +113,42 @@ struct SessionListView: View {
         // Pinned on the Mac: first, and shown even without a running session.
         let pinned = store.projects.filter(\.pinned)
         let pinnedNames = Set(pinned.map(\.name))
-        let projectNames = pinned.map(\.name).reduce(into: [String]()) { if !$0.contains($1) { $0.append($1) } }
-            + sessions.map(\.project).reduce(into: [String]()) { if !$0.contains($1), !pinnedNames.contains($1) { $0.append($1) } }
+        let projectNames = sessions.map(\.project).reduce(into: [String]()) { if !$0.contains($1), !pinnedNames.contains($1) { $0.append($1) } }
         List(selection: $selection) {
             ConnectionBanner()
             if let usage = store.snapshot?.usage { UsageRow(usage: usage) }
+            // Like the Mac's sidebar: one Pinned section on top, each project a row with its
+            // sessions under it.
+            if !pinned.isEmpty {
+                Section("Pinned") {
+                    ForEach(pinned) { project in
+                        let running = projects[project.name] ?? []
+                        ProjectRow(name: project.name, pinned: true, count: running.count) {
+                            newSessionProject = project.id
+                            showNewSession = true
+                        }
+                        .contextMenu { projectMenu(project.name, running: running) }
+                        ForEach(running) { SessionRowLink(session: $0, showProject: false).padding(.leading, 18) }
+                    }
+                }
+            }
             if !waiting.isEmpty {
                 Section("Waiting for you") {
                     ForEach(waiting) { SessionRowLink(session: $0, showProject: true) }
                 }
             }
-            ForEach(projectNames, id: \.self) { project in
-                Section {
-                    ForEach(projects[project] ?? []) { SessionRowLink(session: $0, showProject: false) }
-                    if projects[project] == nil, let id = pinned.first(where: { $0.name == project })?.id {
-                        Button {
-                            newSessionProject = id
-                            showNewSession = true
-                        } label: {
-                            Label("New Session", systemImage: "plus")
-                        }
-                        .disabled(store.connection != .connected)
+            // The other projects with something running, the same way (a header can't take a
+            // context menu on iPad; a row can).
+            if !projectNames.isEmpty {
+                Section("Projects") {
+                    ForEach(projectNames, id: \.self) { project in
+                        let running = projects[project] ?? []
+                        let id = store.projects.first(where: { $0.name == project })?.id
+                        ProjectRow(name: project.isEmpty ? String(localized: "Sessions") : project, pinned: false, count: running.count,
+                                   newSession: id.map { id in { newSessionProject = id; showNewSession = true } })
+                            .contextMenu { projectMenu(project, running: running) }
+                        ForEach(running) { SessionRowLink(session: $0, showProject: false).padding(.leading, 18) }
                     }
-                } header: {
-                    Group {
-                        if pinnedNames.contains(project) {
-                            Label(project, systemImage: "pin.fill")
-                        } else {
-                            Text(project.isEmpty ? String(localized: "Sessions") : project)
-                        }
-                    }
-                    .contextMenu { projectMenu(project, running: projects[project] ?? []) }
                 }
             }
             if store.connection == .connected, sessions.isEmpty {
@@ -195,11 +203,25 @@ struct SessionListView: View {
         }
         .sheet(isPresented: $showSettings) { NavigationStack { SettingsView() } }
         .sheet(isPresented: $showNewSession) { NavigationStack { NewSessionView(initialProject: newSessionProject) } }
+        .sheet(item: $browsingProject) { project in
+            NavigationStack {
+                DirectoryView(projectID: project.id, path: "", title: project.name)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { browsingProject = nil } } }
+            }
+        }
+        .alert("Rename Project", isPresented: Binding(get: { renamingProject != nil }, set: { if !$0 { renamingProject = nil } })) {
+            TextField("Name", text: $renameText)
+            Button("Rename") {
+                if let project = renamingProject { store.projectAction(project.id, .rename(renameText)) }
+                renamingProject = nil
+            }
+            Button("Cancel", role: .cancel) { renamingProject = nil }
+        }
     }
 }
 
 extension SessionListView {
-    /// The Mac's project menu, as far as the other Mac can be asked to (no pin / rename there yet).
+    /// The Mac's project menu, as far as the other Mac can be asked to.
     @ViewBuilder
     func projectMenu(_ name: String, running: [RemoteSession]) -> some View {
         if let project = store.projects.first(where: { $0.name == name }) {
@@ -210,12 +232,53 @@ extension SessionListView {
             Button { store.startShell(in: project.id, command: "", from: sceneID) } label: {
                 Label("New Terminal", systemImage: "apple.terminal")
             }
+            Button { browsingProject = project } label: { Label("Browse Files", systemImage: "folder") }
+            if let path = project.path {
+                Button { UIPasteboard.general.string = path } label: { Label("Copy Path", systemImage: "doc.on.doc") }
+            }
+            if store.snapshot?.supports(RemoteSnapshot.Feature.projectActions) == true {
+                Divider()
+                Button { store.projectAction(project.id, .pin(!project.pinned)) } label: {
+                    Label(project.pinned ? "Unpin" : "Pin", systemImage: project.pinned ? "pin.slash" : "pin")
+                }
+                Button {
+                    renameText = project.name
+                    renamingProject = project
+                } label: { Label("Rename…", systemImage: "pencil") }
+            }
         }
         let claude = running.filter { $0.state != .shell }
         if !claude.isEmpty {
             Divider()
             Button(role: .destructive) { claude.forEach { store.stopSession($0.id) } } label: {
                 Label("End All Sessions (\(claude.count))", systemImage: "power")
+            }
+        }
+    }
+}
+
+/// A project of the Mac, like its sidebar row: name, how many sessions run, + to start one; the
+/// sessions follow it, indented.
+struct ProjectRow: View {
+    @Environment(RemoteStore.self) private var store
+    let name: String
+    let pinned: Bool
+    let count: Int
+    let newSession: (() -> Void)?
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: pinned ? "pin.fill" : "folder").font(.caption).foregroundStyle(.secondary).frame(width: 16)
+            Text(name).font(.body.weight(.semibold)).lineLimit(1)
+            if count > 0 {
+                Text("\(count)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 4)
+            if let newSession {
+                Button(action: newSession) { Image(systemName: "plus") }
+                    .buttonStyle(.borderless)
+                    .disabled(store.connection != .connected)
+                    .accessibilityLabel(Text("New Session"))
             }
         }
     }

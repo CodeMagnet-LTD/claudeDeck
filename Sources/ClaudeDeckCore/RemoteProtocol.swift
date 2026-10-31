@@ -145,6 +145,8 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case permissionMode(sessionID: UUID, cycle: Bool)
     /// Host → remote: the mode as Claude Code's status line shows it ("plan mode"), nil if unknown.
     case permissionModeIs(sessionID: UUID, mode: String?)
+    /// Remote → host: pin / unpin or rename one of its projects (the next snapshot shows it).
+    case projectAction(projectID: UUID, action: RemoteProjectAction)
     /// Phone → host: send push notifications to this device (APNs.swift).
     case registerPush(token: Data, topic: String, environment: String, deviceName: String)
     case ping
@@ -167,6 +169,12 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
         decoder.dateDecodingStrategy = .secondsSince1970
         return try decoder.decode(RemoteMessage.self, from: frame.payload)
     }
+}
+
+/// What a remote may change about one of the host's projects.
+public enum RemoteProjectAction: Codable, Sendable, Equatable {
+    case pin(Bool)
+    case rename(String)
 }
 
 /// Claude Code's permission mode, read from the line under its input box
@@ -230,7 +238,9 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
         public static let files = "files"
         /// `permissionMode`.
         public static let permissionMode = "permissionMode"
-        public static let all: Set<String> = [files, permissionMode]
+        /// `projectAction`.
+        public static let projectActions = "projectActions"
+        public static let all: Set<String> = [files, permissionMode, projectActions]
     }
 
     public func supports(_ feature: String) -> Bool { features?.contains(feature) == true }
@@ -288,10 +298,13 @@ public struct RemoteProject: Codable, Sendable, Equatable, Identifiable {
     public var name: String
     /// Pinned on the host: shown first, even without a running session.
     public var pinned: Bool
-    public init(id: UUID, name: String, pinned: Bool = false) {
+    /// The folder on the host (Copy Path); nil from older hosts.
+    public var path: String?
+    public init(id: UUID, name: String, pinned: Bool = false, path: String? = nil) {
         self.id = id
         self.name = name
         self.pinned = pinned
+        self.path = path
     }
 
     public init(from decoder: Decoder) throws {
@@ -299,6 +312,7 @@ public struct RemoteProject: Codable, Sendable, Equatable, Identifiable {
         id = try c.decode(UUID.self, forKey: .id)
         name = try c.decode(String.self, forKey: .name)
         pinned = try c.decodeIfPresent(Bool.self, forKey: .pinned) ?? false  // older hosts
+        path = try c.decodeIfPresent(String.self, forKey: .path)
     }
 }
 

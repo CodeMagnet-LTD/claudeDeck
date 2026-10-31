@@ -351,6 +351,20 @@ final class RemoteController {
                     self.permissionMode(id, cycle: cycle, reply: reply)
                 }
             }
+            server.onProjectAction = { [weak self] id, action in
+                MainActor.assumeIsolated {
+                    guard let model = self?.model, model.deck.project(id) != nil else { return }
+                    switch action {
+                    case .pin(let pinned):
+                        model.mutate { $0.updateProject(id) { $0.pinned = pinned } }
+                    case .rename(let name):
+                        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                        guard !trimmed.isEmpty else { return }
+                        model.mutate { $0.updateProject(id) { $0.name = String(trimmed.prefix(200)) } }
+                    }
+                    self?.publishSnapshot()
+                }
+            }
             server.onPasteFiles = { [weak self] id, files, reply in
                 MainActor.assumeIsolated {
                     guard let self else { reply(String(localized: "ClaudeDeck isn't ready.")); return }
@@ -476,7 +490,7 @@ final class RemoteController {
         snapshot.features = RemoteSnapshot.Feature.all
         // Pinned first, like the sidebar.
         snapshot.projects = (model.deck.projects.filter(\.pinned) + model.deck.projects.filter { !$0.pinned })
-            .map { RemoteProject(id: $0.id, name: $0.name, pinned: $0.pinned) }
+            .map { RemoteProject(id: $0.id, name: $0.name, pinned: $0.pinned, path: $0.path) }
         if case .ok(let usage) = model.usage.state {
             snapshot.usage = RemoteUsage(fiveHour: usage.fiveHour?.usedPercent, fiveHourResetsAt: usage.fiveHour?.resetsAt,
                                          week: usage.sevenDay?.usedPercent, weekResetsAt: usage.sevenDay?.resetsAt)
