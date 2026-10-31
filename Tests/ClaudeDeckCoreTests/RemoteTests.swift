@@ -615,7 +615,7 @@ import Testing
         #expect(ConversationLog.entries(fromJSONL: line).first?.text == "[Image #1] 📎 my-notes.txt What is it?")
         // A project from an older host (no pin) still decodes, unpinned.
         let old = try JSONDecoder().decode(RemoteProject.self, from: Data(#"{"id":"C0000000-0000-0000-0000-000000000001","name":"api"}"#.utf8))
-        #expect(old.name == "api" && !old.pinned) && old.path == nil
+        #expect(old.name == "api" && !old.pinned && old.path == nil)
         for action in [RemoteProjectAction.pin(true), .rename("Checkout Shop")] {
             let message = RemoteMessage.projectAction(projectID: UUID(), action: action)
             #expect(try RemoteMessage.decode(message.frame()) == message)
