@@ -233,12 +233,15 @@ struct ConversationView: View {
         guard session?.state.isBlocked != true, store.connection == .connected, !store.sendingFiles.contains(sessionID),
               !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !attachments.isEmpty
         else { return }
+        let typing = composing
         if attachments.isEmpty {
             if store.sendPrompt(sessionID, text: draft) { draft = "" }
         } else {
             // Cleared once the Mac took it (a failure keeps them for another try).
             store.sendPrompt(sessionID, text: draft, files: attachments.map(\.upload))
         }
+        // Keep the keyboard up for the next message (the field drops focus as the text clears).
+        if typing { DispatchQueue.main.async { composing = true } }
     }
 
     private func add(_ attachment: Attachment?) {
