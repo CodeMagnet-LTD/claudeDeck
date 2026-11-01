@@ -65,12 +65,12 @@ struct ConversationView: View {
                         if session?.state == .running {
                             HStack(spacing: 6) {
                                 ProgressView().controlSize(.small)
-                                Text(MarkdownBlocks.shortToolNames(session?.detail ?? String(localized: "Running"))).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                                Text(MarkdownBlocks.shortToolNames(session?.detail ?? String(localized: "Running"))).listFont(.caption).foregroundStyle(.secondary).lineLimit(1)
                                 Spacer(minLength: 4)
                                 Button {
                                     store.interrupt(sessionID)
                                 } label: {
-                                    Label("Stop", systemImage: "stop.circle").font(.caption)
+                                    Label("Stop", systemImage: "stop.circle").listFont(.caption)
                                 }
                                 .buttonStyle(.bordered)
                                 .controlSize(.small)
@@ -81,12 +81,14 @@ struct ConversationView: View {
                     }
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
+                    .listFont(.body)
                 }
                 .dynamicTypeSize(ConversationTextSize.size(textSize))
+                .environment(\.listFontScale, ConversationTextSize.listScale(textSize))
                 // Pinch: one step bigger or smaller per gesture.
                 .simultaneousGesture(MagnifyGesture().onEnded { value in
-                    if value.magnification > 1.15 { textSize = ConversationTextSize.step(textSize, by: 1) }
-                    if value.magnification < 0.87 { textSize = ConversationTextSize.step(textSize, by: -1) }
+                    if value.magnification > 1.15 { textSize = ConversationTextSize.listStep(textSize, by: 1) }
+                    if value.magnification < 0.87 { textSize = ConversationTextSize.listStep(textSize, by: -1) }
                 })
                 .defaultScrollAnchor(.bottom)
                 .scrollDismissesKeyboard(.interactively)
@@ -386,11 +388,11 @@ struct ChatEntryView: View {
                         Image(systemName: Self.symbol(entry.toolName))
                             .foregroundStyle(entry.isError ? Color.red : Color.secondary)
                             .frame(width: 16)
-                        Text(MarkdownBlocks.shortToolNames(entry.toolName ?? "")).font(.caption.weight(.semibold))
-                        Text(entry.text).font(.caption).foregroundStyle(.secondary).lineLimit(expanded ? nil : 1)
+                        Text(MarkdownBlocks.shortToolNames(entry.toolName ?? "")).listFont(.caption, weight: .semibold)
+                        Text(entry.text).listFont(.caption).foregroundStyle(.secondary).lineLimit(expanded ? nil : 1)
                         Spacer(minLength: 0)
                         if entry.result != nil {
-                            Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary)
+                            Image(systemName: "chevron.right").listFont(.caption2).foregroundStyle(.tertiary)
                                 .rotationEffect(.degrees(expanded ? 90 : 0))
                         }
                     }
@@ -399,7 +401,7 @@ struct ChatEntryView: View {
                 .buttonStyle(.plain)
                 if expanded, let result = entry.result {
                     Text(result)
-                        .font(.caption2.monospaced())
+                        .listFont(.caption2, design: .monospaced)
                         .foregroundStyle(entry.isError ? Color.red : Color.secondary)
                         .textSelection(.enabled)
                         .padding(8)
@@ -410,7 +412,7 @@ struct ChatEntryView: View {
             .padding(.vertical, 2)
         case .system:
             Text(entry.text)
-                .font(.caption)
+                .listFont(.caption)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity)
         }
@@ -456,25 +458,25 @@ struct QuestionCard: View {
                     HStack(spacing: 6) {
                         if let header = question.header, !header.isEmpty {
                             Text(header)
-                                .font(.caption2.weight(.semibold))
+                                .listFont(.caption2, weight: .semibold)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(Color.accentColor.opacity(0.15), in: Capsule())
                         }
                         if question.multiSelect && pending {
-                            Text("Choose one or more").font(.caption2).foregroundStyle(.secondary)
+                            Text("Choose one or more").listFont(.caption2).foregroundStyle(.secondary)
                         }
                     }
-                    Text(question.question).font(.subheadline.weight(.semibold))
+                    Text(question.question).listFont(.subheadline, weight: .semibold)
                     if pending {
                         options(index, question)
                     } else if let answer = entry.answers?[question.question] {
                         Label(answer, systemImage: "arrow.turn.down.right")
-                            .font(.subheadline)
+                            .listFont(.subheadline)
                             .foregroundStyle(Color.accentColor)
                     } else {
                         ForEach(Array(question.options.enumerated()), id: \.offset) { _, option in
-                            Text("• " + option.label).font(.caption).foregroundStyle(.secondary)
+                            Text("• " + option.label).listFont(.caption).foregroundStyle(.secondary)
                         }
                     }
                 }
@@ -505,9 +507,9 @@ struct QuestionCard: View {
                     Image(systemName: question.multiSelect ? (on ? "checkmark.square.fill" : "square") : (on ? "largecircle.fill.circle" : "circle"))
                         .foregroundStyle(on ? Color.accentColor : Color.secondary)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(option.label).font(.subheadline)
+                        Text(option.label).listFont(.subheadline)
                         if let description = option.description, !description.isEmpty {
-                            Text(description).font(.caption).foregroundStyle(.secondary)
+                            Text(description).listFont(.caption).foregroundStyle(.secondary)
                         }
                     }
                     Spacer(minLength: 0)
@@ -528,7 +530,7 @@ struct QuestionCard: View {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Image(systemName: on ? "largecircle.fill.circle" : "circle")
                         .foregroundStyle(on ? Color.accentColor : Color.secondary)
-                    Text("Other…").font(.subheadline).foregroundStyle(on ? .primary : .secondary)
+                    Text("Other…").listFont(.subheadline).foregroundStyle(on ? .primary : .secondary)
                     Spacer(minLength: 0)
                 }
                 .contentShape(Rectangle())
@@ -538,7 +540,7 @@ struct QuestionCard: View {
             // Outside the button: a text field in a button's label doesn't take taps.
             if on {
                 TextField("Your answer", text: Binding(get: { otherText[index] ?? "" }, set: { otherText[index] = $0 }), axis: .vertical)
-                    .font(.subheadline)
+                    .listFont(.subheadline)
                     .focused($typing, equals: index)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
@@ -579,7 +581,7 @@ struct QuestionCard: View {
                 if busy { ProgressView() }
             }
             if let error = store.answerError {
-                Text(error).font(.caption).foregroundStyle(.red)
+                Text(error).listFont(.caption).foregroundStyle(.red)
             }
         }
     }
@@ -600,7 +602,7 @@ struct MarkdownView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                 case .heading(let level, let text):
                     Text(ChatEntryView.markdown(text))
-                        .font(level <= 1 ? .title3.weight(.bold) : level == 2 ? .headline : .subheadline.weight(.semibold))
+                        .listFont(level <= 1 ? .title3 : level == 2 ? .headline : .subheadline, weight: level <= 1 ? .bold : .semibold)
                         .padding(.top, 4)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 case .table(let header, let rows):
@@ -638,7 +640,7 @@ struct MarkdownTableView: View {
     /// scroll view nothing else bounds them, and the row wouldn't grow for the wrapped lines).
     @ViewBuilder
     private func cell(_ text: String, bold: Bool = false) -> some View {
-        let label = Text(ChatEntryView.markdown(text)).font(.subheadline).fontWeight(bold ? .semibold : .regular)
+        let label = Text(ChatEntryView.markdown(text)).listFont(.subheadline, weight: bold ? .semibold : .regular)
         if text.count > 32 {
             label.frame(width: 260, alignment: .leading).fixedSize(horizontal: false, vertical: true)
         } else {
@@ -696,10 +698,10 @@ struct ToolGroupView: View {
                     Image(systemName: ChatEntryView.symbol(entries.first?.toolName))
                         .foregroundStyle(failed ? Color.red : Color.secondary)
                         .frame(width: 16)
-                    Text(MarkdownBlocks.shortToolNames(entries.first?.toolName ?? "")).font(.caption.weight(.semibold))
-                    Text("×\(entries.count)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                    Text(MarkdownBlocks.shortToolNames(entries.first?.toolName ?? "")).listFont(.caption, weight: .semibold)
+                    Text("×\(entries.count)").listFont(.caption, monospacedDigit: true).foregroundStyle(.secondary)
                     Spacer(minLength: 0)
-                    Image(systemName: "chevron.right").font(.caption2).foregroundStyle(.tertiary)
+                    Image(systemName: "chevron.right").listFont(.caption2).foregroundStyle(.tertiary)
                         .rotationEffect(.degrees(expanded ? 90 : 0))
                 }
                 .contentShape(Rectangle())
@@ -761,6 +763,7 @@ private struct ListFont: ViewModifier {
     let style: Font.TextStyle
     let weight: Font.Weight
     let monospacedDigit: Bool
+    var design: Font.Design = .default
 
     func body(content: Content) -> some View {
         content.font(font)
@@ -769,11 +772,11 @@ private struct ListFont: ViewModifier {
     private var font: Font {
         var font: Font
         if scale >= 1 {
-            font = .system(style).weight(weight)
+            font = .system(style, design: design).weight(weight)
         } else {
             let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(typeSize))
             let size = UIFont.preferredFont(forTextStyle: Self.uiStyle(style), compatibleWith: traits).pointSize * scale
-            font = .system(size: size, weight: weight)
+            font = .system(size: size, weight: weight, design: design)
         }
         return monospacedDigit ? font.monospacedDigit() : font
     }
@@ -796,8 +799,8 @@ private struct ListFont: ViewModifier {
 }
 
 extension View {
-    func listFont(_ style: Font.TextStyle, weight: Font.Weight = .regular, monospacedDigit: Bool = false) -> some View {
-        modifier(ListFont(style: style, weight: weight, monospacedDigit: monospacedDigit))
+    func listFont(_ style: Font.TextStyle, weight: Font.Weight = .regular, monospacedDigit: Bool = false, design: Font.Design = .default) -> some View {
+        modifier(ListFont(style: style, weight: weight, monospacedDigit: monospacedDigit, design: design))
     }
 }
 
@@ -807,10 +810,10 @@ struct ConversationTextSizeMenu: View {
 
     var body: some View {
         Menu {
-            Button { textSize = ConversationTextSize.step(textSize, by: 1) } label: { Label("Larger Text", systemImage: "plus.magnifyingglass") }
+            Button { textSize = ConversationTextSize.listStep(textSize, by: 1) } label: { Label("Larger Text", systemImage: "plus.magnifyingglass") }
                 .disabled(textSize >= ConversationTextSize.sizes.count - 1)
-            Button { textSize = ConversationTextSize.step(textSize, by: -1) } label: { Label("Smaller Text", systemImage: "minus.magnifyingglass") }
-                .disabled(textSize <= 0)
+            Button { textSize = ConversationTextSize.listStep(textSize, by: -1) } label: { Label("Smaller Text", systemImage: "minus.magnifyingglass") }
+                .disabled(textSize <= ConversationTextSize.listMinimum)
             Button { textSize = ConversationTextSize.standard } label: { Label("Default Size", systemImage: "arrow.counterclockwise") }
                 .disabled(textSize == ConversationTextSize.standard)
         } label: {

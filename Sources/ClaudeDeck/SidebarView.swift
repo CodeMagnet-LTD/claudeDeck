@@ -7,6 +7,8 @@ struct SidebarView: View {
     @AppStorage("sidebar.filter", store: .windowState) private var filter: SidebarFilter = .all
     @State private var layoutController = SidebarLayoutController()
     @State private var sidebarHeight: CGFloat = 600
+    @AppStorage(SidebarStyle.scaleKey) private var textScale = 0
+    @AppStorage(SidebarStyle.densityKey) private var density = 0
 
     var body: some View {
         let latest = model.sidebarLayout(filter: filter)
@@ -30,6 +32,7 @@ struct SidebarView: View {
             VStack(spacing: 0) {
                 if !waiting.isEmpty {
                     WaitingTray(sessions: waiting, maxHeight: sidebarHeight * 0.4)
+                        .sidebarStyle(scale: textScale, density: density)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
                 UsageMeterFooter()
@@ -108,6 +111,7 @@ struct SidebarView: View {
             }
         }
         .listStyle(.sidebar)
+        .sidebarStyle(scale: textScale, density: density)
         // A filter switch adds or drops whole sections and most rows at once; diffing that inside
         // the NSTableView jumbled the rows and could raise a constraint exception during layout.
         // A fresh list per filter sidesteps it.
@@ -285,7 +289,7 @@ struct GroupRow: View {
                 Spacer()
                 AggregateBadge(sessionIDs: model.deck.projects.filter { $0.groupID == group.id && !$0.pinned }
                     .flatMap { model.deck.sessions(in: $0.id).map(\.id) })
-                Text("\(projects.count)").font(.caption).foregroundStyle(.tertiary)
+                Text("\(projects.count)").sidebarFont(.caption).foregroundStyle(.tertiary)
                 Menu {
                     Button("Add Project to This Group…") { model.presentAddProject(toGroup: group.id) }
                     Button("Choose Projects…") { pickingProjects = true }
@@ -379,14 +383,14 @@ struct CompactProjectRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
                     if session.kind == .shell {
-                        Image(systemName: "apple.terminal").font(.caption).foregroundStyle(.secondary)
+                        Image(systemName: "apple.terminal").sidebarFont(.caption).foregroundStyle(.secondary)
                     }
                     Text(project.name).fontWeight(.medium).lineLimit(1)
                     if let extra = Self.extraName(session: session.name, project: project.name) {
-                        Text(extra).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        Text(extra).sidebarFont(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
                     if project.pinned {
-                        Image(systemName: "pin.fill").font(.caption2).foregroundStyle(.tertiary)
+                        Image(systemName: "pin.fill").sidebarFont(.caption2).foregroundStyle(.tertiary)
                     }
                     GitHubLinkBadge(session: session)
                     Spacer(minLength: 4)
@@ -404,7 +408,7 @@ struct CompactProjectRow: View {
                 SessionStatusLine(session: session, status: status, unseen: unseen)
             }
         }
-        .padding(.vertical, 2)
+        .sidebarRowPadding(2)
         .flashOnStateChange(status.display)
         .contentShape(Rectangle())
         .onTapGesture { model.selectedSessionID = session.id }
@@ -454,10 +458,10 @@ struct WaitingTray: View {
                 HStack(spacing: 6) {
                     Image(systemName: "bell.badge.fill")
                         .foregroundStyle(blocked ? StatusStyle.blocked : StatusStyle.idle)
-                    Text("Waiting for you · \(sessions.count)").font(.callout.weight(.semibold))
+                    Text("Waiting for you · \(sessions.count)").sidebarFont(.callout, weight: .semibold)
                     Spacer()
                     Image(systemName: "chevron.down")
-                        .font(.caption.weight(.semibold))
+                        .sidebarFont(.caption, weight: .semibold)
                         .foregroundStyle(.secondary)
                         .rotationEffect(.degrees(collapsed ? 180 : 0))
                 }
@@ -465,7 +469,7 @@ struct WaitingTray: View {
             }
             .buttonStyle(.plain)
             .padding(.horizontal, 14)
-            .padding(.vertical, 7)
+            .sidebarRowPadding(7)
             .help("Next session waiting for you: ⌘J")
             if !collapsed {
                 ScrollView {
@@ -500,13 +504,13 @@ struct WaitingRow: View {
                 HStack(spacing: 4) {
                     Text(session.name).fontWeight(.semibold).lineLimit(1)
                     if !session.name.hasPrefix(project) {
-                        Text(project).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        Text(project).sidebarFont(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
                 }
                 StatusPill(display: status.display, unseen: true)
                 if let detail = status.detail {
                     Text(detail)
-                        .font(.caption)
+                        .sidebarFont(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(2)
                 }
@@ -515,7 +519,7 @@ struct WaitingRow: View {
             Spacer(minLength: 4)
             RowTime(date: status.updatedAt)
         }
-        .padding(.vertical, 5)
+        .sidebarRowPadding(5)
         .padding(.horizontal, 8)
         .background(
             RoundedRectangle(cornerRadius: 6)
@@ -545,13 +549,13 @@ struct SessionRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
                     if session.kind == .shell {
-                        Image(systemName: "apple.terminal").font(.caption).foregroundStyle(.secondary)
+                        Image(systemName: "apple.terminal").sidebarFont(.caption).foregroundStyle(.secondary)
                     }
                     Text(session.name).lineLimit(1)
                     if let worktree = session.worktreeName {
                         Label(worktree, systemImage: "arrow.triangle.branch")
                             .labelStyle(.titleAndIcon)
-                            .font(.caption2)
+                            .sidebarFont(.caption2)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                             .help("Separate git worktree: \(session.workingDirectory ?? worktree)")
@@ -563,7 +567,7 @@ struct SessionRow: View {
                 SessionStatusLine(session: session, status: status, unseen: unseen)
             }
         }
-        .padding(.vertical, 3)
+        .sidebarRowPadding(3)
         .flashOnStateChange(status.display)
         .contentShape(Rectangle())
         .onTapGesture { model.selectedSessionID = session.id }
@@ -594,7 +598,7 @@ struct SessionStatusLine: View {
                 ShellStartBadge(session: session)
                 if let detail {
                     Text(detail)
-                        .font(.caption)
+                        .sidebarFont(.caption)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -616,7 +620,7 @@ struct RowTime: View {
         if let date {
             TimelineView(.periodic(from: .now, by: 15)) { _ in
                 Text(RelativeTime.short(date))
-                    .font(.caption2.monospacedDigit())
+                    .sidebarFont(.caption2, monospacedDigit: true)
                     .foregroundStyle(.tertiary)
             }
         }

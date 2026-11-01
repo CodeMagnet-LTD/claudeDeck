@@ -41,7 +41,19 @@ final class RemoteTerminalUIView: UIView, @preconcurrency TerminalViewDelegate, 
         }
     }
     private var lastFitGrid: (Int, Int)?
-    static let readingFont: CGFloat = 11
+    static let defaultFont = CGFloat(TerminalFont.standard)
+    static let fontRange = CGFloat(TerminalFont.range.lowerBound)...CGFloat(TerminalFont.range.upperBound)
+    /// Fit mode's font (Settings, the text size menu, a pinch): the grid asked of the Mac follows it.
+    var readingFont: CGFloat = RemoteTerminalUIView.defaultFont {
+        didSet {
+            guard readingFont != oldValue else { return }
+            fittedWidth = -1
+            lastFitGrid = nil
+            setNeedsLayout()
+        }
+    }
+    /// A pinch in fit mode: the new reading font, to keep.
+    var onReadingFont: ((CGFloat) -> Void)?
     /// nil = fit the width.
     private var chosenFontSize: CGFloat?
     private var fontSize: CGFloat = 0
@@ -78,7 +90,7 @@ final class RemoteTerminalUIView: UIView, @preconcurrency TerminalViewDelegate, 
     /// Columns x rows of this screen at the reading font.
     private func requestFitGrid() {
         guard bounds.width > 50, bounds.height > 50 else { return }
-        let font = UIFont.monospacedSystemFont(ofSize: Self.readingFont, weight: .regular)
+        let font = UIFont.monospacedSystemFont(ofSize: readingFont, weight: .regular)
         let cell = ("W" as NSString).size(withAttributes: [.font: font])
         let cols = Int((bounds.width - 4) / ceil(cell.width))
         let rows = Int(bounds.height / ceil(font.lineHeight + 1))
@@ -119,7 +131,7 @@ final class RemoteTerminalUIView: UIView, @preconcurrency TerminalViewDelegate, 
             setFont(chosenFontSize)
         } else if fitToScreen {
             // The Mac's terminal is (or is about to be) this screen's width.
-            setFont(Self.readingFont)
+            setFont(readingFont)
         } else {
             // Measure at 10 pt, scale to the width, step down until it fits.
             setFont(10)
@@ -162,10 +174,15 @@ final class RemoteTerminalUIView: UIView, @preconcurrency TerminalViewDelegate, 
         case .began:
             pinchStart = fontSize
         case .changed, .ended:
-            let size = min(24, max(5, (pinchStart * gesture.scale * 2).rounded() / 2))
+            let size = min(Self.fontRange.upperBound, max(Self.fontRange.lowerBound, (pinchStart * gesture.scale * 2).rounded() / 2))
             guard size != fontSize else { return }
-            chosenFontSize = size
-            fit()
+            if fitToScreen {
+                readingFont = size
+                onReadingFont?(size)
+            } else {
+                chosenFontSize = size
+                fit()
+            }
         default:
             break
         }
@@ -207,6 +224,7 @@ struct RemoteTerminalRepresentable: UIViewRepresentable {
     let store: RemoteStore
     let keyboardToggle: Int
     let fitToScreen: Bool
+    @Binding var fontSize: Double
 
     final class Coordinator {
         let sessionID: UUID
@@ -227,6 +245,9 @@ struct RemoteTerminalRepresentable: UIViewRepresentable {
         view.onNeedsRedraw = { [weak store] in store?.redrawTerminal(id) }
         view.onFitGrid = { [weak store] cols, rows in store?.fitTerminal(id, cols: cols, rows: rows) }
         view.fitToScreen = fitToScreen
+        view.readingFont = fontSize
+        let size = $fontSize
+        view.onReadingFont = { size.wrappedValue = $0 }
         store.attachTerminal(id, sink: view)
         context.coordinator.lastToggle = keyboardToggle
         return view
@@ -234,6 +255,7 @@ struct RemoteTerminalRepresentable: UIViewRepresentable {
 
     func updateUIView(_ view: RemoteTerminalUIView, context: Context) {
         view.fitToScreen = fitToScreen
+        view.readingFont = fontSize
         if keyboardToggle != context.coordinator.lastToggle {
             context.coordinator.lastToggle = keyboardToggle
             view.toggleKeyboard()
@@ -245,6 +267,7 @@ struct RemoteTerminalRepresentable: UIViewRepresentable {
             view.onInput = nil
             view.onNeedsRedraw = nil
             view.onFitGrid = nil
+            view.onReadingFont = nil
             coordinator.store?.fitTerminal(coordinator.sessionID, cols: 0, rows: 0)
             coordinator.store?.detachTerminal(coordinator.sessionID, sink: view)
         }
@@ -259,6 +282,7 @@ struct SessionDetailView: View {
     /// Per window: two windows can show a conversation and a terminal side by side.
     @SceneStorage("detail.mode") private var mode = Mode.conversation
     @AppStorage("terminal.fit") private var fitToScreen = true
+    @AppStorage(TerminalFont.key) private var terminalFont = TerminalFont.standard
 
     enum Mode: String { case conversation, terminal }
 
@@ -308,6 +332,14 @@ struct SessionDetailView: View {
                     }
                 }
                 ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Button { terminalFont = TerminalFont.step(terminalFont, by: 1) } label: { Label("Larger Text", systemImage: "plus.magnifyingglass") }
+                        Button { terminalFont = TerminalFont.step(terminalFont, by: -1) } label: { Label("Smaller Text", systemImage: "minus.magnifyingglass") }
+                        Button { terminalFont = TerminalFont.standard } label: { Label("Default Size", systemImage: "arrow.counterclockwise") }
+                    } label: { Image(systemName: "textformat.size") }
+                        .accessibilityLabel(Text("Text Size"))
+                }
+                ToolbarItem(placement: .topBarTrailing) {
                     Button { keyboardToggle += 1 } label: { Image(systemName: "keyboard") }
                         .disabled(store.terminalStates[sessionID] != .live)
                 }
@@ -318,7 +350,7 @@ struct SessionDetailView: View {
     }
 
     private var terminal: some View {
-            RemoteTerminalRepresentable(sessionID: sessionID, store: store, keyboardToggle: keyboardToggle, fitToScreen: fitToScreen)
+            RemoteTerminalRepresentable(sessionID: sessionID, store: store, keyboardToggle: keyboardToggle, fitToScreen: fitToScreen, fontSize: $terminalFont)
                 .overlay {
                     if let message = overlayMessage {
                         VStack(spacing: 8) {
@@ -339,4 +371,12 @@ struct SessionDetailView: View {
         default: return String(localized: "Loading the terminal…")
         }
     }
+}
+
+/// The terminal's font size (fit mode: the Mac's terminal is sized to the screen at it).
+enum TerminalFont {
+    static let key = "terminal.fontSize"
+    static let standard: Double = 11
+    static let range: ClosedRange<Double> = 5...24
+    static func step(_ size: Double, by delta: Double) -> Double { min(max(size + delta, range.lowerBound), range.upperBound) }
 }

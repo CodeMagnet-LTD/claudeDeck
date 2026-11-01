@@ -29,9 +29,9 @@ struct ConversationTextSizeCommands: Commands {
 
     var body: some Commands {
         CommandGroup(after: .toolbar) {
-            Button("Larger Text") { textSize = ConversationTextSize.step(textSize, by: 1) }
+            Button("Larger Text") { textSize = ConversationTextSize.listStep(textSize, by: 1) }
                 .keyboardShortcut("+", modifiers: .command)
-            Button("Smaller Text") { textSize = ConversationTextSize.step(textSize, by: -1) }
+            Button("Smaller Text") { textSize = ConversationTextSize.listStep(textSize, by: -1) }
                 .keyboardShortcut("-", modifiers: .command)
             Button("Default Size") { textSize = ConversationTextSize.standard }
                 .keyboardShortcut("0", modifiers: .command)

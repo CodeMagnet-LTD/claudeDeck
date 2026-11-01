@@ -39,6 +39,7 @@ struct SettingsView: View {
                 }
                 UpdateSettingsRows()
             }
+            SidebarSettingsSection()
             Section("Sessions") {
                 Toggle("Resume open sessions at launch", isOn: setting(\.resumeOnLaunch))
                 Toggle("Run /compact on large resumed sessions", isOn: setting(\.compactOnResume))

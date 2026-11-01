@@ -375,7 +375,7 @@ struct RemoteSidebarSection: View {
                 }
                 if sessions.isEmpty, filter != .all || idlePinned.isEmpty {
                     Text(filter == .all ? "No running sessions" : "Nothing here")
-                        .font(.callout).foregroundStyle(.tertiary)
+                        .sidebarFont(.callout).foregroundStyle(.tertiary)
                 }
                 if filter == .all, !closed.isEmpty {
                     DisclosureGroup("Closed sessions (\(closed.count))", isExpanded: $closedExpanded) {
@@ -384,10 +384,10 @@ struct RemoteSidebarSection: View {
                     .selectionDisabled()
                 }
             } else {
-                RemoteConnectionLabel().font(.caption)
+                RemoteConnectionLabel().sidebarFont(.caption)
             }
             if let error = remote.answerError {
-                Text(error).font(.caption).foregroundStyle(.orange)
+                Text(error).sidebarFont(.caption).foregroundStyle(.orange)
             }
         } header: {
             HStack(spacing: 4) {
@@ -424,14 +424,14 @@ struct RemotePinnedProjectRow: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: "pin.fill").font(.caption).foregroundStyle(.secondary)
+            Image(systemName: "pin.fill").sidebarFont(.caption).foregroundStyle(.secondary)
             Text(project.name).lineLimit(1)
             Spacer(minLength: 4)
             Button(action: newSession) { Image(systemName: "plus") }
                 .buttonStyle(.borderless)
                 .help("New session on the other Mac")
         }
-        .padding(.vertical, 1)
+        .sidebarRowPadding(1)
         .contextMenu {
             Button("New Session", action: newSession)
             Button("Resume Previous Conversation…", action: more)
@@ -449,14 +449,14 @@ struct RemoteClosedSessionRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(session.name).lineLimit(1)
                 if !session.project.isEmpty, !session.name.hasPrefix(session.project) {
-                    Text(session.project).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    Text(session.project).sidebarFont(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
             Spacer(minLength: 4)
             Button("Resume") { model.remote.resumeHostSession(session.id) }
                 .controlSize(.small)
         }
-        .padding(.vertical, 1)
+        .sidebarRowPadding(1)
     }
 }
 
@@ -546,11 +546,11 @@ struct RemoteSessionRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 6) {
                     if session.state == .shell {
-                        Image(systemName: "apple.terminal").font(.caption).foregroundStyle(.secondary)
+                        Image(systemName: "apple.terminal").sidebarFont(.caption).foregroundStyle(.secondary)
                     }
                     Text(session.name).lineLimit(1)
                     if !session.project.isEmpty, !session.name.hasPrefix(session.project) {
-                        Text(session.project).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        Text(session.project).sidebarFont(.caption).foregroundStyle(.secondary).lineLimit(1)
                     }
                     Spacer(minLength: 4)
                     RowTime(date: session.updatedAt)
@@ -560,7 +560,7 @@ struct RemoteSessionRow: View {
                     HStack(spacing: 6) {
                         if !quiet { StatusPill(display: display, unseen: session.unseen) }
                         if let detail = session.detail {
-                            Text(detail).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                            Text(detail).sidebarFont(.caption).foregroundStyle(.secondary).lineLimit(2)
                         }
                     }
                 }
@@ -578,7 +578,7 @@ struct RemoteSessionRow: View {
                 }
             }
         }
-        .padding(.vertical, 3)
+        .sidebarRowPadding(3)
         .flashOnStateChange(display)
         .contentShape(Rectangle())
         .onTapGesture { model.openRemoteTerminal(session.id) }

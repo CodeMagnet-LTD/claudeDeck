@@ -8753,6 +8753,66 @@
           }
         }
       }
+    },
+    "Sidebar": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kenar çubuğu"
+          }
+        }
+      }
+    },
+    "Rows": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Satırlar"
+          }
+        }
+      }
+    },
+    "Default": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varsayılan"
+          }
+        }
+      }
+    },
+    "Status Colors": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durum renkleri"
+          }
+        }
+      }
+    },
+    "Default Colors": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varsayılan renkler"
+          }
+        }
+      }
+    },
+    "Terminal: %.1f pt": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminal: %.1f pt"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -15,7 +15,24 @@ enum SessionStyle {
         }
     }
 
-    static func color(_ state: RemoteSession.State) -> Color {
+    /// Status colors the user picked (Settings), "running=#RRGGBB;idle=…".
+    static let colorsKey = "status.colors"
+    /// The states with a color of their own to pick.
+    static let customizable: [(key: String, state: RemoteSession.State)] = [
+        ("idle", .idle), ("running", .running), ("attention", .needsPermission), ("shell", .shell),
+    ]
+
+    static func key(_ state: RemoteSession.State) -> String? {
+        switch state {
+        case .idle: "idle"
+        case .running, .starting: "running"
+        case .needsPermission, .needsAnswer: "attention"
+        case .shell: "shell"
+        case .notStarted, .ended: nil
+        }
+    }
+
+    static func defaultColor(_ state: RemoteSession.State) -> Color {
         switch state {
         case .running: .green
         case .needsPermission, .needsAnswer: .red
@@ -23,6 +40,74 @@ enum SessionStyle {
         case .starting: .green.opacity(0.5)
         case .shell: .blue
         case .notStarted, .ended: .secondary.opacity(0.5)
+        }
+    }
+
+    static func color(_ state: RemoteSession.State, custom: String) -> Color {
+        guard let key = key(state), let hex = parse(custom)[key], let color = Color(hex: hex) else { return defaultColor(state) }
+        return state == .starting ? color.opacity(0.5) : color
+    }
+
+    /// Dark text on a light color, white on a dark one.
+    static func textColor(on state: RemoteSession.State, custom: String) -> Color {
+        guard let key = key(state), let hex = parse(custom)[key], let rgb = Color.rgb(hex: hex) else {
+            return state == .idle || state == .running || state == .starting ? Color.black.opacity(0.8) : .white
+        }
+        let luminance = 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b
+        return luminance > 0.6 ? Color.black.opacity(0.8) : .white
+    }
+
+    static func parse(_ custom: String) -> [String: String] {
+        custom.split(separator: ";").reduce(into: [:]) { result, pair in
+            let parts = pair.split(separator: "=", maxSplits: 1)
+            if parts.count == 2 { result[String(parts[0])] = String(parts[1]) }
+        }
+    }
+
+    static func setting(_ colors: [String: String]) -> String {
+        colors.sorted { $0.key < $1.key }.map { "\($0.key)=\($0.value)" }.joined(separator: ";")
+    }
+}
+
+extension Color {
+    static func rgb(hex: String) -> (r: Double, g: Double, b: Double)? {
+        let digits = hex.hasPrefix("#") ? String(hex.dropFirst()) : hex
+        guard digits.count == 6, let value = UInt32(digits, radix: 16) else { return nil }
+        return (Double((value >> 16) & 0xFF) / 255, Double((value >> 8) & 0xFF) / 255, Double(value & 0xFF) / 255)
+    }
+
+    init?(hex: String) {
+        guard let rgb = Color.rgb(hex: hex) else { return nil }
+        self.init(red: rgb.r, green: rgb.g, blue: rgb.b)
+    }
+
+    var hex: String {
+        var r: CGFloat = 0, g: CGFloat = 0, b: CGFloat = 0, a: CGFloat = 0
+        UIColor(self).getRed(&r, green: &g, blue: &b, alpha: &a)
+        let clamp = { (v: CGFloat) in Int((min(max(v, 0), 1) * 255).rounded()) }
+        return String(format: "#%02X%02X%02X", clamp(r), clamp(g), clamp(b))
+    }
+}
+
+/// Settings → Status Colors.
+struct StatusColorsSection: View {
+    @AppStorage(SessionStyle.colorsKey) private var custom = ""
+
+    var body: some View {
+        Section("Status Colors") {
+            ForEach(SessionStyle.customizable, id: \.key) { item in
+                ColorPicker(SessionStyle.label(item.state), selection: Binding(
+                    get: { SessionStyle.color(item.state, custom: custom) },
+                    set: { color in
+                        var colors = SessionStyle.parse(custom)
+                        colors[item.key] = color.hex
+                        custom = SessionStyle.setting(colors)
+                    }
+                ), supportsOpacity: false)
+            }
+            if !custom.isEmpty {
+                Button("Default Colors") { custom = "" }
+            }
         }
     }
 }
@@ -151,7 +236,7 @@ struct SessionListView: View {
             // a row with them under it; with one, just that session (its menu has the project's
             // actions); with none (pinned), the row to start one.
             if !pinned.isEmpty {
-                Section("Pinned") {
+                Section {
                     ForEach(pinned) { project in
                         let running = projects[project.name] ?? []
                         if running.count == 1, let session = running.first {
@@ -167,19 +252,23 @@ struct SessionListView: View {
                             }
                         }
                     }
+                } header: {
+                    ListHeader("Pinned")
                 }
             }
             if !waiting.isEmpty {
-                Section("Waiting for you") {
+                Section {
                     ForEach(waiting) { session in
                         SessionRowLink(session: session, showProject: true) { AnyView(projectMenu(session.project, running: projects[session.project] ?? [])) }
                     }
+                } header: {
+                    ListHeader("Waiting for you")
                 }
             }
             // The other projects with something running, the same way (a header can't take a
             // context menu on iPad; a row can).
             if !projectNames.isEmpty {
-                Section("Projects") {
+                Section {
                     ForEach(projectNames, id: \.self) { project in
                         let running = projects[project] ?? []
                         if running.count == 1, let session = running.first {
@@ -195,24 +284,26 @@ struct SessionListView: View {
                             }
                         }
                     }
+                } header: {
+                    ListHeader("Projects")
                 }
             }
             if store.connection == .connected, sessions.isEmpty {
-                Text("No running sessions").foregroundStyle(.secondary)
+                Text("No running sessions").listFont(.body).foregroundStyle(.secondary)
             }
             if !closed.isEmpty {
                 Section {
-                    DisclosureGroup("Closed sessions (\(closed.count))") {
+                    DisclosureGroup {
                         ForEach(closed) { session in
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(session.name).lineLimit(1)
+                                    Text(session.name).listFont(.body).lineLimit(1)
                                     if !session.project.isEmpty, !session.name.hasPrefix(session.project) {
-                                        Text(session.project).font(.caption).foregroundStyle(.secondary)
+                                        Text(session.project).listFont(.caption).foregroundStyle(.secondary)
                                     }
                                 }
                                 Spacer()
-                                Button("Resume") { store.resumeSession(session.id, from: sceneID) }
+                                Button { store.resumeSession(session.id, from: sceneID) } label: { Text("Resume").listFont(.subheadline) }
                                     .buttonStyle(.bordered)
                                     .controlSize(.small)
                             }
@@ -232,6 +323,8 @@ struct SessionListView: View {
                                 projectMenu(session.project, running: projects[session.project] ?? [])
                             }
                         }
+                    } label: {
+                        Text("Closed sessions (\(closed.count))").listFont(.body, weight: .semibold)
                     }
                 }
             }
@@ -253,7 +346,7 @@ struct SessionListView: View {
                         }
                     }
                 } header: {
-                    Text("Inactive \(inactive.count)")
+                    ListHeader("Inactive \(inactive.count)")
                 }
                 .environment(\.defaultMinListRowHeight, 30)
             }
@@ -370,6 +463,16 @@ extension SessionListView {
     }
 }
 
+/// A section title of the session list, scaled with its text size.
+struct ListHeader: View {
+    let title: LocalizedStringKey
+    init(_ title: LocalizedStringKey) { self.title = title }
+
+    var body: some View {
+        Text(title).listFont(.subheadline, weight: .semibold)
+    }
+}
+
 /// A project of the Mac, like its sidebar row: name, how many sessions run, + to start one; the
 /// sessions follow it, indented.
 struct ProjectRow: View {
@@ -380,16 +483,16 @@ struct ProjectRow: View {
     let count: Int
     /// Closed sessions of the project: a dot that resumes one.
     var resumable: [RemoteSession] = []
-    /// Inactive projects: a smaller, lighter row.
+    /// Inactive projects: a lighter, tighter row (same text size as the sessions).
     var compact = false
     let newSession: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: pinned ? "pin.fill" : "folder").font(.caption).foregroundStyle(.secondary).frame(width: 16)
-            Text(name).listFont(compact ? .subheadline : .body, weight: compact ? .regular : .semibold).lineLimit(1)
+            Image(systemName: pinned ? "pin.fill" : "folder").listFont(.caption).foregroundStyle(.secondary).frame(width: 16)
+            Text(name).listFont(.body, weight: compact ? .regular : .semibold).lineLimit(1)
             if count > 0 {
-                Text("\(count)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                Text("\(count)").listFont(.caption, monospacedDigit: true).foregroundStyle(.secondary)
             }
             if !resumable.isEmpty {
                 Menu {
@@ -620,6 +723,7 @@ struct NewSessionView: View {
 
 struct SessionRow: View {
     @Environment(RemoteStore.self) private var store
+    @AppStorage(SessionStyle.colorsKey) private var customColors = ""
     @Environment(\.listDensity) private var density
     let session: RemoteSession
     let showProject: Bool
@@ -627,7 +731,7 @@ struct SessionRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: density == 0 ? 5 : density == 1 ? 3 : 1) {
             HStack(spacing: 8) {
-                Circle().fill(SessionStyle.color(session.state)).frame(width: 9, height: 9)
+                Circle().fill(SessionStyle.color(session.state, custom: customColors)).frame(width: 9, height: 9)
                 Text(session.name).listFont(.body, weight: .medium).lineLimit(1)
                 if showProject, !session.project.isEmpty, !session.name.hasPrefix(session.project) {
                     Text(session.project).listFont(.caption).foregroundStyle(.secondary).lineLimit(1)
@@ -669,14 +773,15 @@ struct SessionRow: View {
 
 struct StatusPill: View {
     let state: RemoteSession.State
+    @AppStorage(SessionStyle.colorsKey) private var customColors = ""
 
     var body: some View {
         Text(SessionStyle.label(state))
             .listFont(.caption2, weight: .semibold)
-            .foregroundStyle(state == .idle || state == .running || state == .starting ? Color.black.opacity(0.8) : .white)
+            .foregroundStyle(SessionStyle.textColor(on: state, custom: customColors))
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(SessionStyle.color(state), in: Capsule())
+            .background(SessionStyle.color(state, custom: customColors), in: Capsule())
     }
 }
 
@@ -852,21 +957,31 @@ struct SettingsView: View {
     @AppStorage(ConversationTextSize.sidebarKey) private var sidebarSize = ConversationTextSize.standard
     @AppStorage(ConversationTextSize.key) private var conversationSize = ConversationTextSize.standard
     @AppStorage(ConversationTextSize.densityKey) private var density = 0
+    @AppStorage(TerminalFont.key) private var terminalFont = TerminalFont.standard
 
     var body: some View {
         Form {
             Section {
                 textSizeSlider("Session List", value: $sidebarSize, from: ConversationTextSize.listMinimum)
-                textSizeSlider("Conversation", value: $conversationSize, from: 0)
+                textSizeSlider("Conversation", value: $conversationSize, from: ConversationTextSize.listMinimum)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Terminal: \(terminalFont, specifier: "%.1f") pt")
+                    HStack(spacing: 10) {
+                        Image(systemName: "textformat.size.smaller").foregroundStyle(.secondary)
+                        Slider(value: $terminalFont, in: TerminalFont.range, step: 0.5)
+                        Image(systemName: "textformat.size.larger").foregroundStyle(.secondary)
+                    }
+                }
                 Picker("Session List Rows", selection: $density) {
                     Text("Normal").tag(0)
                     Text("Compact").tag(1)
                     Text("Tight").tag(2)
                 }
-                if sidebarSize != ConversationTextSize.standard || conversationSize != ConversationTextSize.standard {
+                if sidebarSize != ConversationTextSize.standard || conversationSize != ConversationTextSize.standard || terminalFont != TerminalFont.standard {
                     Button("Default Size") {
                         sidebarSize = ConversationTextSize.standard
                         conversationSize = ConversationTextSize.standard
+                        terminalFont = TerminalFont.standard
                     }
                 }
             } header: {
@@ -874,6 +989,7 @@ struct SettingsView: View {
             } footer: {
                 Text("Pinch the list or the conversation to change it there too.")
             }
+            StatusColorsSection()
             if let pairing = store.pairing {
                 Section("Mac") {
                     LabeledContent("Name", value: store.snapshot?.hostName ?? pairing.hostName)
