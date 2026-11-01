@@ -8813,6 +8813,66 @@
           }
         }
       }
+    },
+    "Show the Full Sidebar": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam kenar çubuğunu göster"
+          }
+        }
+      }
+    },
+    "Keep the Sidebar Open": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kenar çubuğunu açık tut"
+          }
+        }
+      }
+    },
+    "Full Sidebar": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tam kenar çubuğu"
+          }
+        }
+      }
+    },
+    "Icons Only": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca ikonlar"
+          }
+        }
+      }
+    },
+    "Hidden (Show on Hover)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gizli (üzerine gelince aç)"
+          }
+        }
+      }
+    },
+    "Sidebar: full, icons only, or hidden": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kenar çubuğu: tam, yalnızca ikonlar ya da gizli"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

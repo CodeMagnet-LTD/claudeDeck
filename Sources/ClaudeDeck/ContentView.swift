@@ -6,16 +6,31 @@ struct ContentView: View {
     @Environment(AppModel.self) private var model
     @AppStorage("showFiles", store: .windowState) private var showFiles = false
     @AppStorage("inspectorTab", store: .windowState) private var inspectorTab = InspectorTab.files
+    @AppStorage(SidebarMode.key, store: .windowState) private var sidebarMode = SidebarMode.full
 
     var body: some View {
-        NavigationSplitView {
-            SidebarView()
-                .navigationSplitViewColumnWidth(min: 240, ideal: 290, max: 420)
+        NavigationSplitView(columnVisibility: Binding(
+            get: { sidebarMode == .hidden ? .detailOnly : .all },
+            // The system's sidebar button: hide → hidden mode, show → full.
+            set: { visibility in sidebarMode = visibility == .detailOnly ? .hidden : (sidebarMode == .hidden ? .full : sidebarMode) }
+        )) {
+            Group {
+                if sidebarMode == .icons {
+                    SidebarRail(mode: $sidebarMode)
+                        .navigationSplitViewColumnWidth(min: 60, ideal: 60, max: 60)
+                } else {
+                    SidebarView()
+                        .navigationSplitViewColumnWidth(min: 240, ideal: 290, max: 420)
+                }
+            }
         } detail: {
             WorkspaceView()
                 .inspector(isPresented: $showFiles) {
                     InspectorPanel(tab: $inspectorTab)
                         .inspectorColumnWidth(min: 220, ideal: 290, max: 520)
+                }
+                .overlay(alignment: .leading) {
+                    if sidebarMode == .hidden { HoverSidebar(mode: $sidebarMode) }
                 }
         }
         .toolbar {
@@ -50,6 +65,7 @@ struct ContentView: View {
                 .help("Session Agents (⌘⇧A)")
                 .keyboardShortcut("a", modifiers: [.command, .shift])
             }
+            ToolbarItem(placement: .navigation) { SidebarModeMenu(mode: $sidebarMode) }
             ToolbarItem(placement: .navigation) {
                 Button {
                     model.presentAddProject()
