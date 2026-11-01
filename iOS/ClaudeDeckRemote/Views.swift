@@ -131,6 +131,7 @@ struct SessionListView: View {
     @State private var renameText = ""
     @AppStorage("list.inactiveExpanded") private var inactiveExpanded = true
     @State private var showAddProject = false
+    @AppStorage(ConversationTextSize.sidebarKey) private var textSize = ConversationTextSize.standard
 
     var body: some View {
         let all = store.snapshot?.sessions ?? []
@@ -259,6 +260,12 @@ struct SessionListView: View {
                 Text(error).font(.footnote).foregroundStyle(.orange)
             }
         }
+        .dynamicTypeSize(ConversationTextSize.size(textSize))
+        // Pinch: one step bigger or smaller per gesture (Settings has the sliders).
+        .simultaneousGesture(MagnifyGesture().onEnded { value in
+            if value.magnification > 1.15 { textSize = ConversationTextSize.step(textSize, by: 1) }
+            if value.magnification < 0.87 { textSize = ConversationTextSize.step(textSize, by: -1) }
+        })
         .navigationTitle(store.snapshot?.hostName ?? store.pairing?.hostName ?? "ClaudeDeck")
         .refreshable { store.reconnect() }
         .toolbar {
@@ -819,9 +826,25 @@ struct QRScanner: UIViewControllerRepresentable {
 struct SettingsView: View {
     @Environment(RemoteStore.self) private var store
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(ConversationTextSize.sidebarKey) private var sidebarSize = ConversationTextSize.standard
+    @AppStorage(ConversationTextSize.key) private var conversationSize = ConversationTextSize.standard
 
     var body: some View {
         Form {
+            Section {
+                textSizeSlider("Session List", value: $sidebarSize)
+                textSizeSlider("Conversation", value: $conversationSize)
+                if sidebarSize != ConversationTextSize.standard || conversationSize != ConversationTextSize.standard {
+                    Button("Default Size") {
+                        sidebarSize = ConversationTextSize.standard
+                        conversationSize = ConversationTextSize.standard
+                    }
+                }
+            } header: {
+                Text("Text Size")
+            } footer: {
+                Text("Pinch the list or the conversation to change it there too.")
+            }
             if let pairing = store.pairing {
                 Section("Mac") {
                     LabeledContent("Name", value: store.snapshot?.hostName ?? pairing.hostName)
@@ -838,6 +861,18 @@ struct SettingsView: View {
         }
         .navigationTitle("Settings")
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+    }
+
+    private func textSizeSlider(_ title: LocalizedStringKey, value: Binding<Int>) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+            HStack(spacing: 10) {
+                Image(systemName: "textformat.size.smaller").foregroundStyle(.secondary)
+                Slider(value: Binding(get: { Double(value.wrappedValue) }, set: { value.wrappedValue = Int($0.rounded()) }),
+                       in: 0...Double(ConversationTextSize.sizes.count - 1), step: 1)
+                Image(systemName: "textformat.size.larger").foregroundStyle(.secondary)
+            }
+        }
     }
 
     private var connectionText: String {

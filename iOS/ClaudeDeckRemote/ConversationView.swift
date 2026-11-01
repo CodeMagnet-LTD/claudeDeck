@@ -716,6 +716,8 @@ struct ToolGroupView: View {
 /// The conversation's text size, apart from the system's: a step of Dynamic Type.
 enum ConversationTextSize {
     static let key = "conversation.textSize"
+    /// The sidebar's (session list) own step.
+    static let sidebarKey = "sidebar.textSize"
     static let sizes: [DynamicTypeSize] = [.xSmall, .small, .medium, .large, .xLarge, .xxLarge, .xxxLarge, .accessibility1, .accessibility2]
     static let standard = 3
 

@@ -8673,6 +8673,46 @@
           }
         }
       }
+    },
+    "Session List": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum listesi"
+          }
+        }
+      }
+    },
+    "Pinch the list or the conversation to change it there too.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listeyi ya da konuşmayı iki parmakla büyütüp küçülterek de değiştirebilirsin."
+          }
+        }
+      }
+    },
+    "Larger List Text": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listede daha büyük yazı"
+          }
+        }
+      }
+    },
+    "Smaller List Text": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listede daha küçük yazı"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
