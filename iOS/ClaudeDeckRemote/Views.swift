@@ -132,6 +132,7 @@ struct SessionListView: View {
     @AppStorage("list.inactiveExpanded") private var inactiveExpanded = true
     @State private var showAddProject = false
     @AppStorage(ConversationTextSize.sidebarKey) private var textSize = ConversationTextSize.standard
+    @AppStorage(ConversationTextSize.densityKey) private var density = 0
 
     var body: some View {
         let all = store.snapshot?.sessions ?? []
@@ -243,7 +244,7 @@ struct SessionListView: View {
                         ProjectRow(name: project.name, pinned: false, count: 0, resumable: resumable, compact: true) {
                             store.startSession(in: project.id, prompt: "", from: sceneID)
                         }
-                        .listRowInsets(EdgeInsets(top: 2, leading: 16, bottom: 2, trailing: 16))
+                        .modifier(ListRowDensity(minimum: 1))
                         .contextMenu {
                             if !resumable.isEmpty {
                                 Section("Closed sessions") { resumeButtons(resumable) }
@@ -261,10 +262,13 @@ struct SessionListView: View {
             }
         }
         .dynamicTypeSize(ConversationTextSize.size(textSize))
+        .environment(\.listFontScale, ConversationTextSize.listScale(textSize))
+        .environment(\.listDensity, density)
+        .environment(\.defaultMinListRowHeight, density > 0 ? 24 : textSize < 0 ? 28 : 44)
         // Pinch: one step bigger or smaller per gesture (Settings has the sliders).
         .simultaneousGesture(MagnifyGesture().onEnded { value in
-            if value.magnification > 1.15 { textSize = ConversationTextSize.step(textSize, by: 1) }
-            if value.magnification < 0.87 { textSize = ConversationTextSize.step(textSize, by: -1) }
+            if value.magnification > 1.15 { textSize = ConversationTextSize.listStep(textSize, by: 1) }
+            if value.magnification < 0.87 { textSize = ConversationTextSize.listStep(textSize, by: -1) }
         })
         .navigationTitle(store.snapshot?.hostName ?? store.pairing?.hostName ?? "ClaudeDeck")
         .refreshable { store.reconnect() }
@@ -383,7 +387,7 @@ struct ProjectRow: View {
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: pinned ? "pin.fill" : "folder").font(.caption).foregroundStyle(.secondary).frame(width: 16)
-            Text(name).font(compact ? .subheadline : .body.weight(.semibold)).lineLimit(1)
+            Text(name).listFont(compact ? .subheadline : .body, weight: compact ? .regular : .semibold).lineLimit(1)
             if count > 0 {
                 Text("\(count)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
             }
@@ -411,6 +415,7 @@ struct ProjectRow: View {
         }
         // Not a session: selecting it would put the project's id in the selection.
         .selectionDisabled()
+        .modifier(ListRowDensity(minimum: compact ? 1 : 0))
     }
 }
 
@@ -434,6 +439,7 @@ struct SessionRowLink: View {
         // Explicit: inside a ForEach over projects the list would otherwise tag the row with the
         // project's id, and selecting it would open an empty "Session".
         .tag(session.id)
+        .modifier(ListRowDensity())
         .contextMenu {
             // Like the Mac's session menu, as far as the other Mac can be asked to.
             if let stamp = session.permissionStamp {
@@ -516,12 +522,12 @@ struct UsageRow: View {
 
     private func meter(_ title: String, _ value: Double, _ reset: Date?) -> some View {
         HStack(spacing: 8) {
-            Text(title).font(.caption).frame(width: 60, alignment: .leading)
+            Text(title).listFont(.caption).frame(width: 60, alignment: .leading)
             ProgressView(value: min(max(value, 0), 100), total: 100)
                 .tint(value >= 90 ? .red : value >= 70 ? .orange : .green)
-            Text("\(Int(value.rounded()))%").font(.caption.monospacedDigit()).frame(width: 40, alignment: .trailing)
+            Text("\(Int(value.rounded()))%").listFont(.caption, monospacedDigit: true).frame(width: 40, alignment: .trailing)
             if let reset {
-                Text(reset, style: .relative).font(.caption2).foregroundStyle(.secondary).frame(width: 70, alignment: .trailing)
+                Text(reset, style: .relative).listFont(.caption2).foregroundStyle(.secondary).frame(width: 70, alignment: .trailing)
             }
         }
     }
@@ -614,33 +620,50 @@ struct NewSessionView: View {
 
 struct SessionRow: View {
     @Environment(RemoteStore.self) private var store
+    @Environment(\.listDensity) private var density
     let session: RemoteSession
     let showProject: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
+        VStack(alignment: .leading, spacing: density == 0 ? 5 : density == 1 ? 3 : 1) {
             HStack(spacing: 8) {
                 Circle().fill(SessionStyle.color(session.state)).frame(width: 9, height: 9)
-                Text(session.name).font(.body.weight(.medium)).lineLimit(1)
+                Text(session.name).listFont(.body, weight: .medium).lineLimit(1)
                 if showProject, !session.project.isEmpty, !session.name.hasPrefix(session.project) {
-                    Text(session.project).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    Text(session.project).listFont(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
                 Spacer(minLength: 4)
                 if let date = session.updatedAt {
-                    Text(date, style: .relative).font(.caption2.monospacedDigit()).foregroundStyle(.tertiary)
+                    // Since the last change on the Mac (for "Your turn": since Claude stopped). Once a
+                    // minute, not the ticking seconds of a relative-style Text.
+                    TimelineView(.everyMinute) { context in
+                        Text(SessionRow.age(since: date, now: context.date))
+                            .listFont(.caption2, monospacedDigit: true).foregroundStyle(.tertiary)
+                    }
                 }
             }
             if !(session.state == .idle && !session.unseen) || session.detail != nil {
                 HStack(spacing: 6) {
                     StatusPill(state: session.state)
                     if let detail = session.detail {
-                        Text(MarkdownBlocks.shortToolNames(detail)).font(.caption).foregroundStyle(.secondary).lineLimit(2)
+                        Text(MarkdownBlocks.shortToolNames(detail)).listFont(.caption).foregroundStyle(.secondary).lineLimit(2)
                     }
                 }
             }
             PermissionButtons(session: session)
         }
-        .padding(.vertical, 2)
+        .padding(.vertical, density == 0 ? 2 : 0)
+    }
+
+    /// "now", "5 min", "2 hr", "3 days".
+    static func age(since date: Date, now: Date) -> String {
+        let seconds = max(0, now.timeIntervalSince(date))
+        if seconds < 60 { return String(localized: "now") }
+        let formatter = DateComponentsFormatter()
+        formatter.unitsStyle = .abbreviated
+        formatter.maximumUnitCount = 1
+        formatter.allowedUnits = seconds < 3600 ? [.minute] : seconds < 86400 ? [.hour] : [.day]
+        return formatter.string(from: seconds) ?? ""
     }
 }
 
@@ -649,7 +672,7 @@ struct StatusPill: View {
 
     var body: some View {
         Text(SessionStyle.label(state))
-            .font(.caption2.weight(.semibold))
+            .listFont(.caption2, weight: .semibold)
             .foregroundStyle(state == .idle || state == .running || state == .starting ? Color.black.opacity(0.8) : .white)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
@@ -828,12 +851,18 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage(ConversationTextSize.sidebarKey) private var sidebarSize = ConversationTextSize.standard
     @AppStorage(ConversationTextSize.key) private var conversationSize = ConversationTextSize.standard
+    @AppStorage(ConversationTextSize.densityKey) private var density = 0
 
     var body: some View {
         Form {
             Section {
-                textSizeSlider("Session List", value: $sidebarSize)
-                textSizeSlider("Conversation", value: $conversationSize)
+                textSizeSlider("Session List", value: $sidebarSize, from: ConversationTextSize.listMinimum)
+                textSizeSlider("Conversation", value: $conversationSize, from: 0)
+                Picker("Session List Rows", selection: $density) {
+                    Text("Normal").tag(0)
+                    Text("Compact").tag(1)
+                    Text("Tight").tag(2)
+                }
                 if sidebarSize != ConversationTextSize.standard || conversationSize != ConversationTextSize.standard {
                     Button("Default Size") {
                         sidebarSize = ConversationTextSize.standard
@@ -863,13 +892,13 @@ struct SettingsView: View {
         .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
     }
 
-    private func textSizeSlider(_ title: LocalizedStringKey, value: Binding<Int>) -> some View {
+    private func textSizeSlider(_ title: LocalizedStringKey, value: Binding<Int>, from minimum: Int) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
             HStack(spacing: 10) {
                 Image(systemName: "textformat.size.smaller").foregroundStyle(.secondary)
                 Slider(value: Binding(get: { Double(value.wrappedValue) }, set: { value.wrappedValue = Int($0.rounded()) }),
-                       in: 0...Double(ConversationTextSize.sizes.count - 1), step: 1)
+                       in: Double(minimum)...Double(ConversationTextSize.sizes.count - 1), step: 1)
                 Image(systemName: "textformat.size.larger").foregroundStyle(.secondary)
             }
         }

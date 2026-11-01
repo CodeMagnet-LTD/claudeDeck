@@ -718,11 +718,87 @@ enum ConversationTextSize {
     static let key = "conversation.textSize"
     /// The sidebar's (session list) own step.
     static let sidebarKey = "sidebar.textSize"
+    static let densityKey = "sidebar.density"
     static let sizes: [DynamicTypeSize] = [.xSmall, .small, .medium, .large, .xLarge, .xxLarge, .xxxLarge, .accessibility1, .accessibility2]
     static let standard = 3
 
     static func size(_ index: Int) -> DynamicTypeSize { sizes[min(max(index, 0), sizes.count - 1)] }
     static func step(_ index: Int, by delta: Int) -> Int { min(max(index + delta, 0), sizes.count - 1) }
+
+    /// The session list goes four steps below the smallest Dynamic Type size: its rows' fonts scale.
+    static let listMinimum = -4
+    static func listStep(_ index: Int, by delta: Int) -> Int { min(max(index + delta, listMinimum), sizes.count - 1) }
+    static func listScale(_ index: Int) -> CGFloat { index >= 0 ? 1 : 1 + 0.1 * CGFloat(max(index, listMinimum)) }
+}
+
+extension EnvironmentValues {
+    /// Below the smallest Dynamic Type size: what the session list's fonts are multiplied by.
+    @Entry var listFontScale: CGFloat = 1
+    /// The session list's row spacing: 0 normal, 1 compact, 2 tight (Settings).
+    @Entry var listDensity = 0
+}
+
+/// A session list row's insets for the chosen density (at least `minimum`).
+struct ListRowDensity: ViewModifier {
+    @Environment(\.listDensity) private var density
+    var minimum = 0
+
+    func body(content: Content) -> some View {
+        let level = max(density, minimum)
+        if level == 0 {
+            content
+        } else {
+            let v: CGFloat = level == 1 ? 4 : 1
+            content.listRowInsets(EdgeInsets(top: v, leading: 16, bottom: v, trailing: 16))
+        }
+    }
+}
+
+/// A text style at the current Dynamic Type size, times `listFontScale`.
+private struct ListFont: ViewModifier {
+    @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.listFontScale) private var scale
+    let style: Font.TextStyle
+    let weight: Font.Weight
+    let monospacedDigit: Bool
+
+    func body(content: Content) -> some View {
+        content.font(font)
+    }
+
+    private var font: Font {
+        var font: Font
+        if scale >= 1 {
+            font = .system(style).weight(weight)
+        } else {
+            let traits = UITraitCollection(preferredContentSizeCategory: UIContentSizeCategory(typeSize))
+            let size = UIFont.preferredFont(forTextStyle: Self.uiStyle(style), compatibleWith: traits).pointSize * scale
+            font = .system(size: size, weight: weight)
+        }
+        return monospacedDigit ? font.monospacedDigit() : font
+    }
+
+    private static func uiStyle(_ style: Font.TextStyle) -> UIFont.TextStyle {
+        switch style {
+        case .largeTitle: .largeTitle
+        case .title: .title1
+        case .title2: .title2
+        case .title3: .title3
+        case .headline: .headline
+        case .subheadline: .subheadline
+        case .callout: .callout
+        case .footnote: .footnote
+        case .caption: .caption1
+        case .caption2: .caption2
+        default: .body
+        }
+    }
+}
+
+extension View {
+    func listFont(_ style: Font.TextStyle, weight: Font.Weight = .regular, monospacedDigit: Bool = false) -> some View {
+        modifier(ListFont(style: style, weight: weight, monospacedDigit: monospacedDigit))
+    }
 }
 
 /// The toolbar menu for it.

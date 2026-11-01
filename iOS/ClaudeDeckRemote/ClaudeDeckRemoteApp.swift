@@ -36,9 +36,9 @@ struct ConversationTextSizeCommands: Commands {
             Button("Default Size") { textSize = ConversationTextSize.standard }
                 .keyboardShortcut("0", modifiers: .command)
             Divider()
-            Button("Larger List Text") { sidebarSize = ConversationTextSize.step(sidebarSize, by: 1) }
+            Button("Larger List Text") { sidebarSize = ConversationTextSize.listStep(sidebarSize, by: 1) }
                 .keyboardShortcut("+", modifiers: [.command, .option])
-            Button("Smaller List Text") { sidebarSize = ConversationTextSize.step(sidebarSize, by: -1) }
+            Button("Smaller List Text") { sidebarSize = ConversationTextSize.listStep(sidebarSize, by: -1) }
                 .keyboardShortcut("-", modifiers: [.command, .option])
         }
     }
