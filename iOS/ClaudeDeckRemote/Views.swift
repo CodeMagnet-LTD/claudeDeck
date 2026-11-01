@@ -130,7 +130,7 @@ struct RootView: View {
     @State private var selection: UUID?
     @Environment(\.horizontalSizeClass) private var sizeClass
     @AppStorage(SidebarMode.key) private var sidebarMode = SidebarMode.full
-    /// Hidden mode: the list is out (the edge tab or the pointer on it).
+    /// Icons / hidden mode: the full list is out (the pointer on the strip or the edge tab).
     @State private var hiddenOpen = false
     @State private var closeTask: Task<Void, Never>?
 
@@ -143,13 +143,13 @@ struct RootView: View {
             } else {
                 // From the mode, every time: a stored visibility got reset by the split view at launch.
                 let visibility = Binding<NavigationSplitViewVisibility>(
-                    get: { mode == .full ? .all : mode == .hidden && hiddenOpen ? .all : .detailOnly },
-                    set: { value in if mode == .hidden { hiddenOpen = value != .detailOnly } }
+                    get: { mode == .full || hiddenOpen ? .all : .detailOnly },
+                    set: { value in if mode != .full { hiddenOpen = value != .detailOnly } }
                 )
                 let split = NavigationSplitView(columnVisibility: visibility) {
                     SessionListView(selection: $selection)
                         // Hidden mode: the pointer leaving the list closes it.
-                        .onHover { hovering in if mode == .hidden { hoverList(hovering) } }
+                        .onHover { hovering in if mode != .full { hoverList(hovering) } }
                         // On iPad the mode menu (full / icons / hidden) replaces the system's button.
                         .toolbar(removing: sizeClass == .regular ? .sidebarToggle : nil)
                 } detail: {
@@ -159,6 +159,8 @@ struct RootView: View {
                         if mode == .icons {
                             SessionRail(selection: $selection, mode: $sidebarMode)
                                 .frame(width: 52)
+                                // The pointer on the strip: the full list opens over the session.
+                                .onHover { if $0 { withAnimation { hiddenOpen = true } } }
                                 .background(.bar)
                             Divider()
                         }
@@ -185,7 +187,7 @@ struct RootView: View {
                 }
                 // Hidden mode: the list opens over the session instead of squeezing it.
                 Group {
-                    if mode == .hidden { split.navigationSplitViewStyle(.prominentDetail) } else { split }
+                    if mode != .full { split.navigationSplitViewStyle(.prominentDetail) } else { split }
                 }
                 .onChange(of: mode, initial: true) { _, mode in
                     hiddenOpen = false
@@ -217,7 +219,7 @@ struct RootView: View {
             }
             store.sceneSelected(sceneID, session: id)
             // Hidden mode: picking a session puts the list away.
-            if id != nil, sizeClass == .regular, sidebarMode == .hidden { withAnimation { hiddenOpen = false } }
+            if id != nil, sizeClass == .regular, sidebarMode != .full { withAnimation { hiddenOpen = false } }
             // Not on iPhone: restoring it would reopen the last session on every launch
             // (supportsMultipleWindows is true there too, so ask for the iPad).
             if let id, UIDevice.current.userInterfaceIdiom == .pad { windowSession = id }

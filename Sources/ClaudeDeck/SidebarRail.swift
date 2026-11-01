@@ -27,6 +27,8 @@ enum SidebarInitials {
 struct SidebarRail: View {
     @Environment(AppModel.self) private var model
     @Binding var mode: SidebarMode
+    /// The pointer on the strip opens the full sidebar over the content.
+    @Binding var peek: Bool
 
     var body: some View {
         let projects = model.deck.projects
@@ -52,7 +54,10 @@ struct SidebarRail: View {
                             selected: model.selectedSessionID == session.id
                         )
                         .help(project.map { "\($0.name) · \(session.name)" } ?? session.name)
-                        .onTapGesture { model.selectFromSidebar(session.id) }
+                        .onTapGesture {
+                            peek = false
+                            model.selectFromSidebar(session.id)
+                        }
                         .contextMenu { SessionMenu(session: session) }
                     }
                 }
@@ -60,6 +65,7 @@ struct SidebarRail: View {
             }
         }
         .frame(maxWidth: .infinity)
+        .onHover { if $0 { peek = true } }
     }
 }
 
@@ -97,7 +103,9 @@ struct RailIcon: View {
 /// over the content, and it closes when the pointer leaves (a click toggles it too).
 struct HoverSidebar: View {
     @Binding var mode: SidebarMode
-    @State private var open = false
+    @Binding var open: Bool
+    /// Hidden mode's edge tab (icons mode opens it from the strip).
+    var showTab = true
     @State private var closeTask: Task<Void, Never>?
 
     var body: some View {
@@ -122,7 +130,7 @@ struct HoverSidebar: View {
                 .padding(6)
                 .onHover { hovering in hover(hovering) }
                 .transition(.move(edge: .leading).combined(with: .opacity))
-            } else {
+            } else if showTab {
                 // A slim tab on the leading edge, halfway down: covers almost nothing.
                 Button { open = true } label: {
                     Image(systemName: "chevron.compact.right")
@@ -138,16 +146,18 @@ struct HoverSidebar: View {
             }
         }
         .animation(.snappy(duration: 0.2), value: open)
+        // Opened from the icon strip: closes unless the pointer moves onto it.
+        .onChange(of: open) { _, open in if open { hover(false, grace: 1500) } }
     }
 
-    private func hover(_ hovering: Bool) {
+    private func hover(_ hovering: Bool, grace: Int = 400) {
         closeTask?.cancel()
         if hovering {
             open = true
         } else {
             // A moment's grace: crossing a menu or the edge shouldn't close it.
             closeTask = Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(400))
+                try? await Task.sleep(for: .milliseconds(grace))
                 if !Task.isCancelled { open = false }
             }
         }

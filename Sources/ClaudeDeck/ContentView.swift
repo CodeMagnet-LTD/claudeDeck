@@ -7,6 +7,8 @@ struct ContentView: View {
     @AppStorage("showFiles", store: .windowState) private var showFiles = false
     @AppStorage("inspectorTab", store: .windowState) private var inspectorTab = InspectorTab.files
     @AppStorage(SidebarMode.key, store: .windowState) private var sidebarMode = SidebarMode.full
+    /// Icons / hidden: the full sidebar out over the content.
+    @State private var sidebarPeek = false
 
     var body: some View {
         NavigationSplitView(columnVisibility: Binding(
@@ -16,7 +18,7 @@ struct ContentView: View {
         )) {
             Group {
                 if sidebarMode == .icons {
-                    SidebarRail(mode: $sidebarMode)
+                    SidebarRail(mode: $sidebarMode, peek: $sidebarPeek)
                         .navigationSplitViewColumnWidth(min: 50, ideal: 50, max: 50)
                 } else {
                     SidebarView()
@@ -30,7 +32,7 @@ struct ContentView: View {
                         .inspectorColumnWidth(min: 220, ideal: 290, max: 520)
                 }
                 .overlay(alignment: .leading) {
-                    if sidebarMode == .hidden { HoverSidebar(mode: $sidebarMode) }
+                    if sidebarMode != .full { HoverSidebar(mode: $sidebarMode, open: $sidebarPeek, showTab: sidebarMode == .hidden) }
                 }
         }
         .toolbar {
