@@ -23,7 +23,10 @@ struct ConversationView: View {
         VStack(spacing: 0) {
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 10) {
+                    // Not lazy: a page is at most a few dozen entries, and a lazy stack only guesses
+                    // the heights of rows it hasn't drawn, so scrolling to the end landed short and
+                    // left gaps until the list was scrolled by hand.
+                    VStack(alignment: .leading, spacing: 10) {
                         if conversation?.hasMoreBefore == true {
                             Button {
                                 let anchor = conversation?.entries.first?.id
@@ -87,8 +90,17 @@ struct ConversationView: View {
                         Text("No messages yet").foregroundStyle(.secondary)
                     }
                 }
-                .onChange(of: conversation?.entries.last?.id) { _, _ in
-                    withAnimation(.snappy) { proxy.scrollTo("bottom", anchor: .bottom) }
+                .onChange(of: conversation?.entries.last?.id) { old, _ in
+                    // Opening: straight to the end; new messages after that: animated.
+                    if old == nil {
+                        proxy.scrollTo("bottom", anchor: .bottom)
+                        Task { @MainActor in
+                            try? await Task.sleep(for: .milliseconds(150))
+                            proxy.scrollTo("bottom", anchor: .bottom)
+                        }
+                    } else {
+                        withAnimation(.snappy) { proxy.scrollTo("bottom", anchor: .bottom) }
+                    }
                 }
             }
             Divider()
