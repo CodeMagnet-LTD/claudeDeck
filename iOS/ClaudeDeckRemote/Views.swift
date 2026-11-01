@@ -65,6 +65,8 @@ struct RootView: View {
         .onAppear {
             store.sceneAppeared(sceneID)
             // iPad only, and only a session the Mac still has (an unknown snapshot is checked when it comes).
+            // A value saved by an older build on iPhone: dropped.
+            if UIDevice.current.userInterfaceIdiom != .pad { windowSession = nil }
             if selection == nil, UIDevice.current.userInterfaceIdiom == .pad, let restored = windowSession,
                store.snapshot.map({ $0.session(restored) != nil }) ?? true {
                 selection = restored
@@ -75,6 +77,13 @@ struct RootView: View {
             if phase == .active { store.sceneActivated(sceneID) }
         }
         .onChange(of: selection, initial: true) { _, id in
+            // Whatever set it (a restored window, an old notification), a session the Mac doesn't
+            // have would show an empty "Session" screen: back to the list.
+            if let id, let snapshot = store.snapshot, snapshot.session(id) == nil {
+                DispatchQueue.main.async { if selection == id { selection = nil } }
+                windowSession = nil
+                return
+            }
             store.sceneSelected(sceneID, session: id)
             // Not on iPhone: restoring it would reopen the last session on every launch
             // (supportsMultipleWindows is true there too, so ask for the iPad).
@@ -91,6 +100,11 @@ struct RootView: View {
         .onChange(of: store.openRequest, initial: true) { _, request in
             guard let request, store.openRequest?.token == request.token,
                   request.scene == nil || request.scene == sceneID else { return }
+            // Not a session the Mac no longer has (a late notification tap, say).
+            if let snapshot = store.snapshot, snapshot.session(request.session) == nil {
+                store.openRequest = nil
+                return
+            }
             store.openRequest = nil
             selection = request.session
         }
@@ -347,6 +361,8 @@ struct ProjectRow: View {
                     .accessibilityLabel(Text("New Session"))
             }
         }
+        // Not a session: selecting it would put the project's id in the selection.
+        .selectionDisabled()
     }
 }
 
@@ -367,6 +383,9 @@ struct SessionRowLink: View {
         NavigationLink(value: session.id) {
             SessionRow(session: session, showProject: showProject)
         }
+        // Explicit: inside a ForEach over projects the list would otherwise tag the row with the
+        // project's id, and selecting it would open an empty "Session".
+        .tag(Optional(session.id))
         .contextMenu {
             // Like the Mac's session menu, as far as the other Mac can be asked to.
             if let stamp = session.permissionStamp {
