@@ -159,7 +159,7 @@ struct ConversationView: View {
                     .disabled(blocked)
                     .submitLabel(.send)
                     .onKeyPress(.return, phases: .down) { press in
-                        guard press.modifiers.contains(.shift) else { send(session); return .handled }
+                        guard press.modifiers.contains(.shift) else { send(session, keepFocus: true); return .handled }
                         shiftReturn = true
                         return .ignored
                     }
@@ -171,7 +171,7 @@ struct ConversationView: View {
                         defer { if typedNewline { shiftReturn = false } }
                         guard typedNewline, !shiftReturn else { return }
                         draft = old
-                        send(session)
+                        send(session, keepFocus: true)
                     }
                 if sending {
                     ProgressView().frame(width: 30, height: 36)
@@ -229,11 +229,13 @@ struct ConversationView: View {
         return "slider.horizontal.3"
     }
 
-    private func send(_ session: RemoteSession?) {
+    /// `keepFocus`: sent with Return, so the keyboard stays for the next message (the field may
+    /// already have given up focus by the time this runs, so it isn't asked).
+    private func send(_ session: RemoteSession?, keepFocus: Bool = false) {
         guard session?.state.isBlocked != true, store.connection == .connected, !store.sendingFiles.contains(sessionID),
               !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !attachments.isEmpty
         else { return }
-        let typing = composing
+        let typing = keepFocus || composing
         if attachments.isEmpty {
             if store.sendPrompt(sessionID, text: draft) { draft = "" }
         } else {
@@ -241,7 +243,12 @@ struct ConversationView: View {
             store.sendPrompt(sessionID, text: draft, files: attachments.map(\.upload))
         }
         // Keep the keyboard up for the next message (the field drops focus as the text clears).
-        if typing { DispatchQueue.main.async { composing = true } }
+        if typing {
+            // Again a moment later: clearing the text and the list update can take focus away after.
+            composing = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { composing = true }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { composing = true }
+        }
     }
 
     private func add(_ attachment: Attachment?) {

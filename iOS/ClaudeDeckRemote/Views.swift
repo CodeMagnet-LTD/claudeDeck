@@ -128,13 +128,18 @@ struct SessionListView: View {
                             showNewSession = true
                         }
                         .contextMenu { projectMenu(project.name, running: running) }
-                        ForEach(running) { SessionRowLink(session: $0, showProject: false).padding(.leading, 18) }
+                        ForEach(running) { session in
+                            SessionRowLink(session: session, showProject: false) { AnyView(projectMenu(session.project, running: running)) }
+                                .padding(.leading, 18)
+                        }
                     }
                 }
             }
             if !waiting.isEmpty {
                 Section("Waiting for you") {
-                    ForEach(waiting) { SessionRowLink(session: $0, showProject: true) }
+                    ForEach(waiting) { session in
+                        SessionRowLink(session: session, showProject: true) { AnyView(projectMenu(session.project, running: projects[session.project] ?? [])) }
+                    }
                 }
             }
             // The other projects with something running, the same way (a header can't take a
@@ -147,7 +152,10 @@ struct SessionListView: View {
                         ProjectRow(name: project.isEmpty ? String(localized: "Sessions") : project, pinned: false, count: running.count,
                                    newSession: id.map { id in { newSessionProject = id; showNewSession = true } })
                             .contextMenu { projectMenu(project, running: running) }
-                        ForEach(running) { SessionRowLink(session: $0, showProject: false).padding(.leading, 18) }
+                        ForEach(running) { session in
+                            SessionRowLink(session: session, showProject: false) { AnyView(projectMenu(session.project, running: running)) }
+                                .padding(.leading, 18)
+                        }
                     }
                 }
             }
@@ -290,6 +298,8 @@ struct SessionRowLink: View {
     @Environment(\.openWindow) private var openWindow
     let session: RemoteSession
     let showProject: Bool
+    /// The project's menu, under the session's own items (right-clicking a session reaches it too).
+    var projectMenu: (() -> AnyView)? = nil
     @State private var confirmStop = false
 
     var body: some View {
@@ -317,6 +327,9 @@ struct SessionRowLink: View {
             if session.state != .shell {
                 Divider()
                 Button(role: .destructive) { confirmStop = true } label: { Label("End Session", systemImage: "power") }
+            }
+            if let projectMenu {
+                Section(session.project.isEmpty ? String(localized: "Project") : session.project) { projectMenu() }
             }
         }
         .swipeActions(edge: .trailing) {
