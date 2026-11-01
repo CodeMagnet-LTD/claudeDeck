@@ -34,7 +34,12 @@ struct SidebarRail: View {
         let projects = model.deck.projects
         let order = Dictionary(uniqueKeysWithValues: projects.enumerated().map { ($1.id, $0) })
         let sessions = model.deck.sessions
-            .filter { model.status(of: $0.id).display != .notStarted }
+            // Only what's working or waiting for the user (and the one on screen).
+            .filter { session in
+                let display = model.status(of: session.id).display
+                return display.isRunning || display == .starting || display.isBlocked || model.isUnseenIdle(session.id)
+                    || session.id == model.selectedSessionID
+            }
             .sorted { (order[$0.projectID] ?? .max) < (order[$1.projectID] ?? .max) }
         VStack(spacing: 0) {
             Button { mode = .full } label: { Image(systemName: "sidebar.left") }

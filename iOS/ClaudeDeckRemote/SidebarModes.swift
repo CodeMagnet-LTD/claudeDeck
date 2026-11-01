@@ -32,7 +32,8 @@ struct SessionRail: View {
     var body: some View {
         let pinned = Set(store.projects.filter(\.pinned).map(\.name))
         let sessions = (store.snapshot?.sessions ?? [])
-            .filter { $0.state != .notStarted }
+            // Only what's working or waiting for the user (and the one on screen).
+            .filter { $0.state == .running || $0.state == .starting || $0.needsAttention || $0.id == selection }
             .sorted { pinned.contains($0.project) && !pinned.contains($1.project) }
         VStack(spacing: 0) {
             Button { mode = .full } label: { Image(systemName: "sidebar.left").font(.system(size: 17)) }

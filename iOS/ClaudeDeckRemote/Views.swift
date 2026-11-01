@@ -790,10 +790,17 @@ struct SessionRow: View {
     let session: RemoteSession
     let showProject: Bool
 
+    private var quiet: Bool { session.state == .idle && !session.unseen }
+
     var body: some View {
         VStack(alignment: .leading, spacing: density == 0 ? 5 : density == 1 ? 3 : 1) {
             HStack(spacing: 8) {
-                Circle().fill(SessionStyle.color(session.state, custom: customColors)).frame(width: 9, height: 9)
+                // Like the Mac: a seen "your turn" is a quiet grey ring, only an unseen one is colored.
+                if quiet {
+                    Circle().strokeBorder(Color.secondary.opacity(0.8), lineWidth: 1.5).frame(width: 9, height: 9)
+                } else {
+                    Circle().fill(SessionStyle.color(session.state, custom: customColors)).frame(width: 9, height: 9)
+                }
                 Text(session.name).listFont(.body, weight: .medium).lineLimit(1)
                 if showProject, !session.project.isEmpty, !session.name.hasPrefix(session.project) {
                     Text(session.project).listFont(.caption).foregroundStyle(.secondary).lineLimit(1)
@@ -808,9 +815,9 @@ struct SessionRow: View {
                     }
                 }
             }
-            if !(session.state == .idle && !session.unseen) || session.detail != nil {
+            if !quiet || session.detail != nil {
                 HStack(spacing: 6) {
-                    StatusPill(state: session.state)
+                    if !quiet { StatusPill(state: session.state) }
                     if let detail = session.detail {
                         Text(MarkdownBlocks.shortToolNames(detail)).listFont(.caption).foregroundStyle(.secondary).lineLimit(2)
                     }
