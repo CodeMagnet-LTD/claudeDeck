@@ -156,8 +156,7 @@ struct SessionListView: View {
                             SessionRowLink(session: session, showProject: true) { AnyView(projectMenu(project.name, running: running)) }
                         } else {
                             ProjectRow(name: project.name, pinned: true, count: running.count) {
-                                newSessionProject = project.id
-                                showNewSession = true
+                                store.startSession(in: project.id, prompt: "", from: sceneID)
                             }
                             .contextMenu { projectMenu(project.name, running: running) }
                             ForEach(running) { session in
@@ -186,7 +185,7 @@ struct SessionListView: View {
                         } else {
                             let id = store.projects.first(where: { $0.name == project })?.id
                             ProjectRow(name: project.isEmpty ? String(localized: "Sessions") : project, pinned: false, count: running.count,
-                                       newSession: id.map { id in { newSessionProject = id; showNewSession = true } })
+                                       newSession: id.map { id in { store.startSession(in: id, prompt: "", from: sceneID) } })
                                 .contextMenu { projectMenu(project, running: running) }
                             ForEach(running) { session in
                                 SessionRowLink(session: session, showProject: false) { AnyView(projectMenu(session.project, running: running)) }
@@ -202,8 +201,7 @@ struct SessionListView: View {
                 Section(isExpanded: $inactiveExpanded) {
                     ForEach(inactive) { project in
                         ProjectRow(name: project.name, pinned: false, count: 0) {
-                            newSessionProject = project.id
-                            showNewSession = true
+                            store.startSession(in: project.id, prompt: "", from: sceneID)
                         }
                         .contextMenu { projectMenu(project.name, running: []) }
                     }
@@ -242,6 +240,8 @@ struct SessionListView: View {
                                         Label("Remove", systemImage: "trash")
                                     }
                                 }
+                                Divider()
+                                projectMenu(session.project, running: projects[session.project] ?? [])
                             }
                         }
                     }
@@ -305,10 +305,14 @@ extension SessionListView {
     @ViewBuilder
     func projectMenu(_ name: String, running: [RemoteSession]) -> some View {
         if let project = store.projects.first(where: { $0.name == name }) {
+            // Like the Mac: starts right away; the sheet is for a prompt or a past conversation.
+            Button { store.startSession(in: project.id, prompt: "", from: sceneID) } label: {
+                Label("New Session", systemImage: "plus")
+            }
             Button {
                 newSessionProject = project.id
                 showNewSession = true
-            } label: { Label("New Session…", systemImage: "plus") }
+            } label: { Label("Resume Previous Conversation…", systemImage: "clock.arrow.circlepath") }
             Button { store.startShell(in: project.id, command: "", from: sceneID) } label: {
                 Label("New Terminal", systemImage: "apple.terminal")
             }

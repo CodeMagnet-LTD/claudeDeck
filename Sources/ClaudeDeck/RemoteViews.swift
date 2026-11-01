@@ -365,6 +365,8 @@ struct RemoteSidebarSection: View {
                 if filter == .all {
                     ForEach(idlePinned) { project in
                         RemotePinnedProjectRow(project: project) {
+                            remote.startHostSession(in: project.id, prompt: "")
+                        } more: {
                             newSessionProject = project.id
                             showNewSession = true
                         }
@@ -417,6 +419,8 @@ struct RemoteSidebarSection: View {
 struct RemotePinnedProjectRow: View {
     let project: RemoteProject
     let newSession: () -> Void
+    /// The sheet: a prompt, a terminal or a past conversation.
+    let more: () -> Void
 
     var body: some View {
         HStack(spacing: 6) {
@@ -428,7 +432,10 @@ struct RemotePinnedProjectRow: View {
                 .help("New session on the other Mac")
         }
         .padding(.vertical, 1)
-        .contextMenu { Button("New Session…", action: newSession) }
+        .contextMenu {
+            Button("New Session", action: newSession)
+            Button("Resume Previous Conversation…", action: more)
+        }
     }
 }
 
