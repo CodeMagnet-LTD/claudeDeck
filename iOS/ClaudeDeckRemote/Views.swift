@@ -385,7 +385,7 @@ struct SessionRowLink: View {
         }
         // Explicit: inside a ForEach over projects the list would otherwise tag the row with the
         // project's id, and selecting it would open an empty "Session".
-        .tag(Optional(session.id))
+        .tag(session.id)
         .contextMenu {
             // Like the Mac's session menu, as far as the other Mac can be asked to.
             if let stamp = session.permissionStamp {
