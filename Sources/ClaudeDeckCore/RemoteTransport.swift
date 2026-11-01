@@ -274,6 +274,8 @@ public final class RemoteServer: @unchecked Sendable {
     public var onSendPromptWithFiles: ((_ sessionID: UUID, _ text: String, _ files: [RemoteUpload], _ reply: @escaping @Sendable (String?) -> Void) -> Void)?
     /// The session's permission mode (after Shift+Tab when cycling); reply with what the screen shows.
     public var onPermissionMode: ((_ sessionID: UUID, _ cycle: Bool, _ reply: @escaping @Sendable (String?) -> Void) -> Void)?
+    /// The session menu's actions.
+    public var onSessionAction: ((_ sessionID: UUID, _ action: RemoteSessionAction) -> Void)?
     /// Pin / rename one of the host's projects.
     public var onProjectAction: ((_ projectID: UUID, _ action: RemoteProjectAction) -> Void)?
     /// Files to paste into a watched terminal; reply nil once they're going in, else why not.
@@ -498,6 +500,8 @@ public final class RemoteServer: @unchecked Sendable {
                 }
             case .projectAction(let projectID, let action):
                 onProjectAction?(projectID, action)
+            case .sessionAction(let sessionID, let action):
+                onSessionAction?(sessionID, action)
             case .pasteFiles(let sessionID, let files)
                 where !files.isEmpty && files.reduce(0, { $0 + $1.data.count }) <= RemoteUpload.maxTotalBytes:
                 let channel = peer.channel

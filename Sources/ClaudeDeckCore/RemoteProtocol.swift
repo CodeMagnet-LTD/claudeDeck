@@ -147,6 +147,8 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case permissionModeIs(sessionID: UUID, mode: String?)
     /// Remote → host: pin / unpin or rename one of its projects (the next snapshot shows it).
     case projectAction(projectID: UUID, action: RemoteProjectAction)
+    /// Remote → host: what the Mac's session menu does (rename, restart, close, start fresh, remove).
+    case sessionAction(sessionID: UUID, action: RemoteSessionAction)
     /// Phone → host: send push notifications to this device (APNs.swift).
     case registerPush(token: Data, topic: String, environment: String, deviceName: String)
     case ping
@@ -175,6 +177,19 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
 public enum RemoteProjectAction: Codable, Sendable, Equatable {
     case pin(Bool)
     case rename(String)
+}
+
+/// The Mac's session menu, for a remote.
+public enum RemoteSessionAction: Codable, Sendable, Equatable {
+    case rename(String)
+    /// Restart Session / Restart Terminal.
+    case restart
+    /// End Session / Close Terminal (stopSession, for terminals too).
+    case close
+    /// A closed Claude session started again without its conversation; a closed terminal reopened.
+    case startFresh
+    /// End and Remove: off the list (the conversation stays resumable from the project).
+    case remove
 }
 
 /// Claude Code's permission mode, read from the line under its input box
@@ -240,7 +255,9 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
         public static let permissionMode = "permissionMode"
         /// `projectAction`.
         public static let projectActions = "projectActions"
-        public static let all: Set<String> = [files, permissionMode, projectActions]
+        /// `sessionAction`.
+        public static let sessionActions = "sessionActions"
+        public static let all: Set<String> = [files, permissionMode, projectActions, sessionActions]
     }
 
     public func supports(_ feature: String) -> Bool { features?.contains(feature) == true }

@@ -191,6 +191,14 @@ struct SessionListView: View {
                                 Button { store.resumeSession(session.id, from: sceneID) } label: {
                                     Label("Resume", systemImage: "play")
                                 }
+                                if store.snapshot?.supports(RemoteSnapshot.Feature.sessionActions) == true {
+                                    Button { store.sessionAction(session.id, .startFresh) } label: {
+                                        Label("Start Fresh", systemImage: "sparkles")
+                                    }
+                                    Button(role: .destructive) { store.sessionAction(session.id, .remove) } label: {
+                                        Label("Remove", systemImage: "trash")
+                                    }
+                                }
                             }
                         }
                     }
@@ -310,6 +318,9 @@ struct SessionRowLink: View {
     /// The project's menu, under the session's own items (right-clicking a session reaches it too).
     var projectMenu: (() -> AnyView)? = nil
     @State private var confirmStop = false
+    @State private var confirmRemove = false
+    @State private var renaming = false
+    @State private var newName = ""
 
     var body: some View {
         NavigationLink(value: session.id) {
@@ -333,9 +344,28 @@ struct SessionRowLink: View {
             if session.unseen {
                 Button { store.markSeen(session.id) } label: { Label("Mark as Seen", systemImage: "eye") }
             }
-            if session.state != .shell {
+            let shell = session.state == .shell
+            if store.snapshot?.supports(RemoteSnapshot.Feature.sessionActions) == true {
+                Divider()
+                Button { store.sessionAction(session.id, .restart) } label: {
+                    Label(shell ? "Restart Terminal" : "Restart Session", systemImage: "arrow.clockwise")
+                }
+                Button {
+                    newName = session.name
+                    renaming = true
+                } label: { Label("Rename…", systemImage: "pencil") }
+                if shell {
+                    Button(role: .destructive) { store.sessionAction(session.id, .close) } label: {
+                        Label("Close Terminal", systemImage: "xmark.circle")
+                    }
+                }
+            }
+            if !shell {
                 Divider()
                 Button(role: .destructive) { confirmStop = true } label: { Label("End Session", systemImage: "power") }
+            }
+            if store.snapshot?.supports(RemoteSnapshot.Feature.sessionActions) == true {
+                Button(role: .destructive) { confirmRemove = true } label: { Label("End and Remove…", systemImage: "trash") }
             }
             if let projectMenu {
                 Section(session.project.isEmpty ? String(localized: "Project") : session.project) { projectMenu() }
@@ -345,6 +375,16 @@ struct SessionRowLink: View {
             if session.state != .shell {
                 Button("Stop", role: .destructive) { confirmStop = true }
             }
+        }
+        .alert("Rename Session", isPresented: $renaming) {
+            TextField("Name", text: $newName)
+            Button("Rename") { store.sessionAction(session.id, .rename(newName)) }
+            Button("Cancel", role: .cancel) {}
+        }
+        .confirmationDialog("End \"\(session.name)\" and remove it from the list?", isPresented: $confirmRemove, titleVisibility: .visible) {
+            Button("End and Remove", role: .destructive) { store.sessionAction(session.id, .remove) }
+        } message: {
+            Text("The running process is stopped. The Claude conversation history is kept and can be reopened from the project's \"Resume Previous Conversation…\" menu.")
         }
         .confirmationDialog("Stop \(session.name)?", isPresented: $confirmStop, titleVisibility: .visible) {
             Button("Stop Session", role: .destructive) { store.stopSession(session.id) }

@@ -351,6 +351,25 @@ final class RemoteController {
                     self.permissionMode(id, cycle: cycle, reply: reply)
                 }
             }
+            server.onSessionAction = { [weak self] id, action in
+                MainActor.assumeIsolated {
+                    guard let model = self?.model, let session = model.deck.session(id) else { return }
+                    switch action {
+                    case .rename(let name):
+                        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if !trimmed.isEmpty { model.renameSession(id, to: String(trimmed.prefix(200))) }
+                    case .restart:
+                        if model.terminals.isRunning(id), model.canRestart(id) { Task { await model.restartSession(id) } }
+                    case .close:
+                        if model.terminals.isRunning(id) { model.stop(id) }
+                    case .startFresh:
+                        if !model.terminals.isRunning(id) { model.launch(id, resume: false) }
+                    case .remove:
+                        model.removeSession(session.id)
+                    }
+                    self?.publishSnapshot()
+                }
+            }
             server.onProjectAction = { [weak self] id, action in
                 MainActor.assumeIsolated {
                     guard let model = self?.model, model.deck.project(id) != nil else { return }
