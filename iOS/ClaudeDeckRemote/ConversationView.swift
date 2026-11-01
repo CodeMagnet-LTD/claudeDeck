@@ -137,11 +137,15 @@ struct ConversationView: View {
                 .disabled(blocked || store.connection != .connected)
                 .accessibilityHint(Text("Switches to the next permission mode, like Shift+Tab"))
             }
-            // How full Claude's context is, as tokens (the window depends on the model).
+            // How full Claude's context is: tokens, and a rough share of the window (the window
+            // depends on the model: 200k assumed, 1M once past it).
             if let tokens = store.conversations[sessionID]?.contextTokens, tokens > 0 {
-                Label("\(tokens >= 1000 ? "\(tokens / 1000)k" : "\(tokens)") context", systemImage: "gauge.with.dots.needle.33percent")
+                let window = tokens > 200_000 ? 1_000_000 : 200_000
+                let percent = min(100, tokens * 100 / window)
+                Label("\(tokens >= 1000 ? "\(tokens / 1000)k" : "\(tokens)") · ~%\(percent)", systemImage: "gauge.with.dots.needle.33percent")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(percent >= 80 ? Color.orange : Color.secondary)
+                    .accessibilityLabel(Text("Context: \(tokens) tokens, about \(percent) percent"))
             }
             }
             HStack(alignment: .bottom, spacing: 8) {
