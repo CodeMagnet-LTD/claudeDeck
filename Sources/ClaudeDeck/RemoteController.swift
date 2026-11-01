@@ -631,7 +631,7 @@ final class RemoteController {
     // MARK: Host — conversation for remotes
 
     /// Parsed transcripts by session, reused while the file doesn't change.
-    @ObservationIgnored private var historyCache: [UUID: (path: String, size: Int, entries: [ChatEntry])] = [:]
+    @ObservationIgnored private var historyCache: [UUID: (path: String, size: Int, entries: [ChatEntry], tokens: Int?)] = [:]
 
     private func history(_ id: UUID, before: String?, after: String?, limit: Int, reply: @escaping @Sendable (ChatPage?) -> Void) {
         // The hook's path follows /clear (a new transcript); the deck's is the one it resumed.
@@ -641,13 +641,18 @@ final class RemoteController {
         }
         let size = ((try? FileManager.default.attributesOfItem(atPath: path)[.size]) as? NSNumber)?.intValue ?? 0
         if let cached = historyCache[id], cached.path == path, cached.size == size {
-            reply(ConversationLog.page(cached.entries, before: before, after: after, limit: limit))
+            var page = ConversationLog.page(cached.entries, before: before, after: after, limit: limit)
+            page.contextTokens = cached.tokens
+            reply(page)
             return
         }
         Task { @MainActor [weak self] in
-            let entries = await Task.detached { ConversationLog.entries(of: URL(fileURLWithPath: path)) }.value
-            self?.historyCache[id] = (path, size, entries)
-            reply(ConversationLog.page(entries, before: before, after: after, limit: limit))
+            let url = URL(fileURLWithPath: path)
+            let (entries, tokens) = await Task.detached { (ConversationLog.entries(of: url), Transcript.contextTokens(of: url)) }.value
+            self?.historyCache[id] = (path, size, entries, tokens)
+            var page = ConversationLog.page(entries, before: before, after: after, limit: limit)
+            page.contextTokens = tokens
+            reply(page)
         }
     }
 

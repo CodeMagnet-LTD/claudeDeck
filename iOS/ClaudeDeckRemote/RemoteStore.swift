@@ -30,6 +30,8 @@ final class RemoteStore {
         var entries: [ChatEntry] = []
         var hasMoreBefore = false
         var loaded = false
+        /// Tokens in Claude's context (the Mac reads it with the transcript).
+        var contextTokens: Int?
         var loadingOlder = false
     }
     private(set) var conversations: [UUID: Conversation] = [:]
@@ -558,6 +560,7 @@ final class RemoteStore {
             }
         }
         conversation.loaded = true
+        if let tokens = page.contextTokens { conversation.contextTokens = tokens }
         if conversations[id] != conversation { conversations[id] = conversation }
     }
 

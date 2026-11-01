@@ -124,6 +124,7 @@ struct ConversationView: View {
                 }
                 .disabled(sending)
             }
+            HStack(spacing: 8) {
             if let session, session.state != .shell, store.snapshot?.supports(RemoteSnapshot.Feature.permissionMode) == true {
                 let mode = store.permissionModes[sessionID]
                 Button { store.permissionMode(sessionID, cycle: true) } label: {
@@ -135,6 +136,13 @@ struct ConversationView: View {
                 .controlSize(.small)
                 .disabled(blocked || store.connection != .connected)
                 .accessibilityHint(Text("Switches to the next permission mode, like Shift+Tab"))
+            }
+            // How full Claude's context is, as tokens (the window depends on the model).
+            if let tokens = store.conversations[sessionID]?.contextTokens, tokens > 0 {
+                Label("\(tokens >= 1000 ? "\(tokens / 1000)k" : "\(tokens)") context", systemImage: "gauge.with.dots.needle.33percent")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
             }
             HStack(alignment: .bottom, spacing: 8) {
                 Menu {

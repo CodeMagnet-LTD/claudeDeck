@@ -122,6 +122,8 @@ public struct ChatPage: Codable, Sendable, Equatable {
     public var reset: Bool
     public var before: String?
     public var after: String?
+    /// Tokens in Claude's context as of the transcript's last turn (nil from older hosts).
+    public var contextTokens: Int?
 
     public init(entries: [ChatEntry], hasMoreBefore: Bool, reset: Bool, before: String? = nil, after: String? = nil) {
         self.entries = entries
