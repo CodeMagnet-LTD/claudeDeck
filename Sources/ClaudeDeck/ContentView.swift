@@ -17,7 +17,7 @@ struct ContentView: View {
             Group {
                 if sidebarMode == .icons {
                     SidebarRail(mode: $sidebarMode)
-                        .navigationSplitViewColumnWidth(min: 60, ideal: 60, max: 60)
+                        .navigationSplitViewColumnWidth(min: 50, ideal: 50, max: 50)
                 } else {
                     SidebarView()
                         .navigationSplitViewColumnWidth(min: 240, ideal: 290, max: 420)

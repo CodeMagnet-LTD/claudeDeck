@@ -15,6 +15,12 @@ enum SidebarInitials {
         if words.count >= 2 { return String(words[0].prefix(1) + words[1].prefix(1)).uppercased() }
         return String(name.filter { $0.isLetter || $0.isNumber }.prefix(2)).uppercased()
     }
+
+    /// The first name's, or the second's when the first has no letters ("/", "").
+    static func of(_ name: String, or fallback: String) -> String {
+        let initials = of(name)
+        return initials.isEmpty ? of(fallback) : initials
+    }
 }
 
 /// The sidebar as icons: one per running session, ringed in its status color; a click opens it.
@@ -39,7 +45,7 @@ struct SidebarRail: View {
                     ForEach(sessions) { session in
                         let project = model.deck.project(session.projectID)
                         RailIcon(
-                            initials: SidebarInitials.of(project?.name ?? session.name),
+                            initials: SidebarInitials.of(project?.name ?? "", or: session.name),
                             terminal: session.kind == .shell,
                             color: StatusStyle.color(for: model.status(of: session.id).display),
                             attention: model.status(of: session.id).display.isBlocked || model.isUnseenIdle(session.id),
@@ -68,17 +74,17 @@ struct RailIcon: View {
         ZStack(alignment: .bottomTrailing) {
             RoundedRectangle(cornerRadius: 9)
                 .fill(selected ? Color.accentColor.opacity(0.25) : Color.secondary.opacity(0.12))
-                .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(color, lineWidth: 2))
+                .overlay(RoundedRectangle(cornerRadius: 9).strokeBorder(color, lineWidth: 1.5))
                 .overlay {
                     if terminal {
                         Image(systemName: "apple.terminal").font(.system(size: 13))
                     } else {
-                        Text(initials).font(.system(size: 12, weight: .semibold))
+                        Text(initials).font(.system(size: 10.5, weight: .semibold))
                     }
                 }
-                .frame(width: 36, height: 36)
+                .frame(width: 30, height: 30)
             if attention {
-                Circle().fill(color).frame(width: 10, height: 10)
+                Circle().fill(color).frame(width: 8, height: 8)
                     .overlay(Circle().strokeBorder(.background, lineWidth: 2))
                     .offset(x: 3, y: 3)
             }
