@@ -8623,6 +8623,56 @@
           }
         }
       }
+    },
+    "Closed sessions": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapalı oturumlar"
+          }
+        }
+      }
+    },
+    "Larger Text": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha büyük yazı"
+          }
+        }
+      }
+    },
+    "Smaller Text": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Daha küçük yazı"
+          }
+        }
+      }
+    },
+    "Default Size": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Varsayılan boyut"
+          }
+        }
+      }
+    },
+    "Text Size": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yazı boyutu"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

@@ -18,6 +18,23 @@ struct ClaudeDeckRemoteApp: App {
                     delegate.store.setActive(phase != .background)
                 }
         }
+        .commands { ConversationTextSizeCommands() }
+    }
+}
+
+/// View menu (iPad menu bar, ⌘-key overlay): the conversation's text size.
+struct ConversationTextSizeCommands: Commands {
+    @AppStorage(ConversationTextSize.key) private var textSize = ConversationTextSize.standard
+
+    var body: some Commands {
+        CommandGroup(after: .toolbar) {
+            Button("Larger Text") { textSize = ConversationTextSize.step(textSize, by: 1) }
+                .keyboardShortcut("+", modifiers: .command)
+            Button("Smaller Text") { textSize = ConversationTextSize.step(textSize, by: -1) }
+                .keyboardShortcut("-", modifiers: .command)
+            Button("Default Size") { textSize = ConversationTextSize.standard }
+                .keyboardShortcut("0", modifiers: .command)
+        }
     }
 }
 

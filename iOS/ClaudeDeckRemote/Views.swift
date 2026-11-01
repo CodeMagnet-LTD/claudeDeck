@@ -195,20 +195,6 @@ struct SessionListView: View {
                     }
                 }
             }
-            // Like the Mac's sidebar: projects with nothing running, at the bottom.
-            let inactive = store.projects.filter { !$0.pinned && projects[$0.name] == nil }
-            if !inactive.isEmpty {
-                Section(isExpanded: $inactiveExpanded) {
-                    ForEach(inactive) { project in
-                        ProjectRow(name: project.name, pinned: false, count: 0) {
-                            store.startSession(in: project.id, prompt: "", from: sceneID)
-                        }
-                        .contextMenu { projectMenu(project.name, running: []) }
-                    }
-                } header: {
-                    Text("Inactive \(inactive.count)")
-                }
-            }
             if store.connection == .connected, sessions.isEmpty {
                 Text("No running sessions").foregroundStyle(.secondary)
             }
@@ -246,6 +232,28 @@ struct SessionListView: View {
                         }
                     }
                 }
+            }
+            // Like the Mac's sidebar: projects with nothing running, at the bottom.
+            let inactive = store.projects.filter { !$0.pinned && projects[$0.name] == nil }
+            if !inactive.isEmpty {
+                Section(isExpanded: $inactiveExpanded) {
+                    ForEach(inactive) { project in
+                        let resumable = closed.filter { $0.project == project.name }
+                        ProjectRow(name: project.name, pinned: false, count: 0, resumable: resumable, compact: true) {
+                            store.startSession(in: project.id, prompt: "", from: sceneID)
+                        }
+                        .listRowInsets(EdgeInsets(top: 2, leading: 16, bottom: 2, trailing: 16))
+                        .contextMenu {
+                            if !resumable.isEmpty {
+                                Section("Closed sessions") { resumeButtons(resumable) }
+                            }
+                            projectMenu(project.name, running: [])
+                        }
+                    }
+                } header: {
+                    Text("Inactive \(inactive.count)")
+                }
+                .environment(\.defaultMinListRowHeight, 30)
             }
             if let error = store.answerError {
                 Text(error).font(.footnote).foregroundStyle(.orange)
@@ -301,6 +309,16 @@ struct SessionListView: View {
 }
 
 extension SessionListView {
+    /// Resume each of a project's closed sessions (an inactive project's dot and menu).
+    @ViewBuilder
+    func resumeButtons(_ closed: [RemoteSession]) -> some View {
+        ForEach(closed) { session in
+            Button { store.resumeSession(session.id, from: sceneID) } label: {
+                Label(session.name, systemImage: "play")
+            }
+        }
+    }
+
     /// The Mac's project menu, as far as the other Mac can be asked to.
     @ViewBuilder
     func projectMenu(_ name: String, running: [RemoteSession]) -> some View {
@@ -345,17 +363,36 @@ extension SessionListView {
 /// sessions follow it, indented.
 struct ProjectRow: View {
     @Environment(RemoteStore.self) private var store
+    @Environment(\.sceneID) private var sceneID
     let name: String
     let pinned: Bool
     let count: Int
+    /// Closed sessions of the project: a dot that resumes one.
+    var resumable: [RemoteSession] = []
+    /// Inactive projects: a smaller, lighter row.
+    var compact = false
     let newSession: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 8) {
             Image(systemName: pinned ? "pin.fill" : "folder").font(.caption).foregroundStyle(.secondary).frame(width: 16)
-            Text(name).font(.body.weight(.semibold)).lineLimit(1)
+            Text(name).font(compact ? .subheadline : .body.weight(.semibold)).lineLimit(1)
             if count > 0 {
                 Text("\(count)").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+            }
+            if !resumable.isEmpty {
+                Menu {
+                    Section("Resume") {
+                        ForEach(resumable) { session in
+                            Button { store.resumeSession(session.id, from: sceneID) } label: { Text(session.name) }
+                        }
+                    }
+                } label: {
+                    Circle().fill(Color.accentColor).frame(width: 7, height: 7)
+                        .padding(6).contentShape(Rectangle())
+                }
+                .buttonStyle(.borderless)
+                .accessibilityLabel(Text("Closed sessions"))
             }
             Spacer(minLength: 4)
             if let newSession {

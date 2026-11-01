@@ -16,6 +16,7 @@ struct ConversationView: View {
     @State private var attachError: String?
     /// Shift+Return on a hardware keyboard: the next newline stays a newline.
     @State private var shiftReturn = false
+    @AppStorage(ConversationTextSize.key) private var textSize = ConversationTextSize.standard
 
     var body: some View {
         let conversation = store.conversations[sessionID]
@@ -81,6 +82,12 @@ struct ConversationView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 10)
                 }
+                .dynamicTypeSize(ConversationTextSize.size(textSize))
+                // Pinch: one step bigger or smaller per gesture.
+                .simultaneousGesture(MagnifyGesture().onEnded { value in
+                    if value.magnification > 1.15 { textSize = ConversationTextSize.step(textSize, by: 1) }
+                    if value.magnification < 0.87 { textSize = ConversationTextSize.step(textSize, by: -1) }
+                })
                 .defaultScrollAnchor(.bottom)
                 .scrollDismissesKeyboard(.interactively)
                 .overlay {
@@ -703,5 +710,34 @@ struct ToolGroupView: View {
             }
         }
         .padding(.vertical, 2)
+    }
+}
+
+/// The conversation's text size, apart from the system's: a step of Dynamic Type.
+enum ConversationTextSize {
+    static let key = "conversation.textSize"
+    static let sizes: [DynamicTypeSize] = [.xSmall, .small, .medium, .large, .xLarge, .xxLarge, .xxxLarge, .accessibility1, .accessibility2]
+    static let standard = 3
+
+    static func size(_ index: Int) -> DynamicTypeSize { sizes[min(max(index, 0), sizes.count - 1)] }
+    static func step(_ index: Int, by delta: Int) -> Int { min(max(index + delta, 0), sizes.count - 1) }
+}
+
+/// The toolbar menu for it.
+struct ConversationTextSizeMenu: View {
+    @AppStorage(ConversationTextSize.key) private var textSize = ConversationTextSize.standard
+
+    var body: some View {
+        Menu {
+            Button { textSize = ConversationTextSize.step(textSize, by: 1) } label: { Label("Larger Text", systemImage: "plus.magnifyingglass") }
+                .disabled(textSize >= ConversationTextSize.sizes.count - 1)
+            Button { textSize = ConversationTextSize.step(textSize, by: -1) } label: { Label("Smaller Text", systemImage: "minus.magnifyingglass") }
+                .disabled(textSize <= 0)
+            Button { textSize = ConversationTextSize.standard } label: { Label("Default Size", systemImage: "arrow.counterclockwise") }
+                .disabled(textSize == ConversationTextSize.standard)
+        } label: {
+            Image(systemName: "textformat.size")
+        }
+        .accessibilityLabel(Text("Text Size"))
     }
 }

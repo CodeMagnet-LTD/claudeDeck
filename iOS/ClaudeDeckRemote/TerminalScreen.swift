@@ -311,6 +311,8 @@ struct SessionDetailView: View {
                     Button { keyboardToggle += 1 } label: { Image(systemName: "keyboard") }
                         .disabled(store.terminalStates[sessionID] != .live)
                 }
+            } else {
+                ToolbarItem(placement: .topBarTrailing) { ConversationTextSizeMenu() }
             }
         }
     }
