@@ -64,7 +64,11 @@ struct RootView: View {
         .environment(\.sceneID, sceneID)
         .onAppear {
             store.sceneAppeared(sceneID)
-            if selection == nil { selection = windowSession }
+            // iPad only, and only a session the Mac still has (an unknown snapshot is checked when it comes).
+            if selection == nil, UIDevice.current.userInterfaceIdiom == .pad, let restored = windowSession,
+               store.snapshot.map({ $0.session(restored) != nil }) ?? true {
+                selection = restored
+            }
         }
         .onDisappear { store.sceneDisappeared(sceneID) }
         .onChange(of: scenePhase, initial: true) { _, phase in
@@ -72,8 +76,16 @@ struct RootView: View {
         }
         .onChange(of: selection, initial: true) { _, id in
             store.sceneSelected(sceneID, session: id)
-            // Not on iPhone: restoring it would reopen the last session on every launch.
-            if let id, supportsMultipleWindows { windowSession = id }
+            // Not on iPhone: restoring it would reopen the last session on every launch
+            // (supportsMultipleWindows is true there too, so ask for the iPad).
+            if let id, UIDevice.current.userInterfaceIdiom == .pad { windowSession = id }
+        }
+        // A restored (or opened) session the Mac no longer has: back to the list instead of an
+        // empty "Session" screen. A new session is in the snapshot before its id comes back.
+        .onChange(of: store.snapshot?.sessions.map(\.id)) { _, ids in
+            guard let selection, let ids, !ids.contains(selection) else { return }
+            self.selection = nil
+            windowSession = nil
         }
         // Initial too: a notification tap that launched the app is waiting for the first window.
         .onChange(of: store.openRequest, initial: true) { _, request in
