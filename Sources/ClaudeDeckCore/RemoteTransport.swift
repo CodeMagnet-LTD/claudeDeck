@@ -274,6 +274,9 @@ public final class RemoteServer: @unchecked Sendable {
     public var onSendPromptWithFiles: ((_ sessionID: UUID, _ text: String, _ files: [RemoteUpload], _ reply: @escaping @Sendable (String?) -> Void) -> Void)?
     /// The session's permission mode (after Shift+Tab when cycling); reply with what the screen shows.
     public var onPermissionMode: ((_ sessionID: UUID, _ cycle: Bool, _ reply: @escaping @Sendable (String?) -> Void) -> Void)?
+    /// A folder's subfolders for the project picker; reply with `.folder`.
+    public var onBrowseFolder: ((_ path: String, _ reply: @escaping @Sendable (RemoteMessage) -> Void) -> Void)?
+    public var onAddProject: ((_ path: String) -> Void)?
     /// The session menu's actions.
     public var onSessionAction: ((_ sessionID: UUID, _ action: RemoteSessionAction) -> Void)?
     /// Pin / rename one of the host's projects.
@@ -502,6 +505,11 @@ public final class RemoteServer: @unchecked Sendable {
                 onProjectAction?(projectID, action)
             case .sessionAction(let sessionID, let action):
                 onSessionAction?(sessionID, action)
+            case .browseFolder(let path):
+                let channel = peer.channel
+                onBrowseFolder?(path) { [queue] answer in queue.async { channel.send(answer) } }
+            case .addProject(let path):
+                onAddProject?(path)
             case .pasteFiles(let sessionID, let files)
                 where !files.isEmpty && files.reduce(0, { $0 + $1.data.count }) <= RemoteUpload.maxTotalBytes:
                 let channel = peer.channel
@@ -607,6 +615,8 @@ public final class RemoteHostConnection: @unchecked Sendable {
     public var onSessionStarted: ((UUID) -> Void)?
     public var onPromptResult: ((_ sessionID: UUID, _ error: String?) -> Void)?
     public var onPermissionMode: ((_ sessionID: UUID, _ mode: String?) -> Void)?
+    /// `.folder` answers (project picker).
+    public var onFolder: ((RemoteMessage) -> Void)?
     public var onPastConversations: ((UUID, [RemotePastConversation]) -> Void)?
     /// `.directory` / `.file` answers.
     public var onFileReply: ((RemoteMessage) -> Void)?
@@ -720,6 +730,8 @@ public final class RemoteHostConnection: @unchecked Sendable {
                 self.onPromptResult?(id, error)
             case .permissionModeIs(let id, let mode) where authenticated:
                 self.onPermissionMode?(id, mode)
+            case .folder where authenticated:
+                self.onFolder?(message)
             case .pastConversations(let projectID, let items) where authenticated:
                 self.onPastConversations?(projectID, items)
             case .directory, .file:

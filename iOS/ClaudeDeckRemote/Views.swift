@@ -103,6 +103,8 @@ struct SessionListView: View {
     @State private var browsingProject: RemoteProject?
     @State private var renamingProject: RemoteProject?
     @State private var renameText = ""
+    @AppStorage("list.inactiveExpanded") private var inactiveExpanded = true
+    @State private var showAddProject = false
 
     var body: some View {
         let all = store.snapshot?.sessions ?? []
@@ -168,6 +170,21 @@ struct SessionListView: View {
                     }
                 }
             }
+            // Like the Mac's sidebar: projects with nothing running, at the bottom.
+            let inactive = store.projects.filter { !$0.pinned && projects[$0.name] == nil }
+            if !inactive.isEmpty {
+                Section(isExpanded: $inactiveExpanded) {
+                    ForEach(inactive) { project in
+                        ProjectRow(name: project.name, pinned: false, count: 0) {
+                            newSessionProject = project.id
+                            showNewSession = true
+                        }
+                        .contextMenu { projectMenu(project.name, running: []) }
+                    }
+                } header: {
+                    Text("Inactive \(inactive.count)")
+                }
+            }
             if store.connection == .connected, sessions.isEmpty {
                 Text("No running sessions").foregroundStyle(.secondary)
             }
@@ -219,15 +236,27 @@ struct SessionListView: View {
                     .disabled(store.connection != .connected || store.projects.isEmpty)
             }
             ToolbarItem(placement: .topBarTrailing) {
-                Button {
-                    newSessionProject = nil
-                    showNewSession = true
+                Menu {
+                    Button {
+                        newSessionProject = nil
+                        showNewSession = true
+                    } label: { Label("New Session…", systemImage: "plus.bubble") }
+                        .disabled(store.projects.isEmpty)
+                    if store.snapshot?.supports(RemoteSnapshot.Feature.addProject) == true {
+                        Button { showAddProject = true } label: { Label("Add Project…", systemImage: "folder.badge.plus") }
+                    }
                 } label: { Image(systemName: "plus") }
-                    .disabled(store.connection != .connected || store.projects.isEmpty)
+                    .disabled(store.connection != .connected)
             }
         }
         .sheet(isPresented: $showSettings) { NavigationStack { SettingsView() } }
         .sheet(isPresented: $showNewSession) { NavigationStack { NewSessionView(initialProject: newSessionProject) } }
+        .sheet(isPresented: $showAddProject) {
+            NavigationStack {
+                FolderPickerView(path: "", title: String(localized: "Add Project")) { showAddProject = false }
+                    .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { showAddProject = false } } }
+            }
+        }
         .sheet(item: $browsingProject) { project in
             NavigationStack {
                 DirectoryView(projectID: project.id, path: "", title: project.name)
@@ -746,5 +775,46 @@ struct SettingsView: View {
         case .retrying(let reason, _): reason
         default: String(localized: "Connecting…")
         }
+    }
+}
+
+/// Picks a folder on the Mac to add as a project: starts at its home folder, Add takes the one shown.
+struct FolderPickerView: View {
+    @Environment(RemoteStore.self) private var store
+    let path: String
+    let title: String
+    let done: () -> Void
+
+    var body: some View {
+        let state = store.folders[path]
+        let added = state.map { state in store.projects.contains { $0.path == state.path } } ?? false
+        List {
+            if let state {
+                Text(state.path).font(.caption.monospaced()).foregroundStyle(.secondary)
+                if let error = state.error { Text(error).font(.footnote).foregroundStyle(.red) }
+                ForEach(state.folders, id: \.self) { name in
+                    NavigationLink {
+                        FolderPickerView(path: (state.path as NSString).appendingPathComponent(name), title: name, done: done)
+                    } label: {
+                        Label(name, systemImage: "folder")
+                    }
+                }
+            }
+        }
+        .overlay { if state == nil { ProgressView() } }
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button(added ? String(localized: "Added") : String(localized: "Add")) {
+                    if let state {
+                        store.addProject(state.path)
+                        done()
+                    }
+                }
+                .disabled(state == nil || state?.error != nil || added)
+            }
+        }
+        .onAppear { store.browseFolder(path) }
     }
 }

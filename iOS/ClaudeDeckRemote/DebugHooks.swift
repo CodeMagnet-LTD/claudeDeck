@@ -81,6 +81,13 @@ final class DebugHooks {
             } else if file.hasSuffix(".rename"), let id, let name = try? String(contentsOf: url, encoding: .utf8) {
                 try? FileManager.default.removeItem(at: url)
                 store.projectAction(id, .rename(name))
+            } else if file == "addproject.txt", let path = try? String(contentsOf: url, encoding: .utf8) {
+                try? FileManager.default.removeItem(at: url)
+                store.browseFolder("")
+                store.addProject(path.trimmingCharacters(in: .whitespacesAndNewlines))
+            } else if file.hasSuffix(".renamesession"), let id, let name = try? String(contentsOf: url, encoding: .utf8) {
+                try? FileManager.default.removeItem(at: url)
+                store.sessionAction(id, .rename(name))
             } else if file.hasSuffix(".mode"), let id {
                 try? FileManager.default.removeItem(at: url)
                 store.permissionMode(id, cycle: true)
@@ -98,7 +105,7 @@ final class DebugHooks {
         let push = PushRegistration.shared
         var lines = ["connection: \(store.connection) modes=\(store.permissionModes.values.sorted()) sendingFiles=\(store.sendingFiles.count) promptError=\(store.promptError ?? "-") windows=\(store.scenes.map { "\($0.key.uuidString.prefix(8)):\($0.value?.uuidString.suffix(4) ?? "-")" }.sorted()) projects=\(store.projects.map { ($0.pinned ? "📌" : "") + $0.name })", "files: dirs=\(store.directories.values.map { $0.entries.map(\.name) }) file=\(store.files.values.map { "\($0.size):\($0.text?.prefix(30) ?? "")|\($0.error ?? "")" })",
                      "terminals: \(store.terminalStates) usage=\(store.snapshot?.usage.map { "\($0.fiveHour ?? -1)/\($0.week ?? -1)" } ?? "-") past=\(store.pastConversations.values.map(\.count))",
-                     "lan: \(store.lanHosts.map(\.name)) via=\(store.connectedVia ?? "-") pairing=\(store.pairing?.addresses ?? [])",
+                     "home: \(store.folders[""].map { "\($0.path) \($0.folders.count) folders" } ?? "-") lan: \(store.lanHosts.map(\.name)) via=\(store.connectedVia ?? "-") pairing=\(store.pairing?.addresses ?? [])",
                      "push: token=\(push.token?.count ?? 0) env=\(PushRegistration.environment) error=\(push.lastError ?? "-")"]
         for session in store.snapshot?.sessions ?? [] {
             lines.append("  \(session.id.uuidString) \(session.name) \(session.state.rawValue) stamp=\(session.permissionStamp.map { String($0) } ?? "-") unseen=\(session.unseen)")

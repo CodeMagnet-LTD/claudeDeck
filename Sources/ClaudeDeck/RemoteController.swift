@@ -351,6 +351,33 @@ final class RemoteController {
                     self.permissionMode(id, cycle: cycle, reply: reply)
                 }
             }
+            server.onBrowseFolder = { path, reply in
+                // Off the main thread: a slow disk shouldn't stall the app.
+                DispatchQueue.global(qos: .userInitiated).async {
+                    let home = FileManager.default.homeDirectoryForCurrentUser.path
+                    let resolved = path.isEmpty ? home : (path as NSString).expandingTildeInPath
+                    do {
+                        let names = try FileManager.default.contentsOfDirectory(atPath: resolved).filter { name in
+                            var isDirectory: ObjCBool = false
+                            return !name.hasPrefix(".")
+                                && FileManager.default.fileExists(atPath: (resolved as NSString).appendingPathComponent(name), isDirectory: &isDirectory)
+                                && isDirectory.boolValue
+                        }
+                        reply(.folder(requested: path, path: resolved, folders: names.sorted { $0.localizedStandardCompare($1) == .orderedAscending }, error: nil))
+                    } catch {
+                        reply(.folder(requested: path, path: resolved, folders: [], error: error.localizedDescription))
+                    }
+                }
+            }
+            server.onAddProject = { [weak self] path in
+                MainActor.assumeIsolated {
+                    var isDirectory: ObjCBool = false
+                    guard let self, let model = self.model, FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory), isDirectory.boolValue,
+                          !model.deck.projects.contains(where: { $0.path == path }) else { return }
+                    model.addProject(path: path)
+                    self.publishSnapshot()
+                }
+            }
             server.onSessionAction = { [weak self] id, action in
                 MainActor.assumeIsolated {
                     guard let model = self?.model, let session = model.deck.session(id) else { return }

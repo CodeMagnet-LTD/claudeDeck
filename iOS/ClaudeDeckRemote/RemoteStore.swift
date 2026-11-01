@@ -227,6 +227,13 @@ final class RemoteStore {
                 self.open(id, in: self.startingScene)
             }
         }
+        next.onFolder = { [weak self] message in
+            MainActor.assumeIsolated {
+                if case .folder(let requested, let path, let names, let error) = message {
+                    self?.folders[requested] = FolderState(path: path, folders: names, error: error)
+                }
+            }
+        }
         next.onPermissionMode = { [weak self] id, mode in
             MainActor.assumeIsolated { self?.permissionModes[id] = mode }
         }
@@ -447,6 +454,12 @@ final class RemoteStore {
 
     /// Asks the Mac for the session's permission mode; `cycle` presses Shift+Tab first.
     func permissionMode(_ id: UUID, cycle: Bool = false) { _ = send(.permissionMode(sessionID: id, cycle: cycle)) }
+
+    /// The project picker: folders on the Mac by requested path ("" = home).
+    struct FolderState: Equatable { var path: String; var folders: [String]; var error: String? }
+    private(set) var folders: [String: FolderState] = [:]
+    func browseFolder(_ path: String) { _ = send(.browseFolder(path: path)) }
+    func addProject(_ path: String) { _ = send(.addProject(path: path)) }
 
     /// The Mac's session menu (rename, restart, close, start fresh, remove).
     func sessionAction(_ id: UUID, _ action: RemoteSessionAction) { _ = send(.sessionAction(sessionID: id, action: action)) }

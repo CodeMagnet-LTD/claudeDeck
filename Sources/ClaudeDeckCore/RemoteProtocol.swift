@@ -147,6 +147,12 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case permissionModeIs(sessionID: UUID, mode: String?)
     /// Remote → host: pin / unpin or rename one of its projects (the next snapshot shows it).
     case projectAction(projectID: UUID, action: RemoteProjectAction)
+    /// Remote → host: the folders in `path` ("" = home), to pick a new project. Answered with `folder`.
+    case browseFolder(path: String)
+    /// Host → remote: `path` resolved (absolute) and its subfolders (no hidden ones).
+    case folder(requested: String, path: String, folders: [String], error: String?)
+    /// Remote → host: add this folder as a project.
+    case addProject(path: String)
     /// Remote → host: what the Mac's session menu does (rename, restart, close, start fresh, remove).
     case sessionAction(sessionID: UUID, action: RemoteSessionAction)
     /// Phone → host: send push notifications to this device (APNs.swift).
@@ -257,7 +263,9 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
         public static let projectActions = "projectActions"
         /// `sessionAction`.
         public static let sessionActions = "sessionActions"
-        public static let all: Set<String> = [files, permissionMode, projectActions, sessionActions]
+        /// `browseFolder` / `addProject`.
+        public static let addProject = "addProject"
+        public static let all: Set<String> = [files, permissionMode, projectActions, sessionActions, addProject]
     }
 
     public func supports(_ feature: String) -> Bool { features?.contains(feature) == true }

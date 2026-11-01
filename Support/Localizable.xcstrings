@@ -8603,6 +8603,26 @@
           }
         }
       }
+    },
+    "Inactive %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Boşta %lld"
+          }
+        }
+      }
+    },
+    "Added": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eklendi"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
