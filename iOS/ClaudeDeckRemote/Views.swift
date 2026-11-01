@@ -117,20 +117,25 @@ struct SessionListView: View {
         List(selection: $selection) {
             ConnectionBanner()
             if let usage = store.snapshot?.usage { UsageRow(usage: usage) }
-            // Like the Mac's sidebar: one Pinned section on top, each project a row with its
-            // sessions under it.
+            // Like the Mac's sidebar: one Pinned section on top. A project with several sessions is
+            // a row with them under it; with one, just that session (its menu has the project's
+            // actions); with none (pinned), the row to start one.
             if !pinned.isEmpty {
                 Section("Pinned") {
                     ForEach(pinned) { project in
                         let running = projects[project.name] ?? []
-                        ProjectRow(name: project.name, pinned: true, count: running.count) {
-                            newSessionProject = project.id
-                            showNewSession = true
-                        }
-                        .contextMenu { projectMenu(project.name, running: running) }
-                        ForEach(running) { session in
-                            SessionRowLink(session: session, showProject: false) { AnyView(projectMenu(session.project, running: running)) }
-                                .padding(.leading, 18)
+                        if running.count == 1, let session = running.first {
+                            SessionRowLink(session: session, showProject: true) { AnyView(projectMenu(project.name, running: running)) }
+                        } else {
+                            ProjectRow(name: project.name, pinned: true, count: running.count) {
+                                newSessionProject = project.id
+                                showNewSession = true
+                            }
+                            .contextMenu { projectMenu(project.name, running: running) }
+                            ForEach(running) { session in
+                                SessionRowLink(session: session, showProject: false) { AnyView(projectMenu(session.project, running: running)) }
+                                    .padding(.leading, 18)
+                            }
                         }
                     }
                 }
@@ -148,13 +153,17 @@ struct SessionListView: View {
                 Section("Projects") {
                     ForEach(projectNames, id: \.self) { project in
                         let running = projects[project] ?? []
-                        let id = store.projects.first(where: { $0.name == project })?.id
-                        ProjectRow(name: project.isEmpty ? String(localized: "Sessions") : project, pinned: false, count: running.count,
-                                   newSession: id.map { id in { newSessionProject = id; showNewSession = true } })
-                            .contextMenu { projectMenu(project, running: running) }
-                        ForEach(running) { session in
-                            SessionRowLink(session: session, showProject: false) { AnyView(projectMenu(session.project, running: running)) }
-                                .padding(.leading, 18)
+                        if running.count == 1, let session = running.first {
+                            SessionRowLink(session: session, showProject: true) { AnyView(projectMenu(project, running: running)) }
+                        } else {
+                            let id = store.projects.first(where: { $0.name == project })?.id
+                            ProjectRow(name: project.isEmpty ? String(localized: "Sessions") : project, pinned: false, count: running.count,
+                                       newSession: id.map { id in { newSessionProject = id; showNewSession = true } })
+                                .contextMenu { projectMenu(project, running: running) }
+                            ForEach(running) { session in
+                                SessionRowLink(session: session, showProject: false) { AnyView(projectMenu(session.project, running: running)) }
+                                    .padding(.leading, 18)
+                            }
                         }
                     }
                 }
