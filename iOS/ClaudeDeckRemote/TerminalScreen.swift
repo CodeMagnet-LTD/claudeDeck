@@ -283,6 +283,7 @@ struct SessionDetailView: View {
     @SceneStorage("detail.mode") private var mode = Mode.conversation
     @AppStorage("terminal.fit") private var fitToScreen = true
     @AppStorage(TerminalFont.key) private var terminalFont = TerminalFont.standard
+    @State private var filesProject: RemoteProject?
 
     enum Mode: String { case conversation, terminal }
 
@@ -345,6 +346,19 @@ struct SessionDetailView: View {
                 }
             } else {
                 ToolbarItem(placement: .topBarTrailing) { ConversationTextSizeMenu() }
+            }
+            // The session's project files: save one here, add one to this session, upload.
+            if let project = store.projects.first(where: { $0.name == session?.project }) {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button { filesProject = project } label: { Image(systemName: "folder") }
+                        .accessibilityLabel(Text("Files"))
+                }
+            }
+        }
+        .sheet(item: $filesProject) { project in
+            NavigationStack {
+                DirectoryView(projectID: project.id, path: "", title: project.name)
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { filesProject = nil } } }
             }
         }
     }

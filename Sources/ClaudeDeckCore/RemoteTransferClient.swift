@@ -15,10 +15,17 @@ public final class RemoteTransferClient {
         public var total = 0
         public var error: String?
         public var finished = false
+        /// Uploads: the project, and where the file was saved (relative to it) once done.
+        public var projectID: UUID?
+        public var savedPath: String?
         public var progress: Double { total > 0 ? Double(done) / Double(total) : 0 }
     }
 
     public private(set) var items: [Item] = []
+    /// Previews (downloads with `then`): progress and errors, by `downloadKey`.
+    public private(set) var previews: [String: Item] = [:]
+
+    public func preview(_ projectID: UUID, path: String) -> Item? { previews[Self.downloadKey(projectID, path)] }
     /// Sends to the host; false when not connected.
     @ObservationIgnored public var send: ((RemoteMessage) -> Bool)?
     /// A finished download (a temporary file).
@@ -28,7 +35,7 @@ public final class RemoteTransferClient {
 
     public init() {}
 
-    private struct Download { let projectID: UUID; let path: String; let file: URL; let handle: FileHandle }
+    private struct Download { let projectID: UUID; let path: String; let file: URL; let handle: FileHandle; let then: ((URL) -> Void)? }
     private struct Upload { let projectID: UUID; let folder: String; let name: String; let file: URL; let total: Int; var sent: Int; let onSaved: ((String) -> Void)? }
     @ObservationIgnored private var downloads: [String: Download] = [:]
     @ObservationIgnored private var uploads: [String: Upload] = [:]
@@ -38,7 +45,9 @@ public final class RemoteTransferClient {
 
     // MARK: Download
 
-    public func download(_ projectID: UUID, path: String) {
+    /// `then`: the finished file goes there instead of `onDownloaded` (a preview), and the
+    /// download stays out of `items`.
+    public func download(_ projectID: UUID, path: String, then: ((URL) -> Void)? = nil) {
         let key = Self.downloadKey(projectID, path)
         guard downloads[key] == nil else { return }
         let name = (path as NSString).lastPathComponent
@@ -46,8 +55,8 @@ public final class RemoteTransferClient {
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let file = folder.appending(path: name)
         guard FileManager.default.createFile(atPath: file.path, contents: nil), let handle = try? FileHandle(forWritingTo: file) else { return }
-        downloads[key] = Download(projectID: projectID, path: path, file: file, handle: handle)
-        put(Item(id: key, name: name, upload: false))
+        downloads[key] = Download(projectID: projectID, path: path, file: file, handle: handle, then: then)
+        if then == nil { put(Item(id: key, name: name, upload: false)) } else { previews[key] = Item(id: key, name: name, upload: false) }
         if send?(.downloadFile(projectID: projectID, path: path, offset: 0)) != true { fail(key, String(localized: "Not connected")) }
     }
 
@@ -58,11 +67,17 @@ public final class RemoteTransferClient {
         do { try download.handle.write(contentsOf: data) } catch { return fail(key, String(localized: "Couldn't save the file")) }
         let done = offset + data.count
         update(key) { $0.done = done; $0.total = total }
+        if download.then != nil { previews[key]?.done = done; previews[key]?.total = total }
         if done >= total || data.isEmpty {
             try? download.handle.close()
             downloads[key] = nil
             update(key) { $0.finished = true }
-            onDownloaded?(download.file)
+            if let then = download.then {
+                previews[key]?.finished = true
+                then(download.file)
+            } else {
+                onDownloaded?(download.file)
+            }
             removeLater(key)
         } else if send?(.downloadFile(projectID: projectID, path: path, offset: done)) != true {
             fail(key, String(localized: "Not connected"))
@@ -103,7 +118,7 @@ public final class RemoteTransferClient {
             return
         }
         uploads[key] = Upload(projectID: projectID, folder: folder, name: name, file: file, total: total, sent: 0, onSaved: onSaved)
-        put(Item(id: key, name: name, upload: true, total: total))
+        put(Item(id: key, name: name, upload: true, total: total, projectID: projectID))
         sendNext(key)
     }
 
@@ -125,10 +140,11 @@ public final class RemoteTransferClient {
         if let path {
             uploads[key] = nil
             try? FileManager.default.removeItem(at: upload.file.deletingLastPathComponent())
-            update(key) { $0.finished = true }
+            update(key) { $0.finished = true; $0.savedPath = path }
             onUploaded?(projectID, folder, path)
             upload.onSaved?(path)
-            removeLater(key)
+            // Long enough to add it to a session from the list.
+            removeLater(key, after: 20)
         } else {
             upload.sent = received
             uploads[key] = upload
@@ -169,11 +185,12 @@ public final class RemoteTransferClient {
         if let download = downloads.removeValue(forKey: key) { try? download.handle.close() }
         uploads[key] = nil
         update(key) { $0.error = error }
+        previews[key]?.error = error
     }
 
-    private func removeLater(_ id: String) {
+    private func removeLater(_ id: String, after seconds: Double = 3) {
         Task { @MainActor in
-            try? await Task.sleep(for: .seconds(3))
+            try? await Task.sleep(for: .seconds(seconds))
             items.removeAll { $0.id == id && $0.finished }
         }
     }

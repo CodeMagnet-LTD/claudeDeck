@@ -9073,6 +9073,86 @@
           }
         }
       }
+    },
+    "Upload Files": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya yükle"
+          }
+        }
+      }
+    },
+    "Upload Photos": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoğraf yükle"
+          }
+        }
+      }
+    },
+    "Preview": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önizle"
+          }
+        }
+      }
+    },
+    "Loading the preview…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önizleme yükleniyor…"
+          }
+        }
+      }
+    },
+    "Upload files or photos here with the buttons below.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aşağıdaki düğmelerle buraya dosya ya da fotoğraf yükleyebilirsin."
+          }
+        }
+      }
+    },
+    "Drop to upload into %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ klasörüne yüklemek için bırak"
+          }
+        }
+      }
+    },
+    "Uploaded · %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yüklendi · %@"
+          }
+        }
+      }
+    },
+    "Ready · %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hazır · %@"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
