@@ -444,11 +444,41 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         if multiline { body = "\u{1B}[200~" + body + "\u{1B}[201~" }
         guard submit else { view.send(txt: body); return }
         view.send(txt: body)
+        let probe = Self.probe(String(text.dropLast()))
         Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .milliseconds(multiline ? 500 : 150))
+            // Longer text takes Claude Code longer to take in; a Return inside that burst counts
+            // as part of a paste and the message just sits in the prompt.
+            try? await Task.sleep(for: .milliseconds(multiline ? 500 : 150 + min(450, body.count / 3)))
             guard let self, self.running.contains(id) else { return }
             self.views[id]?.send(txt: "\r")
+            // Still in the prompt box (Claude was busy drawing)? Return again, up to twice.
+            for _ in 0..<2 {
+                try? await Task.sleep(for: .milliseconds(900))
+                guard self.running.contains(id), let view = self.views[id], Self.promptHolds(probe, in: view) else { return }
+                view.send(txt: "\r")
+            }
         }
+    }
+
+    /// The start of a message, spaces squeezed, to look for on screen.
+    private static func probe(_ text: String) -> String {
+        String(text.split(whereSeparator: \.isWhitespace).joined(separator: " ").prefix(24))
+    }
+
+    /// Whether Claude Code's prompt box (between the last two ─── rules at the bottom) still
+    /// shows `probe`: the Return didn't submit. A permission prompt or a question has no such box.
+    private static func promptHolds(_ probe: String, in view: TerminalView) -> Bool {
+        guard probe.count >= 3 else { return false }
+        let lines = TerminalCapture.screen(of: view, scrollback: 0).lines.suffix(16).map { $0.map(\.text).joined() }
+        let rules = lines.indices.filter { index in
+            let line = lines[index].trimmingCharacters(in: .whitespaces)
+            return line.count >= 20 && line.allSatisfy { $0 == "─" }
+        }
+        guard rules.count >= 2, let bottom = rules.last else { return false }
+        let top = rules[rules.count - 2]
+        guard bottom - top > 1 else { return false }
+        let box = lines[(top + 1)..<bottom].joined(separator: " ").split(whereSeparator: \.isWhitespace).joined(separator: " ")
+        return box.contains(probe)
     }
 
     /// Pastes text as the terminal would (bracketed): Claude Code turns a pasted image path into
