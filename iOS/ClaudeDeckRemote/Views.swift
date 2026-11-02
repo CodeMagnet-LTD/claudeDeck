@@ -278,6 +278,7 @@ struct SessionListView: View {
     @State private var renameText = ""
     @AppStorage("list.inactiveExpanded") private var inactiveExpanded = true
     @State private var showAddProject = false
+    @State private var showFiles = false
     @AppStorage(ConversationTextSize.sidebarKey) private var textSize = ConversationTextSize.standard
     @AppStorage(ConversationTextSize.densityKey) private var density = 0
 
@@ -432,7 +433,10 @@ struct SessionListView: View {
                 Button { showSettings = true } label: { Image(systemName: "gearshape") }
             }
             ToolbarItem(placement: .topBarTrailing) {
-                NavigationLink { ProjectFilesView() } label: { Image(systemName: "folder") }
+                // A sheet with its own stack: pushed from the sidebar it replaced the session
+                // column, and folders opened from there had no way back.
+                Button { showFiles = true } label: { Image(systemName: "folder") }
+                    .accessibilityLabel(Text("Files"))
                     .disabled(store.connection != .connected || store.projects.isEmpty)
             }
             ToolbarItem(placement: .topBarTrailing) {
@@ -450,6 +454,12 @@ struct SessionListView: View {
             }
         }
         .sheet(isPresented: $showSettings) { NavigationStack { SettingsView() } }
+        .sheet(isPresented: $showFiles) {
+            NavigationStack {
+                ProjectFilesView()
+                    .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showFiles = false } } }
+            }
+        }
         .sheet(isPresented: $showNewSession) { NavigationStack { NewSessionView(initialProject: newSessionProject) } }
         .sheet(isPresented: $showAddProject) {
             NavigationStack {
