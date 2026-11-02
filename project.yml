@@ -109,6 +109,7 @@ targets:
       - Sources/ClaudeDeckCore/RemoteDiscovery.swift
       - Sources/ClaudeDeckCore/ConversationLog.swift
       - Sources/ClaudeDeckCore/RemoteFiles.swift
+      - Sources/ClaudeDeckCore/RemoteTransferClient.swift
       - Support/Localizable.xcstrings
     dependencies:
       - package: SwiftTerm

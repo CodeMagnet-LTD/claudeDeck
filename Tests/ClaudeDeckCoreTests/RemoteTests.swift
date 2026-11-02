@@ -187,6 +187,72 @@ import Testing
         try await waitUntil { queue.sync { snapshot.value?.sessions.isEmpty == true } }
     }
 
+    /// A file up into a project folder and back down, a piece at a time, over the real connection.
+    @Test func transfersAFileBothWays() async throws {
+        let queue = DispatchQueue(label: "remote-test-transfer")
+        let key = RemotePairing.makeKey()
+        let projectID = UUID()
+        let root = FileManager.default.temporaryDirectory.appending(path: "loopback-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root.appending(path: "in"), withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let server = RemoteServer(port: 0, queue: queue, key: { key }, acceptsPeer: Tailscale.isLoopback)
+        let receiver = RemoteTransfer.Receiver()
+        server.onFileRequest = { request, reply in
+            switch request {
+            case .uploadFile(let id, let folder, let name, let offset, let total, let data):
+                let r = receiver.receive(root: root.path, folder: folder, name: name, offset: offset, total: total, data: data)
+                reply(.uploadAck(projectID: id, folder: folder, name: name, received: r.received, path: r.path, error: r.error))
+            case .downloadFile(let id, let path, let offset):
+                let piece = RemoteTransfer.read(path, in: root.path, offset: offset)
+                reply(.fileChunk(projectID: id, path: path, offset: offset, total: piece.total, data: piece.data, error: piece.error))
+            default: break
+            }
+        }
+        queue.sync {
+            server.snapshot = RemoteSnapshot(hostName: "Home", sessions: [])
+            server.start()
+        }
+        defer { queue.sync { server.stop() } }
+        let port = try await RemoteLoopbackTests.listeningPort(server, queue: queue)
+        let client = RemoteHostConnection(pairing: RemotePairing(id: UUID(), hostName: "Home", addresses: ["127.0.0.1"], port: port, key: key, updatedAt: Date()), deviceName: "Phone", queue: queue)
+        let replies = Box<[RemoteMessage]>([])
+        let connected = Box(false)
+        client.onSnapshot = { _ in connected.value = true }
+        client.onFileReply = { replies.value.append($0) }
+        queue.sync { client.start() }
+        defer { queue.sync { client.close() } }
+        try await waitUntil { queue.sync { connected.value } }
+
+        let bytes = Data((0..<(RemoteTransfer.chunkSize * 2 + 4321)).map { UInt8(($0 * 7) % 256) })
+        var sent = 0
+        var saved: String?
+        while saved == nil {
+            let piece = bytes[sent..<min(sent + RemoteTransfer.chunkSize, bytes.count)]
+            let before = queue.sync { replies.value.count }
+            #expect(queue.sync { client.send(.uploadFile(projectID: projectID, folder: "in", name: "photo.png", offset: sent, total: bytes.count, data: Data(piece))) })
+            try await waitUntil { queue.sync { replies.value.count > before } }
+            guard case .uploadAck(_, _, _, let received, let path, let error) = queue.sync(execute: { replies.value.last! }) else { Issue.record("no ack"); return }
+            #expect(error == nil)
+            sent = received
+            saved = path
+        }
+        #expect(saved == "in/photo.png")
+        #expect(try Data(contentsOf: root.appending(path: "in/photo.png")) == bytes)
+
+        var down = Data()
+        var total = Int.max
+        while down.count < total {
+            let before = queue.sync { replies.value.count }
+            #expect(queue.sync { client.send(.downloadFile(projectID: projectID, path: "in/photo.png", offset: down.count)) })
+            try await waitUntil { queue.sync { replies.value.count > before } }
+            guard case .fileChunk(_, _, _, let size, let data, let error) = queue.sync(execute: { replies.value.last! }) else { Issue.record("no chunk"); return }
+            #expect(error == nil)
+            total = size
+            down.append(data)
+        }
+        #expect(down == bytes)
+    }
+
     @Test func wrongKeyIsRefused() async throws {
         let queue = DispatchQueue(label: "remote-test-2")
                 let server = RemoteServer(port: 0, queue: queue, key: { RemotePairing.makeKey() }, acceptsPeer: Tailscale.isLoopback)
@@ -732,5 +798,66 @@ import Testing
         #expect(listing.entries.contains { $0.name == ".env" && $0.isHidden })
         #expect(!listing.entries.contains { $0.name == ".git" })
         #expect(RemoteFiles.list("..", in: root.path).error != nil)
+    }
+}
+
+@Suite struct RemoteTransferTests {
+    private func folder() throws -> URL {
+        let root = FileManager.default.temporaryDirectory.appending(path: "transfer-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root.appending(path: "docs"), withIntermediateDirectories: true)
+        return root
+    }
+
+    @Test func downloadsInPieces() throws {
+        let root = try folder()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let bytes = Data((0..<(RemoteTransfer.chunkSize + 1234)).map { UInt8($0 % 251) })
+        try bytes.write(to: root.appending(path: "docs/big.bin"))
+        let first = RemoteTransfer.read("docs/big.bin", in: root.path, offset: 0)
+        #expect(first.error == nil && first.total == bytes.count && first.data.count == RemoteTransfer.chunkSize)
+        let second = RemoteTransfer.read("docs/big.bin", in: root.path, offset: first.data.count)
+        #expect(first.data + second.data == bytes)
+        #expect(RemoteTransfer.read("../outside", in: root.path, offset: 0).error != nil)
+        #expect(RemoteTransfer.read("docs", in: root.path, offset: 0).error != nil)
+    }
+
+    @Test func uploadsInPiecesWithAFreeName() throws {
+        let root = try folder()
+        defer { try? FileManager.default.removeItem(at: root) }
+        try Data("old".utf8).write(to: root.appending(path: "docs/report.pdf"))
+        let receiver = RemoteTransfer.Receiver()
+        let a = Data(repeating: 1, count: 10), b = Data(repeating: 2, count: 5)
+        let one = receiver.receive(root: root.path, folder: "docs", name: "report.pdf", offset: 0, total: 15, data: a)
+        #expect(one.received == 10 && one.path == nil && one.error == nil)
+        // A piece out of order is refused, the upload stays where it was.
+        #expect(receiver.receive(root: root.path, folder: "docs", name: "report.pdf", offset: 3, total: 15, data: b).error != nil)
+        let two = receiver.receive(root: root.path, folder: "docs", name: "report.pdf", offset: 10, total: 15, data: b)
+        #expect(two.path == "docs/report 2.pdf")
+        #expect(try Data(contentsOf: root.appending(path: "docs/report 2.pdf")) == a + b)
+        #expect(try Data(contentsOf: root.appending(path: "docs/report.pdf")) == Data("old".utf8))
+        // No pieces left behind.
+        let left = try FileManager.default.contentsOfDirectory(atPath: root.appending(path: "docs").path)
+        #expect(!left.contains { $0.hasSuffix(".part") })
+        #expect(receiver.receive(root: root.path, folder: "..", name: "x", offset: 0, total: 1, data: Data([1])).error != nil)
+    }
+
+    @Test func emptyFileUploads() throws {
+        let root = try folder()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let result = RemoteTransfer.Receiver().receive(root: root.path, folder: "", name: "empty.txt", offset: 0, total: 0, data: Data())
+        #expect(result.path == "empty.txt")
+    }
+
+    @Test func transferMessagesRoundTrip() throws {
+        let id = UUID()
+        for message: RemoteMessage in [
+            .downloadFile(projectID: id, path: "a/b.png", offset: 42),
+            .fileChunk(projectID: id, path: "a/b.png", offset: 0, total: 3, data: Data([1, 2, 3]), error: nil),
+            .uploadFile(projectID: id, folder: "a", name: "c.zip", offset: 0, total: 2, data: Data([9, 9])),
+            .uploadAck(projectID: id, folder: "a", name: "c.zip", received: 2, path: "a/c.zip", error: nil),
+            .sessionAction(sessionID: id, action: .insert("@/tmp/x ")),
+        ] {
+            #expect(try RemoteMessage.decode(message.frame()) == message)
+        }
     }
 }

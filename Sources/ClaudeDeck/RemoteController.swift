@@ -24,6 +24,8 @@ final class RemoteController {
     private(set) var hostError: String?
     /// Last answer a remote sent (diagnostics, DebugSnapshot).
     @ObservationIgnored private(set) var lastRemoteAnswer: String?
+    /// Files coming in from remotes (uploads), a piece at a time.
+    @ObservationIgnored private let receiver = RemoteTransfer.Receiver()
     var lastRejectedPeer: String? { server?.lastRejectedPeer }
 
     // MARK: Remote state
@@ -116,6 +118,24 @@ final class RemoteController {
     init() {
         localURL = DeckDataStore.default().url.deletingLastPathComponent().appending(path: "remote.json")
         local = RemoteLocalState.load(from: localURL)
+        hostTransfers.send = { [weak self] message in self?.hostConnection?.send(message) ?? false }
+        hostTransfers.onDownloaded = { file in RemoteController.saveToDownloads(file) }
+        hostTransfers.onUploaded = { [weak self] projectID, folder, _ in self?.listHostDirectory(projectID, path: folder) }
+    }
+
+    /// A file from the other Mac: into Downloads (a free name), shown in the Finder.
+    static func saveToDownloads(_ file: URL) {
+        let downloads = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+            ?? FileManager.default.homeDirectoryForCurrentUser.appending(path: "Downloads")
+        let name = RemoteTransfer.freeName(file.lastPathComponent, in: downloads)
+        let target = downloads.appending(path: name)
+        do {
+            try FileManager.default.moveItem(at: file, to: target)
+            try? FileManager.default.removeItem(at: file.deletingLastPathComponent())
+            NSWorkspace.shared.activateFileViewerSelecting([target])
+        } catch {
+            NSWorkspace.shared.activateFileViewerSelecting([file])
+        }
     }
 
     func start(model: AppModel) {
@@ -304,6 +324,19 @@ final class RemoteController {
                             let result = RemoteFiles.read(path, in: root)
                             reply(.file(projectID: projectID, path: path, text: result.text, size: result.size, error: result.error))
                         }
+                    case .downloadFile(let projectID, let path, let offset):
+                        guard let root = self?.model?.deck.project(projectID)?.path else { return }
+                        Task.detached {
+                            let piece = RemoteTransfer.read(path, in: root, offset: offset)
+                            reply(.fileChunk(projectID: projectID, path: path, offset: offset, total: piece.total, data: piece.data, error: piece.error))
+                        }
+                    case .uploadFile(let projectID, let folder, let name, let offset, let total, let data):
+                        guard let self, let root = self.model?.deck.project(projectID)?.path else { return }
+                        let receiver = self.receiver
+                        Task.detached {
+                            let result = receiver.receive(root: root, folder: folder, name: name, offset: offset, total: total, data: data)
+                            reply(.uploadAck(projectID: projectID, folder: folder, name: name, received: result.received, path: result.path, error: result.error))
+                        }
                     default:
                         break
                     }
@@ -393,6 +426,8 @@ final class RemoteController {
                         if !model.terminals.isRunning(id) { model.launch(id, resume: false) }
                     case .remove:
                         model.removeSession(session.id)
+                    case .insert(let text):
+                        model.terminals.paste(text, into: id)
                     }
                     self?.publishSnapshot()
                 }
@@ -1168,6 +1203,20 @@ final class RemoteController {
         next.onPastConversations = { [weak self] projectID, items in
             MainActor.assumeIsolated { self?.hostPastConversations[projectID] = items }
         }
+        next.onFileReply = { [weak self] message in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                switch message {
+                case .directory(let projectID, let path, let entries, let error):
+                    self.hostDirectories[Self.fileKey(projectID, path)] = RemoteDirectoryState(entries: entries, error: error)
+                case .fileChunk(let projectID, let path, let offset, let total, let data, let error):
+                    self.hostTransfers.received(projectID, path: path, offset: offset, total: total, data: data, error: error)
+                case .uploadAck(let projectID, let folder, let name, let received, let path, let error):
+                    self.hostTransfers.acknowledged(projectID, folder: folder, name: name, received: received, path: path, error: error)
+                default: break
+                }
+            }
+        }
         next.onPromptResult = { [weak self] id, error in
             MainActor.assumeIsolated {
                 guard let self, self.uploads[id] == .sending else { return }
@@ -1197,6 +1246,7 @@ final class RemoteController {
                 saveLocal()
             }
         case .disconnected(let reason):
+            hostTransfers.connectionLost()
             scheduleRetry(reason: reason, after: retryDelay)
             retryDelay = min(retryDelay * 2, 30)
         case .refused(let reason):
@@ -1272,6 +1322,21 @@ final class RemoteController {
 
     /// The other Mac's projects (New Session sheet).
     var hostProjects: [RemoteProject] { snapshot?.projects ?? [] }
+    /// The other Mac's project folders (its Files window), by `fileKey`.
+    private(set) var hostDirectories: [String: RemoteDirectoryState] = [:]
+    /// Downloads from / uploads to the other Mac's projects.
+    let hostTransfers = RemoteTransferClient()
+
+    static func fileKey(_ projectID: UUID, _ path: String) -> String { "\(projectID)|\(path)" }
+
+    func listHostDirectory(_ projectID: UUID, path: String) {
+        _ = hostConnection?.send(.listDirectory(projectID: projectID, path: path))
+    }
+
+    /// Text into one of its sessions' prompt (a file's @mention), without Enter.
+    func insertIntoHostSession(_ id: UUID, text: String) {
+        _ = hostConnection?.send(.sessionAction(sessionID: id, action: .insert(text)))
+    }
     /// Earlier conversations of the other Mac's projects, newest first.
     private(set) var hostPastConversations: [UUID: [RemotePastConversation]] = [:]
 
@@ -1377,4 +1442,10 @@ extension RemoteSession.State {
         case .ended: .activity(.ended)
         }
     }
+}
+
+/// A folder of the other Mac's project, as it answered.
+struct RemoteDirectoryState: Equatable {
+    var entries: [RemoteFileEntry]
+    var error: String?
 }

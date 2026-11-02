@@ -343,6 +343,7 @@ struct RemoteSidebarSection: View {
     @AppStorage("sidebar.remoteClosedExpanded", store: .windowState) private var closedExpanded = false
     @State private var showNewSession = false
     @State private var newSessionProject: UUID?
+    @State private var showFiles = false
 
     var body: some View {
         let remote = model.remote
@@ -398,6 +399,9 @@ struct RemoteSidebarSection: View {
                 }
                 Spacer()
                 if remote.connection == .connected, !remote.hostProjects.isEmpty {
+                    Button { showFiles = true } label: { Image(systemName: "folder") }
+                        .buttonStyle(.borderless)
+                        .help("Files on the other Mac: save, upload, add to a session")
                     Button {
                         newSessionProject = nil
                         showNewSession = true
@@ -411,6 +415,7 @@ struct RemoteSidebarSection: View {
                     .help(remote.connection == .connected ? "Connected" : "Not connected")
             }
             .sheet(isPresented: $showNewSession) { RemoteNewSessionSheet(initialProject: newSessionProject) }
+            .sheet(isPresented: $showFiles) { RemoteFilesSheet() }
         }
     }
 }

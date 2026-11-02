@@ -8873,6 +8873,206 @@
           }
         }
       }
+    },
+    "Files…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosyalar…"
+          }
+        }
+      }
+    },
+    "Photos…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fotoğraflar…"
+          }
+        }
+      }
+    },
+    "Upload Here": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buraya yükle"
+          }
+        }
+      }
+    },
+    "Save / Share…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kaydet / Paylaş…"
+          }
+        }
+      }
+    },
+    "Add to Session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturuma ekle"
+          }
+        }
+      }
+    },
+    "Upload…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yükle…"
+          }
+        }
+      }
+    },
+    "Upload": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yükle"
+          }
+        }
+      }
+    },
+    "Save to Downloads": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirilenler'e kaydet"
+          }
+        }
+      }
+    },
+    "Uploaded": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yüklendi"
+          }
+        }
+      }
+    },
+    "Saved to Downloads": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İndirilenler'e kaydedildi"
+          }
+        }
+      }
+    },
+    "Double-click a file to save it to Downloads; drop files here to upload them into this folder.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir dosyayı İndirilenler'e kaydetmek için çift tıkla; bu klasöre yüklemek için dosyaları buraya bırak."
+          }
+        }
+      }
+    },
+    "Update ClaudeDeck on the other Mac to send and save files.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya gönderip kaydetmek için diğer Mac'teki ClaudeDeck'i güncelle."
+          }
+        }
+      }
+    },
+    "Files on the other Mac: save, upload, add to a session": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer Mac'teki dosyalar: kaydet, yükle, oturuma ekle"
+          }
+        }
+      }
+    },
+    "Too large to send": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Göndermek için çok büyük"
+          }
+        }
+      }
+    },
+    "That's a folder": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu bir klasör"
+          }
+        }
+      }
+    },
+    "Can't write in this folder": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu klasöre yazılamıyor"
+          }
+        }
+      }
+    },
+    "The upload was interrupted; try again": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yükleme yarıda kaldı; tekrar dene"
+          }
+        }
+      }
+    },
+    "Couldn't save the file": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya kaydedilemedi"
+          }
+        }
+      }
+    },
+    "Couldn't read the file": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya okunamadı"
+          }
+        }
+      }
+    },
+    "Connection lost": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı koptu"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

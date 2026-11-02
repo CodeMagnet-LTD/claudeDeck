@@ -92,6 +92,9 @@ final class RemoteStore {
         let saved = PairingKeychain.load()
         pairing = saved
         connection = saved == nil ? .unpaired : .paused
+        transfers.send = { [weak self] message in self?.send(message) ?? false }
+        transfers.onDownloaded = { Transfers.share($0) }
+        transfers.onUploaded = { [weak self] projectID, folder, _ in self?.listDirectory(projectID, path: folder) }
         discovery.onChange = { [weak self] hosts in
             MainActor.assumeIsolated { self?.lanHostsChanged(hosts) }
         }
@@ -253,6 +256,10 @@ final class RemoteStore {
                     self.directories[Self.fileKey(projectID, path)] = DirectoryState(entries: entries, error: error)
                 case .file(let projectID, let path, let text, let size, let error):
                     self.files[Self.fileKey(projectID, path)] = FileState(text: text, size: size, error: error)
+                case .fileChunk(let projectID, let path, let offset, let total, let data, let error):
+                    self.transfers.received(projectID, path: path, offset: offset, total: total, data: data, error: error)
+                case .uploadAck(let projectID, let folder, let name, let received, let path, let error):
+                    self.transfers.acknowledged(projectID, folder: folder, name: name, received: received, path: path, error: error)
                 default: break
                 }
             }
@@ -309,6 +316,7 @@ final class RemoteStore {
         case .disconnected(let reason):
             hostConnection = nil
             answering = []
+            transfers.connectionLost()
             guard isActive else { connection = .paused; return }
             connection = .retrying(reason, at: Date().addingTimeInterval(retryDelay))
             scheduleRetry(after: retryDelay)
@@ -440,6 +448,8 @@ final class RemoteStore {
     struct FileState: Equatable { var text: String?; var size: Int; var error: String? }
     private(set) var directories: [String: DirectoryState] = [:]
     private(set) var files: [String: FileState] = [:]
+    /// Downloads and uploads (Browse Files).
+    let transfers = RemoteTransferClient()
 
     static func fileKey(_ projectID: UUID, _ path: String) -> String { "\(projectID.uuidString)/\(path)" }
 

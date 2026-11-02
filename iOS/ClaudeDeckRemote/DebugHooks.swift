@@ -85,6 +85,25 @@ final class DebugHooks {
                 try? FileManager.default.removeItem(at: url)
                 store.browseFolder("")
                 store.addProject(path.trimmingCharacters(in: .whitespacesAndNewlines))
+            } else if file.hasSuffix(".download"), let id, let path = try? String(contentsOf: url, encoding: .utf8) {
+                // `<project>.download`: that file of the project; it lands in debug/downloaded/.
+                try? FileManager.default.removeItem(at: url)
+                let saved = dir.appending(path: "downloaded")
+                store.transfers.onDownloaded = { file in
+                    try? FileManager.default.createDirectory(at: saved, withIntermediateDirectories: true)
+                    try? FileManager.default.removeItem(at: saved.appending(path: file.lastPathComponent))
+                    try? FileManager.default.copyItem(at: file, to: saved.appending(path: file.lastPathComponent))
+                }
+                store.transfers.download(id, path: path.trimmingCharacters(in: .whitespacesAndNewlines))
+            } else if file.hasSuffix(".upload"), let id, let text = try? String(contentsOf: url, encoding: .utf8) {
+                // `<project>.upload`: "folder" then local file paths, one per line.
+                try? FileManager.default.removeItem(at: url)
+                var lines = text.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
+                let folder = lines.isEmpty ? "" : lines.removeFirst()
+                for path in lines where !path.isEmpty { store.transfers.upload(URL(fileURLWithPath: path), to: id, folder: folder) }
+            } else if file.hasSuffix(".insert"), let id, let text = try? String(contentsOf: url, encoding: .utf8) {
+                try? FileManager.default.removeItem(at: url)
+                store.sessionAction(id, .insert(text))
             } else if file.hasSuffix(".renamesession"), let id, let name = try? String(contentsOf: url, encoding: .utf8) {
                 try? FileManager.default.removeItem(at: url)
                 store.sessionAction(id, .rename(name))
@@ -113,6 +132,9 @@ final class DebugHooks {
         for (id, conversation) in store.conversations {
             let questions = conversation.entries.filter { $0.questions != nil }.map { "\($0.id.suffix(6)):\($0.questions?.count ?? 0)q:\($0.result == nil ? "open" : "done")" }
             lines.append("  conversation \(id.uuidString) entries=\(conversation.entries.count) questions=\(questions)")
+        }
+        for item in store.transfers.items {
+            lines.append("  transfer \(item.upload ? "up" : "down") \(item.name) \(item.done)/\(item.total) finished=\(item.finished) error=\(item.error ?? "-")")
         }
         for (id, view) in store.debugTerminals() {
             let terminal = view.terminal.getTerminal()

@@ -123,6 +123,16 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     /// Remote → host: a text file of a project (at most `RemoteFiles.maxFileSize`).
     case readFile(projectID: UUID, path: String)
     case file(projectID: UUID, path: String, text: String?, size: Int, error: String?)
+    /// Remote → host: the next piece of any file of a project, from `offset` (download). Answered
+    /// with `fileChunk`; the remote asks for the next piece when one arrives.
+    case downloadFile(projectID: UUID, path: String, offset: Int)
+    /// Host → remote: up to `RemoteTransfer.chunkSize` bytes of the file at `offset`, of `total`.
+    case fileChunk(projectID: UUID, path: String, offset: Int, total: Int, data: Data, error: String?)
+    /// Remote → host: a piece of a file for the project folder `folder` (upload). The host saves it
+    /// as `name` (or "name 2"… when taken) once `total` bytes are in. Answered with `uploadAck`.
+    case uploadFile(projectID: UUID, folder: String, name: String, offset: Int, total: Int, data: Data)
+    /// Host → remote: bytes in so far; `path` (relative to the project) once the file is saved.
+    case uploadAck(projectID: UUID, folder: String, name: String, received: Int, path: String?, error: String?)
     /// Remote → host: press Esc in a working session (interrupts Claude).
     case interrupt(sessionID: UUID)
     /// Remote → host: end a running session / resume a closed one.
@@ -196,6 +206,9 @@ public enum RemoteSessionAction: Codable, Sendable, Equatable {
     case startFresh
     /// End and Remove: off the list (the conversation stays resumable from the project).
     case remove
+    /// Put text in the session's prompt without Enter, as a paste (a project file's @mention).
+    /// Hosts with `Feature.transfer` only.
+    case insert(String)
 }
 
 /// Claude Code's permission mode, read from the line under its input box
@@ -265,7 +278,9 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
         public static let sessionActions = "sessionActions"
         /// `browseFolder` / `addProject`.
         public static let addProject = "addProject"
-        public static let all: Set<String> = [files, permissionMode, projectActions, sessionActions, addProject]
+        /// `downloadFile` / `uploadFile`.
+        public static let transfer = "transfer"
+        public static let all: Set<String> = [files, permissionMode, projectActions, sessionActions, addProject, transfer]
     }
 
     public func supports(_ feature: String) -> Bool { features?.contains(feature) == true }
