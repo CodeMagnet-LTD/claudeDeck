@@ -861,3 +861,34 @@ import Testing
         }
     }
 }
+
+@Suite struct PromptQueueTests {
+    @Test func actions() {
+        let a = QueuedPrompt(text: "one"), b = QueuedPrompt(text: "two"), c = QueuedPrompt(text: "three")
+        let queue = [a, b, c]
+        #expect(queue.applying(.moveUp, to: c.id).queue.map(\.text) == ["one", "three", "two"])
+        #expect(queue.applying(.moveUp, to: a.id).queue == queue)
+        #expect(queue.applying(.remove, to: b.id).queue.map(\.text) == ["one", "three"])
+        #expect(queue.applying(.edit("  2  "), to: b.id).queue[1].text == "2")
+        #expect(queue.applying(.edit("   "), to: b.id).queue.count == 2)
+        let now = queue.applying(.sendNow, to: b.id)
+        #expect(now.sent == b && now.queue.map(\.text) == ["one", "three"])
+        #expect(queue.applying(.remove, to: UUID()).queue == queue)
+    }
+
+    @Test func queueTravelsAndOlderDecksDecode() throws {
+        var session = DeckSession(projectID: UUID(), name: "api")
+        session.queue = [QueuedPrompt(text: "then run the tests")]
+        let decoded = try JSONDecoder().decode(DeckSession.self, from: JSONEncoder().encode(session))
+        #expect(decoded.queue == session.queue)
+        let old = #"{"id":"\#(UUID())","projectID":"\#(UUID())","name":"x"}"#
+        #expect(try JSONDecoder().decode(DeckSession.self, from: Data(old.utf8)).queue.isEmpty)
+        let id = UUID()
+        for message: RemoteMessage in [.queuePrompt(sessionID: id, text: "hi"), .queueAction(sessionID: id, promptID: id, action: .edit("x"))] {
+            #expect(try RemoteMessage.decode(message.frame()) == message)
+        }
+        var remote = RemoteSession(id: id, name: "api", project: "api", state: .running)
+        remote.queue = session.queue
+        #expect(try JSONDecoder().decode(RemoteSession.self, from: JSONEncoder().encode(remote)).queue == session.queue)
+    }
+}

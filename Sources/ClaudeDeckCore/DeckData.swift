@@ -68,6 +68,8 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
     public var workingDirectory: String?
     /// GitHub issue or pull request linked to this session (see GitHubLink.swift).
     public var linkedWorkItem: LinkedWorkItem?
+    /// Claude sessions: messages waiting for "your turn", sent one per turn, oldest first.
+    public var queue: [QueuedPrompt] = []
 
     public init(id: UUID = UUID(), projectID: UUID, name: String, kind: SessionKind = .claude, claudeSessionID: String? = nil,
                 createdAt: Date = Date(), lastActivityAt: Date? = nil, isOpen: Bool = true, worktreeName: String? = nil) {
@@ -105,8 +107,10 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
         worktreeName = try c.decodeIfPresent(String.self, forKey: .worktreeName)
         workingDirectory = try c.decodeIfPresent(String.self, forKey: .workingDirectory)
         linkedWorkItem = try? c.decodeIfPresent(LinkedWorkItem.self, forKey: .linkedWorkItem)
+        queue = (try? c.decodeIfPresent([QueuedPrompt].self, forKey: .queue)) ?? []
     }
 }
+
 
 public enum AppTheme: String, Codable, Sendable, CaseIterable {
     case system, light, dark

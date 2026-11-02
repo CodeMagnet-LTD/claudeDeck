@@ -35,6 +35,9 @@ final class AppModel {
     private(set) var deck: DeckData
     private(set) var hookStatuses: [UUID: HookStatus] = [:]
     private var transcriptSignals: [UUID: TranscriptSignal] = [:]
+    /// Prompt queue: a queued message went in at this time; the next waits until Claude has
+    /// taken it up (see `drainQueues`).
+    @ObservationIgnored var queueAwaiting: [UUID: Date] = [:]
     /// Last time the user looked at a session while it was idle (clears the yellow "unseen" badge).
     private var seenAt: [UUID: Date] = [:]
     var hookError: String?
@@ -309,6 +312,7 @@ final class AppModel {
             emitAttentionChanges()
         }
         onCountsChanged?()
+        drainQueues()
     }
 
     /// Keeps `busyAtQuit` current for running Claude sessions, so a session that was working when
@@ -351,6 +355,7 @@ final class AppModel {
         transcriptSignals[id] = signal
         emitAttentionChanges()
         onCountsChanged?()
+        drainQueues()
     }
 
     private func notifyKey(_ id: UUID) -> String? {

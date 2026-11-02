@@ -17,6 +17,10 @@ struct ConversationView: View {
     /// Shift+Return on a hardware keyboard: the next newline stays a newline.
     @State private var shiftReturn = false
     @AppStorage(ConversationTextSize.key) private var textSize = ConversationTextSize.standard
+    /// Optional: while Claude works, messages wait in the Mac's queue and go in one per turn.
+    @AppStorage("composer.queue") private var queueMode = false
+    @State private var editingPrompt: QueuedPrompt?
+    @State private var editText = ""
 
     var body: some View {
         let conversation = store.conversations[sessionID]
@@ -129,6 +133,7 @@ struct ConversationView: View {
         let blocked = session?.state.isBlocked == true
         let sending = store.sendingFiles.contains(sessionID)
         VStack(alignment: .leading, spacing: 6) {
+            if let queue = session?.queue, !queue.isEmpty { queueList(queue) }
             if let error = attachError ?? store.promptError {
                 Text(error).font(.caption).foregroundStyle(.red).padding(.horizontal, 4)
             }
@@ -158,6 +163,17 @@ struct ConversationView: View {
                 .disabled(blocked || store.connection != .connected)
                 .accessibilityHint(Text("Switches to the next permission mode, like Shift+Tab"))
             }
+            if canQueue(session) {
+                Button { queueMode.toggle() } label: {
+                    Label("Queue", systemImage: "text.line.first.and.arrowtriangle.forward")
+                        .font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .tint(queueMode ? .accentColor : .secondary)
+                .controlSize(.small)
+                .accessibilityValue(Text(queueMode ? "On" : "Off"))
+                .accessibilityHint(Text("While Claude works, messages wait and go in one per turn"))
+            }
             // How full Claude's context is: tokens, and a rough share of the window (the window
             // depends on the model: 200k assumed, 1M once past it).
             if let tokens = store.conversations[sessionID]?.contextTokens, tokens > 0 {
@@ -182,14 +198,15 @@ struct ConversationView: View {
                     Image(systemName: "paperclip").font(.system(size: 20)).frame(width: 30, height: 36)
                 }
                 .disabled(blocked || sending)
-                TextField(blocked ? String(localized: "Answer the prompt above first") : String(localized: "Message Claude"),
+                TextField(blocked && !queuing(session) ? String(localized: "Answer the prompt above first")
+                          : queuing(session) ? String(localized: "Queue a message for the next turn") : String(localized: "Message Claude"),
                           text: $draft, axis: .vertical)
                     .lineLimit(1...5)
                     .focused($composing)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
                     .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18))
-                    .disabled(blocked)
+                    .disabled(blocked && !queuing(session))
                     .submitLabel(.send)
                     .onKeyPress(.return, phases: .down) { press in
                         guard press.modifiers.contains(.shift) else { send(session, keepFocus: true); return .handled }
@@ -212,10 +229,20 @@ struct ConversationView: View {
                     Button {
                         send(session)
                     } label: {
-                        Image(systemName: "arrow.up.circle.fill").font(.system(size: 30))
+                        Image(systemName: queuing(session) ? "text.line.first.and.arrowtriangle.forward" : "arrow.up.circle.fill")
+                            .font(.system(size: queuing(session) ? 22 : 30))
+                            .frame(width: 30, height: 30)
                     }
                     .disabled((draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && attachments.isEmpty)
-                              || blocked || store.connection != .connected)
+                              || (blocked && !queuing(session)) || store.connection != .connected)
+                    // One message the other way: now, or into the queue.
+                    .contextMenu {
+                        if canQueue(session), attachments.isEmpty {
+                            Button { send(session, queue: false) } label: { Label("Send Now", systemImage: "arrow.up.circle") }
+                                .disabled(blocked)
+                            Button { send(session, queue: true) } label: { Label("Add to Queue", systemImage: "text.line.first.and.arrowtriangle.forward") }
+                        }
+                    }
                 }
             }
         }
@@ -264,12 +291,16 @@ struct ConversationView: View {
 
     /// `keepFocus`: sent with Return, so the keyboard stays for the next message (the field may
     /// already have given up focus by the time this runs, so it isn't asked).
-    private func send(_ session: RemoteSession?, keepFocus: Bool = false) {
-        guard session?.state.isBlocked != true, store.connection == .connected, !store.sendingFiles.contains(sessionID),
+    /// `queue`: nil follows the Queue switch (only while Claude is busy), true / false force it.
+    private func send(_ session: RemoteSession?, keepFocus: Bool = false, queue: Bool? = nil) {
+        let toQueue = attachments.isEmpty && canQueue(session) && (queue ?? queuing(session))
+        guard session?.state.isBlocked != true || toQueue, store.connection == .connected, !store.sendingFiles.contains(sessionID),
               !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || !attachments.isEmpty
         else { return }
         let typing = keepFocus || composing
-        if attachments.isEmpty {
+        if toQueue {
+            if store.queuePrompt(sessionID, text: draft) { draft = "" }
+        } else if attachments.isEmpty {
             if store.sendPrompt(sessionID, text: draft) { draft = "" }
         } else {
             // Cleared once the Mac took it (a failure keeps them for another try).
@@ -281,6 +312,57 @@ struct ConversationView: View {
             composing = true
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { composing = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { composing = true }
+        }
+    }
+
+    /// The Mac keeps a queue for this session (a Claude session, a new enough host).
+    private func canQueue(_ session: RemoteSession?) -> Bool {
+        guard let session, session.state != .shell, session.state != .notStarted else { return false }
+        return store.snapshot?.supports(RemoteSnapshot.Feature.queue) == true
+    }
+
+    /// The next message goes to the queue: the switch is on and Claude isn't waiting for the user
+    /// (working, asking, or messages already waiting their turn).
+    private func queuing(_ session: RemoteSession?) -> Bool {
+        guard queueMode, canQueue(session), let session, attachments.isEmpty else { return false }
+        return session.state != .idle || !(session.queue ?? []).isEmpty
+    }
+
+    @ViewBuilder
+    private func queueList(_ queue: [QueuedPrompt]) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label("Queue · \(queue.count)", systemImage: "text.line.first.and.arrowtriangle.forward")
+                .font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            ForEach(Array(queue.enumerated()), id: \.element.id) { index, prompt in
+                HStack(spacing: 6) {
+                    Text("\(index + 1).").font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                    Text(prompt.text).font(.subheadline).lineLimit(2).frame(maxWidth: .infinity, alignment: .leading)
+                    Menu {
+                        Button { store.queueAction(sessionID, prompt: prompt.id, .sendNow) } label: { Label("Send Now", systemImage: "arrow.up.circle") }
+                        Button {
+                            editText = prompt.text
+                            editingPrompt = prompt
+                        } label: { Label("Edit…", systemImage: "pencil") }
+                        if index > 0 {
+                            Button { store.queueAction(sessionID, prompt: prompt.id, .moveUp) } label: { Label("Move Up", systemImage: "arrow.up") }
+                        }
+                        Button(role: .destructive) { store.queueAction(sessionID, prompt: prompt.id, .remove) } label: { Label("Remove", systemImage: "trash") }
+                    } label: {
+                        Image(systemName: "ellipsis.circle").font(.system(size: 18)).frame(width: 30, height: 26)
+                    }
+                }
+                .padding(.vertical, 2)
+            }
+        }
+        .padding(8)
+        .background(Color.accentColor.opacity(0.08), in: RoundedRectangle(cornerRadius: 10))
+        .alert("Edit Queued Message", isPresented: Binding(get: { editingPrompt != nil }, set: { if !$0 { editingPrompt = nil } })) {
+            TextField("Message", text: $editText, axis: .vertical)
+            Button("Save") {
+                if let prompt = editingPrompt { store.queueAction(sessionID, prompt: prompt.id, .edit(editText)) }
+                editingPrompt = nil
+            }
+            Button("Cancel", role: .cancel) { editingPrompt = nil }
         }
     }
 

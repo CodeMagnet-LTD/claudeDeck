@@ -372,6 +372,18 @@ final class RemoteController {
             server.onSendPrompt = { [weak self] id, text in
                 MainActor.assumeIsolated { self?.sendPrompt(id, text: text) }
             }
+            server.onQueuePrompt = { [weak self] id, text in
+                MainActor.assumeIsolated {
+                    self?.model?.enqueue(id, text: text)
+                    self?.publishSnapshot()
+                }
+            }
+            server.onQueueAction = { [weak self] id, prompt, action in
+                MainActor.assumeIsolated {
+                    self?.model?.queueAction(id, prompt: prompt, action: action)
+                    self?.publishSnapshot()
+                }
+            }
             server.onSendPromptWithFiles = { [weak self] id, text, files, reply in
                 MainActor.assumeIsolated {
                     guard let self else { reply(String(localized: "ClaudeDeck isn't ready.")); return }
@@ -586,7 +598,7 @@ final class RemoteController {
             guard let state = RemoteSession.State(status.display) else { return nil }
             // Closed sessions only when they can be resumed (the phone lists them under "Closed").
             if state == .notStarted, session.kind != .claude || !model.canResume(session.id) { return nil }
-            return RemoteSession(
+            var remote = RemoteSession(
                 id: session.id,
                 name: session.name,
                 project: model.deck.project(session.projectID)?.name ?? "",
@@ -596,6 +608,8 @@ final class RemoteController {
                 unseen: model.isUnseenIdle(session.id),
                 permissionStamp: model.pendingPermissionStamp(session.id)?.timeIntervalSince1970
             )
+            remote.queue = session.queue.isEmpty ? nil : session.queue
+            return remote
         }
         return RemoteSnapshot(hostName: hostName, sessions: sessions)
     }

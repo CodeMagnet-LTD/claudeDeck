@@ -656,6 +656,9 @@ struct SessionMenu: View {
             Button("Close Pane") { model.closePane(session.id) }
         }
         Divider()
+        if session.kind == .claude, model.terminals.isRunning(session.id) {
+            Button("Queue a Message…") { QueueStrip.askToQueue(session.id, model: model) }
+        }
         if model.terminals.isRunning(session.id) {
             Button(session.kind == .shell ? String(localized: "Restart Terminal") : String(localized: "Restart Session")) {
                 Task { await model.restartSession(session.id) }

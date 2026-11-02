@@ -35,6 +35,13 @@ enum DebugSnapshot {
             try? FileManager.default.removeItem(atPath: path)
             if let project = UUID(uuidString: String(file.dropLast(6))) { model.newShell(in: project) }
         }
+        // `<session-uuid>.queue`: puts the file's text in that session's prompt queue.
+        for file in files where file.hasSuffix(".queue") {
+            let path = (dir as NSString).appendingPathComponent(file)
+            let text = contents(path)
+            try? FileManager.default.removeItem(atPath: path)
+            if let id = UUID(uuidString: String(file.dropLast(6))) { model.enqueue(id, text: text) }
+        }
         // `<session-uuid>.remove`: deletes that session, as its context menu does.
         for file in files where file.hasSuffix(".remove") {
             let path = (dir as NSString).appendingPathComponent(file)

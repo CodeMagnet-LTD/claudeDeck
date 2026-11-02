@@ -476,6 +476,18 @@ final class RemoteStore {
     /// The Mac's session menu (rename, restart, close, start fresh, remove).
     func sessionAction(_ id: UUID, _ action: RemoteSessionAction) { _ = send(.sessionAction(sessionID: id, action: action)) }
 
+    /// The prompt queue (hosts with `Feature.queue`): sent at "your turn", one per turn.
+    @discardableResult
+    func queuePrompt(_ id: UUID, text: String) -> Bool {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return false }
+        return send(.queuePrompt(sessionID: id, text: trimmed))
+    }
+
+    func queueAction(_ id: UUID, prompt: UUID, _ action: QueueAction) {
+        _ = send(.queueAction(sessionID: id, promptID: prompt, action: action))
+    }
+
     /// Pin / unpin or rename one of the Mac's projects.
     func projectAction(_ projectID: UUID, _ action: RemoteProjectAction) { _ = send(.projectAction(projectID: projectID, action: action)) }
 

@@ -201,6 +201,7 @@ struct PaneView: View {
                 } else {
                     ProgressView().frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
+                if !session.queue.isEmpty { QueueStrip(session: session) }
                 if !running && !model.restartingSessions.contains(sessionID) { ExitedBar(session: session) }
             }
             .overlay {

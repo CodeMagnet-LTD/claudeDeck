@@ -9153,6 +9153,166 @@
           }
         }
       }
+    },
+    "Queue": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kuyruk"
+          }
+        }
+      }
+    },
+    "Queue · %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kuyruk · %lld"
+          }
+        }
+      }
+    },
+    "Queue a Message…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesajı kuyruğa ekle…"
+          }
+        }
+      }
+    },
+    "Queue a Message": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mesajı kuyruğa ekle"
+          }
+        }
+      }
+    },
+    "Sent when it's your turn": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıra sana gelince gönderilir"
+          }
+        }
+      }
+    },
+    "Sent one at a time, when it's your turn": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sıra sana geldikçe birer birer gönderilir"
+          }
+        }
+      }
+    },
+    "Edit Queued Message": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kuyruktaki mesajı düzenle"
+          }
+        }
+      }
+    },
+    "Edit": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düzenle"
+          }
+        }
+      }
+    },
+    "Edit…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düzenle…"
+          }
+        }
+      }
+    },
+    "Move Up": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yukarı taşı"
+          }
+        }
+      }
+    },
+    "Send Now": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi gönder"
+          }
+        }
+      }
+    },
+    "Send Now (Claude takes it in while working)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Şimdi gönder (Claude çalışırken alır)"
+          }
+        }
+      }
+    },
+    "Add to Queue": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kuyruğa ekle"
+          }
+        }
+      }
+    },
+    "Queue a message for the next turn": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonraki tur için mesaj yaz"
+          }
+        }
+      }
+    },
+    "While Claude works, messages wait and go in one per turn": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude çalışırken mesajlar bekler ve her turda bir tane gönderilir"
+          }
+        }
+      }
+    },
+    "On": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açık"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

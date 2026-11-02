@@ -142,6 +142,11 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case markSeen(sessionID: UUID)
     /// Remote → host: type this message into the session and press Enter.
     case sendPrompt(sessionID: UUID, text: String)
+    /// Remote → host: put this message in the session's queue (sent at "your turn"; at once when
+    /// it's the user's turn already). The next snapshot shows the queue.
+    case queuePrompt(sessionID: UUID, text: String)
+    /// Remote → host: remove / edit / send now / move up a queued message.
+    case queueAction(sessionID: UUID, promptID: UUID, action: QueueAction)
     /// Remote → host: a message with files. The host saves them and puts them in with the text
     /// (images as pasted images, other files as @mentions). Answered with `promptResult`.
     case sendPromptWithFiles(sessionID: UUID, text: String, files: [RemoteUpload])
@@ -280,7 +285,9 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
         public static let addProject = "addProject"
         /// `downloadFile` / `uploadFile`.
         public static let transfer = "transfer"
-        public static let all: Set<String> = [files, permissionMode, projectActions, sessionActions, addProject, transfer]
+        /// `queuePrompt` / `queueAction`.
+        public static let queue = "queue"
+        public static let all: Set<String> = [files, permissionMode, projectActions, sessionActions, addProject, transfer, queue]
     }
 
     public func supports(_ feature: String) -> Bool { features?.contains(feature) == true }
@@ -374,6 +381,8 @@ public struct RemoteSession: Codable, Sendable, Equatable, Identifiable {
     public var unseen: Bool
     /// Set while a permission prompt can be answered with Allow / Deny (see `pendingPermissionStamp`).
     public var permissionStamp: Double?
+    /// Messages waiting for "your turn" (hosts with `Feature.queue`).
+    public var queue: [QueuedPrompt]?
 
     public init(
         id: UUID, name: String, project: String, state: State, detail: String? = nil,

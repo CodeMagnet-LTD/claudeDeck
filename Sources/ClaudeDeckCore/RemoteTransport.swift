@@ -271,6 +271,9 @@ public final class RemoteServer: @unchecked Sendable {
     /// A watching remote wants the terminal at this grid (0 cols = release).
     public var onTerminalFit: ((UUID, Int, Int) -> Void)?
     public var onSendPrompt: ((UUID, String) -> Void)?
+    /// `.queuePrompt` / `.queueAction` (the next snapshot carries the queue).
+    public var onQueuePrompt: ((UUID, String) -> Void)?
+    public var onQueueAction: ((_ sessionID: UUID, _ promptID: UUID, _ action: QueueAction) -> Void)?
     /// A message with files; reply nil once it's going in, else why not.
     public var onSendPromptWithFiles: ((_ sessionID: UUID, _ text: String, _ files: [RemoteUpload], _ reply: @escaping @Sendable (String?) -> Void) -> Void)?
     /// The session's permission mode (after Shift+Tab when cycling); reply with what the screen shows.
@@ -491,6 +494,10 @@ public final class RemoteServer: @unchecked Sendable {
                 onMarkSeen?(sessionID)
             case .sendPrompt(let sessionID, let text) where !text.isEmpty:
                 onSendPrompt?(sessionID, String(text.prefix(20_000)))
+            case .queuePrompt(let sessionID, let text) where !text.isEmpty:
+                onQueuePrompt?(sessionID, String(text.prefix(20_000)))
+            case .queueAction(let sessionID, let promptID, let action):
+                onQueueAction?(sessionID, promptID, action)
             case .sendPromptWithFiles(let sessionID, let text, let files)
                 where !files.isEmpty && files.reduce(0, { $0 + $1.data.count }) <= RemoteUpload.maxTotalBytes:
                 let channel = peer.channel
