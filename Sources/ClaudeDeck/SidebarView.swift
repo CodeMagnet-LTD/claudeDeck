@@ -8,6 +8,8 @@ struct SidebarView: View {
     @State private var layoutController = SidebarLayoutController()
     @State private var sidebarHeight: CGFloat = 600
     @AppStorage(SidebarStyle.scaleKey) private var textScale = 0
+    /// Bumped when a session row goes away: the list is rebuilt instead of reshaped (see `list`).
+    @State private var rebuild = 0
     @AppStorage(SidebarStyle.densityKey) private var density = 0
 
     var body: some View {
@@ -19,6 +21,14 @@ struct SidebarView: View {
             list(layout)
                 .onChange(of: latest, initial: true) { _, value in
                     layoutController.offer(value, userActionAt: model.lastUserLayoutAction)
+                }
+                .onChange(of: Set(layout.sessionsInProject.values.joined())) { old, new in
+                    guard !old.subtracting(new).isEmpty else { return }
+                    rebuild += 1
+                    // A fresh list starts at the top: back to the session on screen.
+                    if let id = model.selectedSessionID, new.contains(id) {
+                        DispatchQueue.main.async { proxy.scrollTo(id, anchor: .center) }
+                    }
                 }
                 .onChange(of: model.sidebarReveal) { _, request in
                     guard let request else { return }
@@ -114,8 +124,10 @@ struct SidebarView: View {
         .sidebarStyle(scale: textScale, density: density)
         // A filter switch adds or drops whole sections and most rows at once; diffing that inside
         // the NSTableView jumbled the rows and could raise a constraint exception during layout.
-        // A fresh list per filter sidesteps it.
-        .id(layout.filter)
+        // A fresh list per filter sidesteps it. Same after a session is removed: reshaping the
+        // rows in place (a project going from header + sessions to one row, or a row leaving a
+        // section) left the removed row drawn over the others, so the list starts over then.
+        .id("\(layout.filter)-\(rebuild)")
         // Rows moving between sections (Active ↔ Inactive) land at once: an animated move while
         // row heights also change left a stale copy drawn over the next row.
         .transaction(value: layout) { $0.animation = nil }
