@@ -892,3 +892,11 @@ import Testing
         #expect(try JSONDecoder().decode(RemoteSession.self, from: JSONEncoder().encode(remote)).queue == session.queue)
     }
 }
+
+@Suite struct LANAddressTests {
+    @Test func onlyPrivateIPv4() {
+        for ip in Tailscale.lanAddresses() {
+            #expect(Tailscale.isPrivateLAN(ip) && !ip.contains(":") && !ip.hasPrefix("169.254.") && !Tailscale.isTailscaleIP(ip))
+        }
+    }
+}

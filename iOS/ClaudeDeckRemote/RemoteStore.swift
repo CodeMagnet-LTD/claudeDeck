@@ -86,6 +86,8 @@ final class RemoteStore {
 
     /// ClaudeDeck Macs advertising on this network (Bonjour).
     private(set) var lanHosts: [DiscoveredHost] = []
+    /// The Local Network permission is off: the Mac at home can't be found directly.
+    private(set) var localNetworkDenied = false
     @ObservationIgnored private let discovery = RemoteDiscovery()
 
     init() {
@@ -97,6 +99,9 @@ final class RemoteStore {
         transfers.onUploaded = { [weak self] projectID, folder, _ in self?.listDirectory(projectID, path: folder) }
         discovery.onChange = { [weak self] hosts in
             MainActor.assumeIsolated { self?.lanHostsChanged(hosts) }
+        }
+        discovery.onDeniedChange = { [weak self] denied in
+            MainActor.assumeIsolated { self?.localNetworkDenied = denied }
         }
     }
 

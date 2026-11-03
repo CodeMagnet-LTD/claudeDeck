@@ -9313,6 +9313,86 @@
           }
         }
       }
+    },
+    "The Mac is on this Wi-Fi; connecting directly.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac bu Wi-Fi'da; doğrudan bağlanılıyor."
+          }
+        }
+      }
+    },
+    "Not found on this Wi-Fi (on the Mac: Settings → Remote → \"Also reachable on the local network\"), so trying Tailscale: is it connected on this device?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac bu Wi-Fi'da bulunamadı (Mac'te: Ayarlar → Remote → \"Also reachable on the local network\"), bu yüzden Tailscale deneniyor: bu cihazda Tailscale bağlı mı?"
+          }
+        }
+      }
+    },
+    "Local Network access is off": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yerel Ağ izni kapalı"
+          }
+        }
+      }
+    },
+    "Without it this app can't find your Mac on this Wi-Fi and only tries Tailscale. Turn it on in Settings → Privacy & Security → Local Network → ClaudeDeck.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu izin olmadan uygulama Mac'ini bu Wi-Fi'da bulamaz ve yalnızca Tailscale'i dener. Ayarlar → Gizlilik ve Güvenlik → Yerel Ağ → ClaudeDeck'ten aç."
+          }
+        }
+      }
+    },
+    "Open Settings": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ayarları aç"
+          }
+        }
+      }
+    },
+    "Via": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantı yolu"
+          }
+        }
+      }
+    },
+    "This Wi-Fi (direct)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Wi-Fi (doğrudan)"
+          }
+        }
+      }
+    },
+    "Tailscale": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tailscale"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

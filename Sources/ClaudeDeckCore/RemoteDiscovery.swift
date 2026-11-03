@@ -41,6 +41,9 @@ public final class RemoteDiscovery: @unchecked Sendable {
     private var browser: NWBrowser?
     public private(set) var hosts: [DiscoveredHost] = []
     public var onChange: (([DiscoveredHost]) -> Void)?
+    /// iOS "Local Network" permission turned off: browsing can't see anything.
+    public private(set) var denied = false
+    public var onDeniedChange: ((Bool) -> Void)?
 
     public init(queue: DispatchQueue = .main) {
         self.queue = queue
@@ -63,7 +66,19 @@ public final class RemoteDiscovery: @unchecked Sendable {
             self.onChange?(hosts)
         }
         browser.stateUpdateHandler = { [weak self] state in
-            if case .failed = state { self?.restart() }
+            guard let self else { return }
+            var denied = false
+            switch state {
+            case .failed: self.restart()
+            case .waiting(let error):
+                // kDNSServiceErr_PolicyDenied: the user said no to Local Network access.
+                if case .dns(let code) = error, code == -65570 { denied = true }
+            default: break
+            }
+            if denied != self.denied {
+                self.denied = denied
+                self.onDeniedChange?(denied)
+            }
         }
         self.browser = browser
         browser.start(queue: queue)

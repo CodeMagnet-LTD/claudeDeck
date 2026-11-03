@@ -510,19 +510,23 @@ final class RemoteController {
     func refreshAddresses() {
         guard model?.deck.settings.remoteHost == true else { return }
         addressTask?.cancel()
+        let lan = model?.deck.settings.remoteLAN == true
         addressTask = Task { @MainActor [weak self] in
-            let found = await Task.detached { () -> [String] in
+            let found = await Task.detached { () -> (tailscale: [String], lan: [String]) in
                 let status = Tailscale.status()
                 var addresses: [String] = []
                 if let dns = status?.dnsName { addresses.append(dns) }
                 for ip in (status?.ips ?? []) + Tailscale.interfaceAddresses() where !addresses.contains(ip) {
                     addresses.append(ip)
                 }
-                return addresses
+                // Local network on: its IPs too, after Tailscale's (remotes try them in order;
+                // at home Bonjour usually finds the Mac first).
+                return (addresses, lan ? Tailscale.lanAddresses() : [])
             }.value
             guard let self, !Task.isCancelled else { return }
-            self.hostAddresses = Self.allowLoopback ? found + ["127.0.0.1"] : found
-            self.hostError = self.hostAddresses.isEmpty
+            let all = found.tailscale + found.lan
+            self.hostAddresses = Self.allowLoopback ? all + ["127.0.0.1"] : all
+            self.hostError = found.tailscale.isEmpty && found.lan.isEmpty
                 ? String(localized: "Tailscale isn't running on this Mac. Install it and sign in, then try again.")
                 : nil
             self.publishPairing()

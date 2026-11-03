@@ -899,9 +899,39 @@ struct ConnectionBanner: View {
                 Label("Retrying in \(seconds) s — \(reason)", systemImage: "exclamationmark.triangle")
                     .foregroundStyle(.orange)
             }
-            Text("Is Tailscale connected on this iPhone?").font(.footnote).foregroundStyle(.secondary)
+            pathHint
         case .refused(let reason):
             Label(reason, systemImage: "lock.trianglebadge.exclamationmark").foregroundStyle(.red)
+        }
+        if store.localNetworkDenied, store.connection != .connected {
+            LocalNetworkDeniedHint()
+        }
+    }
+
+    /// Which way it can reach the Mac: on this Wi-Fi (Bonjour) or through Tailscale.
+    @ViewBuilder
+    private var pathHint: some View {
+        let onWiFi = store.lanHosts.contains { $0.hostID == store.pairing?.id }
+        if onWiFi {
+            Text("The Mac is on this Wi-Fi; connecting directly.").font(.footnote).foregroundStyle(.secondary)
+        } else if !store.localNetworkDenied {
+            Text("Not found on this Wi-Fi (on the Mac: Settings → Remote → \"Also reachable on the local network\"), so trying Tailscale: is it connected on this device?")
+                .font(.footnote).foregroundStyle(.secondary)
+        }
+    }
+}
+
+/// iOS said no to Local Network access: the Mac at home can't be found directly.
+struct LocalNetworkDeniedHint: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Label("Local Network access is off", systemImage: "wifi.exclamationmark").foregroundStyle(.orange)
+            Text("Without it this app can't find your Mac on this Wi-Fi and only tries Tailscale. Turn it on in Settings → Privacy & Security → Local Network → ClaudeDeck.")
+                .font(.footnote).foregroundStyle(.secondary)
+            Button("Open Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+            }
+            .font(.footnote)
         }
     }
 }
@@ -1074,6 +1104,11 @@ struct SettingsView: View {
                     LabeledContent("Name", value: store.snapshot?.hostName ?? pairing.hostName)
                     LabeledContent("Address", value: pairing.addresses.first ?? "")
                     LabeledContent("Connection", value: connectionText)
+                    if store.connection == .connected, let via = store.connectedVia {
+                        let local = RemoteBonjour.serviceName(of: via) != nil || Tailscale.isPrivateLAN(via)
+                        LabeledContent("Via", value: local ? String(localized: "This Wi-Fi (direct)") : String(localized: "Tailscale"))
+                    }
+                    if store.localNetworkDenied { LocalNetworkDeniedHint() }
                 }
                 Section {
                     Button("Forget This Mac", role: .destructive) {

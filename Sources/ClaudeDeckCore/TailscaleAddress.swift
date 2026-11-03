@@ -108,6 +108,25 @@ public enum Tailscale {
         return result
     }
 
+    /// This Mac's private IPv4 addresses on the local network (Wi-Fi, Ethernet; not link-local):
+    /// a remote at home can reach these even when Bonjour doesn't get through.
+    public static func lanAddresses() -> [String] {
+        var result: [String] = []
+        var list: UnsafeMutablePointer<ifaddrs>?
+        guard getifaddrs(&list) == 0, let first = list else { return [] }
+        defer { freeifaddrs(list) }
+        for pointer in sequence(first: first, next: { $0.pointee.ifa_next }) {
+            guard let addr = pointer.pointee.ifa_addr, Int32(addr.pointee.sa_family) == AF_INET else { continue }
+            let name = String(cString: pointer.pointee.ifa_name)
+            guard name.hasPrefix("en") || name.hasPrefix("bridge") else { continue }
+            var host = [CChar](repeating: 0, count: Int(NI_MAXHOST))
+            guard getnameinfo(addr, socklen_t(MemoryLayout<sockaddr_in>.size), &host, socklen_t(host.count), nil, 0, NI_NUMERICHOST) == 0 else { continue }
+            let ip = String(cString: host)
+            if isPrivateLAN(ip), !ip.hasPrefix("169.254."), !result.contains(ip) { result.append(ip) }
+        }
+        return result
+    }
+
     /// 100.64.0.0/10 (Tailscale's CGNAT range) or fd7a:115c:a1e0::/48.
     public static func isTailscaleIP(_ ip: String) -> Bool {
         let bare = ip.split(separator: "%").first.map(String.init) ?? ip
