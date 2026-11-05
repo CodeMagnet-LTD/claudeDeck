@@ -19,9 +19,15 @@ public struct ChatEntry: Codable, Sendable, Equatable, Identifiable {
     /// AskUserQuestion: what Claude asked, and once answered, the answers by question text.
     public var questions: [ChatQuestion]?
     public var answers: [String: String]?
+    /// Who typed a user message when it wasn't the person at the keyboard. Absent in transcripts;
+    /// ClaudeDeck sets it when serving a conversation (kod checker). Missing JSON decodes as nil.
+    public var source: String?
+
+    /// `source` for a message the kod checker bridge typed into a session.
+    public static let kodCheckerSource = "kod checker"
 
     public init(id: String, kind: Kind, text: String, toolName: String? = nil, result: String? = nil, isError: Bool = false, date: Date? = nil,
-                questions: [ChatQuestion]? = nil, answers: [String: String]? = nil) {
+                questions: [ChatQuestion]? = nil, answers: [String: String]? = nil, source: String? = nil) {
         self.id = id
         self.kind = kind
         self.text = text
@@ -31,6 +37,7 @@ public struct ChatEntry: Codable, Sendable, Equatable, Identifiable {
         self.date = date
         self.questions = questions
         self.answers = answers
+        self.source = source
     }
 }
 

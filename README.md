@@ -517,6 +517,15 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
   Restart Session to pick it up.
 - `.pen` files open in Pencil from the Files panel. Turn the integration off in Settings.
 
+### Kod checker (optional, off by default)
+ClaudeDeck can sit between a Claude Code session and an external reviewer called **kod checker**. The reviewer never talks to Claude Code. It only talks to ClaudeDeck, and the exchange is visible in the app.
+
+- When a session finishes a turn, or is waiting on a permission or a question, ClaudeDeck POSTs a JSON event to a webhook. The `Authorization` header value is stored in the Keychain.
+- kod checker sends messages back to `127.0.0.1` with a bearer token the app generates. ClaudeDeck types them into the session the same way you would, and labels them **kod checker** in the pane and on the phone.
+- Settings › Kod Checker has the switch, the webhook, the token, a test event, and the activity log.
+
+Request and response shapes, curl examples, and the auth header are in [docs/kod-bridge.md](docs/kod-bridge.md).
+
 ### Terminal
 - Full keyboard support, colors, shortcuts, resizing and copy/paste. Switching panes or sessions never
   kills processes.
@@ -543,6 +552,7 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
 - Notifications and Dock bounce, theme, and keeping the app in the menu bar when the window is closed.
 - Editor: built-in editor on or off, separate windows instead of tabs, font size, wrap lines.
 - Pencil: connect Claude sessions to Pencil, with its status.
+- Kod checker: webhook, local API token, and the activity log (off by default).
 - iCloud sync (below).
 - Claude Code hooks: status, reinstall, uninstall.
 
@@ -571,6 +581,8 @@ Turn it on in Settings › iCloud (off by default). No entitlement is needed; it
 | Widget snapshot | `~/Library/Group Containers/<team>.<bundle-prefix>.ClaudeDeck/widget-snapshot.json` |
 | iCloud sync (if on) | `~/Library/Mobile Documents/com~apple~CloudDocs/ClaudeDeck/projects.json` |
 | Conversation history | Claude's own location, `~/.claude/projects/<project>/<id>.jsonl` (read-only for ClaudeDeck) |
+| Kod checker activity log and which messages it sent (no secrets) | `~/Library/Application Support/ClaudeDeck/kod-bridge.json` |
+| Kod checker API token and webhook `Authorization` value | Keychain service `co.codemagnet.ClaudeDeck.KodBridge` |
 
 ## Building from source
 
@@ -635,7 +647,7 @@ notification permissions again after every build.
   - Tabs (`WorkspaceTabList`), editor text and syntax (`TextFileIO`, `SyntaxTokenizer`)
   - GitHub via `gh` (`GitHub`, `GitHubLink`, `GitHubInbox`), automations (`Automations`, `AutomationEvents`), restart and Pencil
     (`SessionRestart`, `PencilIntegration`)
-  - iCloud (`DeckSync`) and the widget snapshot (`WidgetSnapshot`)
+  - iCloud (`DeckSync`), the widget snapshot (`WidgetSnapshot`), and the kod checker bridge (`KodBridge`)
 - `Sources/ClaudeDeck/`: the SwiftUI app.
   - `AppModel` and `TerminalRegistry` (SwiftTerm, processes)
   - Views: `SidebarView`, `ContentView` (panes), `WorkspaceTabs` / `TabStrip`, `EditorWindow` /

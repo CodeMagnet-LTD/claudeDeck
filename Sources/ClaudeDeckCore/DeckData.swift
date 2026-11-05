@@ -174,6 +174,13 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     public var remoteClient = false
     /// Remote mode, host side: also reachable on the local network (Bonjour), not only Tailscale.
     public var remoteLAN = false
+    /// Kod checker bridge (KodBridge.swift). Off until the user turns it on. The webhook
+    /// Authorization value and the local API token live in the Keychain, not here.
+    public var kodBridgeEnabled = false
+    /// Where finished-turn / permission / question events are POSTed. Empty sends nothing.
+    public var kodWebhookURL = ""
+    /// Loopback HTTP API port. Not the remote-mode port (`RemotePairing.defaultPort`).
+    public var kodBridgePort = KodBridge.defaultPort
 
     public init() {}
 
@@ -206,6 +213,9 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         remoteHost = try c.decodeIfPresent(Bool.self, forKey: .remoteHost) ?? d.remoteHost
         remoteClient = try c.decodeIfPresent(Bool.self, forKey: .remoteClient) ?? d.remoteClient
         remoteLAN = try c.decodeIfPresent(Bool.self, forKey: .remoteLAN) ?? d.remoteLAN
+        kodBridgeEnabled = try c.decodeIfPresent(Bool.self, forKey: .kodBridgeEnabled) ?? d.kodBridgeEnabled
+        kodWebhookURL = try c.decodeIfPresent(String.self, forKey: .kodWebhookURL) ?? d.kodWebhookURL
+        kodBridgePort = try c.decodeIfPresent(Int.self, forKey: .kodBridgePort) ?? d.kodBridgePort
     }
 }
 

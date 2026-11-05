@@ -99,6 +99,8 @@ final class AppModel {
     // MARK: iCloud sync — end
     /// Remote mode: host for other Macs / show another Mac's sessions (RemoteController).
     @ObservationIgnored let remote = RemoteController()
+    /// Kod checker: webhook on turn end, loopback API for messages back (KodBridgeController).
+    let kodBridge = KodBridgeController()
     // MARK: Automations (AutomationScheduler) — begin
     @ObservationIgnored private(set) var automations: AutomationScheduler?
     @ObservationIgnored private(set) var githubEvents: GitHubEventPoller?
@@ -146,6 +148,7 @@ final class AppModel {
         cleanupStatusFiles()
         if !Self.isDemo { sync.start(model: self) } // iCloud sync (no-op unless enabled)
         remote.start(model: self) // no-op unless remote mode is on in Settings
+        kodBridge.start(model: self, storageDirectory: store.url.deletingLastPathComponent())
         usage.start()
         // Resolving `claude` runs the login shell; keep it off the main thread.
         Task { @MainActor in
@@ -196,6 +199,7 @@ final class AppModel {
         }
         saveNow()
         remote.stop()
+        kodBridge.shutdown()
         terminals.terminateAll()
     }
 
@@ -386,6 +390,11 @@ final class AppModel {
             let key = notifyKey(session.id)
             defer { lastNotified[session.id] = key }
             guard let activity = status.display.activityValue, key != lastNotified[session.id], activity.isAttention else { continue }
+            // The reviewer hears every finished turn and every permission or question, including
+            // while this session is on screen. Landing in idle at SessionStart is not a turn.
+            if activity != .idle || hookStatuses[session.id]?.event != "SessionStart" {
+                kodBridge.note(sessionID: session.id, activity: activity)
+            }
             // Finished while the user is looking at it: already seen.
             if activity == .idle, isVisible(session.id) { seenAt[session.id] = Date() }
             // Esc / denied permission: the user did it themselves — no notification, not "unseen".

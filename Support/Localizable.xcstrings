@@ -9393,6 +9393,196 @@
           }
         }
       }
+    },
+    "Kod Checker": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Kod Checker" } }
+      }
+    },
+    "Enable the kod checker bridge": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "kod checker köprüsünü aç" } }
+      }
+    },
+    "When a Claude session finishes a turn, or is waiting on a permission or a question, ClaudeDeck POSTs an event to the webhook. kod checker talks only to ClaudeDeck, and the exchange shows up here and in the session. Off until you turn this on.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Bir Claude oturumu turunu bitirdiğinde ya da bir izin veya soru beklediğinde ClaudeDeck webhook'a bir olay gönderir. kod checker yalnızca ClaudeDeck ile konuşur; alışveriş burada ve oturumda görünür. Siz açana kadar kapalıdır." } }
+      }
+    },
+    "Webhook URL": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Webhook adresi" } }
+      }
+    },
+    "The webhook URL needs to start with http:// or https://.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Webhook adresi http:// veya https:// ile başlamalı." } }
+      }
+    },
+    "Events are sent only when a webhook URL is set. The local API still accepts messages.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Olaylar yalnızca bir webhook adresi varken gönderilir. Yerel API mesaj kabul etmeye devam eder." } }
+      }
+    },
+    "Authorization": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Authorization" } }
+      }
+    },
+    "The full Authorization header value, for example “Bearer secret”. It is stored in the Keychain, not in settings.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Authorization başlığının tam değeri, örneğin “Bearer secret”. Ayarlarda değil, Anahtarlık'ta durur." } }
+      }
+    },
+    "No Authorization header is sent until this is set.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Bu boşken Authorization başlığı gönderilmez." } }
+      }
+    },
+    "Port": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Port" } }
+      }
+    },
+    "Port 47821 belongs to remote mode. Pick another port.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "47821 portu uzak bağlantıya ait. Başka bir port seçin." } }
+      }
+    },
+    "Choose a port from 1024 to 65535.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "1024 ile 65535 arasında bir port seçin." } }
+      }
+    },
+    "Couldn't start the local API: %@": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Yerel API başlatılamadı: %@" } }
+      }
+    },
+    "Listening at %@": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "%@ adresinde dinleniyor" } }
+      }
+    },
+    "The local API is stopped.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Yerel API durdu." } }
+      }
+    },
+    "API token": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "API anahtarı" } }
+      }
+    },
+    "A token is created when you turn the bridge on.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Köprü açılınca bir anahtar oluşturulur." } }
+      }
+    },
+    "Regenerate…": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Yenile…" } }
+      }
+    },
+    "Send Test Event": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Deneme olayı gönder" } }
+      }
+    },
+    "Activity Log…": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Etkinlik günlüğü…" } }
+      }
+    },
+    "Activity Log": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Etkinlik günlüğü" } }
+      }
+    },
+    "Test event": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Deneme olayı" } }
+      }
+    },
+    "Test event sent.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Deneme olayı gönderildi." } }
+      }
+    },
+    "Test event was not delivered.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Deneme olayı iletilemedi." } }
+      }
+    },
+    "Regenerate the API token?": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "API anahtarı yenilensin mi?" } }
+      }
+    },
+    "Regenerate": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Yenile" } }
+      }
+    },
+    "kod checker will need the new token. The old one stops working immediately.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "kod checker yeni anahtara ihtiyaç duyar. Eskisi hemen geçersiz olur." } }
+      }
+    },
+    "This session has a message from kod checker": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Bu oturumda kod checker'dan bir mesaj var" } }
+      }
+    },
+    "Kod Checker Activity": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Kod Checker etkinliği" } }
+      }
+    },
+    "Nothing yet. Finished turns and messages from kod checker show up here.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Henüz bir şey yok. Biten turlar ve kod checker mesajları burada görünür." } }
+      }
+    },
+    "Outbound": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Giden" } }
+      }
+    },
+    "Inbound": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Gelen" } }
+      }
+    },
+    "That session is not a Claude session.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Bu bir Claude oturumu değil." } }
+      }
+    },
+    "The session is waiting for permission or a question, so the message was not typed.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Oturum bir izin veya soru beklediği için mesaj yazılmadı." } }
+      }
+    },
+    "Started a session": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Oturum başlatıldı" } }
+      }
+    },
+    "The session wasn't ready for the message.": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Oturum mesaj için hazır değildi." } }
+      }
+    },
+    "Finished": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Bitti" } }
+      }
+    },
+    "Waiting for input": {
+      "localizations": {
+        "tr": { "stringUnit": { "state": "translated", "value": "Girdi bekleniyor" } }
+      }
     }
   },
   "version": "1.0"
