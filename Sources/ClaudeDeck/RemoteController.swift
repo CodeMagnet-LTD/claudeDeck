@@ -686,6 +686,11 @@ final class RemoteController {
     /// Parsed transcripts by session, reused while the file doesn't change.
     @ObservationIgnored private var historyCache: [UUID: (path: String, size: Int, entries: [ChatEntry], tokens: Int?)] = [:]
 
+    /// User lines kod checker typed get `ChatEntry.kodCheckerSource` so the phone can badge them.
+    private func stamped(_ entries: [ChatEntry], sessionID: UUID) -> [ChatEntry] {
+        model?.kodBridge.stamp(entries, sessionID: sessionID) ?? entries
+    }
+
     private func history(_ id: UUID, before: String?, after: String?, limit: Int, reply: @escaping @Sendable (ChatPage?) -> Void) {
         // The hook's path follows /clear (a new transcript); the deck's is the one it resumed.
         guard let model, let path = model.hookStatuses[id]?.transcriptPath ?? model.deck.transcriptPath(for: id) else {
@@ -694,7 +699,7 @@ final class RemoteController {
         }
         let size = ((try? FileManager.default.attributesOfItem(atPath: path)[.size]) as? NSNumber)?.intValue ?? 0
         if let cached = historyCache[id], cached.path == path, cached.size == size {
-            var page = ConversationLog.page(cached.entries, before: before, after: after, limit: limit)
+            var page = ConversationLog.page(stamped(cached.entries, sessionID: id), before: before, after: after, limit: limit)
             page.contextTokens = cached.tokens
             reply(page)
             return
@@ -703,7 +708,8 @@ final class RemoteController {
             let url = URL(fileURLWithPath: path)
             let (entries, tokens) = await Task.detached { (ConversationLog.entries(of: url), Transcript.contextTokens(of: url)) }.value
             self?.historyCache[id] = (path, size, entries, tokens)
-            var page = ConversationLog.page(entries, before: before, after: after, limit: limit)
+            // Stamp after the cache: a kod checker message typed later still badges this transcript.
+            var page = ConversationLog.page(self?.stamped(entries, sessionID: id) ?? entries, before: before, after: after, limit: limit)
             page.contextTokens = tokens
             reply(page)
         }

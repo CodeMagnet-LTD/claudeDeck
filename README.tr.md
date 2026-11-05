@@ -528,6 +528,15 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
   başlatman gerekir.
 - `.pen` dosyaları Dosyalar panelinden Pencil'da açılır. Entegrasyon Ayarlar'dan kapatılabilir.
 
+### Kod checker (isteğe bağlı, varsayılan kapalı)
+ClaudeDeck, bir Claude Code oturumu ile **kod checker** adlı dış bir inceleyici arasında durabilir. İnceleyici Claude Code ile konuşmaz; yalnızca ClaudeDeck ile konuşur. Alışveriş uygulamada görünür.
+
+- Bir oturum turunu bitirdiğinde ya da bir izin veya soru beklediğinde ClaudeDeck bir webhook'a JSON olay gönderir. `Authorization` başlığının değeri Anahtarlık'ta durur.
+- kod checker mesajları `127.0.0.1` üzerindeki yerel API'ye, uygulamanın ürettiği bearer anahtarıyla gönderir. ClaudeDeck bunları sen yazmışsın gibi oturuma yazar ve bölmede de telefonda da **kod checker** etiketiyle gösterir.
+- Ayarlar › Kod Checker: anahtar, webhook, API anahtarı, deneme olayı ve etkinlik günlüğü.
+
+İstek ve cevap biçimleri, curl örnekleri ve kimlik doğrulama başlığı [docs/kod-bridge.md](docs/kod-bridge.md) içindedir.
+
 ### Terminal
 - Klavye, renk, kısayollar, yeniden boyutlandırma, kopyala/yapıştır; bölme ya da oturum değiştirmek
   süreçleri öldürmez.
@@ -554,6 +563,7 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
 - Bildirim ve Dock zıplatma.
 - Düzenleyici: yerleşik düzenleyici açık/kapalı, sekmeler yerine ayrı pencereler, yazı boyutu, satır kaydırma.
 - Pencil: Claude oturumlarını Pencil'a bağlama ve durumu.
+- Kod checker: webhook, yerel API anahtarı ve etkinlik günlüğü (varsayılan kapalı).
 - iCloud eşitleme (aşağıda).
 - Claude Code hook'ları: durum, yeniden kur, kaldır.
 
@@ -594,6 +604,8 @@ profili gerekir. İkisi de yalnızca yerel anahtar zincirinde durur, repoda hiç
 | Widget özeti | `~/Library/Group Containers/<takım>.<bundle-önek>.ClaudeDeck/widget-snapshot.json` |
 | iCloud eşitleme (açıksa) | `~/Library/Mobile Documents/com~apple~CloudDocs/ClaudeDeck/projects.json` |
 | Konuşma geçmişi | Claude'un kendi yeri: `~/.claude/projects/<proje>/<id>.jsonl` (ClaudeDeck yalnızca okur) |
+| Kod checker etkinlik günlüğü ve gönderdiği mesajlar (sır yok) | `~/Library/Application Support/ClaudeDeck/kod-bridge.json` |
+| Kod checker API anahtarı ve webhook `Authorization` değeri | Anahtarlık servisi `co.codemagnet.ClaudeDeck.KodBridge` |
 
 ## Kod yapısı
 
@@ -602,7 +614,7 @@ profili gerekir. İkisi de yalnızca yerel anahtar zincirinde durur, repoda hiç
   (`Transcript`), kalıcı veri (`DeckData`), dosya listeleme ve git (`FileListing`, `Git`, `GitChanges`,
   `GitExplorer`, `UnifiedDiff`), sekmeler (`WorkspaceTabList`), editör metni ve sözdizimi (`TextFileIO`,
   `SyntaxTokenizer`), `gh` ile GitHub (`GitHub`, `GitHubLink`, `GitHubInbox`), otomasyonlar (`Automations`, `AutomationEvents`), yeniden
-  başlatma ve Pencil (`SessionRestart`, `PencilIntegration`), iCloud (`DeckSync`), widget özeti (`WidgetSnapshot`).
+  başlatma ve Pencil (`SessionRestart`, `PencilIntegration`), iCloud (`DeckSync`), widget özeti (`WidgetSnapshot`), kod checker köprüsü (`KodBridge`).
 - `Sources/ClaudeDeck/` — SwiftUI uygulaması: `AppModel`, `TerminalRegistry` (SwiftTerm, süreçler),
   `SidebarView`, `ContentView` (bölmeler), `WorkspaceTabs` / `TabStrip`, `EditorWindow` / `CodeTextView`,
   `FileBrowser` / `ExplorerSearch`, `ChangesView` / `DiffTab`, `AutomationsView` / `AutomationScheduler`,

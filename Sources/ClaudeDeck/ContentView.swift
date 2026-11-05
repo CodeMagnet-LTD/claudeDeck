@@ -82,6 +82,12 @@ struct ContentView: View {
         } message: {
             Text(model.hookError ?? "")
         }
+        .sheet(isPresented: Binding(
+            get: { model.kodBridge.showLog },
+            set: { model.kodBridge.showLog = $0 }
+        )) {
+            KodActivityLogView()
+        }
     }
 }
 
@@ -193,6 +199,7 @@ struct PaneView: View {
             let onScreen = model.tabs.isSessionsSelected
             VStack(spacing: 0) {
                 if split { PaneHeader(session: session, focused: focused) }
+                KodCheckerStrip(sessionID: sessionID)
                 if model.terminals.view(for: sessionID) != nil {
                     TerminalHost(sessionID: sessionID, registry: model.terminals, generation: running,
                                  isFocused: focused && onScreen, isHidden: !onScreen)
@@ -245,6 +252,7 @@ struct PaneHeader: View {
             Text(session.name).font(.callout.weight(focused ? .semibold : .regular)).lineLimit(1)
             GitHubLinkBadge(session: session, answersDebugPresent: true)
             StatusPill(display: status.display, unseen: model.isUnseenIdle(session.id))
+            if model.kodBridge.hasAttribution(session.id) { KodCheckerBadge() }
             ShellStartBadge(session: session)
             if model.pencilSessions.contains(session.id) { PencilBadge() }
             if let detail = status.detail {

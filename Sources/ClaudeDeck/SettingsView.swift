@@ -93,6 +93,7 @@ struct SettingsView: View {
                 }
             }
             RemoteSettingsSection()
+            KodBridgeSettingsSection()
             PencilSettingsSection()
             Section("Claude Code Hooks") {
                 LabeledContent("Status") {

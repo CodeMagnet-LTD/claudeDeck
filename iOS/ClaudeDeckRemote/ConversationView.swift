@@ -452,12 +452,21 @@ struct ChatEntryView: View {
         case .user:
             HStack {
                 Spacer(minLength: 40)
-                Text(entry.text)
-                    .textSelection(.enabled)
-                    .foregroundStyle(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 16))
+                VStack(alignment: .trailing, spacing: 4) {
+                    if entry.source == ChatEntry.kodCheckerSource {
+                        Text(ChatEntry.kodCheckerSource)
+                            .listFont(.caption2, weight: .semibold)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.accentColor.opacity(0.15), in: Capsule())
+                    }
+                    Text(entry.text)
+                        .textSelection(.enabled)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 16))
+                }
             }
         case .assistant:
             MarkdownView(text: entry.text)
