@@ -295,6 +295,10 @@ struct SessionListView: View {
         List(selection: $selection) {
             ConnectionBanner()
             if let usage = store.snapshot?.usage { UsageRow(usage: usage) }
+            if let pending = store.snapshot?.pendingAgents, !pending.isEmpty,
+               store.snapshot?.supports(RemoteSnapshot.Feature.agentApproval) == true {
+                PendingAgentsSection(agents: pending)
+            }
             // Like the Mac's sidebar: one Pinned section on top. A project with several sessions is
             // a row with them under it; with one, just that session (its menu has the project's
             // actions); with none (pinned), the row to start one.
@@ -679,6 +683,37 @@ struct SessionRowLink: View {
             Button("Stop Session", role: .destructive) { store.stopSession(session.id) }
         } message: {
             Text("Claude stops on the Mac. You can resume the conversation later.")
+        }
+    }
+}
+
+/// Agents that signed themselves up on the Mac: nothing reaches them until approved.
+struct PendingAgentsSection: View {
+    @Environment(RemoteStore.self) private var store
+    let agents: [RemotePendingAgent]
+
+    var body: some View {
+        Section {
+            ForEach(agents) { agent in
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(agent.name).font(.body.weight(.semibold))
+                    Text(agent.host).font(.caption).foregroundStyle(.secondary)
+                    if !agent.description.isEmpty {
+                        Text(agent.description).font(.caption).foregroundStyle(.secondary).lineLimit(3)
+                    }
+                    HStack {
+                        Button("Reject", role: .destructive) { store.agentRegistration(agent.id, approve: false) }
+                        Spacer()
+                        Button("Approve") { store.agentRegistration(agent.id, approve: true) }
+                            .buttonStyle(.borderedProminent)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+                .padding(.vertical, 2)
+            }
+        } header: {
+            ListHeader("Agents Waiting for Approval")
         }
     }
 }

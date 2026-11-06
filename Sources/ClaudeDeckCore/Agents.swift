@@ -101,6 +101,21 @@ public struct RemoteAgent: Codable, Identifiable, Sendable, Equatable {
     }
 }
 
+/// An agent waiting for approval, as remotes see it (its URL's host only).
+public struct RemotePendingAgent: Codable, Identifiable, Sendable, Equatable {
+    public var id: UUID
+    public var name: String
+    public var host: String
+    public var description: String
+
+    public init(id: UUID, name: String, host: String, description: String) {
+        self.id = id
+        self.name = name
+        self.host = host
+        self.description = description
+    }
+}
+
 /// What an agent is told about the session.
 public struct AgentContext: Sendable, Equatable {
     public var project: String

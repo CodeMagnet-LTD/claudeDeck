@@ -4,6 +4,7 @@ import SwiftUI
 struct MenuBarLabel: View {
     @Environment(AppModel.self) private var model
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         let c = model.counts
@@ -16,6 +17,7 @@ struct MenuBarLabel: View {
         .onAppear {
             model.openMainWindow = { openWindow(id: "main") }
             model.openEditorWindow = { openWindow(id: "editor", value: $0.standardizedFileURL) }
+            model.openSettings = { openSettings() }
         }
     }
 }

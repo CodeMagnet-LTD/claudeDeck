@@ -313,6 +313,58 @@ extension AppModel {
         notesChanged(sessionID)
     }
 
+    // MARK: Agents signing themselves up
+
+    /// Waiting for the user (Settings → Agents, the notification, the phone).
+    var pendingAgents: [AgentRegistration] { AgentRegistry.pending(deck.settings.agentRegistrations) }
+
+    /// `/v1/agents…`: the rules are AgentRegistry's; here the deck is saved, the Authorization
+    /// header goes to the keychain (never to deck.json or the log), and the user is told.
+    func handleAgentRegistration(_ route: AgentRoute, body: Data) -> AgentHTTPResponse {
+        var registrations = deck.settings.agentRegistrations
+        var profiles = deck.settings.agents
+        let (response, effect) = AgentRegistry.handle(route, body: body, registrations: &registrations, profiles: &profiles)
+        if registrations != deck.settings.agentRegistrations || profiles != deck.settings.agents {
+            mutate(userInitiated: false) {
+                $0.settings.agentRegistrations = registrations
+                $0.settings.agents = profiles
+            }
+        }
+        switch effect {
+        case .none:
+            break
+        case .registered(let record, let authHeader):
+            AgentKeychain.setWebhookAuthorization(authHeader, for: record.id)
+            logAgent(record.name, inbound: true, "registered, waiting for approval · \(record.host)")
+            onAgentRegistered?(record)
+        case .deleted(let record):
+            AgentKeychain.setWebhookAuthorization(nil, for: record.id)
+            logAgent(record.name, inbound: true, "registration deleted through the API · \(record.host)")
+        }
+        return response
+    }
+
+    /// The agent becomes an ordinary webhook agent: not allowed to type into Claude, no projects.
+    func approveAgent(_ id: UUID) {
+        var registrations = deck.settings.agentRegistrations
+        var profiles = deck.settings.agents
+        guard let record = AgentRegistry.approve(id, registrations: &registrations, profiles: &profiles, now: Date()) else { return }
+        mutate(userInitiated: false) {
+            $0.settings.agentRegistrations = registrations
+            $0.settings.agents = profiles
+        }
+        logAgent(record.name, inbound: false, "approved · \(record.host)")
+    }
+
+    /// Its keychain item goes now; the record stays 24 hours so it can't ask again at once.
+    func rejectAgent(_ id: UUID) {
+        var registrations = deck.settings.agentRegistrations
+        guard let record = AgentRegistry.reject(id, registrations: &registrations, now: Date()) else { return }
+        AgentKeychain.setWebhookAuthorization(nil, for: id)
+        mutate(userInitiated: false) { $0.settings.agentRegistrations = registrations }
+        logAgent(record.name, inbound: false, "rejected · \(record.host)", ok: false)
+    }
+
     // MARK: Sessions for the API
 
     /// A new Claude session; `prompt` goes in once Claude is up (as from the phone).

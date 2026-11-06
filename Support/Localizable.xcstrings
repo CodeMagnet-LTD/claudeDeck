@@ -1,6 +1,56 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Approve": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onayla"
+          }
+        }
+      }
+    },
+    "Reject": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reddet"
+          }
+        }
+      }
+    },
+    "Agent waiting for approval": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onay bekleyen ajan"
+          }
+        }
+      }
+    },
+    "Agents Waiting for Approval": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onay bekleyen ajanlar"
+          }
+        }
+      }
+    },
+    "They asked through the local API. Approved, an agent gets webhook requests and shows in Ask Agent; it may not type into Claude and follows no project until you change that.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yerel API üzerinden kaydoldular. Onaylanan ajan webhook istekleri alır ve Ajana sor menüsünde görünür; sen değiştirene kadar Claude'a yazamaz ve hiçbir projeyi izlemez."
+          }
+        }
+      }
+    },
     "Choose one or more": {
       "localizations": {
         "tr": {

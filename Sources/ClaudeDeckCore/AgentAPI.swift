@@ -58,6 +58,11 @@ public enum AgentRoute: Equatable, Sendable {
     case notes
     case prompt(session: UUID)
     case newSession(project: UUID)
+    /// Agents signing themselves up (AgentRegistry).
+    case listAgents
+    case registerAgent
+    case agentInfo(UUID)
+    case deleteAgent(UUID)
 
     public enum Match: Equatable, Sendable {
         case route(AgentRoute)
@@ -75,6 +80,19 @@ public enum AgentRoute: Equatable, Sendable {
         switch rest.count {
         case 1 where rest[0] == "projects": return expect("GET", .projects)
         case 1 where rest[0] == "notes": return expect("POST", .notes)
+        case 1 where rest[0] == "agents":
+            switch method {
+            case "GET": return .route(.listAgents)
+            case "POST": return .route(.registerAgent)
+            default: return .methodNotAllowed
+            }
+        case 2 where rest[0] == "agents":
+            guard let id = UUID(uuidString: rest[1]) else { return .notFound }
+            switch method {
+            case "GET": return .route(.agentInfo(id))
+            case "DELETE": return .route(.deleteAgent(id))
+            default: return .methodNotAllowed
+            }
         case 3 where rest[0] == "sessions" && rest[2] == "messages":
             guard let id = UUID(uuidString: rest[1]) else { return .notFound }
             return expect("GET", .messages(session: id))
@@ -88,9 +106,25 @@ public enum AgentRoute: Equatable, Sendable {
         }
     }
 
+    /// The token first (401 before anything else), then the route; a response when it ends there.
+    public static func resolve(_ request: AgentHTTPRequest, token: String?) -> Result<AgentRoute, AgentHTTPRequestRefusal> {
+        guard AgentBearer.authorized(request.header("authorization"), token: token) else { return .failure(.init(.error(401, "unauthorized"))) }
+        switch match(method: request.method, path: request.path) {
+        case .notFound: return .failure(.init(.error(404, "not_found")))
+        case .methodNotAllowed: return .failure(.init(.error(405, "method_not_allowed")))
+        case .route(let route): return .success(route)
+        }
+    }
+
     public static func limit(_ query: [String: String], default value: Int = 20) -> Int {
         min(200, max(1, query["limit"].flatMap(Int.init) ?? value))
     }
+}
+
+/// Why a request stopped before its route (`AgentRoute.resolve`).
+public struct AgentHTTPRequestRefusal: Error, Equatable, Sendable {
+    public var response: AgentHTTPResponse
+    public init(_ response: AgentHTTPResponse) { self.response = response }
 }
 
 /// Request bodies.

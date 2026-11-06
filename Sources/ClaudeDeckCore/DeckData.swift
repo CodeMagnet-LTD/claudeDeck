@@ -179,6 +179,9 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     /// The agents' local API (127.0.0.1 only; the token is in the keychain).
     public var agentAPIEnabled = false
     public var agentAPIPort = 47647
+    /// Agents that signed themselves up through the local API (AgentRegistry): pending ones wait
+    /// for the user; approved ones are in `agents` too.
+    public var agentRegistrations: [AgentRegistration] = []
 
     public init() {}
 
@@ -214,6 +217,7 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         agents = (try? c.decodeIfPresent([AgentProfile].self, forKey: .agents)) ?? d.agents
         agentAPIEnabled = try c.decodeIfPresent(Bool.self, forKey: .agentAPIEnabled) ?? d.agentAPIEnabled
         agentAPIPort = try c.decodeIfPresent(Int.self, forKey: .agentAPIPort) ?? d.agentAPIPort
+        agentRegistrations = (try? c.decodeIfPresent([AgentRegistration].self, forKey: .agentRegistrations)) ?? d.agentRegistrations
     }
 }
 

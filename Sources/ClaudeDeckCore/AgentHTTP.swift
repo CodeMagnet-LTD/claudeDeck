@@ -130,12 +130,15 @@ public struct AgentHTTPResponse: Equatable, Sendable {
     private static func reason(_ status: Int) -> String {
         switch status {
         case 200: "OK"
+        case 201: "Created"
         case 400: "Bad Request"
         case 401: "Unauthorized"
+        case 403: "Forbidden"
         case 404: "Not Found"
         case 405: "Method Not Allowed"
         case 409: "Conflict"
         case 413: "Payload Too Large"
+        case 429: "Too Many Requests"
         case 503: "Service Unavailable"
         default: "Error"
         }

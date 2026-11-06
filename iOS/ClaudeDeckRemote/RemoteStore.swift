@@ -509,6 +509,12 @@ final class RemoteStore {
         send(.agentNoteAction(sessionID: id, noteID: note, action: action))
     }
 
+    /// An agent that signed itself up on the Mac: approve or reject it (the next snapshot drops it).
+    @discardableResult
+    func agentRegistration(_ id: UUID, approve: Bool) -> Bool {
+        send(.agentRegistration(agentID: id, approve: approve))
+    }
+
     /// Pin / unpin or rename one of the Mac's projects.
     func projectAction(_ projectID: UUID, _ action: RemoteProjectAction) { _ = send(.projectAction(projectID: projectID, action: action)) }
 

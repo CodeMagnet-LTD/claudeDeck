@@ -90,9 +90,10 @@ is an error). **Asynchronous** ones acknowledge, then post the answer to `callba
 | POST | `/v1/sessions/{id}/prompt` | `{agent, text}` | Types into Claude if the agent may send directly, else a note; `409` while a permission or question is on screen |
 | POST | `/v1/projects/{id}/sessions` | `{agent, name?, prompt?}` | A new Claude session; `prompt` goes in once Claude is up |
 
-Errors are `{"error": "…"}`: `400 bad_request`, `401 unauthorized`, `404 not_found` /
-`unknown_session` / `unknown_project`, `405 method_not_allowed`, `409 blocked` / `not_running` /
-`not_started`, `413 too_large`.
+Errors are `{"error": "…"}`: `400 bad_request`, `401 unauthorized`, `403 not_registered_by_api`,
+`404 not_found` / `unknown_session` / `unknown_project` / `unknown_agent`, `405 method_not_allowed`,
+`409 blocked` / `not_running` / `not_started` / `name_taken`, `413 too_large`, `429 too_many_pending` /
+`rejected_recently`. Agents registering themselves: [below](#agents-signing-themselves-up).
 
 ```sh
 TOKEN=…   # Settings › Agents › Copy
@@ -114,6 +115,58 @@ curl -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
 curl -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   -d '{"agent":"Kod Checker","name":"Review fixes","prompt":"Fix the issues in REVIEW.md"}' \
   $API/v1/projects/$PROJECT/sessions
+```
+
+## Agents signing themselves up
+
+A bot can add itself instead of being typed into Settings: it registers through the local API
+(same token), then waits until you approve it. Until then it gets **no** webhook, isn't in
+**Ask Agent** (Mac or phone) and can't type into Claude.
+
+| Method | Path | Body | Does |
+|---|---|---|---|
+| POST | `/v1/agents` | `{name, kind: "webhook", url, auth_header?, async?, description?}` | Registers it as pending: `201 {agent_id, status: "pending"}` |
+| GET | `/v1/agents` | | Every agent: `[{id, name, kind, url_host, status, async, registered}]` |
+| GET | `/v1/agents/{id}` | | One agent (poll it to see whether you approved it) |
+| DELETE | `/v1/agents/{id}` | | Removes an agent that registered itself (`403` for ones added in Settings) |
+
+- `name`: 1–40 characters, not blank, one line. `kind`: only `"webhook"`. `url`: `https://…`, or
+  `http://` only to this Mac (`127.0.0.1`, `localhost`). `description` (at most 500 characters) is
+  shown when you decide; it's never sent anywhere.
+- `auth_header` goes to the keychain, like the header of a webhook agent added by hand; it's never
+  written to deck.json or the activity log, and no endpoint returns it. Listings show the URL's host
+  only (`url_host`), never its path or query. `kind` is `xai` for Grok bots made in Settings.
+- `status`: `pending`, `approved` or `rejected`. `registered` is `true` for agents that signed
+  themselves up (only those can be deleted through the API).
+- **Idempotent:** the same name (case-insensitively) and URL again answers `200` with the agent
+  already there and its status. The same name with another URL is `409 name_taken`.
+- Bodies are at most 16 KB (`413 too_large`); bad JSON is `400 bad_request`. Other `400`s:
+  `bad_name`, `bad_kind`, `bad_url`, `insecure_url`, `bad_auth_header`, `bad_description`.
+- At most 10 agents wait at once (`429 too_many_pending`). A rejected name and URL can't register
+  again for 24 hours (`429 rejected_recently`); `GET /v1/agents/{id}` says `rejected` meanwhile, and
+  `DELETE` refuses it (`429 rejected_recently`) so the wait can't be skipped.
+
+**Approval.** A new registration shows a notification on the Mac (with **Approve** / **Reject**),
+an **Agents Waiting for Approval** section in Settings › Agents (name, URL host, description), and
+the same section at the top of the phone's session list. Approved, it's an ordinary webhook agent:
+it gets requests, shows in Ask Agent, and you can edit it in Settings. **May type into Claude** stays
+off and no project is ticked for automatic requests until you change them. Registrations,
+approvals, rejections and deletions are in the **Activity Log…**.
+
+```sh
+# Register (once; running it again is harmless):
+curl -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"name":"Kod Checker","kind":"webhook","url":"https://bots.example.com/kod-checker",
+       "auth_header":"Bearer '"$BOT_SECRET"'","async":true,"description":"Reviews Swift diffs"}' \
+  $API/v1/agents
+# → {"agent_id":"9A3F…","status":"pending"}
+
+# Approved yet?
+curl -H "Authorization: Bearer $TOKEN" $API/v1/agents/$AGENT_ID
+# → {"id":"9A3F…","name":"Kod Checker","kind":"webhook","url_host":"bots.example.com","status":"approved",…}
+
+# Leave:
+curl -X DELETE -H "Authorization: Bearer $TOKEN" $API/v1/agents/$AGENT_ID
 ```
 
 The agent name in API calls is matched (case-insensitively) against the agents in Settings; only

@@ -566,7 +566,9 @@ Cevapları Mac'te ve telefonda not olarak gelir; sen göndermedikçe (ya da bir 
 Claude'a hiçbir şey gitmez. Ajana istek, son mesaj ve cevap, commit edilmemiş diff ve yeni dosyalar
 gider; anahtar ve token'a benzeyen metinler maskelenir, **Gönderilecek içeriği önizle…** tam olarak
 bunu gösterir. Ajanlar seçtiğin projeleri kendiliğinden izleyebilir; bu Mac'teki botlar yerel bir
-API kullanabilir (127.0.0.1, bearer token). Kurulum, payload ve uçlar: [docs/agents.md](docs/agents.md).
+API kullanabilir (127.0.0.1, bearer token). Bir bot bu API üzerinden kendini de kaydedebilir
+(`POST /v1/agents`); sen Ayarlar › Ajanlar'dan, bildirimden ya da telefondan onaylayana kadar hiçbir
+şey almaz. Kurulum, payload ve uçlar: [docs/agents.md](docs/agents.md).
 
 ## iCloud eşitleme (isteğe bağlı)
 

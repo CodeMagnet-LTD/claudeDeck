@@ -10,6 +10,7 @@ struct AgentsSettingsSection: View {
     @State private var copied = false
 
     var body: some View {
+        if !model.pendingAgents.isEmpty { pendingSection }
         Section {
             SecureField("xAI API key", text: $key, prompt: Text("xai-…"))
                 .onSubmit { AgentKeychain.setXAIKey(key) }
@@ -41,6 +42,32 @@ struct AgentsSettingsSection: View {
         }
         .sheet(item: $editing) { agent in AgentEditor(agent: agent) }
         .sheet(isPresented: $showLog) { AgentActivityLog() }
+    }
+
+    /// Agents that signed themselves up through the local API: nothing reaches them until approved.
+    private var pendingSection: some View {
+        Section {
+            ForEach(model.pendingAgents) { record in
+                HStack {
+                    Image(systemName: "person.badge.clock").foregroundStyle(.orange)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(record.name)
+                        Text(record.host).font(.caption).foregroundStyle(.secondary).lineLimit(1).help(record.url)
+                        if !record.description.isEmpty {
+                            Text(record.description).font(.caption).foregroundStyle(.secondary).lineLimit(3)
+                        }
+                    }
+                    Spacer()
+                    Button("Reject", role: .destructive) { model.rejectAgent(record.id) }
+                    Button("Approve") { model.approveAgent(record.id) }
+                }
+            }
+        } header: {
+            Text("Agents Waiting for Approval")
+        } footer: {
+            Text("They asked through the local API. Approved, an agent gets webhook requests and shows in Ask Agent; it may not type into Claude and follows no project until you change that.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
     }
 
     /// The local API: on/off, port, token.

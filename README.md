@@ -554,6 +554,8 @@ the Mac and the phone; nothing reaches Claude unless you send it on (or allow an
 gets the request, the last message and answer, the uncommitted diff and new files, with key- and
 token-looking strings redacted; **Preview What's Sent…** shows exactly that. Agents can follow
 chosen projects by themselves, and bots on this Mac can use a local API (127.0.0.1, bearer token).
+A bot can also register itself through that API (`POST /v1/agents`); it gets nothing until you
+approve it in Settings › Agents, from the notification or on the phone.
 Setup, payload and endpoints: [docs/agents.md](docs/agents.md).
 
 ## iCloud sync (optional)

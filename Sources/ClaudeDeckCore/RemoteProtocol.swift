@@ -152,6 +152,8 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case askAgents(sessionID: UUID, agentIDs: [UUID], request: String)
     /// Remote → host: dismiss a note, or send its answer to Claude (now or queued).
     case agentNoteAction(sessionID: UUID, noteID: UUID, action: AgentNoteAction)
+    /// Remote → host: approve or reject an agent that signed itself up (`pendingAgents`).
+    case agentRegistration(agentID: UUID, approve: Bool)
     /// Remote → host: a message with files. The host saves them and puts them in with the text
     /// (images as pasted images, other files as @mentions). Answered with `promptResult`.
     case sendPromptWithFiles(sessionID: UUID, text: String, files: [RemoteUpload])
@@ -278,6 +280,8 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
     public var features: Set<String>?
     /// The agents the Mac can ask (hosts with `Feature.agents`).
     public var agents: [RemoteAgent]?
+    /// Agents waiting for approval (hosts with `Feature.agentApproval`).
+    public var pendingAgents: [RemotePendingAgent]?
 
     public enum Feature {
         /// `sendPromptWithFiles` (phone) and `pasteFiles` (another Mac).
@@ -296,7 +300,9 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
         public static let queue = "queue"
         /// `askAgents` / `agentNoteAction`, `agents` in the snapshot, notes in conversation pages.
         public static let agents = "agents"
-        public static let all: Set<String> = [files, permissionMode, projectActions, sessionActions, addProject, transfer, queue, agents]
+        /// `agentRegistration`, `pendingAgents` in the snapshot.
+        public static let agentApproval = "agentApproval"
+        public static let all: Set<String> = [files, permissionMode, projectActions, sessionActions, addProject, transfer, queue, agents, agentApproval]
     }
 
     public func supports(_ feature: String) -> Bool { features?.contains(feature) == true }

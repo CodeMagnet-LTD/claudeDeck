@@ -8,6 +8,7 @@ final class AttentionCenter: NSObject, UNUserNotificationCenterDelegate {
     nonisolated static let permissionCategory = "permission"
     nonisolated static let approveAction = "approve"
     nonisolated static let denyAction = "deny"
+    nonisolated static let agentCategory = "agentRegistration"
     private let model: AppModel
     private var center: UNUserNotificationCenter? {
         // UNUserNotificationCenter crashes outside an app bundle (e.g. `swift run`).
@@ -19,14 +20,24 @@ final class AttentionCenter: NSObject, UNUserNotificationCenterDelegate {
         super.init()
         center?.delegate = self
         // Answered in place: the keystroke goes into the terminal, no need to bring the app up.
-        center?.setNotificationCategories([UNNotificationCategory(
-            identifier: Self.permissionCategory,
-            actions: [
-                UNNotificationAction(identifier: Self.approveAction, title: String(localized: "Allow"), options: []),
-                UNNotificationAction(identifier: Self.denyAction, title: String(localized: "Deny"), options: [.destructive]),
-            ],
-            intentIdentifiers: []
-        )])
+        center?.setNotificationCategories([
+            UNNotificationCategory(
+                identifier: Self.permissionCategory,
+                actions: [
+                    UNNotificationAction(identifier: Self.approveAction, title: String(localized: "Allow"), options: []),
+                    UNNotificationAction(identifier: Self.denyAction, title: String(localized: "Deny"), options: [.destructive]),
+                ],
+                intentIdentifiers: []
+            ),
+            UNNotificationCategory(
+                identifier: Self.agentCategory,
+                actions: [
+                    UNNotificationAction(identifier: Self.approveAction, title: String(localized: "Approve"), options: []),
+                    UNNotificationAction(identifier: Self.denyAction, title: String(localized: "Reject"), options: [.destructive]),
+                ],
+                intentIdentifiers: []
+            ),
+        ])
         center?.requestAuthorization(options: [.alert, .sound, .badge]) { _, _ in }
         model.onAttention = { [weak self] event in self?.handle(event) }
         model.remote.onAttention = { [weak self] session, hostName in self?.handleRemote(session, hostName: hostName) }
@@ -34,6 +45,20 @@ final class AttentionCenter: NSObject, UNUserNotificationCenterDelegate {
             self?.center?.removeDeliveredNotifications(withIdentifiers: ids.map { "remote-\($0.uuidString)" })
         }
         model.onCountsChanged = { [weak self] in self?.updateBadge() }
+        model.onAgentRegistered = { [weak self] record in self?.agentRegistered(record) }
+    }
+
+    /// An agent signed itself up: it waits for approval (shown whatever the notification setting,
+    /// since nothing else asks the user).
+    private func agentRegistered(_ record: AgentRegistration) {
+        guard let center else { return }
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "Agent waiting for approval")
+        content.body = "\(record.name) · \(record.host)" + (record.description.isEmpty ? "" : "\n\(record.description)")
+        content.sound = .default
+        content.categoryIdentifier = Self.agentCategory
+        content.userInfo = ["agentRegistration": record.id.uuidString]
+        center.add(UNNotificationRequest(identifier: "agent-\(record.id.uuidString)", content: content, trigger: nil))
     }
 
     private func handle(_ event: AttentionEvent) {
@@ -102,6 +127,18 @@ final class AttentionCenter: NSObject, UNUserNotificationCenterDelegate {
 
     nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         let userInfo = response.notification.request.content.userInfo
+        if let raw = userInfo["agentRegistration"] as? String, let id = UUID(uuidString: raw) {
+            let action = response.actionIdentifier
+            await MainActor.run {
+                if action == Self.approveAction { self.model.approveAgent(id) }
+                else if action == Self.denyAction { self.model.rejectAgent(id) }
+                else {
+                    self.model.openSettings?()
+                    NSApp.activate()
+                }
+            }
+            return
+        }
         let raw = userInfo["sessionID"] as? String
         guard let raw, let id = UUID(uuidString: raw) else { return }
         let action = response.actionIdentifier

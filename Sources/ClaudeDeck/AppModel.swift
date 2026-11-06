@@ -55,6 +55,8 @@ final class AppModel {
     @ObservationIgnored var agentTypedPrompts: [UUID: [String]] = [:]
     /// A note was added, answered or removed (remotes refresh the conversation).
     @ObservationIgnored var onAgentNotesChanged: (() -> Void)?
+    /// An agent signed itself up through the local API and waits for approval (a notification).
+    @ObservationIgnored var onAgentRegistered: ((AgentRegistration) -> Void)?
     /// Last time the user looked at a session while it was idle (clears the yellow "unseen" badge).
     private var seenAt: [UUID: Date] = [:]
     var hookError: String?
@@ -109,6 +111,8 @@ final class AppModel {
     @ObservationIgnored var openMainWindow: (() -> Void)?
     /// Opens a file in the built-in editor window (set alongside `openMainWindow`).
     @ObservationIgnored var openEditorWindow: ((URL) -> Void)?
+    /// Opens the Settings window (set alongside `openMainWindow`).
+    @ObservationIgnored var openSettings: (() -> Void)?
     /// The main window's tabs (WorkspaceTabs.swift).
     let tabs = WorkspaceTabs()
     // MARK: iCloud sync (DeckSyncController) — begin

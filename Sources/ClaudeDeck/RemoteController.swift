@@ -387,6 +387,11 @@ final class RemoteController {
             server.onAgentNoteAction = { [weak self] id, note, action in
                 MainActor.assumeIsolated { self?.model?.agentNoteAction(note, in: id, action: action) }
             }
+            server.onAgentRegistration = { [weak self] id, approve in
+                MainActor.assumeIsolated {
+                    if approve { self?.model?.approveAgent(id) } else { self?.model?.rejectAgent(id) }
+                }
+            }
             server.onQueueAction = { [weak self] id, prompt, action in
                 MainActor.assumeIsolated {
                     self?.model?.queueAction(id, prompt: prompt, action: action)
@@ -595,6 +600,7 @@ final class RemoteController {
         snapshot.hostID = local.hostID
         snapshot.features = RemoteSnapshot.Feature.all
         snapshot.agents = model.agents.map { RemoteAgent(id: $0.id, name: $0.name) }
+        snapshot.pendingAgents = model.pendingAgents.map { RemotePendingAgent(id: $0.id, name: $0.name, host: $0.host, description: $0.description) }
         // Pinned first, like the sidebar.
         snapshot.projects = (model.deck.projects.filter(\.pinned) + model.deck.projects.filter { !$0.pinned })
             .map { RemoteProject(id: $0.id, name: $0.name, pinned: $0.pinned, path: $0.path) }

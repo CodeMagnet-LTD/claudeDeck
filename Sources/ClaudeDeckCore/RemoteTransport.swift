@@ -277,6 +277,7 @@ public final class RemoteServer: @unchecked Sendable {
     /// `.askAgents` / `.agentNoteAction` (notes go out with the conversation pages).
     public var onAskAgents: ((_ sessionID: UUID, _ agentIDs: [UUID], _ request: String) -> Void)?
     public var onAgentNoteAction: ((_ sessionID: UUID, _ noteID: UUID, _ action: AgentNoteAction) -> Void)?
+    public var onAgentRegistration: ((_ agentID: UUID, _ approve: Bool) -> Void)?
     /// A message with files; reply nil once it's going in, else why not.
     public var onSendPromptWithFiles: ((_ sessionID: UUID, _ text: String, _ files: [RemoteUpload], _ reply: @escaping @Sendable (String?) -> Void) -> Void)?
     /// The session's permission mode (after Shift+Tab when cycling); reply with what the screen shows.
@@ -505,6 +506,8 @@ public final class RemoteServer: @unchecked Sendable {
                 onAskAgents?(sessionID, agentIDs, String(request.prefix(4000)))
             case .agentNoteAction(let sessionID, let noteID, let action):
                 onAgentNoteAction?(sessionID, noteID, action)
+            case .agentRegistration(let agentID, let approve):
+                onAgentRegistration?(agentID, approve)
             case .sendPromptWithFiles(let sessionID, let text, let files)
                 where !files.isEmpty && files.reduce(0, { $0 + $1.data.count }) <= RemoteUpload.maxTotalBytes:
                 let channel = peer.channel
