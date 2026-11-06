@@ -297,7 +297,8 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
 - **Kalıcılık:** uygulama kapanırken açık olan oturumlar açılışta `claude --resume <id>` ile kendiliğinden geri
   gelir ve olduğu gibi devam eder. ClaudeDeck kapanırken (ya da çökerken) **çalışmakta olan** oturum
   kaldığı yerden sürer: ona "Continue where you left off." (ya da Ayarlar'daki kendi mesajın) gönderilir. Sırası
-  sende olan oturumlara (your turn, ekranda bir soru ya da izin) hiçbir şey yazılmaz; senin yerine karar verilmez. Durmuş bir oturumu seçmek de onu devam ettirir; `/exit` ile kapattığın ya da "Oturumu bitir" dediğin
+  sende olan oturumlara (your turn, ekranda bir soru ya da izin) hiçbir şey yazılmaz; senin yerine karar verilmez
+  (Ayarlar › Oturumlar › "Kime gönderilsin" "Geri gelen tüm oturumlar" yapılmadıkça). Durmuş bir oturumu seçmek de onu devam ettirir; `/exit` ile kapattığın ya da "Oturumu bitir" dediğin
   oturum ise "Devam et" deyince döner.
 - **Otomatik /compact (varsayılan kapalı):** açılırsa, geri gelen oturumun context'i eşiği aşıyorsa `/compact` gönderilir. Eşik gerçek
   context token'ıdır (transcript'teki son asistan mesajının `input + cache_read + cache_creation` toplamı;

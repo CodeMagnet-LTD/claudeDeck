@@ -47,9 +47,15 @@ struct SettingsView: View {
                     Text("Compact threshold: context above \(model.deck.settings.compactThresholdTokens / 1000)K tokens")
                 }
                 .disabled(!model.deck.settings.compactOnResume)
-                Text("Sessions that were working when ClaudeDeck quit (or crashed) pick up where they left off with this message. Sessions waiting on you (your turn, a question, a permission) are left as they were.")
-                    .font(.caption).foregroundStyle(.secondary)
                 TextField("Message", text: setting(\.continueMessage), prompt: Text("Continue where you left off."))
+                Picker("Send it to", selection: setting(\.continueAllOnResume)) {
+                    Text("Interrupted sessions only").tag(false)
+                    Text("All resumed sessions").tag(true)
+                }
+                Text(model.deck.settings.continueAllOnResume
+                     ? "Every session that comes back at launch gets this message, also one that was waiting on you (your turn, a question, a permission)."
+                     : "Only sessions that were working when ClaudeDeck quit (or crashed) get this message. Sessions waiting on you (your turn, a question, a permission) are left as they were.")
+                    .font(.caption).foregroundStyle(.secondary)
                 Toggle("Continue sessions when the usage limit resets", isOn: setting(\.continueAfterUsageLimit))
                 Text("A session that stopped on the Claude plan's usage limit gets this message once, when the limit resets.")
                     .font(.caption).foregroundStyle(.secondary)

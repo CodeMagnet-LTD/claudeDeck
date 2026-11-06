@@ -66,9 +66,6 @@ struct ConversationView: View {
                                 ToolGroupView(entries: entries).id(item.id)
                             }
                         }
-                        ForEach(conversation?.agentNotes ?? []) { note in
-                            AgentNoteCard(note: note, sessionID: sessionID).id(note.id)
-                        }
                         if session?.state == .running {
                             HStack(spacing: 6) {
                                 ProgressView().controlSize(.small)
@@ -136,6 +133,7 @@ struct ConversationView: View {
         let blocked = session?.state.isBlocked == true
         let sending = store.sendingFiles.contains(sessionID)
         VStack(alignment: .leading, spacing: 6) {
+            if let notes = store.conversations[sessionID]?.agentNotes, !notes.isEmpty { AgentNotesBar(notes: notes, sessionID: sessionID) }
             if let queue = session?.queue, !queue.isEmpty { queueList(queue) }
             if let error = attachError ?? store.promptError {
                 Text(error).font(.caption).foregroundStyle(.red).padding(.horizontal, 4)
@@ -934,59 +932,96 @@ struct ConversationTextSizeMenu: View {
 }
 
 /// An agent's note in the conversation: its answer, then Send to Claude / Queue / Dismiss.
-struct AgentNoteCard: View {
+/// Agents' notes, above the message field (not in the conversation: they're not Claude's).
+/// One line each; tap to read it all. Sending it on is in the menu, dismissing is the ×.
+struct AgentNotesBar: View {
+    let notes: [AgentNote]
+    let sessionID: UUID
+
+    var body: some View {
+        if notes.count > 2 {
+            ScrollView { rows }.frame(maxHeight: 220)
+        } else {
+            rows
+        }
+    }
+
+    private var rows: some View {
+        VStack(spacing: 4) {
+            ForEach(notes) { AgentNoteRow(note: $0, sessionID: sessionID) }
+        }
+    }
+}
+
+struct AgentNoteRow: View {
     @Environment(RemoteStore.self) private var store
     let note: AgentNote
     let sessionID: UUID
-    /// Sent, waiting for the Mac: the buttons wait too (cleared when the note changes).
+    @State private var expanded = false
+    /// Sent, waiting for the Mac: the actions wait too (cleared when the note changes).
     @State private var working = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
-                Image(systemName: "sparkles").foregroundStyle(.purple)
-                Text(note.agentName).listFont(.subheadline, weight: .semibold)
-                if !note.request.isEmpty {
-                    Text("· \(note.request)").listFont(.caption).foregroundStyle(.secondary).lineLimit(1)
+                Image(systemName: "sparkles").foregroundStyle(.purple).font(.caption)
+                Text(note.agentName).listFont(.caption, weight: .semibold)
+                if !expanded {
+                    Text(summary).listFont(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
                 Spacer(minLength: 4)
-                if note.pending || working { ProgressView().controlSize(.small) }
-                Button { act(.dismiss) } label: { Image(systemName: "xmark.circle.fill") }
+                if note.pending || working { ProgressView().controlSize(.mini) }
+                if note.reply != nil {
+                    Menu {
+                        Button { act(.sendToClaude) } label: { Label("Send to Claude", systemImage: "arrow.up.circle") }
+                        Button { act(.queueForClaude) } label: {
+                            Label("Queue for Claude", systemImage: "text.line.first.and.arrowtriangle.forward")
+                        }
+                        Button { UIPasteboard.general.string = note.reply } label: { Label("Copy", systemImage: "doc.on.doc") }
+                    } label: {
+                        Image(systemName: "ellipsis.circle").font(.body)
+                    }
+                    .disabled(store.connection != .connected || working)
+                    .accessibilityLabel(Text("Actions"))
+                }
+                Button { act(.dismiss) } label: { Image(systemName: "xmark.circle.fill").font(.body) }
                     .buttonStyle(.borderless)
                     .foregroundStyle(.tertiary)
+                    .accessibilityLabel(Text("Dismiss"))
             }
-            if let reply = note.reply {
-                MarkdownView(text: reply)
-                HStack(spacing: 8) {
-                    Button { act(.sendToClaude) } label: {
-                        Label("Send to Claude", systemImage: "arrow.up.circle")
-                    }
-                    .buttonStyle(.borderedProminent)
-                    Button { act(.queueForClaude) } label: {
-                        Label("Queue", systemImage: "text.line.first.and.arrowtriangle.forward")
-                    }
-                    .buttonStyle(.bordered)
+            if expanded {
+                if !note.request.isEmpty {
+                    Text(note.request).listFont(.caption).foregroundStyle(.secondary)
                 }
-                .controlSize(.small)
-                .disabled(store.connection != .connected || working)
-                if let failure = note.actionError {
-                    Text(failure).listFont(.caption).foregroundStyle(.orange)
+                if let reply = note.reply {
+                    ScrollView { MarkdownView(text: reply).frame(maxWidth: .infinity, alignment: .leading) }
+                        .frame(maxHeight: 260)
+                } else if let error = note.error {
+                    Text(error).listFont(.caption).foregroundStyle(.orange)
                 }
-            } else if let error = note.error {
-                Text(error).listFont(.caption).foregroundStyle(.orange)
-            } else {
-                Text("Thinking…").listFont(.caption).foregroundStyle(.secondary)
+            }
+            if let failure = note.actionError {
+                Text(failure).listFont(.caption).foregroundStyle(.orange)
             }
         }
-        .padding(10)
-        .background(Color.purple.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Color.purple.opacity(0.10), in: RoundedRectangle(cornerRadius: 10))
+        .contentShape(Rectangle())
+        .onTapGesture { withAnimation(.snappy) { expanded.toggle() } }
         .onChange(of: note) { _, _ in working = false }
         .task(id: working) {
-            // No word from the Mac (lost connection): the buttons come back.
+            // No word from the Mac (lost connection): the actions come back.
             guard working else { return }
             try? await Task.sleep(for: .seconds(8))
             working = false
         }
+    }
+
+    private var summary: String {
+        if let reply = note.reply { return reply.split(whereSeparator: \.isNewline).first.map(String.init) ?? reply }
+        if let error = note.error { return error }
+        return String(localized: "Thinking…")
     }
 
     private func act(_ action: AgentNoteAction) {

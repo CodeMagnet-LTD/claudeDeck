@@ -129,8 +129,8 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     /// After an automatic resume, send `/compact` when the context is over the threshold. Off by
     /// default: resumed sessions should simply carry on.
     public var compactOnResume = false
-    /// No longer used: only sessions that were working when the app quit get the "continue"
-    /// message; ones waiting on the user never do. Still decoded so old deck.json files round-trip.
+    /// Sessions that were working when the app quit always get the "continue" message when they
+    /// resume. This also sends it to every other resumed session (even one waiting on the user).
     public var continueAllOnResume = false
     /// Legacy (before interrupted sessions always continued); only read to migrate to `continueAllOnResume`.
     public var continueAfterResume = false

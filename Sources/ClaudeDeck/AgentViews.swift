@@ -393,55 +393,89 @@ struct AskAgentMenu: View {
 }
 
 /// Under a session's terminal: the agents' notes, with Send to Claude / Queue / Dismiss.
+/// Agents' notes under a session's terminal: one line each (click to read it all), sending it on
+/// in the menu, dismissing with the ×. As tall as the notes, scrolling past 220 pt.
 struct AgentNotesStrip: View {
     @Environment(AppModel.self) private var model
     let sessionID: UUID
     @State private var expanded: Set<UUID> = []
+    @State private var contentHeight: CGFloat = 0
 
     var body: some View {
+        ScrollView {
+            notesList
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { contentHeight = $0 }
+        }
+        .frame(height: min(max(contentHeight, 1), 220))
+        .background(.bar)
+    }
+
+    private var notesList: some View {
         let notes = model.agentNotes[sessionID] ?? []
-        VStack(alignment: .leading, spacing: 6) {
+        return VStack(alignment: .leading, spacing: 4) {
             ForEach(notes) { note in
+                let open = expanded.contains(note.id)
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
                         Image(systemName: "sparkles").foregroundStyle(.purple)
-                        Text(note.agentName).font(.caption.weight(.semibold))
-                        if !note.request.isEmpty { Text("· \(note.request)").font(.caption).foregroundStyle(.secondary).lineLimit(1) }
-                        Spacer()
-                        if note.pending {
-                            ProgressView().controlSize(.small)
-                        } else if note.reply != nil {
-                            Button("Send to Claude") { model.agentNoteAction(note.id, in: sessionID, action: .sendToClaude) }
-                            Button("Queue") { model.agentNoteAction(note.id, in: sessionID, action: .queueForClaude) }
-                                .help("Sent when it's your turn")
+                        Text(note.agentName).font(.caption.weight(.semibold)).lineLimit(1).fixedSize()
+                        if !open {
+                            Text(summary(note)).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                        }
+                        Spacer(minLength: 4)
+                        if note.pending { ProgressView().controlSize(.mini) }
+                        if let reply = note.reply {
+                            Menu {
+                                Button("Send to Claude") { model.agentNoteAction(note.id, in: sessionID, action: .sendToClaude) }
+                                Button("Queue for Claude") { model.agentNoteAction(note.id, in: sessionID, action: .queueForClaude) }
+                                Divider()
+                                Button("Copy") {
+                                    NSPasteboard.general.clearContents()
+                                    NSPasteboard.general.setString(reply, forType: .string)
+                                }
+                            } label: {
+                                Image(systemName: "ellipsis.circle")
+                            }
+                            .menuStyle(.borderlessButton)
+                            .menuIndicator(.hidden)
+                            .fixedSize()
+                            .help("Send it on to Claude, or queue it for Claude's next turn")
                         }
                         Button { model.agentNoteAction(note.id, in: sessionID, action: .dismiss) } label: { Image(systemName: "xmark") }
                             .buttonStyle(.borderless)
                             .help("Dismiss")
                     }
                     .controlSize(.small)
-                    if let reply = note.reply {
-                        Text(reply)
-                            .font(.callout)
-                            .textSelection(.enabled)
-                            .lineLimit(expanded.contains(note.id) ? nil : 4)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .onTapGesture { if expanded.contains(note.id) { expanded.remove(note.id) } else { expanded.insert(note.id) } }
-                    } else if let error = note.error {
-                        Text(error).font(.caption).foregroundStyle(.orange)
+                    if open {
+                        if !note.request.isEmpty { Text(note.request).font(.caption).foregroundStyle(.secondary) }
+                        if let reply = note.reply {
+                            Text(reply)
+                                .font(.callout)
+                                .textSelection(.enabled)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        } else if let error = note.error {
+                            Text(error).font(.caption).foregroundStyle(.orange)
+                        }
                     }
                     if let failure = note.actionError {
                         Text(failure).font(.caption).foregroundStyle(.orange)
                     }
                 }
-                .padding(8)
-                .background(Color.purple.opacity(0.07), in: RoundedRectangle(cornerRadius: 8))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 5)
+                .background(Color.purple.opacity(0.07), in: RoundedRectangle(cornerRadius: 7))
+                .contentShape(Rectangle())
+                .onTapGesture { if open { expanded.remove(note.id) } else { expanded.insert(note.id) } }
             }
         }
         .padding(.horizontal, 10)
-        .padding(.vertical, 6)
-        .frame(maxHeight: 320)
-        .background(.bar)
+        .padding(.vertical, 5)
+    }
+
+    private func summary(_ note: AgentNote) -> String {
+        if let reply = note.reply { return reply.split(whereSeparator: \.isNewline).first.map(String.init) ?? reply }
+        if let error = note.error { return error }
+        return String(localized: "Thinking…")
     }
 }
 

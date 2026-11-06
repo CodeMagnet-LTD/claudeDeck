@@ -1,6 +1,86 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Actions": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İşlemler"
+          }
+        }
+      }
+    },
+    "Queue for Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude için kuyruğa al"
+          }
+        }
+      }
+    },
+    "Send it on to Claude, or queue it for Claude's next turn": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude'a gönder ya da Claude'un sıradaki turu için kuyruğa al"
+          }
+        }
+      }
+    },
+    "All resumed sessions": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geri gelen tüm oturumlar"
+          }
+        }
+      }
+    },
+    "Every session that comes back at launch gets this message, also one that was waiting on you (your turn, a question, a permission).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Açılışta geri gelen her oturum bu mesajı alır; sırası sende olanlar (your turn, soru, izin) da."
+          }
+        }
+      }
+    },
+    "Interrupted sessions only": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece yarıda kalan oturumlar"
+          }
+        }
+      }
+    },
+    "Only sessions that were working when ClaudeDeck quit (or crashed) get this message. Sessions waiting on you (your turn, a question, a permission) are left as they were.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu mesajı sadece ClaudeDeck kapanırken (ya da çökerken) çalışmakta olan oturumlar alır. Sırası sende olan oturumlar (your turn, soru, izin) olduğu gibi bırakılır."
+          }
+        }
+      }
+    },
+    "Send it to": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kime gönderilsin"
+          }
+        }
+      }
+    },
     "This agent isn't waiting for approval any more.": {
       "localizations": {
         "tr": {
@@ -6309,16 +6389,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Oturumlar"
-          }
-        }
-      }
-    },
-    "Sessions that were working when ClaudeDeck quit (or crashed) pick up where they left off with this message. Sessions waiting on you (your turn, a question, a permission) are left as they were.": {
-      "localizations": {
-        "tr": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ClaudeDeck kapanırken (ya da çökerken) çalışmakta olan oturumlar bu mesajla kaldıkları yerden devam eder. Sırası sende olan oturumlar (your turn, soru, izin) olduğu gibi bırakılır."
           }
         }
       }

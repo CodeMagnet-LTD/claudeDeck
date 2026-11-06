@@ -476,9 +476,9 @@ final class AppModel {
         let worktreeDir = session.workingDirectory.flatMap { FileManager.default.fileExists(atPath: $0) ? $0 : nil }
         if sid == nil, worktreeDir == nil, let worktree = session.worktreeName { args += ["--worktree", worktree] }
         if automatic, sid != nil, deck.settings.compactOnResume { pendingCompact.insert(id) }
-        // Only a session cut off mid-turn picks up where it left off; one whose turn it was
-        // (idle, or a question or permission on screen) waits for the user.
-        if sid != nil, session.busyAtQuit {
+        // A session cut off mid-turn picks up where it left off; one whose turn it was (idle, or a
+        // question or permission on screen) waits for the user, unless Settings says every session.
+        if sid != nil, session.busyAtQuit || (automatic && deck.settings.continueAllOnResume) {
             pendingContinue.insert(id)
         }
         deck.updateSession(id) { $0.busyAtQuit = false }
