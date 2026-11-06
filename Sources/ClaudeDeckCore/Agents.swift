@@ -114,12 +114,13 @@ public struct AgentContext: Sendable, Equatable {
 
     public init(project: String, session: String, lastPrompt: String?, lastReply: String?, diff: String?,
                 untracked: [UntrackedFile] = [], request: String) {
+        // Whatever goes to an agent has key- and token-looking strings blanked out.
         self.project = project
         self.session = session
-        self.lastPrompt = lastPrompt
-        self.lastReply = lastReply
-        self.diff = diff
-        self.untracked = untracked
+        self.lastPrompt = lastPrompt.map(SecretMask.mask)
+        self.lastReply = lastReply.map(SecretMask.mask)
+        self.diff = diff.map(SecretMask.mask)
+        self.untracked = untracked.map { UntrackedFile(path: $0.path, content: SecretMask.mask($0.content)) }
         self.request = request
     }
 
@@ -227,5 +228,41 @@ public enum AgentWebhook {
         }
         guard let text = String(data: data, encoding: .utf8), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw Problem.empty }
         return text
+    }
+}
+
+/// Blanks out what looks like a credential before text leaves the Mac for an agent: API keys and
+/// tokens with known prefixes, private key blocks, JWTs, bearer headers, and `password=` /
+/// `secret: …` style assignments.
+public enum SecretMask {
+    public static let replacement = "[redacted]"
+
+    private static let patterns: [NSRegularExpression] = [
+        #"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?-----END [A-Z ]*PRIVATE KEY-----"#,
+        #"\b(?:sk|pk|rk)-(?:ant-|proj-|live-|test-)?[A-Za-z0-9_\-]{16,}"#,
+        #"\bxai-[A-Za-z0-9]{20,}"#,
+        #"\bgh[pousr]_[A-Za-z0-9]{30,}"#,
+        #"\bgithub_pat_[A-Za-z0-9_]{40,}"#,
+        #"\bAKIA[0-9A-Z]{16}\b"#,
+        #"\bAIza[0-9A-Za-z_\-]{35}\b"#,
+        #"\bxox[abpr]-[A-Za-z0-9\-]{10,}"#,
+        #"\beyJ[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}\.[A-Za-z0-9_\-]{10,}"#,
+        #"(?i)\bbearer\s+[A-Za-z0-9._~+/\-]{20,}=*"#,
+    ].compactMap { try? NSRegularExpression(pattern: $0) }
+
+    /// `KEY = "value"` where the name says it's secret: the value goes.
+    private static let assignment = try? NSRegularExpression(
+        pattern: #"(?i)\b([A-Za-z0-9_]*(?:password|passwd|secret|token|api[_-]?key|private[_-]?key|access[_-]?key)[A-Za-z0-9_]*)(\s*[:=]\s*)(["']?)([^\s"'`,;]{6,})\3"#
+    )
+
+    public static func mask(_ text: String) -> String {
+        var result = text
+        for pattern in patterns {
+            result = pattern.stringByReplacingMatches(in: result, range: NSRange(result.startIndex..., in: result), withTemplate: replacement)
+        }
+        if let assignment {
+            result = assignment.stringByReplacingMatches(in: result, range: NSRange(result.startIndex..., in: result), withTemplate: "$1$2$3\(replacement)$3")
+        }
+        return result
     }
 }

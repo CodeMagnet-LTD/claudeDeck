@@ -77,6 +77,7 @@ struct ContentView: View {
                 .help("Add Project (⌘O)")
             }
         }
+        .sheet(item: Binding(get: { model.agentSheet }, set: { model.agentSheet = $0 })) { sheet in AgentSheetView(sheet: sheet) }
         .alert("Couldn’t Install the Hook", isPresented: .constant(model.hookError != nil)) {
             Button("OK") { model.hookError = nil }
         } message: {

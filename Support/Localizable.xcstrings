@@ -9933,6 +9933,96 @@
           }
         }
       }
+    },
+    "Preview What's Sent…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gönderilecek içeriği önizle…"
+          }
+        }
+      }
+    },
+    "Past Reviews…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmiş incelemeler…"
+          }
+        }
+      }
+    },
+    "What's Sent to Agents": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajanlara gidecek içerik"
+          }
+        }
+      }
+    },
+    "Key- and token-looking strings are replaced with [redacted]. The diff and new files are cut to size.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anahtar ve token'a benzeyen metinler [redacted] ile değiştirilir. Diff ve yeni dosyalar kısaltılır."
+          }
+        }
+      }
+    },
+    "Send to All Agents": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm ajanlara gönder"
+          }
+        }
+      }
+    },
+    "Past Reviews": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geçmiş incelemeler"
+          }
+        }
+      }
+    },
+    "Sent to Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude'a gönderildi"
+          }
+        }
+      }
+    },
+    "Queued": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kuyruğa alındı"
+          }
+        }
+      }
+    },
+    "Dismissed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapatıldı"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

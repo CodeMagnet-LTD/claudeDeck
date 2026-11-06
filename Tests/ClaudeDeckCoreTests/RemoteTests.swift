@@ -1066,3 +1066,26 @@ import Testing
         #expect(!AgentProfile(name: "x", autoTrigger: false, autoProjects: [project]).follows(project: project))
     }
 }
+
+@Suite struct SecretMaskTests {
+    @Test func masksCredentials() {
+        let text = """
+        let key = "sk-ant-api03-abcdefghijklmnopqrstuvwx"
+        XAI=xai-abcdefghijklmnopqrstuvwxyz0123
+        token: ghp_abcdefghijklmnopqrstuvwxyz0123456789
+        Authorization: Bearer abcdefghijklmnopqrstuvwxyz.123
+        DB_PASSWORD="hunter2hunter2"
+        -----BEGIN RSA PRIVATE KEY-----
+        MIIEow
+        -----END RSA PRIVATE KEY-----
+        let count = 42 // keep this
+        """
+        let masked = SecretMask.mask(text)
+        for secret in ["sk-ant-api03", "xai-abcdef", "ghp_abcdef", "abcdefghijklmnopqrstuvwxyz.123", "hunter2hunter2", "MIIEow"] {
+            #expect(!masked.contains(secret), "\(secret) left in")
+        }
+        #expect(masked.contains("let count = 42 // keep this") && masked.contains("DB_PASSWORD=\"[redacted]\""))
+        let context = AgentContext(project: "p", session: "s", lastPrompt: "use AKIAABCDEFGHIJKLMNOP", lastReply: nil, diff: "+ api_key = 'abcdef123456'", request: "")
+        #expect(!context.message.contains("AKIAABCDEFGHIJKLMNOP") && !context.message.contains("abcdef123456"))
+    }
+}

@@ -1,6 +1,25 @@
 import ClaudeDeckCore
 import Foundation
 
+/// A note that left the open list: what became of it.
+struct AgentReviewRecord: Codable, Identifiable, Equatable {
+    var id: UUID { note.id }
+    var note: AgentNote
+    var outcome: String  // "sent", "queued", "dismissed"
+    var date: Date
+}
+
+enum AgentSheet: Identifiable, Equatable {
+    case preview(session: UUID, agents: [UUID], text: String)
+    case history(session: UUID)
+    var id: String {
+        switch self {
+        case .preview(let session, _, _): "preview-\(session)"
+        case .history(let session): "history-\(session)"
+        }
+    }
+}
+
 /// One line of the agents' activity log: what went out to an agent, what came in from one.
 struct AgentActivity: Identifiable, Equatable {
     let id = UUID()
@@ -204,6 +223,13 @@ extension AppModel {
             // The user chose to send it: their turn, for the automatic count.
             if action != .dismiss { agentGate.reset(sessionID) }
             agentNotes[sessionID]?.removeAll { $0.id == noteID }
+            let outcome = switch action {
+            case .dismiss: "dismissed"
+            case .sendToClaude: "sent"
+            case .queueForClaude: "queued"
+            }
+            agentReviewHistory[sessionID, default: []].append(AgentReviewRecord(note: note, outcome: outcome, date: Date()))
+            if let count = agentReviewHistory[sessionID]?.count, count > 50 { agentReviewHistory[sessionID]?.removeFirst(count - 50) }
             notesChanged(sessionID)
         }
         return failure
@@ -225,6 +251,53 @@ extension AppModel {
     func notesChanged(_ sessionID: UUID) {
         agentNotesRevision[sessionID, default: 0] += 1
         onAgentNotesChanged?()
+        saveAgentNotesSoon()
+    }
+
+    // MARK: Kept on disk (Application Support/agent-notes.json)
+
+    private struct NotesFile: Codable {
+        var notes: [UUID: [AgentNote]]
+        var history: [UUID: [AgentReviewRecord]]
+    }
+
+    private var agentNotesURL: URL {
+        DeckDataStore.default().url.deletingLastPathComponent().appending(path: "agent-notes.json")
+    }
+
+    func loadAgentNotes() {
+        guard let data = try? Data(contentsOf: agentNotesURL) else { return }
+        do {
+            let file = try JSONDecoder().decode(NotesFile.self, from: data)
+            let known = Set(deck.sessions.map(\.id))
+            agentNotes = file.notes.filter { known.contains($0.key) }
+            agentReviewHistory = file.history.filter { known.contains($0.key) }
+        } catch {
+            logAgent("ClaudeDeck", inbound: false, "couldn't read agent-notes.json: \(error.localizedDescription)", ok: false)
+        }
+    }
+
+    private func saveAgentNotesSoon() {
+        agentNotesSaveTask?.cancel()
+        agentNotesSaveTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(1))
+            guard let self, !Task.isCancelled else { return }
+            do {
+                let data = try JSONEncoder().encode(NotesFile(notes: self.agentNotes, history: self.agentReviewHistory))
+                try data.write(to: self.agentNotesURL, options: .atomic)
+            } catch {
+                self.logAgent("ClaudeDeck", inbound: false, "couldn't save agent notes: \(error.localizedDescription)", ok: false)
+            }
+        }
+    }
+
+    /// What would go to the agents (masked, cut), shown before sending.
+    func previewAgentRequest(_ ids: [UUID], about sessionID: UUID, request: String) {
+        let snapshot = contextSnapshot(sessionID)
+        Task { @MainActor [weak self] in
+            let context = await snapshot.gather(request: request)
+            self?.agentSheet = .preview(session: sessionID, agents: ids, text: context.message)
+        }
     }
 
     private func updateNote(_ id: UUID, in sessionID: UUID, _ change: (inout AgentNote) -> Void) {

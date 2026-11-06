@@ -168,7 +168,7 @@ Ayarların, `CLAUDE.md` dosyaların, remote-control, MCP, skill'ler ve diğer ho
 |---|---|
 | Kendi kurulu `claude` CLI'ını gerçek terminallerde çalıştıran bir **oturum yöneticisi** | Claude'un yerine geçen bir sohbet uygulaması ya da API istemcisi |
 | Durumu Claude Code'un resmi **hook**'larından öğrenen bir pano | Ekranı okuyan, terminal çıktısını ayrıştıran ya da tuş kaydeden bir araç |
-| Birçok projeyi ve paralel oturumu tek pencerede toplayan yerel bir macOS uygulaması | Bulut hizmeti, hesap sistemi ya da telemetri; hiçbir veri dışarı gönderilmez |
+| Birçok projeyi ve paralel oturumu tek pencerede toplayan yerel bir macOS uygulaması | Bulut hizmeti, hesap sistemi ya da telemetri. Sen açmadıkça hiçbir veri Mac'inden çıkmaz: kendi cihazlarına uzaktan erişim (şifreli), iCloud eşitleme ve eklediğin ajanlar (onlara gönderdiğin oturum bağlamını alırlar; bkz. [Ajanlar](docs/agents.md)) |
 | Senin ayarlarını, `CLAUDE.md`'lerini, MCP'lerini ve skill'lerini olduğu gibi kullanan bir kabuk | Claude Code'un davranışını, izin kurallarını ya da modelini değiştiren bir eklenti |
 | İzin istemine senin basacağın tuşu gönderen bir kısayol | İzinleri kendiliğinden onaylayan bir otomasyon |
 
@@ -556,6 +556,17 @@ Sabit bir imza kullanıldığı için macOS'un verdiği izinler (klasör erişim
 - Pencil: Claude oturumlarını Pencil'a bağlama ve durumu.
 - iCloud eşitleme (aşağıda).
 - Claude Code hook'ları: durum, yeniden kur, kaldır.
+
+
+## Ajanlar (isteğe bağlı)
+
+Bir oturum hakkında başka modellere sorabilirsin: bu Mac'te webhook arkasında çalışan bir bot
+(örneğin bir Grok Bot rutini) ya da ClaudeDeck'in xAI API üzerinden çağırdığı bir Grok botu.
+Cevapları Mac'te ve telefonda not olarak gelir; sen göndermedikçe (ya da bir ajana izin vermedikçe)
+Claude'a hiçbir şey gitmez. Ajana istek, son mesaj ve cevap, commit edilmemiş diff ve yeni dosyalar
+gider; anahtar ve token'a benzeyen metinler maskelenir, **Gönderilecek içeriği önizle…** tam olarak
+bunu gösterir. Ajanlar seçtiğin projeleri kendiliğinden izleyebilir; bu Mac'teki botlar yerel bir
+API kullanabilir (127.0.0.1, bearer token). Kurulum, payload ve uçlar: [docs/agents.md](docs/agents.md).
 
 ## iCloud eşitleme (isteğe bağlı)
 

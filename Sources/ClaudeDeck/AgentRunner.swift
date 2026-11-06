@@ -65,7 +65,7 @@ enum AgentRunner {
         request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: ["model": model, "messages": messages])
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await limitedData(for: request)
         try check(response, data)
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         let choices = json?["choices"] as? [[String: Any]]
@@ -92,7 +92,7 @@ enum AgentRunner {
             request.setValue(auth, forHTTPHeaderField: "Authorization")
         }
         request.httpBody = try AgentJSON.encode(payload)
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await limitedData(for: request)
         try check(response, data)
         // Asynchronous: an acknowledgement is enough (an answer in it is still taken).
         if payload.async {
@@ -110,11 +110,24 @@ enum AgentRunner {
         guard let key = AgentKeychain.xaiKey, !key.isEmpty else { throw Failure.noKey }
         var request = URLRequest(url: xaiBase.appending(path: "models"), timeoutInterval: 30)
         request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await limitedData(for: request)
         try check(response, data)
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         let ids = (json?["data"] as? [[String: Any]])?.compactMap { $0["id"] as? String } ?? []
         return ids.sorted()
+    }
+
+    /// The body, read a piece at a time: past `maxResponseBytes` the download stops (a huge
+    /// answer is never held in memory whole).
+    static func limitedData(for request: URLRequest) async throws -> (Data, URLResponse) {
+        let (bytes, response) = try await session.bytes(for: request)
+        var data = Data()
+        if let expected = (response as? HTTPURLResponse)?.expectedContentLength, expected > maxResponseBytes { throw Failure.tooLarge }
+        for try await byte in bytes {
+            data.append(byte)
+            if data.count > maxResponseBytes { throw Failure.tooLarge }
+        }
+        return (data, response)
     }
 
     private static func check(_ response: URLResponse, _ data: Data) throws {

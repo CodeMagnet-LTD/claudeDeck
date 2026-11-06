@@ -44,6 +44,11 @@ final class AppModel {
     @ObservationIgnored var agentNotesRevision: [UUID: Int] = [:]
     /// Agents' activity log (newest last).
     var agentActivity: [AgentActivity] = []
+    /// Notes that were sent on, queued or dismissed, by session (the review box), newest last.
+    var agentReviewHistory: [UUID: [AgentReviewRecord]] = [:]
+    /// The agents sheet on screen: what would be sent, or a session's past reviews.
+    var agentSheet: AgentSheet?
+    @ObservationIgnored var agentNotesSaveTask: Task<Void, Never>?
     /// Automatic agent requests: once per turn, a few rounds in a row (AgentTriggerGate).
     @ObservationIgnored var agentGate = AgentTriggerGate()
     @ObservationIgnored var agentPromptSeen: [UUID: Date] = [:]
@@ -161,6 +166,7 @@ final class AppModel {
         if !Self.isDemo { sync.start(model: self) } // iCloud sync (no-op unless enabled)
         remote.start(model: self) // no-op unless remote mode is on in Settings
         agentAPI.start(model: self) // no-op unless the agents' API is on
+        loadAgentNotes()
         usage.start()
         // Resolving `claude` runs the login shell; keep it off the main thread.
         Task { @MainActor in

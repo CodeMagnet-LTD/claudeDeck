@@ -29,7 +29,13 @@ Settings › Agents:
 6. **Activity Log…** lists everything sent to and received from agents.
 
 Ask by hand from a session's menu (**Ask Agent**) or on the phone (**Ask** above the message field;
-what's typed there is the request).
+what's typed there is the request). **Ask Agent › Preview What's Sent…** shows the exact text first.
+Notes are kept on disk (Application Support/agent-notes.json) and come back after a restart; notes
+that were sent, queued or dismissed stay in **Past Reviews…** (the session's menu, last 50).
+
+Before anything goes out, key- and token-looking strings in the messages, the diff and new files are
+replaced with `[redacted]` (API keys with known prefixes, private key blocks, JWTs, bearer values,
+`password=` / `secret:` style assignments). It's a safety net, not a guarantee: review what you send.
 
 ## What a webhook receives
 

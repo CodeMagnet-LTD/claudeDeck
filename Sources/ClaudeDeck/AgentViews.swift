@@ -260,7 +260,12 @@ struct AskAgentMenu: View {
                     Divider()
                     Button("All Agents") { ask(model.agents.map(\.id)) }
                 }
+                Divider()
+                Button("Preview What's Sent…") { model.previewAgentRequest(model.agents.map(\.id), about: sessionID, request: "") }
             }
+        }
+        if !(model.agentReviewHistory[sessionID] ?? []).isEmpty {
+            Button("Past Reviews…") { model.agentSheet = .history(session: sessionID) }
         }
     }
 
@@ -321,5 +326,51 @@ struct AgentNotesStrip: View {
         .padding(.vertical, 6)
         .frame(maxHeight: 320)
         .background(.bar)
+    }
+}
+
+/// The agents sheet: what would be sent (then send it), or a session's past reviews.
+struct AgentSheetView: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
+    let sheet: AgentSheet
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            switch sheet {
+            case .preview(let session, let agents, let text):
+                Text("What's Sent to Agents").font(.headline)
+                Text("Key- and token-looking strings are replaced with [redacted]. The diff and new files are cut to size.")
+                    .font(.caption).foregroundStyle(.secondary)
+                ScrollView { Text(text).font(.system(.caption, design: .monospaced)).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading) }
+                HStack {
+                    Spacer()
+                    Button("Cancel") { dismiss() }.keyboardShortcut(.cancelAction)
+                    Button("Send to All Agents") {
+                        model.askAgents(agents, about: session, request: "")
+                        dismiss()
+                    }
+                    .keyboardShortcut(.defaultAction)
+                }
+            case .history(let session):
+                Text("Past Reviews").font(.headline)
+                List((model.agentReviewHistory[session] ?? []).reversed()) { record in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(record.note.agentName).font(.callout.weight(.semibold))
+                            Text(record.outcome == "sent" ? String(localized: "Sent to Claude") : record.outcome == "queued" ? String(localized: "Queued") : String(localized: "Dismissed"))
+                                .font(.caption).foregroundStyle(.secondary)
+                            Spacer()
+                            Text(record.date, format: .dateTime.day().month().hour().minute()).font(.caption).foregroundStyle(.secondary)
+                        }
+                        Text(record.note.reply ?? record.note.error ?? "").font(.callout).textSelection(.enabled).lineLimit(8)
+                    }
+                    .padding(.vertical, 2)
+                }
+                HStack { Spacer(); Button("Done") { dismiss() }.keyboardShortcut(.defaultAction) }
+            }
+        }
+        .padding(16)
+        .frame(width: 640, height: 520)
     }
 }

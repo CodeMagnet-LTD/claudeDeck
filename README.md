@@ -166,7 +166,7 @@ ClaudeDeck doesn't wrap, imitate or screen-scrape Claude. Every session runs **y
 |---|---|
 | A **session manager** that runs your installed `claude` CLI in real terminals | A chat client or API client that replaces Claude Code |
 | A dashboard that learns session state from Claude Code's official **hooks** | A tool that reads the screen, parses terminal output or logs keystrokes |
-| A local macOS app that gathers many projects and parallel sessions in one window | A cloud service, an account system or telemetry: nothing leaves your Mac |
+| A local macOS app that gathers many projects and parallel sessions in one window | A cloud service, an account system or telemetry. Nothing leaves your Mac unless you turn it on: remote access to your own devices (encrypted), iCloud sync, and agents you add (they get the session context you send them; see [Agents](docs/agents.md)) |
 | A shell around your own settings, `CLAUDE.md` files, MCP servers and skills | A plugin that changes Claude Code's behavior, permission rules or model |
 | A shortcut that sends the key *you* would press to a permission prompt | An automation that approves permissions on its own |
 
@@ -545,6 +545,16 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
 - Pencil: connect Claude sessions to Pencil, with its status.
 - iCloud sync (below).
 - Claude Code hooks: status, reinstall, uninstall.
+
+## Agents (optional)
+
+Ask other models about a session: a bot on this Mac behind a webhook (for example a Grok Bot
+routine) or a Grok bot ClaudeDeck calls through the xAI API. Their answers come back as notes on
+the Mac and the phone; nothing reaches Claude unless you send it on (or allow an agent to). An agent
+gets the request, the last message and answer, the uncommitted diff and new files, with key- and
+token-looking strings redacted; **Preview What's Sent…** shows exactly that. Agents can follow
+chosen projects by themselves, and bots on this Mac can use a local API (127.0.0.1, bearer token).
+Setup, payload and endpoints: [docs/agents.md](docs/agents.md).
 
 ## iCloud sync (optional)
 
