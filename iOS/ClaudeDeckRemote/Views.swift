@@ -273,6 +273,7 @@ struct SessionListView: View {
     @State private var showNewSession = false
     /// The project the New Session sheet starts on (a pinned project's row).
     @State private var newSessionProject: UUID?
+    @State private var newSessionKind = NewSessionView.Kind.claude
     @State private var browsingProject: RemoteProject?
     @State private var renamingProject: RemoteProject?
     @State private var renameText = ""
@@ -309,9 +310,7 @@ struct SessionListView: View {
                         if running.count == 1, let session = running.first {
                             SessionRowLink(session: session, showProject: true) { AnyView(projectMenu(project.name, running: running)) }
                         } else {
-                            ProjectRow(name: project.name, pinned: true, count: running.count) {
-                                store.startSession(in: project.id, prompt: "", from: sceneID)
-                            }
+                            ProjectRow(name: project.name, pinned: true, count: running.count) { AnyView(newItems(project.id)) }
                             .contextMenu { projectMenu(project.name, running: running) }
                             ForEach(running) { session in
                                 SessionRowLink(session: session, showProject: false) { AnyView(projectMenu(session.project, running: running)) }
@@ -343,7 +342,7 @@ struct SessionListView: View {
                         } else {
                             let id = store.projects.first(where: { $0.name == project })?.id
                             ProjectRow(name: project.isEmpty ? String(localized: "Sessions") : project, pinned: false, count: running.count,
-                                       newSession: id.map { id in { store.startSession(in: id, prompt: "", from: sceneID) } })
+                                       newMenu: id.map { id in { AnyView(newItems(id)) } })
                                 .contextMenu { projectMenu(project, running: running) }
                             ForEach(running) { session in
                                 SessionRowLink(session: session, showProject: false) { AnyView(projectMenu(session.project, running: running)) }
@@ -401,9 +400,7 @@ struct SessionListView: View {
                 Section(isExpanded: $inactiveExpanded) {
                     ForEach(inactive) { project in
                         let resumable = closed.filter { $0.project == project.name }
-                        ProjectRow(name: project.name, pinned: false, count: 0, resumable: resumable, compact: true) {
-                            store.startSession(in: project.id, prompt: "", from: sceneID)
-                        }
+                        ProjectRow(name: project.name, pinned: false, count: 0, resumable: resumable, compact: true) { AnyView(newItems(project.id)) }
                         .modifier(ListRowDensity(minimum: 1))
                         .contextMenu {
                             if !resumable.isEmpty {
@@ -446,9 +443,16 @@ struct SessionListView: View {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
                     Button {
+                        newSessionKind = .claude
                         newSessionProject = nil
                         showNewSession = true
                     } label: { Label("New Session…", systemImage: "plus.bubble") }
+                        .disabled(store.projects.isEmpty)
+                    Button {
+                        newSessionKind = .terminal
+                        newSessionProject = nil
+                        showNewSession = true
+                    } label: { Label("New Terminal…", systemImage: "apple.terminal") }
                         .disabled(store.projects.isEmpty)
                     if store.snapshot?.supports(RemoteSnapshot.Feature.addProject) == true {
                         Button { showAddProject = true } label: { Label("Add Project…", systemImage: "folder.badge.plus") }
@@ -464,7 +468,7 @@ struct SessionListView: View {
                     .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { showFiles = false } } }
             }
         }
-        .sheet(isPresented: $showNewSession) { NavigationStack { NewSessionView(initialProject: newSessionProject) } }
+        .sheet(isPresented: $showNewSession) { NavigationStack { NewSessionView(initialProject: newSessionProject, initialKind: newSessionKind) } }
         .sheet(isPresented: $showAddProject) {
             NavigationStack {
                 FolderPickerView(path: "", title: String(localized: "Add Project")) { showAddProject = false }
@@ -499,21 +503,35 @@ extension SessionListView {
         }
     }
 
+    /// Starting something in a project (the project's "+" and its menu), like the Mac.
+    @ViewBuilder
+    func newItems(_ projectID: UUID) -> some View {
+        // Starts right away; the sheet is for a prompt, a command or a past conversation.
+        Button { store.startSession(in: projectID, prompt: "", from: sceneID) } label: {
+            Label("New Session", systemImage: "plus.bubble")
+        }
+        Button {
+            newSessionKind = .claude
+            newSessionProject = projectID
+            showNewSession = true
+        } label: { Label("Resume Previous Conversation…", systemImage: "clock.arrow.circlepath") }
+        Divider()
+        Button { store.startShell(in: projectID, command: "", from: sceneID) } label: {
+            Label("New Terminal", systemImage: "apple.terminal")
+        }
+        Button {
+            newSessionKind = .terminal
+            newSessionProject = projectID
+            showNewSession = true
+        } label: { Label("New Terminal with Command…", systemImage: "bolt") }
+    }
+
     /// The Mac's project menu, as far as the other Mac can be asked to.
     @ViewBuilder
     func projectMenu(_ name: String, running: [RemoteSession]) -> some View {
         if let project = store.projects.first(where: { $0.name == name }) {
-            // Like the Mac: starts right away; the sheet is for a prompt or a past conversation.
-            Button { store.startSession(in: project.id, prompt: "", from: sceneID) } label: {
-                Label("New Session", systemImage: "plus")
-            }
-            Button {
-                newSessionProject = project.id
-                showNewSession = true
-            } label: { Label("Resume Previous Conversation…", systemImage: "clock.arrow.circlepath") }
-            Button { store.startShell(in: project.id, command: "", from: sceneID) } label: {
-                Label("New Terminal", systemImage: "apple.terminal")
-            }
+            newItems(project.id)
+            Divider()
             Button { browsingProject = project } label: { Label("Browse Files", systemImage: "folder") }
             if let path = project.path {
                 Button { UIPasteboard.general.string = path } label: { Label("Copy Path", systemImage: "doc.on.doc") }
@@ -561,7 +579,8 @@ struct ProjectRow: View {
     var resumable: [RemoteSession] = []
     /// Inactive projects: a lighter, tighter row (same text size as the sessions).
     var compact = false
-    let newSession: (() -> Void)?
+    /// Every way to start something in the project, like the Mac's "+".
+    let newMenu: (() -> AnyView)?
 
     var body: some View {
         HStack(spacing: 8) {
@@ -585,8 +604,8 @@ struct ProjectRow: View {
                 .accessibilityLabel(Text("Closed sessions"))
             }
             Spacer(minLength: 4)
-            if let newSession {
-                Button(action: newSession) { Image(systemName: "plus") }
+            if let newMenu {
+                Menu { newMenu() } label: { Image(systemName: "plus").padding(.vertical, 4).contentShape(Rectangle()) }
                     .buttonStyle(.borderless)
                     .disabled(store.connection != .connected)
                     .accessibilityLabel(Text("New Session"))
@@ -880,6 +899,7 @@ struct NewSessionView: View {
     @Environment(\.sceneID) private var sceneID
     @Environment(\.dismiss) private var dismiss
     var initialProject: UUID? = nil
+    var initialKind = Kind.claude
     @State private var projectID: UUID?
     @State private var prompt = ""
     @State private var kind = Kind.claude
@@ -889,8 +909,19 @@ struct NewSessionView: View {
 
     var body: some View {
         Form {
-            Picker("Project", selection: $projectID) {
-                ForEach(store.projects) { Text($0.name).tag(Optional($0.id)) }
+            if initialProject == nil {
+                // From the header's "+": the projects as a list to pick from (none picked yet).
+                Section("Project") {
+                    Picker("Project", selection: $projectID) {
+                        ForEach(store.projects) { Text($0.name).tag(Optional($0.id)) }
+                    }
+                    .pickerStyle(.inline)
+                    .labelsHidden()
+                }
+            } else {
+                Picker("Project", selection: $projectID) {
+                    ForEach(store.projects) { Text($0.name).tag(Optional($0.id)) }
+                }
             }
             Picker("Type", selection: $kind) {
                 Text("Claude").tag(Kind.claude)
@@ -955,7 +986,12 @@ struct NewSessionView: View {
                 .disabled(projectID == nil || store.connection != .connected)
             }
         }
-        .onAppear { if projectID == nil { projectID = initialProject ?? store.projects.first?.id } }
+        .onAppear {
+            if projectID == nil {
+                projectID = initialProject
+                kind = initialKind
+            }
+        }
     }
 }
 

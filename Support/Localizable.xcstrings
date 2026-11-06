@@ -1,6 +1,16 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "New Terminal…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni Terminal…"
+          }
+        }
+      }
+    },
     "Actions": {
       "localizations": {
         "tr": {
