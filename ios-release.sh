@@ -63,4 +63,4 @@ PATH=/usr/bin:/bin:/usr/sbin:/sbin xcodebuild -exportArchive -archivePath "$ARCH
   -exportPath "$OUT/export" $AUTH > "$OUT/upload.log" 2>&1 \
   || { grep -iE "error" "$OUT/upload.log" | grep -v DVTDeveloperAccountManager | head -20 >&2; fail "Upload failed (log: $OUT/upload.log)."; }
 
-echo "✅ ClaudeDeckRemote $VERSION ($BUILD) uploaded. App Store Connect processes it for a few minutes, then it shows in TestFlight."
+echo "✅ ClaudeDeckRemote $VERSION uploaded (App Store Connect sets the build number). It processes it for a few minutes, then it shows in TestFlight."

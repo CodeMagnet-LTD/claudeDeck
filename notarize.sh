@@ -54,10 +54,22 @@ EOF
 fi
 echo "Signing identity: $IDENTITY"
 
-# The notary profile must exist before we spend time building.
-xcrun notarytool history --keychain-profile "$PROFILE" >/dev/null 2>&1 \
-  || fail "notarytool profile \"$PROFILE\" is missing or invalid. Create it:
+# Notary credentials must work before we spend time building: the keychain profile, or else the
+# App Store Connect API key ios-release.sh uses (~/.appstoreconnect/claudedeck.env + AuthKey_<id>.p8).
+if xcrun notarytool history --keychain-profile "$PROFILE" >/dev/null 2>&1; then
+  NOTARY_AUTH="--keychain-profile $PROFILE"
+else
+  ASC_CONFIG="$HOME/.appstoreconnect/claudedeck.env"
+  # shellcheck disable=SC1090
+  [ -f "$ASC_CONFIG" ] && . "$ASC_CONFIG"
+  ASC_KEY_PATH="${ASC_KEY_PATH:-$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID:-}.p8}"
+  NOTARY_AUTH="--key $ASC_KEY_PATH --key-id ${ASC_KEY_ID:-} --issuer ${ASC_ISSUER_ID:-}"
+  # shellcheck disable=SC2086
+  [ -n "${ASC_KEY_ID:-}" ] && [ -f "$ASC_KEY_PATH" ] && xcrun notarytool history $NOTARY_AUTH >/dev/null 2>&1 \
+    || fail "notarytool profile \"$PROFILE\" is missing or invalid (and no App Store Connect API key in $ASC_CONFIG). Create it:
    xcrun notarytool store-credentials \"$PROFILE\" --apple-id \"<apple-id>\" --team-id \"$TEAM\" --password \"<app-specific-password>\""
+  echo "Notarizing with the App Store Connect API key $ASC_KEY_ID"
+fi
 
 # 2. Clean release build (incremental builds can embed a stale widget).
 rm -rf build/xcode/Build
@@ -92,12 +104,13 @@ codesign --verify --deep --strict --verbose=2 "$APP"
 # 4. Notarize the app (submitted as a zip), then staple the ticket to it.
 notarize() {
   echo "Submitting for notarization: $1 (profile: $PROFILE)…"
-  OUT=$(xcrun notarytool submit "$1" --keychain-profile "$PROFILE" --wait 2>&1) || true
+  # shellcheck disable=SC2086
+  OUT=$(xcrun notarytool submit "$1" $NOTARY_AUTH --wait 2>&1) || true
   echo "$OUT"
   # notarytool can exit 0 for an "Invalid" result, so check the final status explicitly.
   echo "$OUT" | grep -q "status: Accepted" || {
     SUB=$(echo "$OUT" | awk '/^ *id:/ {print $2; exit}')
-    fail "Notarization failed. Details:  xcrun notarytool log ${SUB:-<submission-id>} --keychain-profile \"$PROFILE\""
+    fail "Notarization failed. Details:  xcrun notarytool log ${SUB:-<submission-id>} $NOTARY_AUTH"
   }
 }
 rm -f "$ZIP"
