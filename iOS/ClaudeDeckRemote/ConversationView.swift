@@ -26,6 +26,13 @@ struct ConversationView: View {
         let conversation = store.conversations[sessionID]
         let session = store.snapshot?.session(sessionID)
         VStack(spacing: 0) {
+            // Agents' notes: under the header, outside the conversation (they're not Claude's).
+            if let notes = conversation?.agentNotes, !notes.isEmpty {
+                AgentNotesBar(notes: notes, sessionID: sessionID)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                Divider()
+            }
             ScrollViewReader { proxy in
                 ScrollView {
                     // Not lazy: a page is at most a few dozen entries, and a lazy stack only guesses
@@ -133,7 +140,6 @@ struct ConversationView: View {
         let blocked = session?.state.isBlocked == true
         let sending = store.sendingFiles.contains(sessionID)
         VStack(alignment: .leading, spacing: 6) {
-            if let notes = store.conversations[sessionID]?.agentNotes, !notes.isEmpty { AgentNotesBar(notes: notes, sessionID: sessionID) }
             if let queue = session?.queue, !queue.isEmpty { queueList(queue) }
             if let error = attachError ?? store.promptError {
                 Text(error).font(.caption).foregroundStyle(.red).padding(.horizontal, 4)
@@ -932,7 +938,7 @@ struct ConversationTextSizeMenu: View {
 }
 
 /// An agent's note in the conversation: its answer, then Send to Claude / Queue / Dismiss.
-/// Agents' notes, above the message field (not in the conversation: they're not Claude's).
+/// Agents' notes, under the conversation's header (not in the conversation: they're not Claude's).
 /// One line each; tap to read it all. Sending it on is in the menu, dismissing is the ×.
 struct AgentNotesBar: View {
     let notes: [AgentNote]
