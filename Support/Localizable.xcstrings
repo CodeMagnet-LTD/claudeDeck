@@ -1,6 +1,16 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Agents Waiting for Approval \u00b7 %lld": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onay bekleyen ajanlar · %lld"
+          }
+        }
+      }
+    },
     "Approve": {
       "localizations": {
         "tr": {

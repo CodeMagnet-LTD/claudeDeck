@@ -121,6 +121,51 @@ struct AgentsSettingsSection: View {
     }
 }
 
+/// Above the sidebar's waiting tray while agents that signed themselves up wait for approval:
+/// decided here without opening Settings.
+struct PendingAgentsTray: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        let pending = model.pendingAgents
+        VStack(alignment: .leading, spacing: 0) {
+            Divider()
+            HStack(spacing: 6) {
+                Image(systemName: "person.badge.clock").foregroundStyle(.orange)
+                Text("Agents Waiting for Approval · \(pending.count)").sidebarFont(.callout, weight: .semibold)
+                Spacer()
+            }
+            .padding(.horizontal, 14)
+            .sidebarRowPadding(7)
+            VStack(spacing: 2) {
+                ForEach(pending) { record in
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(record.name).fontWeight(.semibold).lineLimit(1)
+                        Text(record.host).sidebarFont(.caption).foregroundStyle(.secondary).lineLimit(1).help(record.url)
+                        if !record.description.isEmpty {
+                            Text(record.description).sidebarFont(.caption).foregroundStyle(.secondary).lineLimit(2)
+                        }
+                        HStack {
+                            Button("Approve") { model.approveAgent(record.id) }
+                            Button("Reject", role: .destructive) { model.rejectAgent(record.id) }
+                        }
+                        .controlSize(.small)
+                        .padding(.top, 2)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .sidebarRowPadding(5)
+                    .padding(.horizontal, 8)
+                    .background(RoundedRectangle(cornerRadius: 6).fill(Color.orange.opacity(0.1)))
+                }
+            }
+            .padding(.horizontal, 6)
+            .padding(.bottom, 6)
+        }
+        .background(.bar)
+        .animation(.snappy(duration: 0.25), value: pending.map(\.id))
+    }
+}
+
 /// What went out to agents and what came in, newest first.
 struct AgentActivityLog: View {
     @Environment(AppModel.self) private var model

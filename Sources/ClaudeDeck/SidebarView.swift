@@ -40,6 +40,11 @@ struct SidebarView: View {
             // Waiting tray above the footer, outside the list: it only shortens the list, never
             // pushes its rows around.
             VStack(spacing: 0) {
+                if !model.pendingAgents.isEmpty {
+                    PendingAgentsTray()
+                        .sidebarStyle(scale: textScale, density: density)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
                 if !waiting.isEmpty {
                     WaitingTray(sessions: waiting, maxHeight: sidebarHeight * 0.4)
                         .sidebarStyle(scale: textScale, density: density)
@@ -49,6 +54,7 @@ struct SidebarView: View {
                 footer
             }
             .animation(.snappy(duration: 0.3), value: waiting.isEmpty)
+            .animation(.snappy(duration: 0.3), value: model.pendingAgents.isEmpty)
         }
         .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { sidebarHeight = $0 }
         // The whole column (list, filter bar, tray) counts as "pointing at the sidebar".
