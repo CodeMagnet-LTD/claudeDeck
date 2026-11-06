@@ -499,24 +499,14 @@ final class RemoteStore {
     @discardableResult
     func askAgents(_ id: UUID, agents: [UUID], request: String) -> Bool {
         guard !agents.isEmpty else { return false }
-        let sent = send(.askAgents(sessionID: id, agentIDs: agents, request: request.trimmingCharacters(in: .whitespacesAndNewlines)))
-        if sent { refreshSoon(id) }
-        return sent
+        // The Mac bumps the session's notes revision; the snapshot brings the new page.
+        return send(.askAgents(sessionID: id, agentIDs: agents, request: request.trimmingCharacters(in: .whitespacesAndNewlines)))
     }
 
-    func agentNoteAction(_ id: UUID, note: UUID, _ action: AgentNoteAction) {
-        _ = send(.agentNoteAction(sessionID: id, noteID: note, action: action))
-        // Off the list right away; the next page confirms it.
-        conversations[id]?.agentNotes.removeAll { $0.id == note }
-        refreshSoon(id)
-    }
-
-    /// The page with the new note state, a moment after an agent request or action.
-    private func refreshSoon(_ id: UUID) {
-        Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .milliseconds(400))
-            self?.requestNewer(id)
-        }
+    /// The note stays until the Mac's page drops it (or shows why it couldn't send).
+    @discardableResult
+    func agentNoteAction(_ id: UUID, note: UUID, _ action: AgentNoteAction) -> Bool {
+        send(.agentNoteAction(sessionID: id, noteID: note, action: action))
     }
 
     /// Pin / unpin or rename one of the Mac's projects.

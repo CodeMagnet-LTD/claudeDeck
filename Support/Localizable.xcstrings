@@ -9683,6 +9683,66 @@
           }
         }
       }
+    },
+    "This session isn't running.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu oturum çalışmıyor."
+          }
+        }
+      }
+    },
+    "Answer the prompt on screen first.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Önce ekrandaki soruyu yanıtla."
+          }
+        }
+      }
+    },
+    "No answer to send yet.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz gönderilecek bir cevap yok."
+          }
+        }
+      }
+    },
+    "Webhooks need https (http only to this Mac: 127.0.0.1 or localhost).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Webhook için https gerekir (http yalnızca bu Mac için: 127.0.0.1 ya da localhost)."
+          }
+        }
+      }
+    },
+    "The agent's answer is too large.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajanın cevabı çok büyük."
+          }
+        }
+      }
+    },
+    "Authorization header (optional)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Authorization başlığı (isteğe bağlı)"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

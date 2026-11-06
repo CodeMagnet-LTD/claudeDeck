@@ -40,6 +40,8 @@ final class AppModel {
     @ObservationIgnored var queueAwaiting: [UUID: Date] = [:]
     /// Agents' notes by session (in memory; see AppModel+Agents).
     var agentNotes: [UUID: [AgentNote]] = [:]
+    /// Bumped on every change to a session's notes (remotes see it in the snapshot).
+    @ObservationIgnored var agentNotesRevision: [UUID: Int] = [:]
     /// A note was added, answered or removed (remotes refresh the conversation).
     @ObservationIgnored var onAgentNotesChanged: (() -> Void)?
     /// Last time the user looked at a session while it was idle (clears the yellow "unseen" badge).

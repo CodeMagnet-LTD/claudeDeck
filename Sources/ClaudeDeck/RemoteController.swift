@@ -146,6 +146,9 @@ final class RemoteController {
             previous?()
             self?.publishSnapshot()
         }
+        // A note came, was answered or went: the snapshot says so, and a phone with that
+        // conversation open fetches the page with the notes at once.
+        model.onAgentNotesChanged = { [weak self] in self?.publishSnapshot() }
         let previousSaved = model.onSaved
         model.onSaved = { [weak self] in
             previousSaved?()
@@ -620,6 +623,7 @@ final class RemoteController {
                 permissionStamp: model.pendingPermissionStamp(session.id)?.timeIntervalSince1970
             )
             remote.queue = session.queue.isEmpty ? nil : session.queue
+            remote.notesRevision = model.agentNotesRevision[session.id]
             return remote
         }
         return RemoteSnapshot(hostName: hostName, sessions: sessions)

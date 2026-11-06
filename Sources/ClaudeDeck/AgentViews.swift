@@ -48,6 +48,7 @@ struct AgentEditor: View {
     @State private var useWebhook = false
     @State private var testResult: String?
     @State private var testing = false
+    @State private var authorization = ""
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -60,7 +61,8 @@ struct AgentEditor: View {
                 }
                 .pickerStyle(.segmented)
                 if useWebhook {
-                    TextField("Webhook URL", text: Binding(get: { agent.webhookURL ?? "" }, set: { agent.webhookURL = $0 }), prompt: Text("https://…"))
+                    TextField("Webhook URL", text: Binding(get: { agent.webhookURL ?? "" }, set: { agent.webhookURL = $0 }), prompt: Text("https://… or http://127.0.0.1:…"))
+                    SecureField("Authorization header (optional)", text: $authorization, prompt: Text("Bearer …"))
                     Text("ClaudeDeck POSTs {agent, system, model, message} and shows {\"reply\": \"…\"} (or the plain text it answers).")
                         .font(.caption).foregroundStyle(.secondary)
                 } else {
@@ -96,7 +98,10 @@ struct AgentEditor: View {
         }
         .padding(16)
         .frame(width: 560, height: 560)
-        .onAppear { useWebhook = agent.usesWebhook }
+        .onAppear {
+            useWebhook = agent.usesWebhook
+            authorization = AgentKeychain.webhookAuthorization(agent.id) ?? ""
+        }
         .task {
             do { models = try await AgentRunner.xaiModels() } catch { loadError = error.localizedDescription }
         }
@@ -111,6 +116,7 @@ struct AgentEditor: View {
 
     private func save() {
         let profile = edited
+        AgentKeychain.setWebhookAuthorization(useWebhook ? authorization : nil, for: profile.id)
         model.mutate(userInitiated: false) { deck in
             if let index = deck.settings.agents.firstIndex(where: { $0.id == profile.id }) {
                 deck.settings.agents[index] = profile
@@ -125,6 +131,7 @@ struct AgentEditor: View {
         testing = true
         testResult = nil
         let profile = edited
+        AgentKeychain.setWebhookAuthorization(useWebhook ? authorization : nil, for: profile.id)
         Task {
             do { testResult = try await AgentRunner.ask(profile, message: "Reply with one short sentence: who are you and what do you review?") }
             catch { testResult = error.localizedDescription }
@@ -196,6 +203,9 @@ struct AgentNotesStrip: View {
                             .onTapGesture { if expanded.contains(note.id) { expanded.remove(note.id) } else { expanded.insert(note.id) } }
                     } else if let error = note.error {
                         Text(error).font(.caption).foregroundStyle(.orange)
+                    }
+                    if let failure = note.actionError {
+                        Text(failure).font(.caption).foregroundStyle(.orange)
                     }
                 }
                 .padding(8)

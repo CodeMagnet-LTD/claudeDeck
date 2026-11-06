@@ -43,10 +43,14 @@ extension AppModel {
         }
     }
 
-    /// Types a message and presses Return (Claude Code queues it itself while working).
-    func typePrompt(_ text: String, into id: UUID) {
-        guard terminals.isRunning(id), !status(of: id).display.isBlocked else { return }
+    /// Types a message and presses Return (Claude Code queues it itself while working). Returns
+    /// why not: the session isn't running, or a permission prompt / question is on screen.
+    @discardableResult
+    func typePrompt(_ text: String, into id: UUID) -> String? {
+        guard terminals.isRunning(id) else { return String(localized: "This session isn't running.") }
+        guard !status(of: id).display.isBlocked else { return String(localized: "Answer the prompt on screen first.") }
         terminals.type(text + "\r", into: id)
         markSeen(id)
+        return nil
     }
 }

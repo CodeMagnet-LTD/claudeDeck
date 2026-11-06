@@ -938,6 +938,8 @@ struct AgentNoteCard: View {
     @Environment(RemoteStore.self) private var store
     let note: AgentNote
     let sessionID: UUID
+    /// Sent, waiting for the Mac: the buttons wait too (cleared when the note changes).
+    @State private var working = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -948,25 +950,28 @@ struct AgentNoteCard: View {
                     Text("· \(note.request)").listFont(.caption).foregroundStyle(.secondary).lineLimit(1)
                 }
                 Spacer(minLength: 4)
-                if note.pending { ProgressView().controlSize(.small) }
-                Button { store.agentNoteAction(sessionID, note: note.id, .dismiss) } label: { Image(systemName: "xmark.circle.fill") }
+                if note.pending || working { ProgressView().controlSize(.small) }
+                Button { act(.dismiss) } label: { Image(systemName: "xmark.circle.fill") }
                     .buttonStyle(.borderless)
                     .foregroundStyle(.tertiary)
             }
             if let reply = note.reply {
                 MarkdownView(text: reply)
                 HStack(spacing: 8) {
-                    Button { store.agentNoteAction(sessionID, note: note.id, .sendToClaude) } label: {
+                    Button { act(.sendToClaude) } label: {
                         Label("Send to Claude", systemImage: "arrow.up.circle")
                     }
                     .buttonStyle(.borderedProminent)
-                    Button { store.agentNoteAction(sessionID, note: note.id, .queueForClaude) } label: {
+                    Button { act(.queueForClaude) } label: {
                         Label("Queue", systemImage: "text.line.first.and.arrowtriangle.forward")
                     }
                     .buttonStyle(.bordered)
                 }
                 .controlSize(.small)
-                .disabled(store.connection != .connected)
+                .disabled(store.connection != .connected || working)
+                if let failure = note.actionError {
+                    Text(failure).listFont(.caption).foregroundStyle(.orange)
+                }
             } else if let error = note.error {
                 Text(error).listFont(.caption).foregroundStyle(.orange)
             } else {
@@ -975,5 +980,16 @@ struct AgentNoteCard: View {
         }
         .padding(10)
         .background(Color.purple.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
+        .onChange(of: note) { _, _ in working = false }
+        .task(id: working) {
+            // No word from the Mac (lost connection): the buttons come back.
+            guard working else { return }
+            try? await Task.sleep(for: .seconds(8))
+            working = false
+        }
+    }
+
+    private func act(_ action: AgentNoteAction) {
+        if store.agentNoteAction(sessionID, note: note.id, action) { working = true }
     }
 }

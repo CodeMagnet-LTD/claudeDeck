@@ -929,3 +929,52 @@ import Testing
         #expect(AgentHandoff.prompt(from: note) == "Kod Checker reviewed your work:\n\nLooks fine")
     }
 }
+
+@Suite struct AgentContextTests {
+    @Test func lastExchangeSkipsToolLines() {
+        // The shapes Claude Code writes: a typed prompt (string), a text answer, then a tool call
+        // and its result after it.
+        let jsonl = [
+            #"{"type":"user","uuid":"u1","timestamp":"2026-11-06T10:00:00Z","message":{"role":"user","content":"add retries to the client"}}"#,
+            #"{"type":"assistant","uuid":"a1","timestamp":"2026-11-06T10:00:05Z","message":{"role":"assistant","content":[{"type":"text","text":"Added retries with backoff."}]}}"#,
+            #"{"type":"assistant","uuid":"a2","timestamp":"2026-11-06T10:00:06Z","message":{"role":"assistant","content":[{"type":"tool_use","id":"t1","name":"Bash","input":{"command":"swift test"}}]}}"#,
+            #"{"type":"user","uuid":"u2","timestamp":"2026-11-06T10:00:09Z","message":{"role":"user","content":[{"type":"tool_result","tool_use_id":"t1","content":"ok"}]}}"#,
+        ].joined(separator: "\n")
+        let exchange = AgentContext.lastExchange(in: ConversationLog.entries(fromJSONL: jsonl))
+        #expect(exchange.prompt == "add retries to the client")
+        #expect(exchange.reply == "Added retries with backoff.")
+    }
+
+    @Test func untrackedFilesAreFilteredAndCut() {
+        let big = Data(String(repeating: "a", count: UntrackedFile.maxFileCharacters + 50).utf8)
+        let picked = UntrackedFile.select([
+            ("src/new.swift", Data("let x = 1".utf8)),
+            (".env.local", Data("KEY=1".utf8)),
+            ("certs/server.pem", Data("-----".utf8)),
+            ("config/secrets.json", Data("{}".utf8)),
+            ("logo.png", Data([0x89, 0x50, 0x00, 0x01])),
+            ("src/big.txt", big),
+        ])
+        #expect(picked.map(\.path) == ["src/new.swift", "src/big.txt"])
+        #expect(picked[1].content.hasSuffix("… (cut)"))
+        let many = (0..<40).map { ("f\($0).txt", Data(String(repeating: "b", count: 4000).utf8)) }
+        let total = UntrackedFile.select(many).reduce(0) { $0 + $1.content.count }
+        #expect(total <= UntrackedFile.maxTotalCharacters + 20)
+        let context = AgentContext(project: "p", session: "s", lastPrompt: nil, lastReply: nil, diff: nil,
+                                   untracked: [UntrackedFile(path: "a.swift", content: "x")], request: "")
+        #expect(context.message.contains("## New files (not in git yet)\n### a.swift"))
+    }
+
+    @Test func webhookRules() throws {
+        #expect(try AgentWebhook.url("https://bot.example.com/hook").host == "bot.example.com")
+        #expect(try AgentWebhook.url("http://127.0.0.1:5005/hook").port == 5005)
+        #expect(try AgentWebhook.url("http://localhost/hook").host == "localhost")
+        #expect(throws: AgentWebhook.Problem.insecureURL) { try AgentWebhook.url("http://bot.example.com/hook") }
+        #expect(throws: AgentWebhook.Problem.badURL) { try AgentWebhook.url("ftp://x/y") }
+        #expect(try AgentWebhook.reply(from: Data(#"{"reply":"looks good"}"#.utf8)) == "looks good")
+        #expect(try AgentWebhook.reply(from: Data("plain answer".utf8)) == "plain answer")
+        #expect(throws: AgentWebhook.Problem.empty) { try AgentWebhook.reply(from: Data(#"{"reply":"  "}"#.utf8)) }
+        #expect(throws: AgentWebhook.Problem.empty) { try AgentWebhook.reply(from: Data()) }
+        #expect(throws: AgentWebhook.Problem.tooLarge) { try AgentWebhook.reply(from: Data(count: AgentWebhook.maxResponseBytes + 1)) }
+    }
+}

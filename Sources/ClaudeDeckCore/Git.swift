@@ -110,6 +110,20 @@ public enum Git {
         run(["diff", "HEAD", "--no-ext-diff", "--no-color"], in: repo) ?? ""
     }
 
+    /// Files git doesn't track and doesn't ignore (new code), as candidates for an agent.
+    public static func untrackedFiles(in repo: URL) -> [UntrackedFile] {
+        let list = run(["ls-files", "--others", "--exclude-standard", "-z"], in: repo) ?? ""
+        let paths = list.split(separator: "\0").map(String.init).filter { !$0.isEmpty }.prefix(200)
+        let candidates: [(path: String, data: Data)] = paths.compactMap { path in
+            guard !UntrackedFile.isSecret(path) else { return nil }
+            let url = repo.appending(path: path)
+            let size = ((try? url.resourceValues(forKeys: [.fileSizeKey]))?.fileSize) ?? 0
+            guard size <= UntrackedFile.maxFileBytes, let data = try? Data(contentsOf: url) else { return nil }
+            return (path, data)
+        }
+        return UntrackedFile.select(candidates)
+    }
+
     /// Uncommitted changes of `file`.
     public static func workingDiff(of file: URL, in repo: URL) -> String {
         run(["diff", "HEAD", "--", pathspec(file, in: repo)], in: repo) ?? ""

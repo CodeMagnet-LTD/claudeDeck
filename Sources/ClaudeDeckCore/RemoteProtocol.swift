@@ -392,6 +392,9 @@ public struct RemoteSession: Codable, Sendable, Equatable, Identifiable {
     public var permissionStamp: Double?
     /// Messages waiting for "your turn" (hosts with `Feature.queue`).
     public var queue: [QueuedPrompt]?
+    /// Changes whenever the session's agent notes do: a remote with the conversation open asks
+    /// for the page (the notes come with it).
+    public var notesRevision: Int?
 
     public init(
         id: UUID, name: String, project: String, state: State, detail: String? = nil,

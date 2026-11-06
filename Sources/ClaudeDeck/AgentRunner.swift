@@ -6,15 +6,30 @@ import Security
 enum AgentRunner {
     static let xaiBase = URL(string: "https://api.x.ai/v1")!
 
+    /// No cookies, cache or shared credentials; answers bigger than this are refused.
+    static let session = URLSession(configuration: .ephemeral)
+    static let maxResponseBytes = AgentWebhook.maxResponseBytes
+
     enum Failure: LocalizedError {
-        case noKey, noModel, badURL, http(Int, String), empty
+        case noKey, noModel, badURL, insecureURL, tooLarge, http(Int, String), empty
         var errorDescription: String? {
             switch self {
             case .noKey: String(localized: "Add your xAI API key in Settings → Agents.")
             case .noModel: String(localized: "Pick a model for this agent in Settings → Agents.")
             case .badURL: String(localized: "The agent's webhook address isn't a valid URL.")
+            case .insecureURL: String(localized: "Webhooks need https (http only to this Mac: 127.0.0.1 or localhost).")
+            case .tooLarge: String(localized: "The agent's answer is too large.")
             case .http(let code, let body): String(localized: "The agent answered \(code): \(body)")
             case .empty: String(localized: "The agent sent an empty answer.")
+            }
+        }
+
+        init(_ problem: AgentWebhook.Problem) {
+            switch problem {
+            case .badURL: self = .badURL
+            case .insecureURL: self = .insecureURL
+            case .tooLarge: self = .tooLarge
+            case .empty: self = .empty
             }
         }
     }
@@ -36,7 +51,7 @@ enum AgentRunner {
         request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.httpBody = try JSONSerialization.data(withJSONObject: ["model": model, "messages": messages])
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
         try check(response, data)
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         let choices = json?["choices"] as? [[String: Any]]
@@ -45,22 +60,29 @@ enum AgentRunner {
         return content
     }
 
+    /// Core's rules, as this runner's errors.
+    static func webhookURL(_ raw: String?) throws -> URL {
+        do { return try AgentWebhook.url(raw) } catch let problem as AgentWebhook.Problem { throw Failure(problem) }
+    }
+
+    static func reply(from data: Data) throws -> String {
+        do { return try AgentWebhook.reply(from: data) } catch let problem as AgentWebhook.Problem { throw Failure(problem) }
+    }
+
     private static func webhook(_ profile: AgentProfile, message: String) async throws -> String {
-        guard let url = URL(string: (profile.webhookURL ?? "").trimmingCharacters(in: .whitespaces)),
-              url.scheme == "http" || url.scheme == "https" else { throw Failure.badURL }
+        let url = try webhookURL(profile.webhookURL)
         var request = URLRequest(url: url, timeoutInterval: 180)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        if let auth = AgentKeychain.webhookAuthorization(profile.id), !auth.isEmpty {
+            request.setValue(auth, forHTTPHeaderField: "Authorization")
+        }
         request.httpBody = try JSONSerialization.data(withJSONObject: [
             "agent": profile.name, "system": profile.systemPrompt, "model": profile.model, "message": message,
         ])
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
         try check(response, data)
-        if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any], let reply = json["reply"] as? String {
-            return reply
-        }
-        guard let text = String(data: data, encoding: .utf8), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw Failure.empty }
-        return text
+        return try reply(from: data)
     }
 
     /// The models the key can use (Settings' picker), sorted.
@@ -68,7 +90,7 @@ enum AgentRunner {
         guard let key = AgentKeychain.xaiKey, !key.isEmpty else { throw Failure.noKey }
         var request = URLRequest(url: xaiBase.appending(path: "models"), timeoutInterval: 30)
         request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
         try check(response, data)
         let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         let ids = (json?["data"] as? [[String: Any]])?.compactMap { $0["id"] as? String } ?? []
@@ -76,6 +98,7 @@ enum AgentRunner {
     }
 
     private static func check(_ response: URLResponse, _ data: Data) throws {
+        guard data.count <= maxResponseBytes else { throw Failure.tooLarge }
         guard let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) else { return }
         let body = String(data: data.prefix(400), encoding: .utf8) ?? ""
         throw Failure.http(http.statusCode, body)
@@ -87,7 +110,14 @@ enum AgentKeychain {
     private static let service = "co.codemagnet.ClaudeDeck.agents"
     private static let account = "xai"
 
-    static var xaiKey: String? {
+    static var xaiKey: String? { read(account) }
+    static func setXAIKey(_ key: String?) { write(key, account) }
+
+    /// A webhook agent's Authorization header value ("Bearer …"), sent as typed.
+    static func webhookAuthorization(_ agent: UUID) -> String? { read("webhook-" + agent.uuidString) }
+    static func setWebhookAuthorization(_ value: String?, for agent: UUID) { write(value, "webhook-" + agent.uuidString) }
+
+    static func read(_ account: String) -> String? {
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,
                                     kSecAttrAccount as String: account, kSecReturnData as String: true]
         var item: CFTypeRef?
@@ -95,12 +125,12 @@ enum AgentKeychain {
         return String(data: data, encoding: .utf8)
     }
 
-    static func setXAIKey(_ key: String?) {
+    static func write(_ value: String?, _ account: String) {
         let base: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service, kSecAttrAccount as String: account]
         SecItemDelete(base as CFDictionary)
-        guard let key = key?.trimmingCharacters(in: .whitespacesAndNewlines), !key.isEmpty else { return }
+        guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else { return }
         var add = base
-        add[kSecValueData as String] = Data(key.utf8)
+        add[kSecValueData as String] = Data(value.utf8)
         SecItemAdd(add as CFDictionary, nil)
     }
 }
