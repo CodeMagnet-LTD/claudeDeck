@@ -62,6 +62,11 @@ final class AgentAPIController {
     // MARK: Requests
 
     func handle(_ request: AgentHTTPRequest) async -> AgentHTTPResponse {
+        // A Claude session asking by itself: its own token, not the API's.
+        if request.path == AgentAsk.path || request.path == AgentAsk.path + "/" {
+            guard let model else { return .error(503, "unavailable") }
+            return model.handleClaudeAsk(request)
+        }
         let route: AgentRoute
         switch AgentRoute.resolve(request, token: token) {
         case .failure(let refusal): return refusal.response

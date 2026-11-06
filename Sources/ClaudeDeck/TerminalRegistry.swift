@@ -42,8 +42,8 @@ enum ShellEnvironment {
         ProcessInfo.processInfo.environment.filter { !isInheritedMarker($0.key) }
     }
 
-    static func environment(terminalID: UUID) -> [String] {
-        var env = cleanEnvironment
+    static func environment(terminalID: UUID, extra: [String: String] = [:]) -> [String] {
+        var env = cleanEnvironment.merging(extra) { $1 }
         env["TERM"] = "xterm-256color"
         env["COLORTERM"] = "truecolor"
         env["TERM_PROGRAM"] = "ClaudeDeck"
@@ -367,7 +367,7 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
 
     func view(for id: UUID) -> DeckTerminalView? { views[id] }
 
-    func start(id: UUID, cwd: String, claudePath: String?, args: [String]) {
+    func start(id: UUID, cwd: String, claudePath: String?, args: [String], environment: [String: String] = [:]) {
         let view = views[id] ?? DeckTerminalView(sessionID: id, fontSize: fontSize)
         view.processDelegate = self
         view.onInput = { [weak self] data in self?.onUserInput?(id, data) }
@@ -389,7 +389,7 @@ final class TerminalRegistry: NSObject, LocalProcessTerminalViewDelegate {
         view.startProcess(
             executable: shell,
             args: ["-l", "-c", script, claude] + args,
-            environment: ShellEnvironment.environment(terminalID: id),
+            environment: ShellEnvironment.environment(terminalID: id, extra: environment),
             execName: "-" + (shell as NSString).lastPathComponent,
             currentDirectory: dir
         )

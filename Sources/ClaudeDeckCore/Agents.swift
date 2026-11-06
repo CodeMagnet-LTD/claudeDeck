@@ -20,9 +20,13 @@ public struct AgentProfile: Codable, Identifiable, Sendable, Equatable {
     public var autoProjects: [UUID]
     /// Through the local API it may type into Claude directly; otherwise its texts become notes.
     public var canSendDirectly: Bool
+    /// A Claude session may ask it by itself (`claudedeck-ask`, AgentAsk); the answer still comes
+    /// back as a note for the user.
+    public var claudeCanAsk: Bool
 
     public init(id: UUID = UUID(), name: String, model: String = "", systemPrompt: String = "", webhookURL: String? = nil,
-                async: Bool = false, autoTrigger: Bool = false, autoProjects: [UUID] = [], canSendDirectly: Bool = false) {
+                async: Bool = false, autoTrigger: Bool = false, autoProjects: [UUID] = [], canSendDirectly: Bool = false,
+                claudeCanAsk: Bool = false) {
         self.id = id
         self.name = name
         self.model = model
@@ -32,6 +36,7 @@ public struct AgentProfile: Codable, Identifiable, Sendable, Equatable {
         self.autoTrigger = autoTrigger
         self.autoProjects = autoProjects
         self.canSendDirectly = canSendDirectly
+        self.claudeCanAsk = claudeCanAsk
     }
 
     /// Follows this project's sessions by itself.
@@ -49,6 +54,7 @@ public struct AgentProfile: Codable, Identifiable, Sendable, Equatable {
         autoTrigger = try c.decodeIfPresent(Bool.self, forKey: .autoTrigger) ?? false
         autoProjects = try c.decodeIfPresent([UUID].self, forKey: .autoProjects) ?? []
         canSendDirectly = try c.decodeIfPresent(Bool.self, forKey: .canSendDirectly) ?? false
+        claudeCanAsk = try c.decodeIfPresent(Bool.self, forKey: .claudeCanAsk) ?? false
     }
 
     public var usesWebhook: Bool { !(webhookURL ?? "").trimmingCharacters(in: .whitespaces).isEmpty }

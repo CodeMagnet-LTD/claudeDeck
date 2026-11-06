@@ -55,7 +55,12 @@ extension AppModel {
         if event == .manual { agentGate.reset(sessionID) }
         var notes: [(AgentProfile, AgentNote)] = []
         for agent in chosen {
-            let note = AgentNote(agentID: agent.id, agentName: agent.name, request: event == .manual ? request : Self.label(event))
+            let shown = switch event {
+            case .manual: request
+            case .claudeAsk: String(localized: "Claude asks") + (request.isEmpty ? "" : ": \(request)")
+            default: Self.label(event)
+            }
+            let note = AgentNote(agentID: agent.id, agentName: agent.name, request: shown)
             notes.append((agent, note))
             agentNotes[sessionID, default: []].append(note)
         }
@@ -94,7 +99,7 @@ extension AppModel {
         case .idle: String(localized: "Turn finished")
         case .permission: String(localized: "Waiting for permission")
         case .question: String(localized: "Asking a question")
-        case .manual, .test: ""
+        case .manual, .test, .claudeAsk: ""
         }
     }
 
@@ -363,6 +368,73 @@ extension AppModel {
         AgentKeychain.setWebhookAuthorization(nil, for: id)
         mutate(userInitiated: false) { $0.settings.agentRegistrations = registrations }
         logAgent(record.name, inbound: false, "rejected · \(record.host)", ok: false)
+    }
+
+    // MARK: Claude asking by itself (claudedeck-ask)
+
+    /// `<Application Support>/bin/claudedeck-ask` (the demo's data folder in demo mode).
+    var askScriptURL: URL {
+        DeckDataStore.default().url.deletingLastPathComponent().appending(path: "bin/claudedeck-ask")
+    }
+
+    /// Written on every launch (it holds no secret), so it matches this version.
+    func installAskScript() {
+        let url = askScriptURL
+        do {
+            try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+            try Data(AgentAsk.script.utf8).write(to: url, options: .atomic)
+            try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: url.path)
+        } catch {
+            logAgent("ClaudeDeck", inbound: false, "couldn't write claudedeck-ask: \(error.localizedDescription)", ok: false)
+        }
+    }
+
+    /// What a Claude session's terminal gets: its own token, where to post, and the command's
+    /// path (also on PATH; Claude Code's Bash tool may reset PATH, the absolute path stays).
+    func askEnvironment(for id: UUID) -> [String: String] {
+        let token = askTokens[id] ?? AgentBearer.newToken()
+        askTokens[id] = token
+        let bin = askScriptURL.deletingLastPathComponent().path
+        let path = ProcessInfo.processInfo.environment["PATH"] ?? "/usr/bin:/bin:/usr/sbin:/sbin"
+        return [
+            "CLAUDEDECK_ASK_TOKEN": token,
+            "CLAUDEDECK_ASK_URL": "http://127.0.0.1:\(deck.settings.agentAPIPort)\(AgentAsk.path)",
+            "CLAUDEDECK_ASK": askScriptURL.path,
+            "PATH": bin + ":" + path,
+        ]
+    }
+
+    /// `/v1/ask`, authorized by a session's own token (never the API's): `GET` lists the agents
+    /// Claude may ask, `POST agent=…&request=…` asks them; the answer becomes a note.
+    func handleClaudeAsk(_ request: AgentHTTPRequest) -> AgentHTTPResponse {
+        guard let sessionID = AgentAsk.session(for: request.header("authorization"), tokens: askTokens) else {
+            return .error(401, "unauthorized")
+        }
+        guard let session = deck.session(sessionID), session.kind == .claude else { return .error(404, "unknown_session") }
+        switch request.method {
+        case "GET":
+            return .json(200, ["agents": AgentAsk.list(agents)])
+        case "POST":
+            guard request.body.count <= AgentRegistry.maxBodyBytes else { return .error(413, "too_large") }
+            guard let form = AgentAsk.form(request.body) else { return .error(400, "bad_request") }
+            let targets: [AgentProfile]
+            switch AgentAsk.targets(form.agent, profiles: agents, registrations: deck.settings.agentRegistrations) {
+            case .failure(let refusal):
+                logAgent("Claude", inbound: false, "asked \(form.agent) · \(session.name): refused", ok: false)
+                return refusal.response
+            case .success(let found): targets = found
+            }
+            guard askLimiter.allow(sessionID) else {
+                logAgent("Claude", inbound: false, "too many asks · \(session.name)", ok: false)
+                return .error(429, "too_many_asks")
+            }
+            askAgents(targets.map(\.id), about: sessionID, request: form.request, event: .claudeAsk)
+            let names = targets.map(\.name)
+            return .json(200, ["asked": names.joined(separator: ", "),
+                               "answer": "Each answer comes to the user as a note in ClaudeDeck; they decide whether it reaches you."])
+        default:
+            return .error(405, "method_not_allowed")
+        }
     }
 
     // MARK: Sessions for the API

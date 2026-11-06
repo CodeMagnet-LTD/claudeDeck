@@ -252,6 +252,7 @@ struct AgentEditor: View {
                     }
                 }
                 Toggle("May type into Claude through the local API (otherwise its texts become notes)", isOn: $agent.canSendDirectly)
+                Toggle("Claude may ask it from its session (claudedeck-ask; the answer is a note for you)", isOn: $agent.claudeCanAsk)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Instructions (system prompt)")
                     TextEditor(text: $agent.systemPrompt)

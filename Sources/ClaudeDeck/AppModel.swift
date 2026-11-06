@@ -51,6 +51,9 @@ final class AppModel {
     @ObservationIgnored var agentNotesSaveTask: Task<Void, Never>?
     /// Automatic agent requests: once per turn, a few rounds in a row (AgentTriggerGate).
     @ObservationIgnored var agentGate = AgentTriggerGate()
+    /// Each Claude session's own token for `claudedeck-ask` (AgentAsk), made when it starts.
+    @ObservationIgnored var askTokens: [UUID: String] = [:]
+    @ObservationIgnored var askLimiter = AgentAskLimiter()
     @ObservationIgnored var agentPromptSeen: [UUID: Date] = [:]
     @ObservationIgnored var agentTypedPrompts: [UUID: [String]] = [:]
     /// A note was added, answered or removed (remotes refresh the conversation).
@@ -170,6 +173,7 @@ final class AppModel {
         if !Self.isDemo { sync.start(model: self) } // iCloud sync (no-op unless enabled)
         remote.start(model: self) // no-op unless remote mode is on in Settings
         agentAPI.start(model: self) // no-op unless the agents' API is on
+        installAskScript()
         loadAgentNotes()
         usage.start()
         // Resolving `claude` runs the login shell; keep it off the main thread.
@@ -194,8 +198,10 @@ final class AppModel {
             deck.updateSession(session.id) { $0.isOpen = false }
         }
         for session in toStart { launch(session.id, resume: true, automatic: true) }
+        // The selected session comes up so the window isn't empty, but it wasn't open (ended, or
+        // resume on launch is off): nothing is typed into it (no continue message, no /compact).
         if let selected = deck.selectedSessionID, deck.session(selected) != nil, !terminals.isRunning(selected) {
-            launch(selected, resume: true, automatic: true)
+            launch(selected, resume: true, automatic: false)
         }
         scheduleSave()
     }
@@ -481,7 +487,8 @@ final class AppModel {
         // Pencil MCP first: `--mcp-config` is variadic and the following `--name` ends it.
         let pencil = PencilApp.launchArgs(enabled: deck.settings.pencilMCP)
         if pencil.isEmpty { pencilSessions.remove(id) } else { pencilSessions.insert(id) }
-        terminals.start(id: id, cwd: worktreeDir ?? project.path, claudePath: claudePath, args: pencil + args)
+        terminals.start(id: id, cwd: worktreeDir ?? project.path, claudePath: claudePath, args: pencil + args,
+                        environment: askEnvironment(for: id))
         deck.updateSession(id) { $0.isOpen = true }
         lastNotified[id] = nil
         scheduleSave()

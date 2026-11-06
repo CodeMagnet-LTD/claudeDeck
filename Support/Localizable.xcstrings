@@ -1,6 +1,26 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Claude asks": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude soruyor"
+          }
+        }
+      }
+    },
+    "Claude may ask it from its session (claudedeck-ask; the answer is a note for you)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude oturumundan ona sorabilir (claudedeck-ask; cevap sana not olarak gelir)"
+          }
+        }
+      }
+    },
     "Agents Waiting for Approval \u00b7 %lld": {
       "localizations": {
         "tr": {

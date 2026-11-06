@@ -66,7 +66,7 @@ replaced with `[redacted]` (API keys with known prefixes, private key blocks, JW
 ```
 
 - `event`: `manual` (asked by the user), `session.idle`, `session.permission`, `session.question`,
-  `agent.test` (Settings' Test button).
+  `session.claude_ask` (Claude asked through `claudedeck-ask`), `agent.test` (Settings' Test button).
 - `session_state`: `idle`, `running`, `needsPermission`, `needsAnswer`, `starting`, `stopped`.
 - `git_diff` is `git diff HEAD` (cut at 60 000 characters). `untracked_files` are new files git
   doesn't ignore: text only, at most 25 files, 16 000 characters each, 48 000 in all; `.env*`, keys,
@@ -117,6 +117,31 @@ curl -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
   $API/v1/projects/$PROJECT/sessions
 ```
 
+## Claude asking an agent itself
+
+A Claude session can ask an agent on its own, from its terminal:
+
+```sh
+claudedeck-ask "Grok Bot" "check the error handling in FeedModel"
+claudedeck-ask all "review the last change"   # every agent Claude may ask
+claudedeck-ask --list                          # which ones those are
+```
+
+- Only **approved** agents with **Claude may ask it from its session** ticked (Settings › Agents ›
+  Edit…; off by default, also for agents that registered themselves) can be asked. Others answer
+  `403 not_allowed`, pending ones `409 not_approved`, unknown names `404`.
+- The agent gets the same request a user's Ask Agent sends, with `event: "session.claude_ask"` and
+  Claude's text as `user_request`. **Its answer comes to you as a note**, marked "Claude asks"; it
+  reaches Claude only if you send it on (or the agent may type into Claude).
+- At most 5 asks per session in 10 minutes (`429 too_many_asks`). Every ask is in the Activity Log.
+- How it works: each Claude session ClaudeDeck starts gets `CLAUDEDECK_ASK_TOKEN` (a token for that
+  session only, not the API's), `CLAUDEDECK_ASK_URL` and `CLAUDEDECK_ASK` (the command's absolute
+  path; it's also on `PATH`). The command posts `agent=…&request=…` (form-encoded) to `/v1/ask` on the
+  local API, which must be on. Sessions started before 0.5.0 don't have these: restart them.
+- Claude doesn't know about the command unless told. Tell it in a message, or add a line to the
+  project's `CLAUDE.md`, for example: *"To get a second opinion, run `"$CLAUDEDECK_ASK" "Grok Bot"
+  "<question>"`; the answer goes to the user."*
+
 ## Agents signing themselves up
 
 A bot can add itself instead of being typed into Settings: it registers through the local API
@@ -147,7 +172,7 @@ A bot can add itself instead of being typed into Settings: it registers through 
   `DELETE` refuses it (`429 rejected_recently`) so the wait can't be skipped.
 
 **Approval.** A new registration shows a notification on the Mac (with **Approve** / **Reject**),
-an **Agents Waiting for Approval** section in Settings › Agents (name, URL host, description), and
+an **Agents Waiting for Approval** section in Settings › Agents and above the sidebar's waiting tray (name, URL host, description), and
 the same section at the top of the phone's session list. Approved, it's an ordinary webhook agent:
 it gets requests, shows in Ask Agent, and you can edit it in Settings. **May type into Claude** stays
 off and no project is ticked for automatic requests until you change them. Registrations,

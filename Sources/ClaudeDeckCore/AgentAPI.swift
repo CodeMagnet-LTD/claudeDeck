@@ -200,6 +200,8 @@ public struct AgentPayload: Encodable, Sendable, Equatable {
         case permission = "session.permission"
         case question = "session.question"
         case test = "agent.test"
+        /// The Claude session asked by itself (`claudedeck-ask`).
+        case claudeAsk = "session.claude_ask"
     }
 
     public struct Project: Encodable, Sendable, Equatable {
