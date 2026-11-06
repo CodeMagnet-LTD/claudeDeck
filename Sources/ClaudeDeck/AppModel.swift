@@ -219,7 +219,9 @@ final class AppModel {
             let open = terminals.isRunning(session.id)
             if launchDeferred, !open { continue } // not started yet: keep what the last quit saved
             let display = status(of: session.id).display
-            let busy = open && session.kind == .claude && (display.isRunning || display.isBlocked)
+            // Only work in progress: a session waiting on the user (idle, a question, a
+            // permission) stays as it was, so the continue message can't decide for them.
+            let busy = open && session.kind == .claude && display.isRunning
             deck.updateSession(session.id) {
                 $0.isOpen = open
                 $0.busyAtQuit = busy
@@ -355,7 +357,7 @@ final class AppModel {
         var changed = false
         for session in deck.sessions where session.kind == .claude && terminals.isRunning(session.id) {
             let display = status(of: session.id).display
-            let busy = display.isRunning || display.isBlocked
+            let busy = display.isRunning
             if session.busyAtQuit != busy {
                 deck.updateSession(session.id) { $0.busyAtQuit = busy }
                 changed = true
@@ -474,8 +476,9 @@ final class AppModel {
         let worktreeDir = session.workingDirectory.flatMap { FileManager.default.fileExists(atPath: $0) ? $0 : nil }
         if sid == nil, worktreeDir == nil, let worktree = session.worktreeName { args += ["--worktree", worktree] }
         if automatic, sid != nil, deck.settings.compactOnResume { pendingCompact.insert(id) }
-        // A session cut off mid-turn always picks up where it left off; others only if asked to.
-        if sid != nil, session.busyAtQuit || (automatic && deck.settings.continueAllOnResume) {
+        // Only a session cut off mid-turn picks up where it left off; one whose turn it was
+        // (idle, or a question or permission on screen) waits for the user.
+        if sid != nil, session.busyAtQuit {
             pendingContinue.insert(id)
         }
         deck.updateSession(id) { $0.busyAtQuit = false }

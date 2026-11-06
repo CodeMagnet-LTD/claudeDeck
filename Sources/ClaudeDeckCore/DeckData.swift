@@ -58,7 +58,7 @@ public struct DeckSession: Codable, Identifiable, Sendable, Equatable {
     public var startupCommand: String?
     /// Shell sessions: start whenever the app launches, even if closed at quit.
     public var autoStart: Bool
-    /// Claude sessions: Claude was working (or waiting on a prompt) when the app quit. Kept current
+    /// Claude sessions: Claude was working (not waiting on the user) when the app quit. Kept current
     /// while the app runs, so it also holds after a crash or a force quit.
     public var busyAtQuit: Bool
     /// Claude sessions started with `claude --worktree <name>` (own git worktree and branch).
@@ -129,8 +129,8 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     /// After an automatic resume, send `/compact` when the context is over the threshold. Off by
     /// default: resumed sessions should simply carry on.
     public var compactOnResume = false
-    /// Sessions that were working when the app quit always get the "continue" message when they
-    /// resume. This also sends it to every other resumed session.
+    /// No longer used: only sessions that were working when the app quit get the "continue"
+    /// message; ones waiting on the user never do. Still decoded so old deck.json files round-trip.
     public var continueAllOnResume = false
     /// Legacy (before interrupted sessions always continued); only read to migrate to `continueAllOnResume`.
     public var continueAfterResume = false

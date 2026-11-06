@@ -6313,12 +6313,12 @@
         }
       }
     },
-    "Sessions that were working when ClaudeDeck quit (or crashed) always pick up where they left off with this message.": {
+    "Sessions that were working when ClaudeDeck quit (or crashed) pick up where they left off with this message. Sessions waiting on you (your turn, a question, a permission) are left as they were.": {
       "localizations": {
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "ClaudeDeck kapanırken (ya da çökerken) çalışmakta olan oturumlar bu mesajla her zaman kaldıkları yerden devam eder."
+            "value": "ClaudeDeck kapanırken (ya da çökerken) çalışmakta olan oturumlar bu mesajla kaldıkları yerden devam eder. Sırası sende olan oturumlar (your turn, soru, izin) olduğu gibi bırakılır."
           }
         }
       }

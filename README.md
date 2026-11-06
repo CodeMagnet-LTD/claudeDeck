@@ -270,9 +270,9 @@ The app is signed with a Developer ID and notarized by Apple, so Gatekeeper won'
   transcripts from `~/.claude/projects`.
 - **Persistence:** sessions that were open when you quit come back on launch with
   `claude --resume <id>` and carry on as they were.
-  - A session that was **working** when ClaudeDeck quit (or crashed) always picks up where it left off:
-    it gets "Continue where you left off." (or your own message from Settings). Idle sessions get nothing
-    unless you turn on "Also send it to every resumed session".
+  - A session that was **working** when ClaudeDeck quit (or crashed) picks up where it left off:
+    it gets "Continue where you left off." (or your own message from Settings). Sessions waiting on you
+    (your turn, a question or a permission on screen) get nothing, so nothing is decided for you.
   - Selecting a stopped session resumes it.
   - Sessions you closed with `/exit` or End Session come back when you choose Resume.
 - **Auto /compact (off by default):** when turned on, `/compact` is sent to a resumed session whose context is above the threshold.
