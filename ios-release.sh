@@ -7,7 +7,7 @@
 #   ~/.appstoreconnect/private_keys/AuthKey_<KEY_ID>.p8     the key file (never in the repo)
 #   ~/.appstoreconnect/claudedeck.env                       ASC_KEY_ID=…  ASC_ISSUER_ID=…
 # (or ASC_KEY_ID / ASC_ISSUER_ID / ASC_KEY_PATH in the environment).
-# The build number must be new for App Store Connect: bump CURRENT_PROJECT_VERSION after each upload.
+# App Store Connect gives the upload the next free build number (CURRENT_PROJECT_VERSION is only a start).
 set -eu
 cd "$(dirname "$0")"
 
@@ -52,13 +52,14 @@ cat > "$OUT/ExportOptions.plist" <<EOF
   <key>teamID</key><string>$TEAM</string>
   <key>signingStyle</key><string>automatic</string>
   <key>uploadSymbols</key><true/>
-  <key>manageAppVersionAndBuildNumber</key><false/>
+  <key>manageAppVersionAndBuildNumber</key><true/>
 </dict></plist>
 EOF
 
 echo "▸ Uploading to App Store Connect…"
+# System tools only: a Homebrew rsync earlier in PATH breaks Xcode's IPA packaging ("Copy failed").
 # shellcheck disable=SC2086
-xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportOptionsPlist "$OUT/ExportOptions.plist" \
+PATH=/usr/bin:/bin:/usr/sbin:/sbin xcodebuild -exportArchive -archivePath "$ARCHIVE" -exportOptionsPlist "$OUT/ExportOptions.plist" \
   -exportPath "$OUT/export" $AUTH > "$OUT/upload.log" 2>&1 \
   || { grep -iE "error" "$OUT/upload.log" | grep -v DVTDeveloperAccountManager | head -20 >&2; fail "Upload failed (log: $OUT/upload.log)."; }
 
