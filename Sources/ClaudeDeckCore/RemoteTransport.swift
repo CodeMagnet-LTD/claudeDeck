@@ -278,6 +278,7 @@ public final class RemoteServer: @unchecked Sendable {
     public var onAskAgents: ((_ sessionID: UUID, _ agentIDs: [UUID], _ request: String) -> Void)?
     public var onAgentNoteAction: ((_ sessionID: UUID, _ noteID: UUID, _ action: AgentNoteAction) -> Void)?
     public var onAgentRegistration: ((_ agentID: UUID, _ approve: Bool) -> Void)?
+    public var onAgentDetails: ((_ reply: @escaping @Sendable (RemoteAgentDetails) -> Void) -> Void)?
     /// A message with files; reply nil once it's going in, else why not.
     public var onSendPromptWithFiles: ((_ sessionID: UUID, _ text: String, _ files: [RemoteUpload], _ reply: @escaping @Sendable (String?) -> Void) -> Void)?
     /// The session's permission mode (after Shift+Tab when cycling); reply with what the screen shows.
@@ -508,6 +509,9 @@ public final class RemoteServer: @unchecked Sendable {
                 onAgentNoteAction?(sessionID, noteID, action)
             case .agentRegistration(let agentID, let approve):
                 onAgentRegistration?(agentID, approve)
+            case .agentDetails:
+                let channel = peer.channel
+                onAgentDetails? { [queue] details in queue.async { channel.send(.agentDetailsAre(details)) } }
             case .sendPromptWithFiles(let sessionID, let text, let files)
                 where !files.isEmpty && files.reduce(0, { $0 + $1.data.count }) <= RemoteUpload.maxTotalBytes:
                 let channel = peer.channel
@@ -633,6 +637,7 @@ public final class RemoteHostConnection: @unchecked Sendable {
     public var onSessionStarted: ((UUID) -> Void)?
     public var onPromptResult: ((_ sessionID: UUID, _ error: String?) -> Void)?
     public var onPermissionMode: ((_ sessionID: UUID, _ mode: String?) -> Void)?
+    public var onAgentDetails: ((RemoteAgentDetails) -> Void)?
     /// `.folder` answers (project picker).
     public var onFolder: ((RemoteMessage) -> Void)?
     public var onPastConversations: ((UUID, [RemotePastConversation]) -> Void)?
@@ -748,6 +753,8 @@ public final class RemoteHostConnection: @unchecked Sendable {
                 self.onPromptResult?(id, error)
             case .permissionModeIs(let id, let mode) where authenticated:
                 self.onPermissionMode?(id, mode)
+            case .agentDetailsAre(let details) where authenticated:
+                self.onAgentDetails?(details)
             case .folder where authenticated:
                 self.onFolder?(message)
             case .pastConversations(let projectID, let items) where authenticated:

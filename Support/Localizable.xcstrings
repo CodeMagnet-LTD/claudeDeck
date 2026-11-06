@@ -1,6 +1,116 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "All agents and activity": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm ajanlar ve aktivite"
+          }
+        }
+      }
+    },
+    "No agents on the Mac yet.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'te henüz ajan yok."
+          }
+        }
+      }
+    },
+    "Added and changed on the Mac, in Settings › Agents.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac'te, Ayarlar › Ajanlar'dan eklenir ve değiştirilir."
+          }
+        }
+      }
+    },
+    "registered itself": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "kendini kaydetti"
+          }
+        }
+      }
+    },
+    "Webhook · %@ · asynchronous": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Webhook · %@ · asenkron"
+          }
+        }
+      }
+    },
+    "Webhook · %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Webhook · %@"
+          }
+        }
+      }
+    },
+    "xAI · %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "xAI · %@"
+          }
+        }
+      }
+    },
+    "Asked by hand only": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sadece elle sorulur"
+          }
+        }
+      }
+    },
+    "Follows: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzlediği projeler: %@"
+          }
+        }
+      }
+    },
+    "May type into Claude": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude'a yazabilir"
+          }
+        }
+      }
+    },
+    "Claude may ask it": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Claude ona sorabilir"
+          }
+        }
+      }
+    },
     "Claude asks": {
       "localizations": {
         "tr": {

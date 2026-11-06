@@ -122,6 +122,69 @@ public struct RemotePendingAgent: Codable, Identifiable, Sendable, Equatable {
     }
 }
 
+/// The phone's read-only Agents screen: each agent with what it may do, and the activity log.
+public struct RemoteAgentDetails: Codable, Sendable, Equatable {
+    public struct Agent: Codable, Identifiable, Sendable, Equatable {
+        public var id: UUID
+        public var name: String
+        /// "xai" or "webhook".
+        public var kind: String
+        /// The xAI model, or the webhook URL's host (never its path, query or header).
+        public var target: String
+        public var async: Bool
+        /// Projects it follows by itself (names); empty: asked by hand only.
+        public var followedProjects: [String]
+        public var canSendDirectly: Bool
+        public var claudeCanAsk: Bool
+        /// Signed up through the local API.
+        public var registered: Bool
+
+        public init(id: UUID, name: String, kind: String, target: String, async: Bool, followedProjects: [String],
+                    canSendDirectly: Bool, claudeCanAsk: Bool, registered: Bool) {
+            self.id = id
+            self.name = name
+            self.kind = kind
+            self.target = target
+            self.async = async
+            self.followedProjects = followedProjects
+            self.canSendDirectly = canSendDirectly
+            self.claudeCanAsk = claudeCanAsk
+            self.registered = registered
+        }
+    }
+
+    public struct Activity: Codable, Identifiable, Sendable, Equatable {
+        public var id: UUID
+        public var date: Date
+        public var inbound: Bool
+        public var agent: String
+        public var summary: String
+        public var ok: Bool
+
+        public init(id: UUID, date: Date, inbound: Bool, agent: String, summary: String, ok: Bool) {
+            self.id = id
+            self.date = date
+            self.inbound = inbound
+            self.agent = agent
+            self.summary = summary
+            self.ok = ok
+        }
+    }
+
+    public static let maxActivity = 100
+
+    public var agents: [Agent]
+    /// Newest first, at most `maxActivity`.
+    public var activity: [Activity]
+    public var apiOn: Bool
+
+    public init(agents: [Agent], activity: [Activity], apiOn: Bool) {
+        self.agents = agents
+        self.activity = Array(activity.prefix(Self.maxActivity))
+        self.apiOn = apiOn
+    }
+}
+
 /// What an agent is told about the session.
 public struct AgentContext: Sendable, Equatable {
     public var project: String

@@ -318,6 +318,23 @@ extension AppModel {
         notesChanged(sessionID)
     }
 
+    /// For the phone's Agents screen: what each agent may do, and the latest activity.
+    func remoteAgentDetails() -> RemoteAgentDetails {
+        let registered = Set(deck.settings.agentRegistrations.map(\.id))
+        let list = agents.map { agent in
+            RemoteAgentDetails.Agent(
+                id: agent.id, name: agent.name, kind: agent.usesWebhook ? "webhook" : "xai",
+                target: agent.usesWebhook ? (URL(string: agent.webhookURL ?? "")?.host ?? "") : agent.model,
+                async: agent.usesWebhook && agent.async,
+                followedProjects: agent.autoTrigger ? agent.autoProjects.compactMap { deck.project($0)?.name } : [],
+                canSendDirectly: agent.canSendDirectly, claudeCanAsk: agent.claudeCanAsk, registered: registered.contains(agent.id))
+        }
+        let activity = agentActivity.reversed().map {
+            RemoteAgentDetails.Activity(id: $0.id, date: $0.date, inbound: $0.inbound, agent: $0.agent, summary: $0.summary, ok: $0.ok)
+        }
+        return RemoteAgentDetails(agents: list, activity: activity, apiOn: deck.settings.agentAPIEnabled)
+    }
+
     // MARK: Agents signing themselves up
 
     /// Waiting for the user (Settings → Agents, the notification, the phone).

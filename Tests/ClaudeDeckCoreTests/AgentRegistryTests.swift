@@ -234,6 +234,18 @@ import Testing
         #expect(created.hasPrefix("HTTP/1.1 429 Too Many Requests"))
     }
 
+    @Test func remoteAgentDetailsRoundTripAndCapActivity() throws {
+        let agent = RemoteAgentDetails.Agent(id: UUID(), name: "Grok Bot", kind: "webhook", target: "bots.example.com", async: true,
+                                             followedProjects: ["mobile-app"], canSendDirectly: false, claudeCanAsk: true, registered: true)
+        let activity = (0..<150).map { RemoteAgentDetails.Activity(id: UUID(), date: now, inbound: $0 % 2 == 0, agent: "Grok Bot", summary: "line \($0)", ok: true) }
+        let details = RemoteAgentDetails(agents: [agent], activity: activity, apiOn: true)
+        #expect(details.activity.count == RemoteAgentDetails.maxActivity && details.activity.first?.summary == "line 0")
+        let message = RemoteMessage.agentDetailsAre(details)
+        #expect(try JSONDecoder().decode(RemoteMessage.self, from: JSONEncoder().encode(message)) == message)
+        #expect(try JSONDecoder().decode(RemoteMessage.self, from: JSONEncoder().encode(RemoteMessage.agentDetails)) == .agentDetails)
+        #expect(RemoteSnapshot.Feature.all.contains(RemoteSnapshot.Feature.agentDetails))
+    }
+
     @Test func remoteApprovalRoundTrips() throws {
         let id = UUID()
         let message = RemoteMessage.agentRegistration(agentID: id, approve: true)

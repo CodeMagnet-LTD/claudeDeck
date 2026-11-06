@@ -691,6 +691,8 @@ struct SessionRowLink: View {
 struct PendingAgentsSection: View {
     @Environment(RemoteStore.self) private var store
     let agents: [RemotePendingAgent]
+    /// The link to the Agents screen (not on that screen itself).
+    var linksToAgents = true
 
     var body: some View {
         Section {
@@ -714,7 +716,95 @@ struct PendingAgentsSection: View {
             }
         } header: {
             ListHeader("Agents Waiting for Approval")
+        } footer: {
+            if linksToAgents, store.snapshot?.supports(RemoteSnapshot.Feature.agentDetails) == true {
+                NavigationLink("All agents and activity") { AgentsScreen() }.font(.caption)
+            }
         }
+    }
+}
+
+/// The Mac's agents, read only: what each may do, the ones waiting for approval, and the
+/// activity log. They're added and changed on the Mac (Settings › Agents).
+struct AgentsScreen: View {
+    @Environment(RemoteStore.self) private var store
+
+    var body: some View {
+        let details = store.agentDetails
+        List {
+            if let pending = store.snapshot?.pendingAgents, !pending.isEmpty { PendingAgentsSection(agents: pending, linksToAgents: false) }
+            Section {
+                if let details {
+                    ForEach(details.agents) { AgentInfoRow(agent: $0) }
+                    if details.agents.isEmpty { Text("No agents on the Mac yet.").foregroundStyle(.secondary) }
+                } else {
+                    ProgressView()
+                }
+            } header: {
+                Text("Agents")
+            } footer: {
+                Text("Added and changed on the Mac, in Settings › Agents.")
+            }
+            if let details {
+                Section("Activity") {
+                    ForEach(details.activity) { item in
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Image(systemName: item.inbound ? "arrow.down.left" : "arrow.up.right")
+                                .foregroundStyle(item.ok ? (item.inbound ? Color.green : Color.accentColor) : Color.orange)
+                            VStack(alignment: .leading, spacing: 2) {
+                                HStack {
+                                    Text(item.agent).font(.subheadline.weight(.semibold))
+                                    Spacer()
+                                    Text(item.date, format: .dateTime.hour().minute()).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                                }
+                                Text(item.summary).font(.caption).foregroundStyle(item.ok ? .secondary : Color.orange).lineLimit(3)
+                            }
+                        }
+                    }
+                    if details.activity.isEmpty { Text("Nothing yet").foregroundStyle(.secondary) }
+                }
+            }
+        }
+        .navigationTitle("Agents")
+        .refreshable { store.loadAgentDetails() }
+        .onAppear { store.loadAgentDetails() }
+        // Approved or rejected (here or on the Mac): the list follows.
+        .onChange(of: store.snapshot?.pendingAgents) { store.loadAgentDetails() }
+        .onChange(of: store.snapshot?.agents) { store.loadAgentDetails() }
+    }
+}
+
+/// One agent: where it runs and what it may do.
+struct AgentInfoRow: View {
+    let agent: RemoteAgentDetails.Agent
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 6) {
+                Image(systemName: agent.kind == "webhook" ? "link" : "sparkles").foregroundStyle(.secondary)
+                Text(agent.name).font(.body.weight(.semibold))
+                if agent.registered {
+                    Text("registered itself").font(.caption2).padding(.horizontal, 5).padding(.vertical, 1)
+                        .background(Color.secondary.opacity(0.15), in: Capsule())
+                }
+            }
+            Text(agent.kind == "webhook" ? (agent.async ? String(localized: "Webhook · \(agent.target) · asynchronous") : String(localized: "Webhook · \(agent.target)"))
+                 : String(localized: "xAI · \(agent.target.isEmpty ? String(localized: "No model picked") : agent.target)"))
+                .font(.caption).foregroundStyle(.secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                permission(agent.followedProjects.isEmpty ? String(localized: "Asked by hand only")
+                           : String(localized: "Follows: \(agent.followedProjects.joined(separator: ", "))"), on: !agent.followedProjects.isEmpty)
+                permission(String(localized: "May type into Claude"), on: agent.canSendDirectly)
+                permission(String(localized: "Claude may ask it"), on: agent.claudeCanAsk)
+            }
+            .font(.caption)
+        }
+        .padding(.vertical, 2)
+    }
+
+    private func permission(_ text: String, on: Bool) -> some View {
+        Label(text, systemImage: on ? "checkmark.circle.fill" : "minus.circle")
+            .foregroundStyle(on ? Color.green : Color.secondary)
     }
 }
 
@@ -1144,6 +1234,9 @@ struct SettingsView: View {
                         LabeledContent("Via", value: local ? String(localized: "This Wi-Fi (direct)") : String(localized: "Tailscale"))
                     }
                     if store.localNetworkDenied { LocalNetworkDeniedHint() }
+                    if store.snapshot?.supports(RemoteSnapshot.Feature.agentDetails) == true {
+                        NavigationLink("Agents") { AgentsScreen() }
+                    }
                 }
                 Section {
                     Button("Forget This Mac", role: .destructive) {

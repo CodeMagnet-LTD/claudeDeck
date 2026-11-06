@@ -3,6 +3,7 @@ import UIKit
 
 /// Simulator testing: with `CLAUDEDECK_DEBUG=1` in the launch environment, files dropped into
 /// `tmp/debug/` drive the app and `tmp/debug/remote.txt` reports its state.
+///   agents.txt (load the Agents screen's data) · <agent-id>.agentapprove / .agentreject · <session-id>.askagent (an agent id) ·
 ///   pair.txt (a claudedeck:// link) · <id>.open · <id>.window (new window) · <id>.mode (Shift+Tab) · <project-id>.pin (toggle) / .rename (new name) · <id>.attach (an off-screen terminal, for .type and screen-<id>.txt) · <id>.answer (JSON [QuestionAnswer]) · <id>.files (text, sent with a photo and a file) · <id>.approve / <id>.deny · <id>.type (text, "\r" = Enter)
 @MainActor
 final class DebugHooks {
@@ -31,6 +32,15 @@ final class DebugHooks {
             if file == "lanpair.txt", let password = try? String(contentsOf: url, encoding: .utf8), let host = store.lanHosts.first {
                 try? FileManager.default.removeItem(at: url)
                 store.pair(lanHost: host, password: password.trimmingCharacters(in: .whitespacesAndNewlines))
+            } else if file.hasSuffix(".askagent"), let id, let agent = (try? String(contentsOf: url, encoding: .utf8)).flatMap({ UUID(uuidString: $0.trimmingCharacters(in: .whitespacesAndNewlines)) }) {
+                try? FileManager.default.removeItem(at: url)
+                store.askAgents(id, agents: [agent], request: "debug ask from the phone")
+            } else if file == "agents.txt" {
+                try? FileManager.default.removeItem(at: url)
+                store.loadAgentDetails()
+            } else if file.hasSuffix(".agentapprove") || file.hasSuffix(".agentreject"), let id {
+                try? FileManager.default.removeItem(at: url)
+                store.agentRegistration(id, approve: file.hasSuffix(".agentapprove"))
             } else if file == "pair.txt", let link = try? String(contentsOf: url, encoding: .utf8) {
                 try? FileManager.default.removeItem(at: url)
                 store.pair(link: link)
@@ -126,6 +136,13 @@ final class DebugHooks {
                      "terminals: \(store.terminalStates) usage=\(store.snapshot?.usage.map { "\($0.fiveHour ?? -1)/\($0.week ?? -1)" } ?? "-") past=\(store.pastConversations.values.map(\.count))",
                      "home: \(store.folders[""].map { "\($0.path) \($0.folders.count) folders" } ?? "-") lan: \(store.lanHosts.map(\.name)) via=\(store.connectedVia ?? "-") pairing=\(store.pairing?.addresses ?? [])",
                      "push: token=\(push.token?.count ?? 0) env=\(PushRegistration.environment) error=\(push.lastError ?? "-")"]
+        lines.append("agents: \(store.snapshot?.agents?.map(\.name) ?? []) pending=\(store.snapshot?.pendingAgents?.map { "\($0.id.uuidString) \($0.name) \($0.host)" } ?? [])")
+        if let details = store.agentDetails {
+            for agent in details.agents {
+                lines.append("  agent \(agent.name) \(agent.kind) \(agent.target) async=\(agent.async) follows=\(agent.followedProjects) send=\(agent.canSendDirectly) claudeAsk=\(agent.claudeCanAsk) registered=\(agent.registered)")
+            }
+            lines.append("  activity \(details.activity.count): \(details.activity.prefix(3).map { "\($0.agent): \($0.summary)" })")
+        }
         for session in store.snapshot?.sessions ?? [] {
             lines.append("  \(session.id.uuidString) \(session.name) \(session.state.rawValue) stamp=\(session.permissionStamp.map { String($0) } ?? "-") unseen=\(session.unseen)")
         }

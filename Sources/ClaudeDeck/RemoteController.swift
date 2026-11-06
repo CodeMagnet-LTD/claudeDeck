@@ -387,6 +387,12 @@ final class RemoteController {
             server.onAgentNoteAction = { [weak self] id, note, action in
                 MainActor.assumeIsolated { self?.model?.agentNoteAction(note, in: id, action: action) }
             }
+            server.onAgentDetails = { [weak self] reply in
+                MainActor.assumeIsolated {
+                    guard let model = self?.model else { return }
+                    reply(model.remoteAgentDetails())
+                }
+            }
             server.onAgentRegistration = { [weak self] id, approve in
                 MainActor.assumeIsolated {
                     if approve { self?.model?.approveAgent(id) } else { self?.model?.rejectAgent(id) }

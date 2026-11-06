@@ -60,6 +60,8 @@ final class RemoteStore {
     @ObservationIgnored var onConnected: (() -> Void)?
     /// Claude Code's permission mode per session, as the Mac's screen last showed it.
     private(set) var permissionModes: [UUID: String] = [:]
+    /// The Mac's agents and their activity (Agents screen; hosts with `Feature.agentDetails`).
+    private(set) var agentDetails: RemoteAgentDetails?
     /// Messages with files on their way, by session (sending a few MB takes a moment).
     private(set) var sendingFiles: Set<UUID> = []
     /// Why the last message with files didn't go in.
@@ -248,6 +250,9 @@ final class RemoteStore {
         }
         next.onPermissionMode = { [weak self] id, mode in
             MainActor.assumeIsolated { self?.permissionModes[id] = mode }
+        }
+        next.onAgentDetails = { [weak self] details in
+            MainActor.assumeIsolated { self?.agentDetails = details }
         }
         next.onPromptResult = { [weak self] id, error in
             MainActor.assumeIsolated {
@@ -508,6 +513,10 @@ final class RemoteStore {
     func agentNoteAction(_ id: UUID, note: UUID, _ action: AgentNoteAction) -> Bool {
         send(.agentNoteAction(sessionID: id, noteID: note, action: action))
     }
+
+    /// Asks the Mac for its agents and their activity; `agentDetails` updates when it answers.
+    @discardableResult
+    func loadAgentDetails() -> Bool { send(.agentDetails) }
 
     /// An agent that signed itself up on the Mac: approve or reject it (the next snapshot drops it).
     @discardableResult

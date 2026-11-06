@@ -154,6 +154,11 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case agentNoteAction(sessionID: UUID, noteID: UUID, action: AgentNoteAction)
     /// Remote → host: approve or reject an agent that signed itself up (`pendingAgents`).
     case agentRegistration(agentID: UUID, approve: Bool)
+    /// Remote → host: the agents with their settings and the recent activity (the phone's
+    /// read-only Agents screen). Answered with `agentDetailsAre`.
+    case agentDetails
+    /// Host → remote: the answer to `agentDetails`.
+    case agentDetailsAre(RemoteAgentDetails)
     /// Remote → host: a message with files. The host saves them and puts them in with the text
     /// (images as pasted images, other files as @mentions). Answered with `promptResult`.
     case sendPromptWithFiles(sessionID: UUID, text: String, files: [RemoteUpload])
@@ -302,7 +307,10 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
         public static let agents = "agents"
         /// `agentRegistration`, `pendingAgents` in the snapshot.
         public static let agentApproval = "agentApproval"
-        public static let all: Set<String> = [files, permissionMode, projectActions, sessionActions, addProject, transfer, queue, agents, agentApproval]
+        /// `agentDetails`.
+        public static let agentDetails = "agentDetails"
+        public static let all: Set<String> = [files, permissionMode, projectActions, sessionActions, addProject, transfer, queue, agents, agentApproval,
+                                              agentDetails]
     }
 
     public func supports(_ feature: String) -> Bool { features?.contains(feature) == true }
