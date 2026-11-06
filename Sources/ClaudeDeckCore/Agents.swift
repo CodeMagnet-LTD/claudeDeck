@@ -113,12 +113,15 @@ public struct RemotePendingAgent: Codable, Identifiable, Sendable, Equatable {
     public var name: String
     public var host: String
     public var description: String
+    /// What has to be filled in to approve it ("url", "auth_header"); nil from 0.5.0 hosts.
+    public var needs: [String]?
 
-    public init(id: UUID, name: String, host: String, description: String) {
+    public init(id: UUID, name: String, host: String, description: String, needs: [String] = []) {
         self.id = id
         self.name = name
         self.host = host
         self.description = description
+        self.needs = needs
     }
 }
 
@@ -312,6 +315,46 @@ public enum AgentWebhook {
         }
         guard let text = String(data: data, encoding: .utf8), !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw Problem.empty }
         return text
+    }
+}
+
+/// The URL and Authorization header the user fills in when approving an agent that registered
+/// without them (Mac and phone check them the same way).
+public enum AgentCompletion {
+    public static let maxAuthHeader = 4096
+
+    public enum Problem: Error, Equatable, Sendable {
+        case notPending, missingURL, badURL, insecureURL, missingAuthHeader, badAuthHeader
+
+        public var message: String {
+            switch self {
+            case .notPending: String(localized: "This agent isn't waiting for approval any more.")
+            case .missingURL: String(localized: "Paste the webhook URL.")
+            case .badURL: String(localized: "The webhook address isn't a valid URL.")
+            case .insecureURL: String(localized: "Webhooks need https (http only to this Mac: 127.0.0.1 or localhost).")
+            case .missingAuthHeader: String(localized: "Paste the Authorization header.")
+            case .badAuthHeader: String(localized: "The header has to be one line of plain characters (no line breaks).")
+            }
+        }
+    }
+
+    /// An Authorization header value as HTTP carries it: printable ASCII, one line.
+    public static func validHeader(_ value: String) -> Bool {
+        !value.isEmpty && value.count <= maxAuthHeader && value.unicodeScalars.allSatisfy { (0x20...0x7E).contains($0.value) }
+    }
+
+    /// What's wrong with what was typed (or pasted), nil when it's fine: an empty field that
+    /// isn't needed is fine, a filled one must be valid.
+    public static func problem(needs: [String], url: String, authHeader: String) -> Problem? {
+        let url = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        let header = authHeader.trimmingCharacters(in: .whitespacesAndNewlines)
+        if needs.contains("url"), url.isEmpty { return .missingURL }
+        if !url.isEmpty {
+            do { _ = try AgentWebhook.url(url) } catch AgentWebhook.Problem.insecureURL { return .insecureURL } catch { return .badURL }
+        }
+        if needs.contains("auth_header"), header.isEmpty { return .missingAuthHeader }
+        if !header.isEmpty, !validHeader(header) { return .badAuthHeader }
+        return nil
     }
 }
 

@@ -5,6 +5,9 @@ import Foundation
 /// ordinary webhook `AgentProfile` with the same id (not allowed to type into Claude, no projects
 /// followed); the record stays so the agent can see it was approved, and so `DELETE` knows it
 /// came from the API. Its Authorization header is in the keychain, never here.
+///
+/// A bot that can't see its own address (a Grok Bot routine) registers without `url`: the user
+/// fills in the URL and the header when approving (`needs`).
 public struct AgentRegistration: Codable, Identifiable, Sendable, Equatable {
     public enum Status: String, Codable, Sendable { case pending, approved, rejected }
 
@@ -17,9 +20,11 @@ public struct AgentRegistration: Codable, Identifiable, Sendable, Equatable {
     public var status: Status
     public var createdAt: Date
     public var decidedAt: Date?
+    /// An Authorization header is in the keychain for it (whether, never what).
+    public var hasAuthHeader: Bool
 
     public init(id: UUID = UUID(), name: String, url: String, async: Bool, description: String, status: Status = .pending,
-                createdAt: Date = Date(), decidedAt: Date? = nil) {
+                createdAt: Date = Date(), decidedAt: Date? = nil, hasAuthHeader: Bool = false) {
         self.id = id
         self.name = name
         self.url = url
@@ -28,9 +33,31 @@ public struct AgentRegistration: Codable, Identifiable, Sendable, Equatable {
         self.status = status
         self.createdAt = createdAt
         self.decidedAt = decidedAt
+        self.hasAuthHeader = hasAuthHeader
     }
 
-    public var host: String { URL(string: url)?.host ?? url }
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        url = try c.decodeIfPresent(String.self, forKey: .url) ?? ""
+        async = try c.decodeIfPresent(Bool.self, forKey: .async) ?? false
+        description = try c.decodeIfPresent(String.self, forKey: .description) ?? ""
+        status = try c.decode(Status.self, forKey: .status)
+        createdAt = try c.decode(Date.self, forKey: .createdAt)
+        decidedAt = try c.decodeIfPresent(Date.self, forKey: .decidedAt)
+        hasAuthHeader = try c.decodeIfPresent(Bool.self, forKey: .hasAuthHeader) ?? false
+    }
+
+    /// The URL's host; empty while it has no URL.
+    public var host: String { url.isEmpty ? "" : (URL(string: url)?.host ?? url) }
+
+    /// What the user has to fill in before approving: registered without a URL, it needs the
+    /// URL, and the header too unless it sent one.
+    public var needs: [String] {
+        guard url.isEmpty else { return [] }
+        return hasAuthHeader ? ["url"] : ["url", "auth_header"]
+    }
 
     /// The profile it becomes once approved: a webhook, every permission off.
     public var profile: AgentProfile {
@@ -42,7 +69,8 @@ public struct AgentRegistration: Codable, Identifiable, Sendable, Equatable {
 public struct AgentRegisterBody: Decodable, Sendable {
     public var name: String
     public var kind: String
-    public var url: String
+    /// Optional: a bot that can't see its own address leaves it out (the user fills it in).
+    public var url: String?
     public var authHeader: String?
     public var async: Bool?
     public var description: String?
@@ -58,6 +86,15 @@ public struct AgentRegistrationInfo: Encodable, Sendable, Equatable {
     public var async: Bool
     /// Signed up through the API (only those can be deleted through it).
     public var registered: Bool
+    /// What the user still has to fill in ("url", "auth_header"); empty once approved.
+    public var needs: [String]
+}
+
+/// What `POST /v1/agents` answers.
+public struct AgentReceipt: Encodable, Sendable, Equatable {
+    public var agentId: UUID
+    public var status: AgentRegistration.Status
+    public var needs: [String]
 }
 
 /// The rules for agents signing themselves up: who may, how many may wait, and what each
@@ -68,7 +105,7 @@ public enum AgentRegistry {
     public static let maxBodyBytes = 16 * 1024
     public static let maxName = 40
     public static let maxDescription = 500
-    public static let maxAuthHeader = 4096
+    public static let maxAuthHeader = AgentCompletion.maxAuthHeader
 
     /// What changed, for the controller to act on.
     public enum Effect: Equatable, Sendable {
@@ -95,15 +132,32 @@ public enum AgentRegistry {
         registrations.filter { $0.status == .pending }
     }
 
-    /// Approve: the record's profile joins the agents (no-op unless pending).
+    public typealias CompletionProblem = AgentCompletion.Problem
+
+    public static func validHeader(_ value: String) -> Bool { AgentCompletion.validHeader(value) }
+
+    /// What's wrong with the URL and header typed (or pasted) for `record`, nil when it can be approved.
+    public static func completionProblem(_ record: AgentRegistration, url: String, authHeader: String) -> CompletionProblem? {
+        guard record.status == .pending else { return .notPending }
+        return AgentCompletion.problem(needs: record.needs, url: url, authHeader: authHeader)
+    }
+
+    /// Approve, with what the user filled in: the record's profile joins the agents. Returns the
+    /// header to put in the keychain (nil: keep what's there).
     @discardableResult
-    public static func approve(_ id: UUID, registrations: inout [AgentRegistration], profiles: inout [AgentProfile], now: Date) -> AgentRegistration? {
-        guard let index = registrations.firstIndex(where: { $0.id == id && $0.status == .pending }) else { return nil }
+    public static func approve(_ id: UUID, url: String = "", authHeader: String = "", registrations: inout [AgentRegistration],
+                               profiles: inout [AgentProfile], now: Date) -> Result<(AgentRegistration, authHeader: String?), CompletionProblem> {
+        guard let index = registrations.firstIndex(where: { $0.id == id && $0.status == .pending }) else { return .failure(.notPending) }
+        if let problem = completionProblem(registrations[index], url: url, authHeader: authHeader) { return .failure(problem) }
+        let url = url.trimmingCharacters(in: .whitespacesAndNewlines)
+        let header = authHeader.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !url.isEmpty, let parsed = try? AgentWebhook.url(url) { registrations[index].url = parsed.absoluteString }
+        if !header.isEmpty { registrations[index].hasAuthHeader = true }
         registrations[index].status = .approved
         registrations[index].decidedAt = now
         let record = registrations[index]
         if !profiles.contains(where: { $0.id == id }) { profiles.append(record.profile) }
-        return record
+        return .success((record, header.isEmpty ? nil : header))
     }
 
     /// Reject: the record stays (as rejected) for the cooldown, so the same name and URL can't
@@ -152,31 +206,37 @@ public enum AgentRegistry {
         let name = body.name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty, name.count <= maxName, !name.contains(where: \.isNewline) else { return (.error(400, "bad_name"), .none) }
         guard body.kind == "webhook" else { return (.error(400, "bad_kind"), .none) }
-        let url: URL
-        do { url = try AgentWebhook.url(body.url) } catch AgentWebhook.Problem.insecureURL {
-            return (.error(400, "insecure_url"), .none)
-        } catch { return (.error(400, "bad_url"), .none) }
-        let auth = body.authHeader?.trimmingCharacters(in: .whitespacesAndNewlines)
-        if let auth, auth.count > maxAuthHeader || auth.contains(where: { $0.isNewline }) { return (.error(400, "bad_auth_header"), .none) }
+        // No URL: the user fills it in when approving.
+        let rawURL = (body.url ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        var address = ""
+        if !rawURL.isEmpty {
+            do { address = try AgentWebhook.url(rawURL).absoluteString } catch AgentWebhook.Problem.insecureURL {
+                return (.error(400, "insecure_url"), .none)
+            } catch { return (.error(400, "bad_url"), .none) }
+        }
+        let auth = (body.authHeader ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !auth.isEmpty, !validHeader(auth) { return (.error(400, "bad_auth_header"), .none) }
         let description = (body.description ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard description.count <= maxDescription else { return (.error(400, "bad_description"), .none) }
-        let address = url.absoluteString
 
-        // The same agent again: what it already has.
+        // The same agent again: what it already has. Without a URL the name alone says it's the same.
         if let profile = profiles.first(where: { sameName($0.name, name) }) {
-            guard (profile.webhookURL ?? "").trimmingCharacters(in: .whitespaces) == address else { return (.error(409, "name_taken"), .none) }
-            if let record = registrations.first(where: { $0.id == profile.id }) { return (.json(200, receipt(record.id, record.status)), .none) }
-            return (.json(200, receipt(profile.id, .approved)), .none)
+            guard address.isEmpty || (profile.webhookURL ?? "").trimmingCharacters(in: .whitespaces) == address else {
+                return (.error(409, "name_taken"), .none)
+            }
+            if let record = registrations.first(where: { $0.id == profile.id }) { return (.json(200, receipt(record)), .none) }
+            return (.json(200, AgentReceipt(agentId: profile.id, status: .approved, needs: [])), .none)
         }
         if let record = registrations.first(where: { sameName($0.name, name) }) {
-            guard record.url == address else { return (.error(409, "name_taken"), .none) }
+            guard address.isEmpty || record.url.isEmpty || record.url == address else { return (.error(409, "name_taken"), .none) }
             if record.status == .rejected { return (.error(429, "rejected_recently"), .none) }
-            return (.json(200, receipt(record.id, record.status)), .none)
+            return (.json(200, receipt(record)), .none)
         }
         guard pending(registrations).count < maxPending else { return (.error(429, "too_many_pending"), .none) }
-        let record = AgentRegistration(name: name, url: address, async: body.async ?? false, description: description, createdAt: now)
+        let record = AgentRegistration(name: name, url: address, async: body.async ?? false, description: description, createdAt: now,
+                                       hasAuthHeader: !auth.isEmpty)
         registrations.append(record)
-        return (.json(201, receipt(record.id, .pending)), .registered(record, authHeader: auth.flatMap { $0.isEmpty ? nil : $0 }))
+        return (.json(201, receipt(record)), .registered(record, authHeader: auth.isEmpty ? nil : auth))
     }
 
     /// Settings' agents and the records not approved (yet), each once.
@@ -185,17 +245,18 @@ public enum AgentRegistry {
         let approved = profiles.map { profile in
             AgentRegistrationInfo(id: profile.id, name: profile.name, kind: profile.usesWebhook ? "webhook" : "xai",
                                   urlHost: profile.usesWebhook ? URL(string: profile.webhookURL ?? "")?.host : nil,
-                                  status: .approved, async: profile.usesWebhook && profile.async, registered: fromAPI.contains(profile.id))
+                                  status: .approved, async: profile.usesWebhook && profile.async, registered: fromAPI.contains(profile.id),
+                                  needs: [])
         }
         let waiting = registrations.filter { $0.status != .approved }.map { record in
-            AgentRegistrationInfo(id: record.id, name: record.name, kind: "webhook", urlHost: record.host,
-                                  status: record.status, async: record.async, registered: true)
+            AgentRegistrationInfo(id: record.id, name: record.name, kind: "webhook", urlHost: record.host.isEmpty ? nil : record.host,
+                                  status: record.status, async: record.async, registered: true, needs: record.status == .pending ? record.needs : [])
         }
         return approved + waiting
     }
 
-    private static func receipt(_ id: UUID, _ status: AgentRegistration.Status) -> [String: String] {
-        ["agent_id": id.uuidString, "status": status.rawValue]
+    private static func receipt(_ record: AgentRegistration) -> AgentReceipt {
+        AgentReceipt(agentId: record.id, status: record.status, needs: record.status == .pending ? record.needs : [])
     }
 
     private static func sameName(_ a: String, _ b: String) -> Bool {

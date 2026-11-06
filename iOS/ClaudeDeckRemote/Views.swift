@@ -696,24 +696,7 @@ struct PendingAgentsSection: View {
 
     var body: some View {
         Section {
-            ForEach(agents) { agent in
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(agent.name).font(.body.weight(.semibold))
-                    Text(agent.host).font(.caption).foregroundStyle(.secondary)
-                    if !agent.description.isEmpty {
-                        Text(agent.description).font(.caption).foregroundStyle(.secondary).lineLimit(3)
-                    }
-                    HStack {
-                        Button("Reject", role: .destructive) { store.agentRegistration(agent.id, approve: false) }
-                        Spacer()
-                        Button("Approve") { store.agentRegistration(agent.id, approve: true) }
-                            .buttonStyle(.borderedProminent)
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                }
-                .padding(.vertical, 2)
-            }
+            ForEach(agents) { PendingAgentRow(agent: $0) }
         } header: {
             ListHeader("Agents Waiting for Approval")
         } footer: {
@@ -721,6 +704,64 @@ struct PendingAgentsSection: View {
                 NavigationLink("All agents and activity") { AgentsScreen() }.font(.caption)
             }
         }
+    }
+}
+
+/// A pending agent: Approve / Reject, and when it registered without a webhook URL, the URL and
+/// Authorization header to paste (checked like on the Mac; sent over the encrypted connection).
+struct PendingAgentRow: View {
+    @Environment(RemoteStore.self) private var store
+    let agent: RemotePendingAgent
+    @State private var url = ""
+    @State private var header = ""
+
+    var body: some View {
+        let needs = store.snapshot?.supports(RemoteSnapshot.Feature.agentCompletion) == true ? (agent.needs ?? []) : []
+        let problem = AgentCompletion.problem(needs: needs, url: url, authHeader: header)
+        VStack(alignment: .leading, spacing: 6) {
+            Text(agent.name).font(.body.weight(.semibold))
+            Text(agent.host.isEmpty ? String(localized: "No webhook URL yet") : agent.host)
+                .font(.caption).foregroundStyle(agent.host.isEmpty ? Color.orange : .secondary)
+            if !agent.description.isEmpty {
+                Text(agent.description).font(.caption).foregroundStyle(.secondary).lineLimit(3)
+            }
+            if needs.contains("url") {
+                HStack {
+                    TextField("Webhook URL", text: $url, prompt: Text("https://…"))
+                        .textInputAutocapitalization(.never).autocorrectionDisabled().keyboardType(.URL)
+                    PasteButton(payloadType: String.self) { strings in
+                        if let text = strings.first { url = text.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    }
+                    .labelStyle(.iconOnly)
+                }
+                .font(.caption)
+            }
+            if needs.contains("auth_header") {
+                HStack {
+                    SecureField("Authorization header", text: $header, prompt: Text("Bearer …"))
+                    PasteButton(payloadType: String.self) { strings in
+                        if let text = strings.first { header = text.trimmingCharacters(in: .whitespacesAndNewlines) }
+                    }
+                    .labelStyle(.iconOnly)
+                }
+                .font(.caption)
+            }
+            if !needs.isEmpty, let problem, !(url.isEmpty && header.isEmpty) {
+                Text(problem.message).font(.caption).foregroundStyle(.orange)
+            }
+            HStack {
+                Button("Reject", role: .destructive) { store.agentRegistration(agent.id, approve: false) }
+                Spacer()
+                Button("Approve") {
+                    store.agentRegistration(agent.id, approve: true, url: needs.isEmpty ? nil : url, authHeader: needs.isEmpty ? nil : header)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(problem != nil)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
+        }
+        .padding(.vertical, 2)
     }
 }
 

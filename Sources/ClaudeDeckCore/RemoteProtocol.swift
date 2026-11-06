@@ -152,8 +152,10 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case askAgents(sessionID: UUID, agentIDs: [UUID], request: String)
     /// Remote → host: dismiss a note, or send its answer to Claude (now or queued).
     case agentNoteAction(sessionID: UUID, noteID: UUID, action: AgentNoteAction)
-    /// Remote → host: approve or reject an agent that signed itself up (`pendingAgents`).
-    case agentRegistration(agentID: UUID, approve: Bool)
+    /// Remote → host: approve or reject an agent that signed itself up (`pendingAgents`), with the
+    /// webhook URL and Authorization header the user pasted when it registered without them
+    /// (hosts with `Feature.agentCompletion`). Sent over the encrypted channel, never logged.
+    case agentRegistration(agentID: UUID, approve: Bool, url: String? = nil, authHeader: String? = nil)
     /// Remote → host: the agents with their settings and the recent activity (the phone's
     /// read-only Agents screen). Answered with `agentDetailsAre`.
     case agentDetails
@@ -309,8 +311,10 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
         public static let agentApproval = "agentApproval"
         /// `agentDetails`.
         public static let agentDetails = "agentDetails"
+        /// `agentRegistration` with `url` / `authHeader`, `needs` in `pendingAgents`.
+        public static let agentCompletion = "agentCompletion"
         public static let all: Set<String> = [files, permissionMode, projectActions, sessionActions, addProject, transfer, queue, agents, agentApproval,
-                                              agentDetails]
+                                              agentDetails, agentCompletion]
     }
 
     public func supports(_ feature: String) -> Bool { features?.contains(feature) == true }

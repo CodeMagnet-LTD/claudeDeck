@@ -277,7 +277,7 @@ public final class RemoteServer: @unchecked Sendable {
     /// `.askAgents` / `.agentNoteAction` (notes go out with the conversation pages).
     public var onAskAgents: ((_ sessionID: UUID, _ agentIDs: [UUID], _ request: String) -> Void)?
     public var onAgentNoteAction: ((_ sessionID: UUID, _ noteID: UUID, _ action: AgentNoteAction) -> Void)?
-    public var onAgentRegistration: ((_ agentID: UUID, _ approve: Bool) -> Void)?
+    public var onAgentRegistration: ((_ agentID: UUID, _ approve: Bool, _ url: String?, _ authHeader: String?) -> Void)?
     public var onAgentDetails: ((_ reply: @escaping @Sendable (RemoteAgentDetails) -> Void) -> Void)?
     /// A message with files; reply nil once it's going in, else why not.
     public var onSendPromptWithFiles: ((_ sessionID: UUID, _ text: String, _ files: [RemoteUpload], _ reply: @escaping @Sendable (String?) -> Void) -> Void)?
@@ -507,8 +507,8 @@ public final class RemoteServer: @unchecked Sendable {
                 onAskAgents?(sessionID, agentIDs, String(request.prefix(4000)))
             case .agentNoteAction(let sessionID, let noteID, let action):
                 onAgentNoteAction?(sessionID, noteID, action)
-            case .agentRegistration(let agentID, let approve):
-                onAgentRegistration?(agentID, approve)
+            case .agentRegistration(let agentID, let approve, let url, let authHeader):
+                onAgentRegistration?(agentID, approve, url.map { String($0.prefix(4096)) }, authHeader.map { String($0.prefix(AgentCompletion.maxAuthHeader + 1)) })
             case .agentDetails:
                 let channel = peer.channel
                 onAgentDetails? { [queue] details in queue.async { channel.send(.agentDetailsAre(details)) } }

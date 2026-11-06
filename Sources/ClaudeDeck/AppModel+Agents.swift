@@ -12,10 +12,13 @@ struct AgentReviewRecord: Codable, Identifiable, Equatable {
 enum AgentSheet: Identifiable, Equatable {
     case preview(session: UUID, agents: [UUID], text: String)
     case history(session: UUID)
+    /// Approve (or reject) an agent that registered itself, filling in what it left out.
+    case approve(UUID)
     var id: String {
         switch self {
         case .preview(let session, _, _): "preview-\(session)"
         case .history(let session): "history-\(session)"
+        case .approve(let agent): "approve-\(agent)"
         }
     }
 }
@@ -367,15 +370,27 @@ extension AppModel {
     }
 
     /// The agent becomes an ordinary webhook agent: not allowed to type into Claude, no projects.
-    func approveAgent(_ id: UUID) {
+    /// `url` / `authHeader`: what the user pasted for an agent that registered without them (the
+    /// header goes to the keychain only). Returns why it couldn't be approved.
+    @discardableResult
+    func approveAgent(_ id: UUID, url: String = "", authHeader: String = "") -> String? {
         var registrations = deck.settings.agentRegistrations
         var profiles = deck.settings.agents
-        guard let record = AgentRegistry.approve(id, registrations: &registrations, profiles: &profiles, now: Date()) else { return }
-        mutate(userInitiated: false) {
-            $0.settings.agentRegistrations = registrations
-            $0.settings.agents = profiles
+        switch AgentRegistry.approve(id, url: url, authHeader: authHeader, registrations: &registrations, profiles: &profiles, now: Date()) {
+        case .failure(let problem):
+            let name = registrations.first { $0.id == id }?.name ?? "?"
+            logAgent(name, inbound: false, "not approved: \(problem.message)", ok: false)
+            return problem.message
+        case .success(let (record, header)):
+            if let header { AgentKeychain.setWebhookAuthorization(header, for: id) }
+            mutate(userInitiated: false) {
+                $0.settings.agentRegistrations = registrations
+                $0.settings.agents = profiles
+            }
+            if agentSheet == .approve(id) { agentSheet = nil }
+            logAgent(record.name, inbound: false, "approved · \(record.host)\(header == nil ? "" : " · header saved")")
+            return nil
         }
-        logAgent(record.name, inbound: false, "approved · \(record.host)")
     }
 
     /// Its keychain item goes now; the record stays 24 hours so it can't ask again at once.
@@ -384,6 +399,7 @@ extension AppModel {
         guard let record = AgentRegistry.reject(id, registrations: &registrations, now: Date()) else { return }
         AgentKeychain.setWebhookAuthorization(nil, for: id)
         mutate(userInitiated: false) { $0.settings.agentRegistrations = registrations }
+        if agentSheet == .approve(id) { agentSheet = nil }
         logAgent(record.name, inbound: false, "rejected · \(record.host)", ok: false)
     }
 

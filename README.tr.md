@@ -568,7 +568,8 @@ gider; anahtar ve token'a benzeyen metinler maskelenir, **Gönderilecek içeriğ
 bunu gösterir. Ajanlar seçtiğin projeleri kendiliğinden izleyebilir; bu Mac'teki botlar yerel bir
 API kullanabilir (127.0.0.1, bearer token). Bir bot bu API üzerinden kendini de kaydedebilir
 (`POST /v1/agents`); sen Ayarlar › Ajanlar'dan, kenar çubuğundan, bildirimden ya da telefondan onaylayana kadar hiçbir
-şey almaz. İzin verdiğin ajanlara Claude oturumu kendisi de sorabilir (`claudedeck-ask`); cevaplar
+şey almaz. Grok Bot ajanları URL'siz kaydolur; routine'in webhook URL'sini ve header'ını onay
+ekranında sen yapıştırırsın. İzin verdiğin ajanlara Claude oturumu kendisi de sorabilir (`claudedeck-ask`); cevaplar
 yine sana not olarak gelir. Kurulum, payload ve uçlar: [docs/agents.md](docs/agents.md).
 
 ## iCloud eşitleme (isteğe bağlı)

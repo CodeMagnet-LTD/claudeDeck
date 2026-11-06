@@ -144,8 +144,8 @@ import Testing
         #expect(deck.profiles.isEmpty)
         #expect(!deck.profiles.contains { $0.follows(project: project) || $0.id == id })
 
-        let approved = AgentRegistry.approve(id, registrations: &deck.registrations, profiles: &deck.profiles, now: now)
-        #expect(approved?.status == .approved)
+        let approved = try AgentRegistry.approve(id, registrations: &deck.registrations, profiles: &deck.profiles, now: now).get()
+        #expect(approved.0.status == .approved && approved.authHeader == nil)
         let profile = try #require(deck.profiles.first { $0.id == id })
         #expect(profile.usesWebhook && profile.webhookURL == "https://bots.example.com/hook" && profile.async)
         #expect(!profile.canSendDirectly && !profile.autoTrigger && profile.autoProjects.isEmpty)
@@ -153,7 +153,7 @@ import Testing
         let (info, _) = AgentRegistry.handle(.agentInfo(id), body: Data(), registrations: &deck.registrations, profiles: &deck.profiles, now: now)
         #expect(json(info)["status"] as? String == "approved")
         // Approving twice adds nothing.
-        #expect(AgentRegistry.approve(id, registrations: &deck.registrations, profiles: &deck.profiles, now: now) == nil)
+        #expect((try? AgentRegistry.approve(id, registrations: &deck.registrations, profiles: &deck.profiles, now: now).get()) == nil)
         #expect(deck.profiles.count == 1)
         // Registering again: the same agent, approved.
         #expect(json(register(&deck).0)["status"] as? String == "approved")
@@ -186,7 +186,7 @@ import Testing
         #expect(delete.0.status == 429 && delete.1 == .none && deck.registrations.count == 1)
         #expect(register(&deck, at: now.addingTimeInterval(7200)).0.status == 429)
         // A rejected agent can't be approved afterwards.
-        #expect(AgentRegistry.approve(id, registrations: &deck.registrations, profiles: &deck.profiles, now: now) == nil)
+        #expect((try? AgentRegistry.approve(id, registrations: &deck.registrations, profiles: &deck.profiles, now: now).get()) == nil)
         let later = register(&deck, at: now.addingTimeInterval(AgentRegistry.rejectionCooldown + 1))
         #expect(later.0.status == 201 && json(later.0)["agent_id"] as? String != id.uuidString)
     }
@@ -197,7 +197,7 @@ import Testing
         deck.profiles = [manual]
         let (created, _) = register(&deck)
         let id = try #require((json(created)["agent_id"] as? String).flatMap(UUID.init))
-        AgentRegistry.approve(id, registrations: &deck.registrations, profiles: &deck.profiles, now: now)
+        _ = AgentRegistry.approve(id, registrations: &deck.registrations, profiles: &deck.profiles, now: now)
 
         let forbidden = AgentRegistry.handle(.deleteAgent(manual.id), body: Data(), registrations: &deck.registrations, profiles: &deck.profiles, now: now)
         #expect(forbidden.0.status == 403 && deck.profiles.contains(manual))
@@ -213,12 +213,107 @@ import Testing
         var deck = Deck()
         let (created, _) = register(&deck)
         let id = try #require((json(created)["agent_id"] as? String).flatMap(UUID.init))
-        AgentRegistry.approve(id, registrations: &deck.registrations, profiles: &deck.profiles, now: now)
+        _ = AgentRegistry.approve(id, registrations: &deck.registrations, profiles: &deck.profiles, now: now)
         deck.profiles.removeAll()
         AgentRegistry.prune(&deck.registrations, profiles: deck.profiles, now: now)
         #expect(deck.registrations.isEmpty)
         // It may ask again (pending once more).
         #expect(register(&deck).0.status == 201)
+    }
+
+    // MARK: Registering without a URL (Grok Bot routines can't see their own)
+
+    private func registerWithoutURL(_ deck: inout Deck, name: String = "Grok Routine", extra: [String: Any] = [:]) -> (AgentHTTPResponse, AgentRegistry.Effect) {
+        var fields: [String: Any] = ["name": name, "kind": "webhook"]
+        fields.merge(extra) { $1 }
+        return AgentRegistry.handle(.registerAgent, body: body(fields), registrations: &deck.registrations, profiles: &deck.profiles, now: now)
+    }
+
+    @Test func registersWithoutURLAndSaysWhatItNeeds() throws {
+        var deck = Deck()
+        let (response, effect) = registerWithoutURL(&deck)
+        #expect(response.status == 201)
+        #expect(json(response)["status"] as? String == "pending")
+        #expect(json(response)["needs"] as? [String] == ["url", "auth_header"])
+        guard case .registered(let record, let header) = effect else { Issue.record("no effect"); return }
+        #expect(record.url.isEmpty && record.host.isEmpty && header == nil && record.needs == ["url", "auth_header"])
+        // With a header but no URL, only the URL is missing; with a URL, nothing.
+        #expect(json(registerWithoutURL(&deck, name: "Has Header", extra: ["auth_header": "Bearer abc"]).0)["needs"] as? [String] == ["url"])
+        #expect(json(registerWithoutURL(&deck, name: "Empty URL", extra: ["url": "  "]).0)["needs"] as? [String] == ["url", "auth_header"])
+        #expect(json(register(&deck, name: "With URL").0)["needs"] as? [String] == [])
+        // Listed without a host, with its needs.
+        let id = try #require((json(response)["agent_id"] as? String).flatMap(UUID.init))
+        let (info, _) = AgentRegistry.handle(.agentInfo(id), body: Data(), registrations: &deck.registrations, profiles: &deck.profiles, now: now)
+        #expect(json(info)["url_host"] == nil || json(info)["url_host"] is NSNull)
+        #expect(json(info)["needs"] as? [String] == ["url", "auth_header"])
+    }
+
+    @Test func withoutURLTheNameAloneIsIdempotent() throws {
+        var deck = Deck()
+        let first = registerWithoutURL(&deck)
+        let again = registerWithoutURL(&deck, name: "grok routine")
+        #expect(again.0.status == 200 && again.1 == .none && deck.registrations.count == 1)
+        #expect(json(again.0)["agent_id"] as? String == json(first.0)["agent_id"] as? String)
+        #expect(json(again.0)["needs"] as? [String] == ["url", "auth_header"])
+        // Sending a URL later for the same name: still that record (the user fills it in).
+        #expect(json(register(&deck, name: "Grok Routine").0)["agent_id"] as? String == json(first.0)["agent_id"] as? String)
+        // Without a URL, an agent of that name in Settings is the one returned.
+        deck.profiles.append(AgentProfile(name: "Manual", webhookURL: "https://m.example.com"))
+        #expect(json(registerWithoutURL(&deck, name: "manual").0)["status"] as? String == "approved")
+    }
+
+    @Test func approvingWithoutTheMissingFieldsIsRefused() throws {
+        var deck = Deck()
+        let id = try #require((json(registerWithoutURL(&deck).0)["agent_id"] as? String).flatMap(UUID.init))
+        var registrations = deck.registrations, profiles = deck.profiles
+        func approve(_ url: String, _ header: String) -> AgentRegistry.CompletionProblem? {
+            if case .failure(let problem) = AgentRegistry.approve(id, url: url, authHeader: header, registrations: &registrations,
+                                                                  profiles: &profiles, now: now) { return problem }
+            return nil
+        }
+        #expect(approve("", "") == .missingURL)
+        #expect(approve("https://routines.example.com/hook", "") == .missingAuthHeader)
+        #expect(approve("http://routines.example.com/hook", "Bearer x") == .insecureURL)
+        #expect(approve("not a url", "Bearer x") == .badURL)
+        #expect(approve("https://routines.example.com/hook", "Bearer a\r\nX-Evil: 1") == .badAuthHeader)
+        #expect(approve("https://routines.example.com/hook", "Bearer şifre") == .badAuthHeader)
+        #expect(approve("https://routines.example.com/hook", String(repeating: "a", count: AgentRegistry.maxAuthHeader + 1)) == .badAuthHeader)
+        #expect(profiles.isEmpty && registrations[0].status == .pending)
+        // The same rules the form uses (Mac and phone).
+        #expect(AgentCompletion.problem(needs: ["url", "auth_header"], url: "", authHeader: "") == .missingURL)
+        #expect(AgentCompletion.problem(needs: [], url: "", authHeader: "") == nil)
+        #expect(AgentCompletion.problem(needs: [], url: "http://127.0.0.1:9/x", authHeader: "") == nil)
+    }
+
+    @Test func approvedWithPastedURLAndHeaderGetsWebhooks() throws {
+        var deck = Deck()
+        let id = try #require((json(registerWithoutURL(&deck, extra: ["async": true]).0)["agent_id"] as? String).flatMap(UUID.init))
+        let result = try AgentRegistry.approve(id, url: " https://routines.example.com/r/abc?k=1 ", authHeader: " Bearer routine-secret ",
+                                               registrations: &deck.registrations, profiles: &deck.profiles, now: now).get()
+        #expect(result.authHeader == "Bearer routine-secret")
+        #expect(result.0.status == .approved && result.0.url == "https://routines.example.com/r/abc?k=1" && result.0.hasAuthHeader)
+        // Now an ordinary webhook agent (what Ask Agent and automatic requests use), permissions off.
+        let profile = try #require(deck.profiles.first { $0.id == id })
+        #expect(profile.usesWebhook && profile.webhookURL == "https://routines.example.com/r/abc?k=1" && profile.async)
+        #expect(!profile.canSendDirectly && !profile.claudeCanAsk && profile.autoProjects.isEmpty)
+        // GET: approved, host only, never the header, nothing needed.
+        let (info, _) = AgentRegistry.handle(.agentInfo(id), body: Data(), registrations: &deck.registrations, profiles: &deck.profiles, now: now)
+        let text = String(decoding: info.body, as: UTF8.self)
+        #expect(json(info)["status"] as? String == "approved" && json(info)["url_host"] as? String == "routines.example.com")
+        #expect(json(info)["needs"] as? [String] == [] && !text.contains("routine-secret") && !text.contains("abc?k"))
+        // The saved record holds no header.
+        #expect(!String(decoding: try JSONEncoder().encode(deck.registrations), as: UTF8.self).contains("routine-secret"))
+    }
+
+    @Test func recordsSavedBy050StillDecode() throws {
+        let old = #"[{"id":"\#(UUID().uuidString)","name":"Old","url":"https://o.example.com/h","async":false,"description":"","status":"pending","createdAt":800000000}]"#
+        let records = try JSONDecoder().decode([AgentRegistration].self, from: Data(old.utf8))
+        #expect(records.first?.needs == [] && records.first?.hasAuthHeader == false)
+        // A 0.5.0 phone's approval (no url / header) still decodes on the Mac.
+        let message = #"{"agentRegistration":{"agentID":"\#(UUID().uuidString)","approve":true}}"#
+        guard case .agentRegistration(_, true, nil, nil) = try JSONDecoder().decode(RemoteMessage.self, from: Data(message.utf8)) else {
+            Issue.record("old approval didn't decode"); return
+        }
     }
 
     @Test func routes() {

@@ -1,6 +1,126 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "This agent isn't waiting for approval any more.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu ajan artık onay beklemiyor."
+          }
+        }
+      }
+    },
+    "Paste the webhook URL.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Webhook URL'sini yapıştır."
+          }
+        }
+      }
+    },
+    "The webhook address isn't a valid URL.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Webhook adresi geçerli bir URL değil."
+          }
+        }
+      }
+    },
+    "Paste the Authorization header.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Authorization header'ını yapıştır."
+          }
+        }
+      }
+    },
+    "The header has to be one line of plain characters (no line breaks).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Header tek satır ve düz karakterlerden oluşmalı (satır sonu olmadan)."
+          }
+        }
+      }
+    },
+    "Paste its webhook URL and header to approve.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onaylamak için webhook URL'sini ve header'ını yapıştır."
+          }
+        }
+      }
+    },
+    "Fill In and Approve…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Doldur ve onayla…"
+          }
+        }
+      }
+    },
+    "No webhook URL yet": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz webhook URL'si yok"
+          }
+        }
+      }
+    },
+    "Agent Waiting for Approval": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onay bekleyen ajan"
+          }
+        }
+      }
+    },
+    "Authorization header": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Authorization header"
+          }
+        }
+      }
+    },
+    "Paste from Clipboard": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Panodan yapıştır"
+          }
+        }
+      }
+    },
+    "It registered without its webhook address: paste the URL and header from the routine's panel.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Webhook adresi olmadan kaydoldu: URL'yi ve header'ı routine panelinden yapıştır."
+          }
+        }
+      }
+    },
     "All agents and activity": {
       "localizations": {
         "tr": {

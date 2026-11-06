@@ -54,9 +54,13 @@ final class AttentionCenter: NSObject, UNUserNotificationCenterDelegate {
         guard let center else { return }
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Agent waiting for approval")
-        content.body = "\(record.name) · \(record.host)" + (record.description.isEmpty ? "" : "\n\(record.description)")
+        let needsInfo = !record.needs.isEmpty
+        content.body = record.name + (record.host.isEmpty ? "" : " · \(record.host)")
+            + (needsInfo ? "\n" + String(localized: "Paste its webhook URL and header to approve.") : "")
+            + (record.description.isEmpty ? "" : "\n\(record.description)")
         content.sound = .default
-        content.categoryIdentifier = Self.agentCategory
+        // Without a URL it can't be approved from the banner: clicking opens the form.
+        if !needsInfo { content.categoryIdentifier = Self.agentCategory }
         content.userInfo = ["agentRegistration": record.id.uuidString]
         center.add(UNNotificationRequest(identifier: "agent-\(record.id.uuidString)", content: content, trigger: nil))
     }
@@ -130,11 +134,13 @@ final class AttentionCenter: NSObject, UNUserNotificationCenterDelegate {
         if let raw = userInfo["agentRegistration"] as? String, let id = UUID(uuidString: raw) {
             let action = response.actionIdentifier
             await MainActor.run {
-                if action == Self.approveAction { self.model.approveAgent(id) }
+                let needsInfo = !(self.model.pendingAgents.first { $0.id == id }?.needs.isEmpty ?? true)
+                if action == Self.approveAction, !needsInfo { self.model.approveAgent(id) }
                 else if action == Self.denyAction { self.model.rejectAgent(id) }
-                else {
-                    self.model.openSettings?()
+                else if self.model.pendingAgents.contains(where: { $0.id == id }) {
+                    self.model.openMainWindow?()
                     NSApp.activate()
+                    self.model.agentSheet = .approve(id)
                 }
             }
             return

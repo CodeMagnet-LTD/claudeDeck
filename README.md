@@ -555,7 +555,8 @@ gets the request, the last message and answer, the uncommitted diff and new file
 token-looking strings redacted; **Preview What's Sent…** shows exactly that. Agents can follow
 chosen projects by themselves, and bots on this Mac can use a local API (127.0.0.1, bearer token).
 A bot can also register itself through that API (`POST /v1/agents`); it gets nothing until you
-approve it in Settings › Agents, the sidebar, the notification or the phone. A Claude session can ask
+approve it in Settings › Agents, the sidebar, the notification or the phone. Grok Bot agents register
+without a URL, and you paste the routine's webhook URL and header in the approval form. A Claude session can ask
 the agents you allow by itself (`claudedeck-ask`); their answers still come to you as notes.
 Setup, payload and endpoints: [docs/agents.md](docs/agents.md).
 

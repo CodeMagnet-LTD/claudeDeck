@@ -39,8 +39,11 @@ final class DebugHooks {
                 try? FileManager.default.removeItem(at: url)
                 store.loadAgentDetails()
             } else if file.hasSuffix(".agentapprove") || file.hasSuffix(".agentreject"), let id {
+                // Optional content: the URL on the first line, the header on the second.
+                let lines = ((try? String(contentsOf: url, encoding: .utf8)) ?? "").components(separatedBy: "\n")
                 try? FileManager.default.removeItem(at: url)
-                store.agentRegistration(id, approve: file.hasSuffix(".agentapprove"))
+                store.agentRegistration(id, approve: file.hasSuffix(".agentapprove"), url: lines.first.flatMap { $0.isEmpty ? nil : $0 },
+                                        authHeader: lines.count > 1 && !lines[1].isEmpty ? lines[1] : nil)
             } else if file == "pair.txt", let link = try? String(contentsOf: url, encoding: .utf8) {
                 try? FileManager.default.removeItem(at: url)
                 store.pair(link: link)

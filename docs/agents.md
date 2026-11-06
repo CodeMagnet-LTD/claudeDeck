@@ -150,13 +150,13 @@ A bot can add itself instead of being typed into Settings: it registers through 
 
 | Method | Path | Body | Does |
 |---|---|---|---|
-| POST | `/v1/agents` | `{name, kind: "webhook", url, auth_header?, async?, description?}` | Registers it as pending: `201 {agent_id, status: "pending"}` |
-| GET | `/v1/agents` | | Every agent: `[{id, name, kind, url_host, status, async, registered}]` |
+| POST | `/v1/agents` | `{name, kind: "webhook", url?, auth_header?, async?, description?}` | Registers it as pending: `201 {agent_id, status: "pending", needs}` |
+| GET | `/v1/agents` | | Every agent: `[{id, name, kind, url_host, status, async, registered, needs}]` |
 | GET | `/v1/agents/{id}` | | One agent (poll it to see whether you approved it) |
 | DELETE | `/v1/agents/{id}` | | Removes an agent that registered itself (`403` for ones added in Settings) |
 
-- `name`: 1–40 characters, not blank, one line. `kind`: only `"webhook"`. `url`: `https://…`, or
-  `http://` only to this Mac (`127.0.0.1`, `localhost`). `description` (at most 500 characters) is
+- `name`: 1–40 characters, not blank, one line. `kind`: only `"webhook"`. `url` (optional, see
+  below): `https://…`, or `http://` only to this Mac (`127.0.0.1`, `localhost`). `description` (at most 500 characters) is
   shown when you decide; it's never sent anywhere.
 - `auth_header` goes to the keychain, like the header of a webhook agent added by hand; it's never
   written to deck.json or the activity log, and no endpoint returns it. Listings show the URL's host
@@ -164,12 +164,34 @@ A bot can add itself instead of being typed into Settings: it registers through 
 - `status`: `pending`, `approved` or `rejected`. `registered` is `true` for agents that signed
   themselves up (only those can be deleted through the API).
 - **Idempotent:** the same name (case-insensitively) and URL again answers `200` with the agent
-  already there and its status. The same name with another URL is `409 name_taken`.
+  already there and its status. The same name with another URL is `409 name_taken`. Without a URL
+  the name alone identifies it: registering again returns the same record.
+- `needs`: what you still have to fill in before approving: `["url", "auth_header"]` for an agent
+  that registered without a URL (`["url"]` if it sent a header), `[]` otherwise and once approved.
+- `auth_header` (and the header you paste) must be one line of printable ASCII, at most 4096
+  characters.
 - Bodies are at most 16 KB (`413 too_large`); bad JSON is `400 bad_request`. Other `400`s:
   `bad_name`, `bad_kind`, `bad_url`, `insecure_url`, `bad_auth_header`, `bad_description`.
 - At most 10 agents wait at once (`429 too_many_pending`). A rejected name and URL can't register
   again for 24 hours (`429 rejected_recently`); `GET /v1/agents/{id}` says `rejected` meanwhile, and
   `DELETE` refuses it (`429 rejected_recently`) so the wait can't be skipped.
+
+**Grok Bot agents (no URL).** A Grok Bot routine can't see its own webhook URL or Authorization
+header; only you can copy them from the routine's panel. So it registers **without `url`**, and you
+paste both when approving: the approval form (the notification opens it, and it's in Settings ›
+Agents, the sidebar and on the phone) shows **Webhook URL** and **Authorization header** fields with
+**Paste from Clipboard**. They're checked as you paste (https except to this Mac; a one-line header)
+and **Approve** stays off until both are valid. Approving saves the URL, puts the header in the
+keychain (never in deck.json or the log; from the phone it travels over the encrypted remote
+connection) and the agent is approved. `GET /v1/agents/{id}` then says `approved`, `url_host` is the
+URL's host, and the header is never returned.
+
+```sh
+curl -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"name":"Grok Reviewer","kind":"webhook","async":true,"description":"Reviews Swift diffs"}' \
+  $API/v1/agents
+# → {"agent_id":"5A0C…","needs":["url","auth_header"],"status":"pending"}
+```
 
 **Approval.** A new registration shows a notification on the Mac (with **Approve** / **Reject**),
 an **Agents Waiting for Approval** section in Settings › Agents and above the sidebar's waiting tray (name, URL host, description), and
@@ -188,7 +210,7 @@ curl -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
 
 # Approved yet?
 curl -H "Authorization: Bearer $TOKEN" $API/v1/agents/$AGENT_ID
-# → {"id":"9A3F…","name":"Kod Checker","kind":"webhook","url_host":"bots.example.com","status":"approved",…}
+# → {"id":"9A3F…","name":"Kod Checker","kind":"webhook","needs":[],"url_host":"bots.example.com","status":"approved",…}
 
 # Leave:
 curl -X DELETE -H "Authorization: Bearer $TOKEN" $API/v1/agents/$AGENT_ID

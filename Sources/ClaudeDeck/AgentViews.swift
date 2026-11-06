@@ -47,21 +47,7 @@ struct AgentsSettingsSection: View {
     /// Agents that signed themselves up through the local API: nothing reaches them until approved.
     private var pendingSection: some View {
         Section {
-            ForEach(model.pendingAgents) { record in
-                HStack {
-                    Image(systemName: "person.badge.clock").foregroundStyle(.orange)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(record.name)
-                        Text(record.host).font(.caption).foregroundStyle(.secondary).lineLimit(1).help(record.url)
-                        if !record.description.isEmpty {
-                            Text(record.description).font(.caption).foregroundStyle(.secondary).lineLimit(3)
-                        }
-                    }
-                    Spacer()
-                    Button("Reject", role: .destructive) { model.rejectAgent(record.id) }
-                    Button("Approve") { model.approveAgent(record.id) }
-                }
-            }
+            ForEach(model.pendingAgents) { record in PendingAgentForm(record: record) }
         } header: {
             Text("Agents Waiting for Approval")
         } footer: {
@@ -141,12 +127,18 @@ struct PendingAgentsTray: View {
                 ForEach(pending) { record in
                     VStack(alignment: .leading, spacing: 3) {
                         Text(record.name).fontWeight(.semibold).lineLimit(1)
-                        Text(record.host).sidebarFont(.caption).foregroundStyle(.secondary).lineLimit(1).help(record.url)
+                        Text(record.host.isEmpty ? String(localized: "No webhook URL yet") : record.host)
+                            .sidebarFont(.caption).foregroundStyle(record.host.isEmpty ? Color.orange : .secondary).lineLimit(1).help(record.url)
                         if !record.description.isEmpty {
                             Text(record.description).sidebarFont(.caption).foregroundStyle(.secondary).lineLimit(2)
                         }
                         HStack {
-                            Button("Approve") { model.approveAgent(record.id) }
+                            if record.needs.isEmpty {
+                                Button("Approve") { model.approveAgent(record.id) }
+                            } else {
+                                // URL and header to paste: the form, in a sheet (the tray is narrow).
+                                Button("Fill In and Approve…") { model.agentSheet = .approve(record.id) }
+                            }
                             Button("Reject", role: .destructive) { model.rejectAgent(record.id) }
                         }
                         .controlSize(.small)
@@ -163,6 +155,57 @@ struct PendingAgentsTray: View {
         }
         .background(.bar)
         .animation(.snappy(duration: 0.25), value: pending.map(\.id))
+    }
+}
+
+/// A pending agent with Approve / Reject; when it registered without a webhook URL (a Grok Bot
+/// routine can't see its own), the URL and Authorization header to paste, checked as typed.
+struct PendingAgentForm: View {
+    @Environment(AppModel.self) private var model
+    let record: AgentRegistration
+    @State private var url = ""
+    @State private var header = ""
+    @State private var failure: String?
+
+    var body: some View {
+        let problem = AgentRegistry.completionProblem(record, url: url, authHeader: header)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .top) {
+                Image(systemName: "person.badge.clock").foregroundStyle(.orange)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(record.name)
+                    if !record.host.isEmpty { Text(record.host).font(.caption).foregroundStyle(.secondary).lineLimit(1).help(record.url) }
+                    if !record.description.isEmpty {
+                        Text(record.description).font(.caption).foregroundStyle(.secondary).lineLimit(3)
+                    }
+                }
+                Spacer()
+                Button("Reject", role: .destructive) { model.rejectAgent(record.id) }
+                Button("Approve") { failure = model.approveAgent(record.id, url: url, authHeader: header) }
+                    .disabled(problem != nil)
+            }
+            if !record.needs.isEmpty {
+                if record.needs.contains("url") {
+                    HStack {
+                        TextField("Webhook URL", text: $url, prompt: Text("https://…"))
+                        Button("Paste from Clipboard") { url = NSPasteboard.general.string(forType: .string)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? url }
+                    }
+                }
+                if record.needs.contains("auth_header") {
+                    HStack {
+                        SecureField("Authorization header", text: $header, prompt: Text("Bearer …"))
+                        Button("Paste from Clipboard") { header = NSPasteboard.general.string(forType: .string)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? header }
+                    }
+                }
+                if let problem, !(url.isEmpty && header.isEmpty) {
+                    Text(problem.message).font(.caption).foregroundStyle(.orange)
+                } else if problem != nil {
+                    Text("It registered without its webhook address: paste the URL and header from the routine's panel.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            if let failure { Text(failure).font(.caption).foregroundStyle(.orange) }
+        }
     }
 }
 
@@ -425,6 +468,15 @@ struct AgentSheetView: View {
                     }
                     .keyboardShortcut(.defaultAction)
                 }
+            case .approve(let id):
+                Text("Agent Waiting for Approval").font(.headline)
+                if let record = model.pendingAgents.first(where: { $0.id == id }) {
+                    Form { PendingAgentForm(record: record) }.formStyle(.grouped)
+                } else {
+                    Text("This agent isn't waiting for approval any more.").foregroundStyle(.secondary)
+                }
+                Spacer()
+                HStack { Spacer(); Button("Close") { dismiss() }.keyboardShortcut(.cancelAction) }
             case .history(let session):
                 Text("Past Reviews").font(.headline)
                 List((model.agentReviewHistory[session] ?? []).reversed()) { record in

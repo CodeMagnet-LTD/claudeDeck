@@ -520,8 +520,9 @@ final class RemoteStore {
 
     /// An agent that signed itself up on the Mac: approve or reject it (the next snapshot drops it).
     @discardableResult
-    func agentRegistration(_ id: UUID, approve: Bool) -> Bool {
-        send(.agentRegistration(agentID: id, approve: approve))
+    func agentRegistration(_ id: UUID, approve: Bool, url: String? = nil, authHeader: String? = nil) -> Bool {
+        // The header goes only over the encrypted connection; nothing here keeps or logs it.
+        send(.agentRegistration(agentID: id, approve: approve, url: url, authHeader: authHeader))
     }
 
     /// Pin / unpin or rename one of the Mac's projects.
