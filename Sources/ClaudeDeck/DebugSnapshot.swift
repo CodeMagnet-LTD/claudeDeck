@@ -35,6 +35,20 @@ enum DebugSnapshot {
             try? FileManager.default.removeItem(atPath: path)
             if let project = UUID(uuidString: String(file.dropLast(6))) { model.newShell(in: project) }
         }
+        // `agent.add`: "name|webhook URL" adds an agent; `<session-uuid>.ask`: asks every agent
+        // about that session (the file's text is the request).
+        for file in files where file == "agent.add" {
+            let path = (dir as NSString).appendingPathComponent(file)
+            let parts = contents(path).trimmingCharacters(in: .whitespacesAndNewlines).split(separator: "|", maxSplits: 1).map(String.init)
+            try? FileManager.default.removeItem(atPath: path)
+            if parts.count == 2 { model.mutate { $0.settings.agents.append(AgentProfile(name: parts[0], webhookURL: parts[1])) } }
+        }
+        for file in files where file.hasSuffix(".ask") {
+            let path = (dir as NSString).appendingPathComponent(file)
+            let request = contents(path)
+            try? FileManager.default.removeItem(atPath: path)
+            if let id = UUID(uuidString: String(file.dropLast(4))) { model.askAgents(model.agents.map(\.id), about: id, request: request) }
+        }
         // `<session-uuid>.queue`: puts the file's text in that session's prompt queue.
         for file in files where file.hasSuffix(".queue") {
             let path = (dir as NSString).appendingPathComponent(file)
@@ -81,6 +95,7 @@ enum DebugSnapshot {
                            "lan: \(remote.lanHosts.map(\.name)) via=\(remote.connectedVia ?? "-")",
                            "projects: \(remote.hostProjects.map { $0.pinned ? "📌" + $0.name : $0.name }) past=\(remote.hostPastConversations.mapValues(\.count).values.sorted())"]
             + (remote.snapshot?.sessions ?? []).map { "  \($0.id.uuidString) \($0.name) \($0.state.rawValue) stamp=\($0.permissionStamp.map { String($0) } ?? "-")" }
+            + model.agentNotes.flatMap { id, notes in notes.map { "  note \(id.uuidString.prefix(8)) \($0.agentName) pending=\($0.pending) reply=\(($0.reply ?? "-").prefix(60)) error=\($0.error ?? "-")" } }
         try? remoteLines.joined(separator: "\n").write(toFile: (dir as NSString).appendingPathComponent("remote.txt"), atomically: true, encoding: .utf8)
         // `<id>.remote-open` opens the paired Mac's session in a tab; `<id>.remote-type` types its
         // contents there ("\\r" = Enter); `screen-<id>.txt` holds each live terminal's visible text.

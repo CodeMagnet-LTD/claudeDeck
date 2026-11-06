@@ -9393,6 +9393,296 @@
           }
         }
       }
+    },
+    "Agent": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajan"
+          }
+        }
+      }
+    },
+    "xAI API key": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "xAI API anahtarı"
+          }
+        }
+      }
+    },
+    "No model picked": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model seçilmedi"
+          }
+        }
+      }
+    },
+    "Add Agent…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajan ekle…"
+          }
+        }
+      }
+    },
+    "New Agent": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yeni ajan"
+          }
+        }
+      }
+    },
+    "Grok bots (a system prompt and a model, through the xAI API) or any service behind a webhook. Ask them about a session from its menu or the phone; their answers come back as notes, and you choose whether Claude gets them. The session's last message, Claude's answer and the uncommitted changes are sent to the agent.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grok botları (xAI API üzerinden bir sistem talimatı ve bir model) ya da webhook arkasındaki herhangi bir servis. Oturum menüsünden ya da telefondan onlara sorabilirsin; cevapları not olarak gelir, Claude'a gidip gitmeyeceğine sen karar verirsin. Ajana oturumun son mesajı, Claude'un cevabı ve commit edilmemiş değişiklikler gönderilir."
+          }
+        }
+      }
+    },
+    "Runs on": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çalıştığı yer"
+          }
+        }
+      }
+    },
+    "xAI API (Grok)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "xAI API (Grok)"
+          }
+        }
+      }
+    },
+    "Webhook": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Webhook"
+          }
+        }
+      }
+    },
+    "Webhook URL": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Webhook adresi"
+          }
+        }
+      }
+    },
+    "ClaudeDeck POSTs {agent, system, model, message} and shows {\"reply\": \"…\"} (or the plain text it answers).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ClaudeDeck {agent, system, model, message} gönderir ve {\"reply\": \"…\"} (ya da düz metin) cevabını gösterir."
+          }
+        }
+      }
+    },
+    "Model": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Model"
+          }
+        }
+      }
+    },
+    "Models": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Modeller"
+          }
+        }
+      }
+    },
+    "Loading…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yükleniyor…"
+          }
+        }
+      }
+    },
+    "Instructions (system prompt)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talimatlar (sistem talimatı)"
+          }
+        }
+      }
+    },
+    "Testing…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deneniyor…"
+          }
+        }
+      }
+    },
+    "Test": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dene"
+          }
+        }
+      }
+    },
+    "Ask Agent": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajana sor"
+          }
+        }
+      }
+    },
+    "All Agents": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tüm ajanlar"
+          }
+        }
+      }
+    },
+    "What should it look at? (optional)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Neye baksın? (isteğe bağlı)"
+          }
+        }
+      }
+    },
+    "Asks for a review of the latest work": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son işin incelenmesini ister"
+          }
+        }
+      }
+    },
+    "Asks about what you typed": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yazdığını sorar"
+          }
+        }
+      }
+    },
+    "Ask": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sor"
+          }
+        }
+      }
+    },
+    "Thinking…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Düşünüyor…"
+          }
+        }
+      }
+    },
+    "Add your xAI API key in Settings → Agents.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "xAI API anahtarını Ayarlar → Ajanlar'a ekle."
+          }
+        }
+      }
+    },
+    "Pick a model for this agent in Settings → Agents.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu ajan için Ayarlar → Ajanlar'dan bir model seç."
+          }
+        }
+      }
+    },
+    "The agent's webhook address isn't a valid URL.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajanın webhook adresi geçerli bir URL değil."
+          }
+        }
+      }
+    },
+    "The agent answered %lld: %@": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajan %lld ile cevap verdi: %@"
+          }
+        }
+      }
+    },
+    "The agent sent an empty answer.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajan boş bir cevap gönderdi."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

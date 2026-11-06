@@ -66,6 +66,9 @@ struct ConversationView: View {
                                 ToolGroupView(entries: entries).id(item.id)
                             }
                         }
+                        ForEach(conversation?.agentNotes ?? []) { note in
+                            AgentNoteCard(note: note, sessionID: sessionID).id(note.id)
+                        }
                         if session?.state == .running {
                             HStack(spacing: 6) {
                                 ProgressView().controlSize(.small)
@@ -162,6 +165,26 @@ struct ConversationView: View {
                 .controlSize(.small)
                 .disabled(blocked || store.connection != .connected)
                 .accessibilityHint(Text("Switches to the next permission mode, like Shift+Tab"))
+            }
+            if let agents = store.snapshot?.agents, !agents.isEmpty, store.snapshot?.supports(RemoteSnapshot.Feature.agents) == true,
+               session?.state != .shell {
+                Menu {
+                    Section(draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                            ? String(localized: "Asks for a review of the latest work")
+                            : String(localized: "Asks about what you typed")) {
+                        ForEach(agents) { agent in
+                            Button(agent.name) { ask([agent.id]) }
+                        }
+                        if agents.count > 1 {
+                            Button { ask(agents.map(\.id)) } label: { Label("All Agents", systemImage: "person.3") }
+                        }
+                    }
+                } label: {
+                    Label("Ask", systemImage: "sparkles").font(.caption)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .disabled(store.connection != .connected)
             }
             if canQueue(session) {
                 Button { queueMode.toggle() } label: {
@@ -313,6 +336,11 @@ struct ConversationView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { composing = true }
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { composing = true }
         }
+    }
+
+    /// Agents look at the session; what's typed (if anything) is what they're asked.
+    private func ask(_ agents: [UUID]) {
+        if store.askAgents(sessionID, agents: agents, request: draft) { draft = "" }
     }
 
     /// The Mac keeps a queue for this session (a Claude session, a new enough host).
@@ -902,5 +930,50 @@ struct ConversationTextSizeMenu: View {
             Image(systemName: "textformat.size")
         }
         .accessibilityLabel(Text("Text Size"))
+    }
+}
+
+/// An agent's note in the conversation: its answer, then Send to Claude / Queue / Dismiss.
+struct AgentNoteCard: View {
+    @Environment(RemoteStore.self) private var store
+    let note: AgentNote
+    let sessionID: UUID
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 6) {
+                Image(systemName: "sparkles").foregroundStyle(.purple)
+                Text(note.agentName).listFont(.subheadline, weight: .semibold)
+                if !note.request.isEmpty {
+                    Text("· \(note.request)").listFont(.caption).foregroundStyle(.secondary).lineLimit(1)
+                }
+                Spacer(minLength: 4)
+                if note.pending { ProgressView().controlSize(.small) }
+                Button { store.agentNoteAction(sessionID, note: note.id, .dismiss) } label: { Image(systemName: "xmark.circle.fill") }
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(.tertiary)
+            }
+            if let reply = note.reply {
+                MarkdownView(text: reply)
+                HStack(spacing: 8) {
+                    Button { store.agentNoteAction(sessionID, note: note.id, .sendToClaude) } label: {
+                        Label("Send to Claude", systemImage: "arrow.up.circle")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    Button { store.agentNoteAction(sessionID, note: note.id, .queueForClaude) } label: {
+                        Label("Queue", systemImage: "text.line.first.and.arrowtriangle.forward")
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .controlSize(.small)
+                .disabled(store.connection != .connected)
+            } else if let error = note.error {
+                Text(error).listFont(.caption).foregroundStyle(.orange)
+            } else {
+                Text("Thinking…").listFont(.caption).foregroundStyle(.secondary)
+            }
+        }
+        .padding(10)
+        .background(Color.purple.opacity(0.08), in: RoundedRectangle(cornerRadius: 12))
     }
 }

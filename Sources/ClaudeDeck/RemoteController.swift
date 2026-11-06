@@ -378,6 +378,12 @@ final class RemoteController {
                     self?.publishSnapshot()
                 }
             }
+            server.onAskAgents = { [weak self] id, agents, request in
+                MainActor.assumeIsolated { self?.model?.askAgents(agents, about: id, request: request) }
+            }
+            server.onAgentNoteAction = { [weak self] id, note, action in
+                MainActor.assumeIsolated { self?.model?.agentNoteAction(note, in: id, action: action) }
+            }
             server.onQueueAction = { [weak self] id, prompt, action in
                 MainActor.assumeIsolated {
                     self?.model?.queueAction(id, prompt: prompt, action: action)
@@ -585,6 +591,7 @@ final class RemoteController {
         // How to reach this Mac away from home (a phone paired on the local network learns it here).
         snapshot.hostID = local.hostID
         snapshot.features = RemoteSnapshot.Feature.all
+        snapshot.agents = model.agents.map { RemoteAgent(id: $0.id, name: $0.name) }
         // Pinned first, like the sidebar.
         snapshot.projects = (model.deck.projects.filter(\.pinned) + model.deck.projects.filter { !$0.pinned })
             .map { RemoteProject(id: $0.id, name: $0.name, pinned: $0.pinned, path: $0.path) }
@@ -696,6 +703,7 @@ final class RemoteController {
         if let cached = historyCache[id], cached.path == path, cached.size == size {
             var page = ConversationLog.page(cached.entries, before: before, after: after, limit: limit)
             page.contextTokens = cached.tokens
+            page.agentNotes = model.agentNotes[id] ?? []
             reply(page)
             return
         }
@@ -705,6 +713,7 @@ final class RemoteController {
             self?.historyCache[id] = (path, size, entries, tokens)
             var page = ConversationLog.page(entries, before: before, after: after, limit: limit)
             page.contextTokens = tokens
+            page.agentNotes = self?.model?.agentNotes[id] ?? []
             reply(page)
         }
     }

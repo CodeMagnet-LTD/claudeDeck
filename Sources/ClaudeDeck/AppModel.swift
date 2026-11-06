@@ -38,6 +38,10 @@ final class AppModel {
     /// Prompt queue: a queued message went in at this time; the next waits until Claude has
     /// taken it up (see `drainQueues`).
     @ObservationIgnored var queueAwaiting: [UUID: Date] = [:]
+    /// Agents' notes by session (in memory; see AppModel+Agents).
+    var agentNotes: [UUID: [AgentNote]] = [:]
+    /// A note was added, answered or removed (remotes refresh the conversation).
+    @ObservationIgnored var onAgentNotesChanged: (() -> Void)?
     /// Last time the user looked at a session while it was idle (clears the yellow "unseen" badge).
     private var seenAt: [UUID: Date] = [:]
     var hookError: String?

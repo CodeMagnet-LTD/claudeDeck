@@ -900,3 +900,32 @@ import Testing
         }
     }
 }
+
+@Suite struct AgentTests {
+    @Test func contextMessage() {
+        let context = AgentContext(project: "api", session: "api · 2", lastPrompt: "add retries", lastReply: "Done.", diff: "+ retry()", request: "")
+        let message = context.message
+        #expect(message.hasPrefix("Review the latest work"))
+        #expect(message.contains("add retries") && message.contains("Done.") && message.contains("```diff\n+ retry()"))
+        let asked = AgentContext(project: "api", session: "s", lastPrompt: nil, lastReply: nil, diff: String(repeating: "x", count: AgentContext.maxDiff + 10), request: "check errors")
+        #expect(asked.message.hasPrefix("check errors") && asked.message.contains("… (cut)"))
+    }
+
+    @Test func settingsAndMessagesTravel() throws {
+        var settings = DeckSettings()
+        settings.agents = [AgentProfile(name: "Kod Checker", model: "m", systemPrompt: "review", webhookURL: nil)]
+        let decoded = try JSONDecoder().decode(DeckSettings.self, from: JSONEncoder().encode(settings))
+        #expect(decoded.agents == settings.agents)
+        #expect(try JSONDecoder().decode(DeckSettings.self, from: Data("{}".utf8)).agents.isEmpty)
+        #expect(AgentProfile(name: "w", webhookURL: " https://x ").usesWebhook && !AgentProfile(name: "x", webhookURL: "  ").usesWebhook)
+        let id = UUID()
+        for message: RemoteMessage in [.askAgents(sessionID: id, agentIDs: [id], request: "r"), .agentNoteAction(sessionID: id, noteID: id, action: .queueForClaude)] {
+            #expect(try RemoteMessage.decode(message.frame()) == message)
+        }
+        var page = ChatPage(entries: [], hasMoreBefore: false, reset: false)
+        page.agentNotes = [AgentNote(agentID: id, agentName: "Kod Checker", request: "", reply: "ok")]
+        #expect(try JSONDecoder().decode(ChatPage.self, from: JSONEncoder().encode(page)).agentNotes == page.agentNotes)
+        let note = AgentNote(agentID: id, agentName: "Kod Checker", request: "", reply: "Looks fine")
+        #expect(AgentHandoff.prompt(from: note) == "Kod Checker reviewed your work:\n\nLooks fine")
+    }
+}

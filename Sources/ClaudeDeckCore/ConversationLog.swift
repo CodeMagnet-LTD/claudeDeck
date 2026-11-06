@@ -124,6 +124,9 @@ public struct ChatPage: Codable, Sendable, Equatable {
     public var after: String?
     /// Tokens in Claude's context as of the transcript's last turn (nil from older hosts).
     public var contextTokens: Int?
+    /// Agents' notes on this session, newest last (hosts with `Feature.agents`); the whole list
+    /// each time, it replaces what the remote has.
+    public var agentNotes: [AgentNote]?
 
     public init(entries: [ChatEntry], hasMoreBefore: Bool, reset: Bool, before: String? = nil, after: String? = nil) {
         self.entries = entries

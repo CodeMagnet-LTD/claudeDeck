@@ -147,6 +147,11 @@ public enum RemoteMessage: Codable, Sendable, Equatable {
     case queuePrompt(sessionID: UUID, text: String)
     /// Remote → host: remove / edit / send now / move up a queued message.
     case queueAction(sessionID: UUID, promptID: UUID, action: QueueAction)
+    /// Remote → host: ask these agents about the session (`request`: what to look at). Their
+    /// notes come with the conversation pages.
+    case askAgents(sessionID: UUID, agentIDs: [UUID], request: String)
+    /// Remote → host: dismiss a note, or send its answer to Claude (now or queued).
+    case agentNoteAction(sessionID: UUID, noteID: UUID, action: AgentNoteAction)
     /// Remote → host: a message with files. The host saves them and puts them in with the text
     /// (images as pasted images, other files as @mentions). Answered with `promptResult`.
     case sendPromptWithFiles(sessionID: UUID, text: String, files: [RemoteUpload])
@@ -271,6 +276,8 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
     /// What the host understands beyond the basics (`Feature`); nil from hosts older than 0.4.6,
     /// which skip messages they don't know, so a remote checks before sending them.
     public var features: Set<String>?
+    /// The agents the Mac can ask (hosts with `Feature.agents`).
+    public var agents: [RemoteAgent]?
 
     public enum Feature {
         /// `sendPromptWithFiles` (phone) and `pasteFiles` (another Mac).
@@ -287,7 +294,9 @@ public struct RemoteSnapshot: Codable, Sendable, Equatable {
         public static let transfer = "transfer"
         /// `queuePrompt` / `queueAction`.
         public static let queue = "queue"
-        public static let all: Set<String> = [files, permissionMode, projectActions, sessionActions, addProject, transfer, queue]
+        /// `askAgents` / `agentNoteAction`, `agents` in the snapshot, notes in conversation pages.
+        public static let agents = "agents"
+        public static let all: Set<String> = [files, permissionMode, projectActions, sessionActions, addProject, transfer, queue, agents]
     }
 
     public func supports(_ feature: String) -> Bool { features?.contains(feature) == true }

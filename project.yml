@@ -111,6 +111,7 @@ targets:
       - Sources/ClaudeDeckCore/RemoteFiles.swift
       - Sources/ClaudeDeckCore/RemoteTransferClient.swift
       - Sources/ClaudeDeckCore/PromptQueue.swift
+      - Sources/ClaudeDeckCore/Agents.swift
       - Support/Localizable.xcstrings
     dependencies:
       - package: SwiftTerm

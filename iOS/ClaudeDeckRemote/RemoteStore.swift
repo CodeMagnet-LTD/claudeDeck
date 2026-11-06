@@ -33,6 +33,8 @@ final class RemoteStore {
         /// Tokens in Claude's context (the Mac reads it with the transcript).
         var contextTokens: Int?
         var loadingOlder = false
+        /// Agents' notes on the session (the Mac sends the whole list with each page).
+        var agentNotes: [AgentNote] = []
     }
     private(set) var conversations: [UUID: Conversation] = [:]
     /// Conversations on screen: kept current and marked seen.
@@ -493,6 +495,30 @@ final class RemoteStore {
         _ = send(.queueAction(sessionID: id, promptID: prompt, action: action))
     }
 
+    /// Agents (hosts with `Feature.agents`): ask about a session; notes come with the pages.
+    @discardableResult
+    func askAgents(_ id: UUID, agents: [UUID], request: String) -> Bool {
+        guard !agents.isEmpty else { return false }
+        let sent = send(.askAgents(sessionID: id, agentIDs: agents, request: request.trimmingCharacters(in: .whitespacesAndNewlines)))
+        if sent { refreshSoon(id) }
+        return sent
+    }
+
+    func agentNoteAction(_ id: UUID, note: UUID, _ action: AgentNoteAction) {
+        _ = send(.agentNoteAction(sessionID: id, noteID: note, action: action))
+        // Off the list right away; the next page confirms it.
+        conversations[id]?.agentNotes.removeAll { $0.id == note }
+        refreshSoon(id)
+    }
+
+    /// The page with the new note state, a moment after an agent request or action.
+    private func refreshSoon(_ id: UUID) {
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(400))
+            self?.requestNewer(id)
+        }
+    }
+
     /// Pin / unpin or rename one of the Mac's projects.
     func projectAction(_ projectID: UUID, _ action: RemoteProjectAction) { _ = send(.projectAction(projectID: projectID, action: action)) }
 
@@ -588,6 +614,7 @@ final class RemoteStore {
         }
         conversation.loaded = true
         if let tokens = page.contextTokens { conversation.contextTokens = tokens }
+        if let notes = page.agentNotes { conversation.agentNotes = notes }
         if conversations[id] != conversation { conversations[id] = conversation }
     }
 

@@ -658,6 +658,7 @@ struct SessionMenu: View {
         Divider()
         if session.kind == .claude, model.terminals.isRunning(session.id) {
             Button("Queue a Message…") { QueueStrip.askToQueue(session.id, model: model) }
+            AskAgentMenu(sessionID: session.id)
         }
         if model.terminals.isRunning(session.id) {
             Button(session.kind == .shell ? String(localized: "Restart Terminal") : String(localized: "Restart Session")) {

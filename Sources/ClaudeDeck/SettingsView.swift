@@ -92,6 +92,7 @@ struct SettingsView: View {
                     }
                 }
             }
+            AgentsSettingsSection()
             RemoteSettingsSection()
             PencilSettingsSection()
             Section("Claude Code Hooks") {

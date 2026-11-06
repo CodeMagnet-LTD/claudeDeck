@@ -105,6 +105,11 @@ public enum Git {
         run(["show", "--format=commit %H%nAuthor: %an <%ae>%nDate:   %ad%n%n%B", commit, "--", pathspec(file, in: repo)], in: repo) ?? ""
     }
 
+    /// All uncommitted changes of the repo, staged and not (what an agent reviews).
+    public static func uncommittedDiff(in repo: URL) -> String {
+        run(["diff", "HEAD", "--no-ext-diff", "--no-color"], in: repo) ?? ""
+    }
+
     /// Uncommitted changes of `file`.
     public static func workingDiff(of file: URL, in repo: URL) -> String {
         run(["diff", "HEAD", "--", pathspec(file, in: repo)], in: repo) ?? ""
