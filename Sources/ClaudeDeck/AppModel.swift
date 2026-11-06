@@ -42,6 +42,12 @@ final class AppModel {
     var agentNotes: [UUID: [AgentNote]] = [:]
     /// Bumped on every change to a session's notes (remotes see it in the snapshot).
     @ObservationIgnored var agentNotesRevision: [UUID: Int] = [:]
+    /// Agents' activity log (newest last).
+    var agentActivity: [AgentActivity] = []
+    /// Automatic agent requests: once per turn, a few rounds in a row (AgentTriggerGate).
+    @ObservationIgnored var agentGate = AgentTriggerGate()
+    @ObservationIgnored var agentPromptSeen: [UUID: Date] = [:]
+    @ObservationIgnored var agentTypedPrompts: [UUID: [String]] = [:]
     /// A note was added, answered or removed (remotes refresh the conversation).
     @ObservationIgnored var onAgentNotesChanged: (() -> Void)?
     /// Last time the user looked at a session while it was idle (clears the yellow "unseen" badge).
@@ -105,6 +111,8 @@ final class AppModel {
     // MARK: iCloud sync — end
     /// Remote mode: host for other Macs / show another Mac's sessions (RemoteController).
     @ObservationIgnored let remote = RemoteController()
+    /// The agents' local API (127.0.0.1; Settings → Agents).
+    @ObservationIgnored let agentAPI = AgentAPIController()
     // MARK: Automations (AutomationScheduler) — begin
     @ObservationIgnored private(set) var automations: AutomationScheduler?
     @ObservationIgnored private(set) var githubEvents: GitHubEventPoller?
@@ -152,6 +160,7 @@ final class AppModel {
         cleanupStatusFiles()
         if !Self.isDemo { sync.start(model: self) } // iCloud sync (no-op unless enabled)
         remote.start(model: self) // no-op unless remote mode is on in Settings
+        agentAPI.start(model: self) // no-op unless the agents' API is on
         usage.start()
         // Resolving `claude` runs the login shell; keep it off the main thread.
         Task { @MainActor in
@@ -319,6 +328,7 @@ final class AppModel {
         }
         onCountsChanged?()
         drainQueues()
+        triggerAgents()
     }
 
     /// Keeps `busyAtQuit` current for running Claude sessions, so a session that was working when
@@ -362,6 +372,7 @@ final class AppModel {
         emitAttentionChanges()
         onCountsChanged?()
         drainQueues()
+        triggerAgents()
     }
 
     private func notifyKey(_ id: UUID) -> String? {

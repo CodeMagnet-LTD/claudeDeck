@@ -6,6 +6,8 @@ struct AgentsSettingsSection: View {
     @Environment(AppModel.self) private var model
     @State private var key = AgentKeychain.xaiKey ?? ""
     @State private var editing: AgentProfile?
+    @State private var showLog = false
+    @State private var copied = false
 
     var body: some View {
         Section {
@@ -29,6 +31,8 @@ struct AgentsSettingsSection: View {
                 }
             }
             Button("Add Agent…") { editing = AgentProfile(name: String(localized: "New Agent")) }
+            apiRows
+            Button("Activity Log…") { showLog = true }
         } header: {
             Text("Agents")
         } footer: {
@@ -36,6 +40,82 @@ struct AgentsSettingsSection: View {
                 .font(.caption).foregroundStyle(.secondary)
         }
         .sheet(item: $editing) { agent in AgentEditor(agent: agent) }
+        .sheet(isPresented: $showLog) { AgentActivityLog() }
+    }
+
+    /// The local API: on/off, port, token.
+    @ViewBuilder
+    private var apiRows: some View {
+        Toggle("Local API for agents on this Mac (127.0.0.1)", isOn: Binding(
+            get: { model.deck.settings.agentAPIEnabled },
+            set: { on in
+                model.mutate(userInitiated: false) { $0.settings.agentAPIEnabled = on }
+                model.agentAPI.refresh()
+            }
+        ))
+        if model.deck.settings.agentAPIEnabled {
+            LabeledContent("Port") {
+                TextField("Port", value: Binding(
+                    get: { model.deck.settings.agentAPIPort },
+                    set: { port in
+                        model.mutate(userInitiated: false) { $0.settings.agentAPIPort = port }
+                        model.agentAPI.refresh()
+                    }
+                ), format: .number.grouping(.never))
+                .frame(width: 80)
+                .labelsHidden()
+            }
+            LabeledContent("Status") {
+                switch model.agentAPI.state {
+                case .off: Text("Off").foregroundStyle(.secondary)
+                case .listening(let port): Text(verbatim: "http://127.0.0.1:\(port)").textSelection(.enabled)
+                case .failed(let reason): Text(reason).foregroundStyle(.orange)
+                }
+            }
+            LabeledContent("Bearer token") {
+                HStack {
+                    Text(model.agentAPI.token.map { String($0.prefix(6)) + "…" } ?? "-").font(.body.monospaced()).foregroundStyle(.secondary)
+                    Button(copied ? String(localized: "Copied") : String(localized: "Copy")) {
+                        NSPasteboard.general.clearContents()
+                        NSPasteboard.general.setString(model.agentAPI.token ?? "", forType: .string)
+                        copied = true
+                    }
+                    Button("Regenerate…") {
+                        if Confirm.ask(String(localized: "Regenerate the token?"),
+                                             detail: String(localized: "Agents using the old token stop working until they get the new one."),
+                                             action: String(localized: "Regenerate")) {
+                            model.agentAPI.regenerateToken()
+                            copied = false
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// What went out to agents and what came in, newest first.
+struct AgentActivityLog: View {
+    @Environment(AppModel.self) private var model
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Agent Activity").font(.headline)
+            List(model.agentActivity.reversed()) { item in
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Image(systemName: item.inbound ? "arrow.down.left" : "arrow.up.right")
+                        .foregroundStyle(item.ok ? (item.inbound ? Color.green : Color.accentColor) : Color.orange)
+                    Text(item.date, format: .dateTime.hour().minute().second()).font(.caption.monospacedDigit()).foregroundStyle(.secondary)
+                    Text(item.agent).font(.callout.weight(.semibold))
+                    Text(item.summary).font(.callout).foregroundStyle(item.ok ? .primary : Color.orange).lineLimit(2).textSelection(.enabled)
+                }
+            }
+            .overlay { if model.agentActivity.isEmpty { Text("Nothing yet").foregroundStyle(.secondary) } }
+            HStack { Spacer(); Button("Done") { dismiss() }.keyboardShortcut(.defaultAction) }
+        }
+        .padding(16)
+        .frame(width: 640, height: 460)
     }
 }
 
@@ -61,6 +141,7 @@ struct AgentEditor: View {
                 }
                 .pickerStyle(.segmented)
                 if useWebhook {
+                    Toggle("Asynchronous (the answer comes later through the local API)", isOn: $agent.async)
                     TextField("Webhook URL", text: Binding(get: { agent.webhookURL ?? "" }, set: { agent.webhookURL = $0 }), prompt: Text("https://… or http://127.0.0.1:…"))
                     SecureField("Authorization header (optional)", text: $authorization, prompt: Text("Bearer …"))
                     Text("ClaudeDeck POSTs {agent, system, model, message} and shows {\"reply\": \"…\"} (or the plain text it answers).")
@@ -75,6 +156,30 @@ struct AgentEditor: View {
                         .fixedSize()
                     }
                 }
+                Toggle("Asks by itself when a session finishes a turn or waits on a permission or a question", isOn: $agent.autoTrigger)
+                if agent.autoTrigger {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Only in these projects").font(.caption).foregroundStyle(.secondary)
+                        ScrollView {
+                            VStack(alignment: .leading, spacing: 2) {
+                                ForEach(model.deck.projects) { project in
+                                    Toggle(project.name, isOn: Binding(
+                                        get: { agent.autoProjects.contains(project.id) },
+                                        set: { on in
+                                            agent.autoProjects.removeAll { $0 == project.id }
+                                            if on { agent.autoProjects.append(project.id) }
+                                        }
+                                    ))
+                                }
+                            }
+                        }
+                        .frame(maxHeight: 120)
+                        if agent.autoProjects.isEmpty {
+                            Text("No project chosen: it isn't asked by itself anywhere.").font(.caption).foregroundStyle(.orange)
+                        }
+                    }
+                }
+                Toggle("May type into Claude through the local API (otherwise its texts become notes)", isOn: $agent.canSendDirectly)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Instructions (system prompt)")
                     TextEditor(text: $agent.systemPrompt)
@@ -97,7 +202,7 @@ struct AgentEditor: View {
             }
         }
         .padding(16)
-        .frame(width: 560, height: 560)
+        .frame(width: 600, height: 680)
         .onAppear {
             useWebhook = agent.usesWebhook
             authorization = AgentKeychain.webhookAuthorization(agent.id) ?? ""
@@ -133,7 +238,7 @@ struct AgentEditor: View {
         let profile = edited
         AgentKeychain.setWebhookAuthorization(useWebhook ? authorization : nil, for: profile.id)
         Task {
-            do { testResult = try await AgentRunner.ask(profile, message: "Reply with one short sentence: who are you and what do you review?") }
+            do { testResult = try await AgentRunner.test(profile) }
             catch { testResult = error.localizedDescription }
             testing = false
         }

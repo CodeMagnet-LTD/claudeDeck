@@ -34,8 +34,22 @@ enum AgentRunner {
         }
     }
 
-    static func ask(_ profile: AgentProfile, message: String) async throws -> String {
-        profile.usesWebhook ? try await webhook(profile, message: message) : try await xai(profile, message: message)
+    /// The agent's answer; nil when an asynchronous webhook took the request (the answer comes
+    /// later through the local API).
+    static func ask(_ profile: AgentProfile, payload: AgentPayload) async throws -> String? {
+        profile.usesWebhook ? try await webhook(profile, payload: payload) : try await xai(profile, message: payload.message)
+    }
+
+    /// Settings' Test button.
+    static func test(_ profile: AgentProfile) async throws -> String {
+        let context = AgentContext(project: "ClaudeDeck", session: "Test", lastPrompt: nil, lastReply: nil, diff: nil,
+                                   request: "Reply with one short sentence: who are you and what do you review?")
+        let payload = AgentPayload(requestId: UUID().uuidString, event: .test, agent: profile, async: false,
+                                   project: .init(id: nil, name: "ClaudeDeck", path: ""), sessionId: UUID(), sessionName: "Test",
+                                   sessionState: "idle", context: context, transcriptPath: nil, callback: nil)
+        var copy = profile
+        copy.async = false
+        return try await ask(copy, payload: payload) ?? String(localized: "Accepted (the answer comes later).")
     }
 
     private static func xai(_ profile: AgentProfile, message: String) async throws -> String {
@@ -69,19 +83,25 @@ enum AgentRunner {
         do { return try AgentWebhook.reply(from: data) } catch let problem as AgentWebhook.Problem { throw Failure(problem) }
     }
 
-    private static func webhook(_ profile: AgentProfile, message: String) async throws -> String {
+    private static func webhook(_ profile: AgentProfile, payload: AgentPayload) async throws -> String? {
         let url = try webhookURL(profile.webhookURL)
-        var request = URLRequest(url: url, timeoutInterval: 180)
+        var request = URLRequest(url: url, timeoutInterval: payload.async ? 30 : 180)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         if let auth = AgentKeychain.webhookAuthorization(profile.id), !auth.isEmpty {
             request.setValue(auth, forHTTPHeaderField: "Authorization")
         }
-        request.httpBody = try JSONSerialization.data(withJSONObject: [
-            "agent": profile.name, "system": profile.systemPrompt, "model": profile.model, "message": message,
-        ])
+        request.httpBody = try AgentJSON.encode(payload)
         let (data, response) = try await session.data(for: request)
         try check(response, data)
+        // Asynchronous: an acknowledgement is enough (an answer in it is still taken).
+        if payload.async {
+            return (try? reply(from: data)).flatMap { text in
+                let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                // `{"status":"accepted"}`-style acknowledgements aren't answers.
+                return trimmed.hasPrefix("{") ? nil : text
+            }
+        }
         return try reply(from: data)
     }
 
@@ -107,7 +127,9 @@ enum AgentRunner {
 
 /// The xAI API key, in the login keychain (never in deck.json, which iCloud may sync).
 enum AgentKeychain {
-    private static let service = "co.codemagnet.ClaudeDeck.agents"
+    /// Demo copies keep their own items, never touching the real ones.
+    private static let service = ProcessInfo.processInfo.environment["CLAUDEDECK_DEMO"] == nil
+        ? "co.codemagnet.ClaudeDeck.agents" : "co.codemagnet.ClaudeDeck.agents.demo"
     private static let account = "xai"
 
     static var xaiKey: String? { read(account) }

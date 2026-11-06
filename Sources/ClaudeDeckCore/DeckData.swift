@@ -176,6 +176,9 @@ public struct DeckSettings: Codable, Sendable, Equatable {
     public var remoteLAN = false
     /// Agents to ask about a session (Grok bots through the xAI API, or webhooks); see Agents.swift.
     public var agents: [AgentProfile] = []
+    /// The agents' local API (127.0.0.1 only; the token is in the keychain).
+    public var agentAPIEnabled = false
+    public var agentAPIPort = 47647
 
     public init() {}
 
@@ -209,6 +212,8 @@ public struct DeckSettings: Codable, Sendable, Equatable {
         remoteClient = try c.decodeIfPresent(Bool.self, forKey: .remoteClient) ?? d.remoteClient
         remoteLAN = try c.decodeIfPresent(Bool.self, forKey: .remoteLAN) ?? d.remoteLAN
         agents = (try? c.decodeIfPresent([AgentProfile].self, forKey: .agents)) ?? d.agents
+        agentAPIEnabled = try c.decodeIfPresent(Bool.self, forKey: .agentAPIEnabled) ?? d.agentAPIEnabled
+        agentAPIPort = try c.decodeIfPresent(Int.self, forKey: .agentAPIPort) ?? d.agentAPIPort
     }
 }
 

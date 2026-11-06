@@ -11,13 +11,44 @@ public struct AgentProfile: Codable, Identifiable, Sendable, Equatable {
     public var systemPrompt: String
     /// Set: POST the request here instead of calling xAI; the answer is `{"reply": "…"}` or text.
     public var webhookURL: String?
+    /// Webhook agents: the webhook only acknowledges (200/202); the answer comes later through
+    /// the local API (`POST /v1/notes` with the request id).
+    public var async: Bool
+    /// Asked by itself when a session finishes a turn, or waits on a permission or a question —
+    /// only in `autoProjects` (none chosen: never).
+    public var autoTrigger: Bool
+    public var autoProjects: [UUID]
+    /// Through the local API it may type into Claude directly; otherwise its texts become notes.
+    public var canSendDirectly: Bool
 
-    public init(id: UUID = UUID(), name: String, model: String = "", systemPrompt: String = "", webhookURL: String? = nil) {
+    public init(id: UUID = UUID(), name: String, model: String = "", systemPrompt: String = "", webhookURL: String? = nil,
+                async: Bool = false, autoTrigger: Bool = false, autoProjects: [UUID] = [], canSendDirectly: Bool = false) {
         self.id = id
         self.name = name
         self.model = model
         self.systemPrompt = systemPrompt
         self.webhookURL = webhookURL
+        self.async = async
+        self.autoTrigger = autoTrigger
+        self.autoProjects = autoProjects
+        self.canSendDirectly = canSendDirectly
+    }
+
+    /// Follows this project's sessions by itself.
+    public func follows(project: UUID) -> Bool { autoTrigger && autoProjects.contains(project) }
+
+    /// Profiles saved before a setting existed get its default.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        name = try c.decode(String.self, forKey: .name)
+        model = try c.decodeIfPresent(String.self, forKey: .model) ?? ""
+        systemPrompt = try c.decodeIfPresent(String.self, forKey: .systemPrompt) ?? ""
+        webhookURL = try c.decodeIfPresent(String.self, forKey: .webhookURL)
+        async = try c.decodeIfPresent(Bool.self, forKey: .async) ?? false
+        autoTrigger = try c.decodeIfPresent(Bool.self, forKey: .autoTrigger) ?? false
+        autoProjects = try c.decodeIfPresent([UUID].self, forKey: .autoProjects) ?? []
+        canSendDirectly = try c.decodeIfPresent(Bool.self, forKey: .canSendDirectly) ?? false
     }
 
     public var usesWebhook: Bool { !(webhookURL ?? "").trimmingCharacters(in: .whitespaces).isEmpty }

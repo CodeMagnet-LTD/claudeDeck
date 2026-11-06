@@ -9743,6 +9743,196 @@
           }
         }
       }
+    },
+    "Turn finished": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tur bitti"
+          }
+        }
+      }
+    },
+    "Waiting for permission": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İzin bekliyor"
+          }
+        }
+      }
+    },
+    "Accepted (the answer comes later).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kabul edildi (cevap sonra gelecek)."
+          }
+        }
+      }
+    },
+    "Activity Log…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktivite günlüğü…"
+          }
+        }
+      }
+    },
+    "Local API for agents on this Mac (127.0.0.1)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu Mac'teki ajanlar için yerel API (127.0.0.1)"
+          }
+        }
+      }
+    },
+    "Port": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port"
+          }
+        }
+      }
+    },
+    "Bearer token": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bearer token"
+          }
+        }
+      }
+    },
+    "Regenerate…": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yenile…"
+          }
+        }
+      }
+    },
+    "Regenerate the token?": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Token yenilensin mi?"
+          }
+        }
+      }
+    },
+    "Agents using the old token stop working until they get the new one.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eski token'ı kullanan ajanlar yenisini alana kadar çalışmaz."
+          }
+        }
+      }
+    },
+    "Regenerate": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yenile"
+          }
+        }
+      }
+    },
+    "Agent Activity": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajan aktivitesi"
+          }
+        }
+      }
+    },
+    "Nothing yet": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Henüz bir şey yok"
+          }
+        }
+      }
+    },
+    "Asynchronous (the answer comes later through the local API)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asenkron (cevap sonra yerel API üzerinden gelir)"
+          }
+        }
+      }
+    },
+    "Asks by itself when a session finishes a turn or waits on a permission or a question": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir oturum turu bitirince ya da izin/soru bekleyince kendiliğinden sorulsun"
+          }
+        }
+      }
+    },
+    "Only in these projects": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yalnızca bu projelerde"
+          }
+        }
+      }
+    },
+    "No project chosen: it isn't asked by itself anywhere.": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Proje seçilmedi: hiçbir yerde kendiliğinden sorulmaz."
+          }
+        }
+      }
+    },
+    "May type into Claude through the local API (otherwise its texts become notes)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yerel API üzerinden Claude'a doğrudan yazabilsin (yoksa metinleri not olur)"
+          }
+        }
+      }
+    },
+    "Pick another port (1024–65535, not the remote one).": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Başka bir port seç (1024–65535, uzaktan erişim portu olmasın)."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

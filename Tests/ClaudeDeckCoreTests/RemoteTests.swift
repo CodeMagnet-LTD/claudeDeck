@@ -978,3 +978,91 @@ import Testing
         #expect(throws: AgentWebhook.Problem.tooLarge) { try AgentWebhook.reply(from: Data(count: AgentWebhook.maxResponseBytes + 1)) }
     }
 }
+
+@Suite struct AgentAPITests {
+    @Test func bearer() {
+        let token = AgentBearer.newToken()
+        #expect(token.count >= 40 && !token.contains("+") && !token.contains("/"))
+        #expect(AgentBearer.authorized("Bearer \(token)", token: token))
+        #expect(AgentBearer.authorized("bearer   \(token) ", token: token))
+        #expect(!AgentBearer.authorized("Bearer \(token)x", token: token))
+        #expect(!AgentBearer.authorized("Basic \(token)", token: token))
+        #expect(!AgentBearer.authorized(nil, token: token))
+        #expect(!AgentBearer.authorized("Bearer ", token: token))
+        #expect(!AgentBearer.authorized("Bearer x", token: nil))
+        #expect(!AgentBearer.matches("", expected: ""))
+    }
+
+    @Test func routes() {
+        let id = UUID()
+        #expect(AgentRoute.match(method: "GET", path: "/v1/projects") == .route(.projects))
+        #expect(AgentRoute.match(method: "GET", path: "/v1/projects/") == .route(.projects))
+        #expect(AgentRoute.match(method: "POST", path: "/v1/notes") == .route(.notes))
+        #expect(AgentRoute.match(method: "GET", path: "/v1/sessions/\(id)/messages") == .route(.messages(session: id)))
+        #expect(AgentRoute.match(method: "POST", path: "/v1/sessions/\(id)/prompt") == .route(.prompt(session: id)))
+        #expect(AgentRoute.match(method: "POST", path: "/v1/projects/\(id)/sessions") == .route(.newSession(project: id)))
+        #expect(AgentRoute.match(method: "POST", path: "/v1/projects") == .methodNotAllowed)
+        #expect(AgentRoute.match(method: "GET", path: "/v1/sessions/nope/messages") == .notFound)
+        #expect(AgentRoute.match(method: "GET", path: "/v2/projects") == .notFound)
+        #expect(AgentRoute.limit(["limit": "500"]) == 200 && AgentRoute.limit(["limit": "0"]) == 1 && AgentRoute.limit([:]) == 20)
+    }
+
+    @Test func httpParsing() throws {
+        let body = #"{"session_id":"\#(UUID())","agent":"Kod Checker","text":"ok"}"#
+        let raw = Data("POST /v1/notes?x=1%202 HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer abc\r\nContent-Length: \(body.utf8.count)\r\n\r\n\(body)".utf8)
+        #expect(AgentHTTP.decode(raw.prefix(10)) == .needMore)
+        guard case .ready(let request) = AgentHTTP.decode(raw) else { Issue.record("no request"); return }
+        #expect(request.method == "POST" && request.path == "/v1/notes" && request.query["x"] == "1 2")
+        #expect(request.header("Authorization") == "Bearer abc")
+        let note = try AgentJSON.decode(AgentNoteBody.self, from: request.body)
+        #expect(note.agent == "Kod Checker" && note.requestId == nil)
+        #expect(AgentHTTP.decode(Data("POST / HTTP/1.1\r\nContent-Length: \(AgentHTTP.maxBodyBytes + 1)\r\n\r\n".utf8)) == .tooLarge)
+        #expect(AgentHTTP.decode(Data("POST / HTTP/1.1\r\nTransfer-Encoding: chunked\r\n\r\n".utf8)) == .invalid)
+        let unauthorized = String(decoding: AgentHTTPResponse.error(401, "unauthorized").encoded(), as: UTF8.self)
+        #expect(unauthorized.hasPrefix("HTTP/1.1 401") && unauthorized.contains("WWW-Authenticate: Bearer"))
+    }
+
+    @Test func gateSendsOncePerTurnAndPauses() {
+        var gate = AgentTriggerGate()
+        let s = UUID()
+        #expect(gate.decide(session: s, state: "idle", event: "SessionStart", turn: "1", byUser: false) == .skip)
+        #expect(gate.decide(session: s, state: "running", event: "PreToolUse", turn: "2", byUser: false) == .skip)
+        #expect(gate.decide(session: s, state: "idle", event: "Stop", turn: "3", byUser: false) == .send(.idle))
+        #expect(gate.decide(session: s, state: "idle", event: "Stop", turn: "3", byUser: false) == .skip)  // same turn again
+        #expect(gate.decide(session: s, state: "needsPermission", event: "Notification", turn: "4", byUser: false) == .send(.permission))
+        #expect(gate.decide(session: s, state: "needsAnswer", event: "PreToolUse", turn: "5", byUser: false) == .send(.question))
+        #expect(gate.decide(session: s, state: "idle", event: "Stop", turn: "6", byUser: false) == .paused)  // 3 in a row
+        gate.reset(s)
+        #expect(gate.decide(session: s, state: "idle", event: "Stop", turn: "7", byUser: false) == .send(.idle))
+    }
+
+    @Test func payloadAndProfiles() throws {
+        let agent = AgentProfile(name: "Kod Checker", webhookURL: "http://127.0.0.1:9/hook", async: true, autoTrigger: true, autoProjects: [UUID()])
+        let context = AgentContext(project: "api", session: "api", lastPrompt: "p", lastReply: "r", diff: "+x",
+                                   untracked: [UntrackedFile(path: "n.swift", content: "y")], request: "look")
+        let payload = AgentPayload(requestId: "req-1", event: .idle, agent: agent, async: true,
+                                   project: .init(id: nil, name: "api", path: "/p/api"), sessionId: UUID(), sessionName: "api",
+                                   sessionState: "idle", context: context, transcriptPath: "/t.jsonl",
+                                   callback: .init(notesUrl: "http://127.0.0.1:47647/v1/notes", requestId: "req-1"))
+        let json = try JSONSerialization.jsonObject(with: AgentJSON.encode(payload)) as? [String: Any] ?? [:]
+        for key in ["request_id", "event", "project", "session_id", "session_name", "user_request", "last_user_message",
+                    "last_assistant_message", "git_diff", "untracked_files", "transcript_path", "session_state", "timestamp", "callback"] {
+            #expect(json[key] != nil, "missing \(key)")
+        }
+        #expect(json["event"] as? String == "session.idle")
+        let empty = AgentPayload(requestId: "r", event: .manual, agent: agent, async: false, project: .init(id: nil, name: "", path: ""),
+                                 sessionId: UUID(), sessionName: "", sessionState: "idle",
+                                 context: AgentContext(project: "", session: "", lastPrompt: nil, lastReply: nil, diff: nil, request: ""),
+                                 transcriptPath: nil, callback: nil)
+        let emptyJSON = try JSONSerialization.jsonObject(with: AgentJSON.encode(empty)) as? [String: Any] ?? [:]
+        #expect(emptyJSON["last_user_message"] is NSNull && emptyJSON["callback"] is NSNull && emptyJSON["git_diff"] is NSNull)
+        #expect((json["callback"] as? [String: Any])?["notes_url"] as? String == "http://127.0.0.1:47647/v1/notes")
+        // Older saved profiles get the new settings' defaults; following needs a chosen project.
+        let old = try JSONDecoder().decode(AgentProfile.self, from: Data(#"{"id":"\#(UUID())","name":"a","model":"m","systemPrompt":""}"#.utf8))
+        #expect(!old.async && !old.autoTrigger && old.autoProjects.isEmpty && !old.canSendDirectly)
+        let project = UUID()
+        #expect(!AgentProfile(name: "x", autoTrigger: true).follows(project: project))
+        #expect(AgentProfile(name: "x", autoTrigger: true, autoProjects: [project]).follows(project: project))
+        #expect(!AgentProfile(name: "x", autoTrigger: false, autoProjects: [project]).follows(project: project))
+    }
+}

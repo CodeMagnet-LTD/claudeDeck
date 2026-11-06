@@ -43,6 +43,41 @@ enum DebugSnapshot {
             try? FileManager.default.removeItem(atPath: path)
             if parts.count == 2 { model.mutate { $0.settings.agents.append(AgentProfile(name: parts[0], webhookURL: parts[1])) } }
         }
+        // `agentapi.cmd`: "on <port>" / "off" for the agents' local API; its token goes to
+        // `agentapi-token.txt` (demo keychain only).
+        for file in files where file == "agentapi.cmd" {
+            let path = (dir as NSString).appendingPathComponent(file)
+            let parts = contents(path).split(separator: " ").map(String.init)
+            try? FileManager.default.removeItem(atPath: path)
+            model.mutate {
+                $0.settings.agentAPIEnabled = parts.first == "on"
+                if parts.count > 1, let port = Int(parts[1]) { $0.settings.agentAPIPort = port }
+            }
+            model.agentAPI.refresh()
+            try? (model.agentAPI.token ?? "").write(toFile: (dir as NSString).appendingPathComponent("agentapi-token.txt"), atomically: true, encoding: .utf8)
+        }
+        // `agent.edit`: "name|key=value" sets async / autoTrigger / canSendDirectly ("true"/"false")
+        // or autoProjects (comma-separated project names) on that agent.
+        for file in files where file == "agent.edit" {
+            let path = (dir as NSString).appendingPathComponent(file)
+            let parts = contents(path).trimmingCharacters(in: .whitespacesAndNewlines).split(separator: "|").map(String.init)
+            try? FileManager.default.removeItem(atPath: path)
+            guard parts.count == 2, let target = model.agent(named: parts[0]) else { continue }
+            let pair = parts[1].split(separator: "=", maxSplits: 1).map(String.init)
+            guard pair.count == 2 else { continue }
+            model.mutate { deck in
+                guard let index = deck.settings.agents.firstIndex(where: { $0.id == target.id }) else { return }
+                switch pair[0] {
+                case "async": deck.settings.agents[index].async = pair[1] == "true"
+                case "autoTrigger": deck.settings.agents[index].autoTrigger = pair[1] == "true"
+                case "canSendDirectly": deck.settings.agents[index].canSendDirectly = pair[1] == "true"
+                case "autoProjects":
+                    let names = pair[1].split(separator: ",").map(String.init)
+                    deck.settings.agents[index].autoProjects = deck.projects.filter { names.contains($0.name) }.map(\.id)
+                default: break
+                }
+            }
+        }
         for file in files where file.hasSuffix(".ask") {
             let path = (dir as NSString).appendingPathComponent(file)
             let request = contents(path)
@@ -92,7 +127,7 @@ enum DebugSnapshot {
         let remoteLines = ["host: \(remote.hostState) remotes=\(remote.connectedRemotes) last=\(remote.lastRemoteAnswer ?? "-") rejected=\(remote.lastRejectedPeer ?? "-")",
                            "client: \(remote.connection) answering=\(remote.answering.count) error=\(remote.answerError ?? "-") uploads=\(remote.uploads)",
                            "terminals: \(remote.terminalStates) counters: \(remote.counters.sorted { $0.key < $1.key })",
-                           "lan: \(remote.lanHosts.map(\.name)) via=\(remote.connectedVia ?? "-")",
+                           "lan: \(remote.lanHosts.map(\.name)) via=\(remote.connectedVia ?? "-") agentapi=\(model.agentAPI.state) enabled=\(model.deck.settings.agentAPIEnabled)",
                            "projects: \(remote.hostProjects.map { $0.pinned ? "📌" + $0.name : $0.name }) past=\(remote.hostPastConversations.mapValues(\.count).values.sorted())"]
             + (remote.snapshot?.sessions ?? []).map { "  \($0.id.uuidString) \($0.name) \($0.state.rawValue) stamp=\($0.permissionStamp.map { String($0) } ?? "-")" }
             + model.agentNotes.flatMap { id, notes in notes.map { "  note \(id.uuidString.prefix(8)) \($0.agentName) pending=\($0.pending) reply=\(($0.reply ?? "-").prefix(60)) error=\($0.error ?? "-")" } }
