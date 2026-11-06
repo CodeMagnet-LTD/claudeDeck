@@ -88,7 +88,8 @@ enum AgentRunner {
         var request = URLRequest(url: url, timeoutInterval: payload.async ? 30 : 180)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        if let auth = AgentKeychain.webhookAuthorization(profile.id), !auth.isEmpty {
+        // Normalized again: headers saved before "Bearer " was added for bare tokens.
+        if let auth = AgentKeychain.webhookAuthorization(profile.id).map(AgentCompletion.authorization), !auth.isEmpty {
             request.setValue(auth, forHTTPHeaderField: "Authorization")
         }
         request.httpBody = try AgentJSON.encode(payload)
@@ -148,9 +149,11 @@ enum AgentKeychain {
     static var xaiKey: String? { read(account) }
     static func setXAIKey(_ key: String?) { write(key, account) }
 
-    /// A webhook agent's Authorization header value ("Bearer …"), sent as typed.
+    /// A webhook agent's Authorization header value; a bare token is stored as "Bearer <token>".
     static func webhookAuthorization(_ agent: UUID) -> String? { read("webhook-" + agent.uuidString) }
-    static func setWebhookAuthorization(_ value: String?, for agent: UUID) { write(value, "webhook-" + agent.uuidString) }
+    static func setWebhookAuthorization(_ value: String?, for agent: UUID) {
+        write(value.map(AgentCompletion.authorization), "webhook-" + agent.uuidString)
+    }
 
     static func read(_ account: String) -> String? {
         let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: service,

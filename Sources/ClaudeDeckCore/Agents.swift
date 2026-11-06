@@ -338,6 +338,14 @@ public enum AgentCompletion {
         }
     }
 
+    /// The Authorization header value to store and send: a bare token (no space, so no scheme)
+    /// gets "Bearer " in front; "Bearer …", "Basic …" or any other "<scheme> <value>" stays as is.
+    public static func authorization(_ raw: String) -> String {
+        let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !value.isEmpty, !value.contains(where: \.isWhitespace) else { return value }
+        return "Bearer " + value
+    }
+
     /// An Authorization header value as HTTP carries it: printable ASCII, one line.
     public static func validHeader(_ value: String) -> Bool {
         !value.isEmpty && value.count <= maxAuthHeader && value.unicodeScalars.allSatisfy { (0x20...0x7E).contains($0.value) }

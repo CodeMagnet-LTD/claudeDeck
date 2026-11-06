@@ -1,6 +1,16 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Bearer … (added if you paste just the token)": {
+      "localizations": {
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bearer … (sadece token'ı yapıştırırsan eklenir)"
+          }
+        }
+      }
+    },
     "New Terminal…": {
       "localizations": {
         "tr": {

@@ -258,7 +258,7 @@ struct AgentEditor: View {
                 if useWebhook {
                     Toggle("Asynchronous (the answer comes later through the local API)", isOn: $agent.async)
                     TextField("Webhook URL", text: Binding(get: { agent.webhookURL ?? "" }, set: { agent.webhookURL = $0 }), prompt: Text("https://… or http://127.0.0.1:…"))
-                    SecureField("Authorization header (optional)", text: $authorization, prompt: Text("Bearer …"))
+                    SecureField("Authorization header (optional)", text: $authorization, prompt: Text("Bearer … (added if you paste just the token)"))
                     Text("ClaudeDeck POSTs {agent, system, model, message} and shows {\"reply\": \"…\"} (or the plain text it answers).")
                         .font(.caption).foregroundStyle(.secondary)
                 } else {

@@ -15,7 +15,8 @@ Settings › Agents:
      the API's list. Needs the xAI API key (stored in the keychain). It knows nothing beyond what
      ClaudeDeck sends.
    - **Webhook:** your existing bot. `https://…`, or `http://` only to this Mac (`127.0.0.1`,
-     `localhost`). An optional `Authorization` header value is stored in the keychain and sent as typed.
+     `localhost`). An optional `Authorization` header value is stored in the keychain; a bare token (no space)
+     gets `Bearer ` in front, anything with a scheme (`Bearer …`, `Basic …`) is sent as typed.
 2. **Asynchronous** (webhook only): the webhook just acknowledges (`200`/`202`) and answers later
    through the local API (`POST /v1/notes` with the `request_id`).
 3. **Asks by itself…**: the agent is asked automatically when a session finishes a turn, or waits on

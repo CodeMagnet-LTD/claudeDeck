@@ -902,6 +902,15 @@ import Testing
 }
 
 @Suite struct AgentTests {
+    @Test func bareTokenGetsBearer() {
+        #expect(AgentCompletion.authorization("abc123") == "Bearer abc123")
+        #expect(AgentCompletion.authorization("  abc123\n") == "Bearer abc123")
+        #expect(AgentCompletion.authorization("Bearer abc123") == "Bearer abc123")
+        #expect(AgentCompletion.authorization("bearer abc123") == "bearer abc123")
+        #expect(AgentCompletion.authorization("Basic dXNlcjpwYXNz") == "Basic dXNlcjpwYXNz")
+        #expect(AgentCompletion.authorization("   ") == "")
+    }
+
     @Test func contextMessage() {
         let context = AgentContext(project: "api", session: "api · 2", lastPrompt: "add retries", lastReply: "Done.", diff: "+ retry()", request: "")
         let message = context.message
