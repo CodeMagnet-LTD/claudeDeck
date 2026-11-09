@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle">
+  <channel>
+    <title>ClaudeDeck</title>
+    <link>https://github.com/mstfmedeni/claudeDeck</link>
+    <description>ClaudeDeck updates</description>
+    <language>en</language>
+    <item>
+      <title>ClaudeDeck 0.5.2</title>
+      <pubDate>Mon, 09 Nov 2026 23:17:34 GMT</pubDate>
+      <sparkle:version>19</sparkle:version>
+      <sparkle:shortVersionString>0.5.2</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.5.2</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p><b>Full Changelog</b>: https://github.com/mstfmedeni/claudeDeck/compare/v0.5.1...v0.5.2</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.5.2/ClaudeDeck-0.5.2.dmg" sparkle:edSignature="aZrLpFdoPHBn3aQx9aDivtvZAKm7wExrh2RfNuhdKbkLcs0c6f/MNX89mkBGp5nxiNzwYyqIo1zqi4z94Wk1CQ==" length="18474663" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.5.1</title>
+      <pubDate>Fri, 06 Nov 2026 20:26:35 GMT</pubDate>
+      <sparkle:version>18</sparkle:version>
+      <sparkle:shortVersionString>0.5.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.5.1</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p><b>Full Changelog</b>: https://github.com/mstfmedeni/claudeDeck/compare/v0.5.0...v0.5.1</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.5.1/ClaudeDeck-0.5.1.dmg" sparkle:edSignature="a9R/9F3wRoKGAT4CThT9ilQEQmxgk0Ira0JDDwPNqrh/UWPOwE8Pnux/1r34KxuJ+++xXvpFjfUggxfxeBe1CQ==" length="18431360" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.5.0</title>
+      <pubDate>Fri, 06 Nov 2026 12:44:16 GMT</pubDate>
+      <sparkle:version>17</sparkle:version>
+      <sparkle:shortVersionString>0.5.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.5.0</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p><b>Full Changelog</b>: https://github.com/mstfmedeni/claudeDeck/compare/v0.4.9...v0.5.0</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.5.0/ClaudeDeck-0.5.0.dmg" sparkle:edSignature="18mg5F4WSBV8C75ubR2WN8Ut68lh4sFzI+pXdRk3JDiNwGO1SgDRaiXMHc93O96/h/1frsqEiTMEgn+lcSVyAQ==" length="18231196" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.4.9</title>
+      <pubDate>Fri, 06 Nov 2026 01:16:02 GMT</pubDate>
+      <sparkle:version>16</sparkle:version>
+      <sparkle:shortVersionString>0.4.9</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.4.9</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p><b>Full Changelog</b>: https://github.com/mstfmedeni/claudeDeck/compare/v0.4.8...v0.4.9</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.4.9/ClaudeDeck-0.4.9.dmg" sparkle:edSignature="JrdaojocTNjxkJdAwVKCcRt4ZG0RvuS/KI17tmpsdpEQj5fAqDIl9ChhWKHuxoZNxxoPwVoe7r4+OwBOQyqBCw==" length="17947127" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.4.8</title>
+      <pubDate>Mon, 02 Nov 2026 17:17:13 GMT</pubDate>
+      <sparkle:version>15</sparkle:version>
+      <sparkle:shortVersionString>0.4.8</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.4.8</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p><b>Full Changelog</b>: https://github.com/mstfmedeni/claudeDeck/compare/v0.4.7...v0.4.8</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.4.8/ClaudeDeck-0.4.8.dmg" sparkle:edSignature="YGMlR50i9B5KG6NMHb5fl3nYQP8URHnrl7wtYzg2YTkaDYiO0Sh7z2p9yYuT+dF+dg3lJ7vNx8lVlMA1vshjCQ==" length="16958752" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.4.7</title>
+      <pubDate>Sun, 01 Nov 2026 20:26:42 GMT</pubDate>
+      <sparkle:version>14</sparkle:version>
+      <sparkle:shortVersionString>0.4.7</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.4.7</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p><b>Full Changelog</b>: https://github.com/mstfmedeni/claudeDeck/compare/v0.4.6...v0.4.7</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.4.7/ClaudeDeck-0.4.7.dmg" sparkle:edSignature="1jyQJLv94T8RiOBfZ3wKJI8Qkgh1fS9LFAAOf7g8xMRCVMWuOBdvxqpKqs32lnstqI99RqnQhH2cm0bFoYfJDg==" length="16257249" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.4.6</title>
+      <pubDate>Sat, 31 Oct 2026 12:28:19 GMT</pubDate>
+      <sparkle:version>13</sparkle:version>
+      <sparkle:shortVersionString>0.4.6</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.4.6</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p><b>Full Changelog</b>: https://github.com/mstfmedeni/claudeDeck/compare/v0.4.5...v0.4.6</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.4.6/ClaudeDeck-0.4.6.dmg" sparkle:edSignature="Fz6QoZj/tehwlYCa/52kz9dGBlC2M/NR+PMIksBnNqWrXZ5PvCpNlDyIhQN8sLubgNkbSxmIM1xJWpScuLpQAA==" length="16167394" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.4.5</title>
+      <pubDate>Thu, 29 Oct 2026 10:38:30 GMT</pubDate>
+      <sparkle:version>12</sparkle:version>
+      <sparkle:shortVersionString>0.4.5</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.4.5</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p><b>Full Changelog</b>: https://github.com/mstfmedeni/claudeDeck/compare/v0.4.4...v0.4.5</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.4.5/ClaudeDeck-0.4.5.dmg" sparkle:edSignature="BdZ4scgvhr8NBnqPGjgTMHrHnJl/ecxNFdqjV0xtTKjp3y0KdoPZULh4nIISPO76SVat7B8ZIp9uAwuaK7qMCg==" length="16065763" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.4.4</title>
+      <pubDate>Tue, 27 Oct 2026 23:44:40 GMT</pubDate>
+      <sparkle:version>11</sparkle:version>
+      <sparkle:shortVersionString>0.4.4</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.4.4</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p><b>Full Changelog</b>: https://github.com/mstfmedeni/claudeDeck/compare/v0.4.3...v0.4.4</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.4.4/ClaudeDeck-0.4.4.dmg" sparkle:edSignature="G2R9NO0qZM8oifX/3V0JZ8o58vhAAaicaxQgQAHuozJj4eNDXfk4Wnpr45AoNatvigHZUx8UHhJWbcNwGknCCQ==" length="15903005" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.4.3</title>
+      <pubDate>Thu, 15 Oct 2026 18:14:24 GMT</pubDate>
+      <sparkle:version>10</sparkle:version>
+      <sparkle:shortVersionString>0.4.3</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.4.3</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p><b>Full Changelog</b>: https://github.com/mstfmedeni/claudeDeck/compare/v0.4.2...v0.4.3</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.4.3/ClaudeDeck-0.4.3.dmg" sparkle:edSignature="vRp+nqNBzQBeizRx2gG3JzcweBZi+vOamLnOnr0ncaSpnV3WlB/xlIqIVloXqdQtxvKg3bUFU31n1Amb2iABBg==" length="15798463" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.4.2</title>
+      <pubDate>Wed, 14 Oct 2026 21:41:15 GMT</pubDate>
+      <sparkle:version>9</sparkle:version>
+      <sparkle:shortVersionString>0.4.2</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.4.2</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p>ClaudeDeck 0.4.2 tidies up the sidebar.</p>
+<h3>Fixes</h3>
+<ul>
+<li><b>No leftover row after deleting a session.</b> When a project went from two sessions to one, the deleted session's row could stay drawn over the rows below.</li>
+<li><b>The + menu shows on every project row.</b> Single-session projects now show it all the time, not only while the pointer is over the row.</li>
+</ul>
+<p>Installed 0.2.x or later? This update arrives through <b>ClaudeDeck › Check for Updates…</b> (or on its own within a day).</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.4.2/ClaudeDeck-0.4.2.dmg" sparkle:edSignature="yDXAlW3gytKQMR2oUOLYMnTsYNqw0WVoKNcuMzZWsxFQjIUc3ZDphp+NHK95g3m9qhIHsdb3VsaWFFOCZ7SpAw==" length="15796116" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.4.1</title>
+      <pubDate>Mon, 12 Oct 2026 22:17:56 GMT</pubDate>
+      <sparkle:version>8</sparkle:version>
+      <sparkle:shortVersionString>0.4.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.4.1</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p>ClaudeDeck 0.4.1 makes pairing links work when opened from outside the app.</p>
+<h3>Fixes</h3>
+<ul>
+<li><b>Opening a <code>claudedeck://pair</code> link pairs this Mac.</b> A link opened from a browser, Messages or Notes used to only bring ClaudeDeck to the front; pairing worked only by pasting the link in Settings › Remote. ClaudeDeck now shows the other Mac's name and addresses and asks first, since the link replaces the current pairing. It then turns on showing another Mac's sessions if needed and connects. A damaged link, or this Mac's own link, says so instead of doing nothing.</li>
+</ul>
+<p>Installed 0.2.x or later? This update arrives through <b>ClaudeDeck › Check for Updates…</b> (or on its own within a day).</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.4.1/ClaudeDeck-0.4.1.dmg" sparkle:edSignature="0inVGUcH/eBFQSxNIhG6G+2Cjt8U/Yo9AmhfHVGENfzX/CjDK6SmVogsu4n7buG8ZkvwtA671D7qWGQgYZQ4Bg==" length="15776262" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.4.0</title>
+      <pubDate>Mon, 12 Oct 2026 21:19:03 GMT</pubDate>
+      <sparkle:version>7</sparkle:version>
+      <sparkle:shortVersionString>0.4.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.4.0</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p>ClaudeDeck 0.4.0 adds remote mode: follow and drive one Mac's Claude sessions from another Mac or from the ClaudeDeck iPhone companion.</p>
+<h3>New</h3>
+<ul>
+<li><b>Remote mode (Settings › Remote).</b> One Mac hosts its sessions; another ClaudeDeck shows them in its own sidebar section, notifies you when they need you, answers permission prompts and opens their live terminals. Works over Tailscale, and optionally on the local network (off by default, found over Bonjour). Pairing with the same password on both Macs, an iCloud Drive record, or a QR code / <code>claudedeck://pair</code> link. Every connection is encrypted after a mutual key proof.</li>
+<li><b>iPhone companion hosting.</b> The hosting Mac also serves the ClaudeDeck iPhone app:</li>
+<li>its sessions with Allow / Deny, a readable conversation view and the live terminal fitted to the phone;</li>
+<li>Claude's questions, including multi-question prompts, answered from the phone;</li>
+<li>start, stop and resume sessions;</li>
+<li>open terminals and continue past conversations;</li>
+<li>browse project files;</li>
+<li>push notifications sent straight to Apple with your own .p8 key.</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+<li>A question from Claude (AskUserQuestion) no longer shows as a permission prompt, whose Allow button picked the first option.</li>
+<li>Switching the sidebar filter no longer jumbles rows; the Running pill is readable in dark mode; rows no longer overlap after moving between Active and Inactive.</li>
+<li>"Continue where you left off." waits for Claude to start and keeps retrying Enter while many sessions resume at once, never while a prompt is on screen.</li>
+</ul>
+<p>Installed 0.2.x or 0.3.x? This update arrives through <b>ClaudeDeck › Check for Updates…</b> (or on its own within a day).</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.4.0/ClaudeDeck-0.4.0.dmg" sparkle:edSignature="I7m26Y8YOeHODoB1cIEnB3Vt4aCoZoMfrTqRzXIDS7xbMU/Xp/pPLj/c5tT5JDxsBXITAPsfQmych5Ww3tRRCQ==" length="15775479" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.3.0</title>
+      <pubDate>Fri, 02 Oct 2026 21:45:54 GMT</pubDate>
+      <sparkle:version>6</sparkle:version>
+      <sparkle:shortVersionString>0.3.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.3.0</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p>ClaudeDeck 0.3.0 adds usage limits, git history and branches, a GitHub inbox, history search, Skills and a live view of each session's agents.</p>
+<h3>New</h3>
+<ul>
+<li><b>Claude usage meter.</b> Your plan's 5-hour and weekly usage with reset countdowns, under the sidebar and in the menu bar. When a session stops on the usage limit, ClaudeDeck sends it "continue" once the limit resets (Settings › Sessions to turn off).</li>
+<li><b>Agents panel (⇧⌘A).</b> A third tab next to Files and Changes that follows the session you're on: the subagents it started (type, task, status, duration, tool calls, tokens), a 30-minute timeline and a live activity log.</li>
+<li><b>Branches, History and Worktrees.</b> A branch picker on the Changes header (switch with Stash &amp; Switch, create, check out remote branches), a commit graph in a History tab, and a Worktrees page to see which session uses which worktree, open, remove or prune them.</li>
+<li><b>GitHub Inbox.</b> Open issues and pull requests of the project's repo; <b>Start Work</b> opens a Claude session linked to the item.</li>
+<li><b>Fix CI with Claude.</b> Failed checks of a linked pull request can be sent — with the failing log — to Claude in one click.</li>
+<li><b>Automations on GitHub events.</b> Trigger an automation when a new issue or pull request appears (optional label/author filter).</li>
+<li><b>History search (⇧⌘H).</b> Search every Claude conversation; double-click a result to continue it.</li>
+<li><b>Skills.</b> Browse, preview, edit and create your user, project and plugin skills.</li>
+</ul>
+<h3>Fixes</h3>
+<ul>
+<li>Clicking a session in the sidebar (or ⌘J, or the waiting tray) puts the keyboard focus in its terminal right away.</li>
+<li>"Continue where you left off." no longer stays unsent in the input while Claude is still starting up.</li>
+</ul>
+<p>Installed 0.2.x? This update arrives through <b>ClaudeDeck › Check for Updates…</b> (or on its own within a day).</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.3.0/ClaudeDeck-0.3.0.dmg" sparkle:edSignature="RfKaWBhSFxkuvZt1cFJILgbHMDfR9QTSTsC2vxSPs1cZh0ujibjW0ItekU6iXreKwI/5ecCGBVn8wecABPYRCw==" length="13789060" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.2.1</title>
+      <pubDate>Wed, 30 Sep 2026 20:11:05 GMT</pubDate>
+      <sparkle:version>5</sparkle:version>
+      <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.2.1</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p>A calmer sidebar that doesn't move under your cursor, and ⌘-click for bare file names.</p>
+<h3>Sidebar</h3>
+<ul>
+<li><b>Rows stay where they are.</b> Status changes no longer reorder the list; a project's state shows in place. Changes the app makes on its own (a project becoming active, automations, iCloud sync) wait while the pointer is over the sidebar and briefly after a click, so you don't click the wrong project.</li>
+<li><b>"Waiting for you" tray.</b> Sessions that need you — permission prompts, questions, freshly finished turns — slide up in a tray at the bottom of the sidebar, with Allow / Deny right there. The list above doesn't shift.</li>
+<li><b>Compact rows.</b> A project with a single session takes one row instead of two.</li>
+<li><b>Quieter idle.</b> Sessions you've already looked at show a grey dot instead of a yellow "Your turn" pill; the pill is only for turns you haven't seen.</li>
+<li><b>Group badges.</b> Group headers show how many sessions are waiting (red) and working (green), even when collapsed.</li>
+<li><b>Filter:</b> All / Waiting / Working at the top of the sidebar.</li>
+<li><b>⌘J</b> jumps to the next session waiting for you.</li>
+</ul>
+<h3>Terminal</h3>
+<ul>
+<li><b>⌘-click a bare file name</b> like <code>[file] promo.mp4</code> or <code>README.md</code>: ClaudeDeck finds it in the session's folder, in the files Claude recently wrote or sent in that session, or elsewhere in the project, and shows it in Finder (⌘⌥-click opens it).</li>
+</ul>
+<p>Installed 0.2.0? This update arrives through <b>ClaudeDeck › Check for Updates…</b> (or on its own within a day).</p>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.2.1/ClaudeDeck-0.2.1.dmg" sparkle:edSignature="SJQrr97No5wyv7uOs8V1rw0ru6gZMjTbn/cxeNahO9UAQvtzlq06rHtd9KFu8nN+8FoWq+ubGa1CRG6bw1NSBA==" length="11335371" type="application/octet-stream"/>
+    </item>
+    <item>
+      <title>ClaudeDeck 0.2.0</title>
+      <pubDate>Tue, 29 Sep 2026 23:02:51 GMT</pubDate>
+      <sparkle:version>4</sparkle:version>
+      <sparkle:shortVersionString>0.2.0</sparkle:shortVersionString>
+      <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+      <sparkle:fullReleaseNotesLink>https://github.com/mstfmedeni/claudeDeck/releases/tag/v0.2.0</sparkle:fullReleaseNotesLink>
+      <description><![CDATA[<p>ClaudeDeck 0.2.0 turns the deck into a place where you can also read, review and ship the code your Claude sessions write — without leaving the window.</p>
+<h3>New</h3>
+<ul>
+<li><b>Tabs in the main window.</b> Files, full-width diffs and Automations open as tabs in the toolbar; <b>Sessions</b> is always the first tab. Preview tabs (italic) are replaced by the next file you open until you edit or pin them. ⌘1–⌘9 and ⌃Tab switch tabs, drag to reorder, right-click for Close Others / Open in Separate Window. Prefer windows? Settings › open files in separate windows.</li>
+<li><b>Built-in editor.</b> Light code editor with syntax highlighting, find &amp; replace, ⌘S, reload when the file changes on disk, and <b>Add to Claude</b> that inserts <code>@path#L10-20</code> for the selected lines.</li>
+<li><b>Changes (⌘⇧G).</b> Source control in the right panel: stage, unstage or discard per file or per hunk, commit / amend / push / pull, ✨ generate the commit message with your own <code>claude</code>, and <b>Ask Claude about this line…</b> from any diff line.</li>
+<li><b>Explorer upgrades.</b> Live file tree (including external commits), respects <code>.gitignore</code>, <b>Quick Open (⌘P)</b>, <b>Find in Files (⌘⇧F)</b>, cut / copy / paste / duplicate, drag to move, drop files from Finder.</li>
+<li><b>GitHub issues &amp; pull requests.</b> Link one to a session and its badge shows the state; the popover has CI checks, reviews and the latest comments, plus Add Comment and Send to Claude. You get notified on a new review, a failing check or a merge. Uses your own <code>gh</code> CLI — ClaudeDeck stores no tokens.</li>
+<li><b>Automations.</b> Saved prompts that start a Claude session hourly, daily, on weekdays or weekly (or on demand with Run Now), in the project folder or a fresh git worktree, with run history and templates. They run while ClaudeDeck is running (menu bar mode + open at login keep it alive).</li>
+<li><b>Restart Session (⌘⌥R)</b> and <b>Restart All Claude Sessions.</b> Quits <code>claude</code> and resumes the same conversation, so newly added MCP servers and settings are picked up with one click.</li>
+<li><b>Pencil (pen.dev) integration.</b> Claude sessions started by ClaudeDeck get the Pencil desktop app's MCP server automatically, and <code>.pen</code> files open in Pencil. Optional; off when Pencil isn't installed.</li>
+<li><b>⌘-click paths and links in the terminal.</b> A file path Claude prints (like <code>promo-video/out/promo.mp4</code> or <code>src/app.ts:42</code>) is resolved against the session's project folder and shown in Finder; ⌘⌥-click opens the file itself. URLs open in the browser.</li>
+<li><b>Automatic updates.</b> ClaudeDeck now checks for new versions at launch and daily and installs them for you (Sparkle, signed updates). <b>ClaudeDeck › Check for Updates…</b> checks on demand. If an update is waiting at launch, your sessions start after you decide, so installing it doesn't restart them twice.</li>
+<li><b>Interrupted sessions always pick up where they left off.</b> A session that was working when ClaudeDeck quit — or crashed — gets "Continue where you left off." when it comes back. Idle sessions simply resume; sending the message to every session is optional. The automatic <code>/compact</code> after a resume is now off by default.</li>
+<li><b>Copy Path</b> in the project context menu.</li>
+</ul>
+<h3>Notes</h3>
+<ul>
+<li><b>Coming from 0.1.0:</b> 0.1.0 has no updater, so install 0.2.0 by hand once (download the DMG below and replace the app). From 0.2.0 on, updates arrive automatically.</li>
+<li>Requires macOS 15 or later. <code>gh</code> (for GitHub linking) and Pencil are optional.</li>
+<li>Your data file gains new fields (automations, GitHub links, new settings). Going back to 0.1.0 afterwards works, but 0.1.0 drops those fields the next time it saves.</li>
+</ul>]]></description>
+      <enclosure url="https://github.com/mstfmedeni/claudeDeck/releases/download/v0.2.0/ClaudeDeck-0.2.0.dmg" sparkle:edSignature="eafBm+ppCxg6S3hmwL+PHQVNBvfJRSerLMlGz8zNHHaqK5Loc/qPC19ZpD8XEQgYy2T5PWZX+2hZm/OqkmSpBw==" length="10904398" type="application/octet-stream"/>
+    </item>
+  </channel>
+</rss>
